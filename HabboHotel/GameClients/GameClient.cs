@@ -79,7 +79,7 @@ public abstract class GameClient
                     // TODO @80O: Add logging unknown packet received.
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // TODO @80O: Add logging when ILogger interface has been implemented
             }

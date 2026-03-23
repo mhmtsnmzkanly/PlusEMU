@@ -10,6 +10,8 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>11</LangVersion>
+		<CheckEolTargetFramework>false</CheckEolTargetFramework>
+		<NoWarn>$(NoWarn);CS0067;CS0414;CS0612;CS0618;CS0649;CS8600;CS8601;CS8602;CS8603;CS8604;CS8605;CS8618;CS8622;CS8625;CS8765;CS8767</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -67,8 +69,5 @@
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT' ">
 		<Exec Command="powershell -Command '[Environment]::SetEnvironmentVariable(&quot;PLUS_EMULATOR_HOME&quot;, &quot;$([System.IO.Path]::GetFullPath('$(OutDir)'))&quot;, [System.EnvironmentVariableTarget]::Machine)'" />
-	</Target>
-	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="echo Configuration: $(Configuration)&#xD;&#xA;echo DevEnvDir: $(DevEnvDir)&#xD;&#xA;echo OutDir: $(OutDir)&#xD;&#xA;echo ProjectDir: $(ProjectDir)&#xD;&#xA;echo VisualStudioVersion: $(VisualStudioVersion)&#xD;&#xA;echo AssemblySearchPaths: $(AssemblySearchPaths)&#xD;&#xA;echo AssemblyName: $(AssemblyName)&#xD;&#xA;echo BaseIntermediateOutputPath: $(BaseIntermediateOutputPath)&#xD;&#xA;echo CscToolPath: $(CscToolPath)" />
 	</Target>
 </Project>
