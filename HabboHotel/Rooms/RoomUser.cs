@@ -5,6 +5,7 @@ using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Items.Wired;
+using Plus.HabboHotel.Users;
 using Plus.HabboHotel.Rooms.AI;
 using Plus.HabboHotel.Rooms.Games.Freeze;
 using Plus.HabboHotel.Rooms.Games.Teams;
@@ -136,8 +137,7 @@ public class RoomUser
     {
         get
         {
-            var client = GetClient();
-            var habbo = client?.GetHabbo();
+            var habbo = GetHabbo();
             return habbo?.Effects?.CurrentEffect ?? 0;
         }
     }
@@ -168,8 +168,7 @@ public class RoomUser
         {
             if (IsBot)
                 return false;
-            var client = GetClient();
-            var habbo = client?.GetHabbo();
+            var habbo = GetHabbo();
             if (habbo == null)
                 return true;
             if (habbo.Permissions != null && habbo.Permissions.HasRight("mod_tool") || GetRoom().OwnerId == HabboId)
@@ -339,8 +338,7 @@ public class RoomUser
     public bool IncrementAndCheckFlood(out int muteTime)
     {
         muteTime = 0;
-        var client = GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo();
         if (habbo?.Permissions == null)
             return false;
         ChatSpamCount++;
@@ -365,8 +363,7 @@ public class RoomUser
 
     public void OnChat(int colour, string message, bool shout)
     {
-        var client = GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo();
         var room = _mRoom;
         if (habbo == null || room == null)
             return;
@@ -555,8 +552,7 @@ public class RoomUser
             _mRoom.SendPacket(new AvatarEffectComposer(VirtualId, effectId));
             return;
         }
-        var client = GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo();
         var effects = habbo?.Effects;
         if (effects == null)
             return;
@@ -570,6 +566,12 @@ public class RoomUser
         if (_mClient == null)
             _mClient = PlusEnvironment.Game.ClientManager.GetClientByUserId(HabboId);
         return _mClient;
+    }
+
+    private Habbo GetHabbo()
+    {
+        var client = GetClient();
+        return client?.GetHabbo();
     }
 
     private Room GetRoom()
