@@ -465,10 +465,11 @@ public class Room : RoomData
         var roomUserManager = _roomUserManager;
         if (roomUserManager == null)
             return;
+        var users = roomUserManager.GetUserList().ToList();
 
         session.Send(new HeightMapComposer(GetGameMap().Model.Heightmap));
         session.Send(new FloorHeightMapComposer(GetGameMap().Model.GetRelativeHeightmap(), GetGameMap().StaticModel.WallHeight));
-        foreach (var user in roomUserManager.GetUserList().ToList())
+        foreach (var user in users)
         {
             if (user == null)
                 continue;
@@ -484,7 +485,7 @@ public class Room : RoomData
             if (!user.IsBot && !user.IsPet && user.CurrentEffect > 0)
                 session.Send(new AvatarEffectComposer(user.VirtualId, user.CurrentEffect));
         }
-        session.Send(new UserUpdateComposer(_roomUserManager.GetUserList().ToList()));
+        session.Send(new UserUpdateComposer(users));
         session.Send(new ObjectsComposer(GetRoomItemHandler().GetFloor.ToArray(), this));
         session.Send(new ItemsComposer(GetRoomItemHandler().GetWall.ToArray(), this));
     }
