@@ -1007,9 +1007,10 @@ public class Item
                         }
                         if (targetSquares.Count > 0)
                         {
+                            var room = GetRoom();
                             foreach (var square in targetSquares.ToList())
                             {
-                                var affectedUsers = _room.GetGameMap().GetRoomUsers(square).ToList();
+                                var affectedUsers = room.GetGameMap().GetRoomUsers(square).ToList();
                                 if (affectedUsers.Count == 0)
                                     continue;
                                 foreach (var target in affectedUsers)
@@ -1020,12 +1021,12 @@ public class Item
                                     var targetHabbo = GetHabbo(target);
                                     if (targetHabbo == null || targetClient == null)
                                         continue;
-                                    if (_room.CheckRights(targetClient, true))
+                                    if (room.CheckRights(targetClient, true))
                                         continue;
                                     target.ApplyEffect(4);
                                     targetClient.Send(new RoomNotificationComposer("Kicked from room", "You were hit by a cannonball!", "room_kick_cannonball", ""));
                                     target.ApplyEffect(0);
-                                    _room.GetRoomUserManager().RemoveUserFromRoom(targetClient, true);
+                                    room.GetRoomUserManager().RemoveUserFromRoom(targetClient, true);
                                 }
                             }
                         }
