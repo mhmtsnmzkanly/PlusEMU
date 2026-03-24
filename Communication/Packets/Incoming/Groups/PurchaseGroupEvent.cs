@@ -13,53 +13,24 @@ namespace Plus.Communication.Packets.Incoming.Groups;
 
 internal class PurchaseGroupEvent : IPacketEvent
 {
-    private readonly IGroupManager _groupManager;
-    private readonly IWordFilterManager _wordFilterManager;
-    private readonly ISettingsManager _settingsManager;
+    private readonly IGroupService _groupService;
 
-    public PurchaseGroupEvent(IGroupManager groupManager, IWordFilterManager wordFilterManager, ISettingsManager settingsManager)
+    public PurchaseGroupEvent(IGroupService groupService)
     {
-        _groupManager = groupManager;
-        _wordFilterManager = wordFilterManager;
-        _settingsManager = settingsManager;
+        _groupService = groupService;
     }
+
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
-            return Task.CompletedTask;
-
-        var name = _wordFilterManager.CheckMessage(packet.ReadString());
-        var description = _wordFilterManager.CheckMessage(packet.ReadString());
+        var name = packet.ReadString();
+        var description = packet.ReadString();
         var roomId = packet.ReadUInt();
         var mainColour = packet.ReadInt();
         var secondaryColour = packet.ReadInt();
-        packet.ReadInt(); //unknown
-        var groupCost = Convert.ToInt32(_settingsManager.TryGetValue("catalog.group.purchase.cost"));
-        if (habbo.Credits < groupCost)
-        {
-            session.Send(new BroadcastMessageAlertComposer($"A group costs {groupCost} credits! You only have {habbo.Credits}!"));
-            return Task.CompletedTask;
-        }
-        habbo.Credits -= groupCost;
-        session.Send(new CreditBalanceComposer(habbo.Credits));
-        if (!RoomFactory.TryGetData(roomId, out var room))
-            return Task.CompletedTask;
-        if (room == null || room.OwnerId != habbo.Id || room.Group != null)
-            return Task.CompletedTask;
-        var badge = string.Empty;
-        for (var i = 0; i < 5; i++) badge += BadgePartUtility.WorkBadgeParts(i == 0, packet.ReadInt().ToString(), packet.ReadInt().ToString(), packet.ReadInt().ToString());
-        if (!_groupManager.TryCreateGroup(habbo, name, description, roomId, badge, mainColour, secondaryColour, out var group))
-        {
-            session.SendNotification(
-                "An error occured whilst trying to create this group.\n\nTry again. If you get this message more than once, report it at the link below.\r\rhttp://boonboards.com");
-            return Task.CompletedTask;
-        }
-        session.Send(new PurchaseOkComposer());
-        room.Group = group;
-        if (habbo.CurrentRoom != room)
-            session.Send(new RoomForwardComposer(room.Id));
-        session.Send(new NewGroupInfoComposer(roomId, group.Id));
-        return Task.CompletedTask;
+        packet.ReadInt();
+        var parts = new List<(int baseId, int firstPart, int secondPart)>(5);
+        for (var i = 0; i < 5; i++)
+            parts.Add((packet.ReadInt(), packet.ReadInt(), packet.ReadInt()));
+        return _groupService.PurchaseGroup(session, name, description, roomId, mainColour, secondaryColour, parts);
     }
 }

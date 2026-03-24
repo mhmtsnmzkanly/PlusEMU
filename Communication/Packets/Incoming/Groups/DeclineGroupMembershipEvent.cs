@@ -6,29 +6,13 @@ namespace Plus.Communication.Packets.Incoming.Groups;
 
 internal class DeclineGroupMembershipEvent : IPacketEvent
 {
-    private readonly IGroupManager _groupManager;
+    private readonly IGroupService _groupService;
 
-    public DeclineGroupMembershipEvent(IGroupManager groupManager)
+    public DeclineGroupMembershipEvent(IGroupService groupService)
     {
-        _groupManager = groupManager;
+        _groupService = groupService;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
-            return Task.CompletedTask;
-
-        var groupId = packet.ReadInt();
-        var userId = packet.ReadInt();
-        if (!_groupManager.TryGetGroup(groupId, out var group))
-            return Task.CompletedTask;
-        if (habbo.Id != group.CreatorId && !group.IsAdmin(habbo.Id))
-            return Task.CompletedTask;
-        if (!group.HasRequest(userId))
-            return Task.CompletedTask;
-        group.HandleRequest(userId, false);
-        session.Send(new UnknownGroupComposer(group.Id, userId));
-        return Task.CompletedTask;
-    }
+        => _groupService.DeclineMembership(session, packet.ReadInt(), packet.ReadInt());
 }

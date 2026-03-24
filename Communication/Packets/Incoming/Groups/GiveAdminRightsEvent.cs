@@ -8,47 +8,13 @@ namespace Plus.Communication.Packets.Incoming.Groups;
 
 internal class GiveAdminRightsEvent : IPacketEvent
 {
-    private readonly IGroupManager _groupManager;
-    private readonly IRoomManager _roomManager;
+    private readonly IGroupService _groupService;
 
-    public GiveAdminRightsEvent(IGroupManager groupManager, IRoomManager roomManager)
+    public GiveAdminRightsEvent(IGroupService groupService)
     {
-        _groupManager = groupManager;
-        _roomManager = roomManager;
+        _groupService = groupService;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
-            return Task.CompletedTask;
-
-        var groupId = packet.ReadInt();
-        var userId = packet.ReadInt();
-        if (!_groupManager.TryGetGroup(groupId, out var group))
-            return Task.CompletedTask;
-        if (habbo.Id != group.CreatorId || !group.IsMember(userId))
-            return Task.CompletedTask;
-        var targetHabbo = PlusEnvironment.GetHabboById(userId);
-        if (targetHabbo == null)
-        {
-            session.SendNotification("Oops, an error occurred whilst finding this user.");
-            return Task.CompletedTask;
-        }
-        group.MakeAdmin(userId);
-        if (_roomManager.TryGetRoom(group.RoomId, out var room))
-        {
-            var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
-            if (user != null)
-            {
-                if (!user.Statusses.ContainsKey("flatctrl 3"))
-                    user.SetStatus("flatctrl 3");
-                user.UpdateNeeded = true;
-                if (user.GetClient() != null)
-                    user.GetClient().Send(new YouAreControllerComposer(3));
-            }
-        }
-        session.Send(new GroupMemberUpdatedComposer(groupId, targetHabbo, 1));
-        return Task.CompletedTask;
-    }
+        => _groupService.GiveAdminRights(session, packet.ReadInt(), packet.ReadInt());
 }
