@@ -259,8 +259,7 @@ public class RoomUser
     {
         if (IsBot)
             return string.Empty;
-        var client = GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo();
         return habbo?.Username ?? PlusEnvironment.GetUsernameById(HabboId);
     }
 
@@ -268,8 +267,7 @@ public class RoomUser
     {
         if (!IsBot)
         {
-            var client = GetClient();
-            if (client?.GetHabbo() is { } habbo)
+            if (GetHabbo() is { } habbo)
                 habbo.TimeAfk = 0;
         }
         IdleTime = 0;
@@ -302,7 +300,7 @@ public class RoomUser
                 if (user == null || user.IsBot)
                     continue;
                 var client = user.GetClient();
-                var habbo = client?.GetHabbo();
+                var habbo = user.GetHabbo();
                 if (habbo == null)
                     continue;
                 if (!habbo.AllowPetSpeech)
@@ -317,7 +315,7 @@ public class RoomUser
                 if (user == null || user.IsBot)
                     continue;
                 var client = user.GetClient();
-                var habbo = client?.GetHabbo();
+                var habbo = user.GetHabbo();
                 if (habbo == null)
                     continue;
                 if (!habbo.AllowBotSpeech)
