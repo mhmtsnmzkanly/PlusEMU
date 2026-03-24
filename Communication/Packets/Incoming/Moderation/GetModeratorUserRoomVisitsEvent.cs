@@ -2,49 +2,19 @@
 using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Moderation;
 using Plus.HabboHotel.Rooms;
 
 namespace Plus.Communication.Packets.Incoming.Moderation;
 
 internal class GetModeratorUserRoomVisitsEvent : IPacketEvent
 {
-    private readonly IGameClientManager _clientManager;
-    private readonly IDatabase _database;
+    private readonly IModerationQueryService _moderationQueryService;
 
-    public GetModeratorUserRoomVisitsEvent(IGameClientManager clientManager, IDatabase database)
+    public GetModeratorUserRoomVisitsEvent(IModerationQueryService moderationQueryService)
     {
-        _clientManager = clientManager;
-        _database = database;
+        _moderationQueryService = moderationQueryService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (!(habbo?.Permissions?.HasRight("mod_tool") ?? false))
-            return Task.CompletedTask;
-        var userId = packet.ReadInt();
-        var target = _clientManager.GetClientByUserId(userId);
-        var targetHabbo = target?.GetHabbo();
-        if (targetHabbo == null)
-            return Task.CompletedTask;
-        var visits = new Dictionary<double, RoomData>();
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT `room_id`, `entry_timestamp` FROM `user_roomvisits` WHERE `user_id` = @id ORDER BY `entry_timestamp` DESC LIMIT 50");
-            dbClient.AddParameter("id", userId);
-            var table = dbClient.GetTable();
-            if (table != null)
-            {
-                foreach (DataRow row in table.Rows)
-                {
-                    if (!RoomFactory.TryGetData(Convert.ToUInt32(row["room_id"]), out var data))
-                        continue;
-                    if (!visits.ContainsKey(Convert.ToDouble(row["entry_timestamp"])))
-                        visits.Add(Convert.ToDouble(row["entry_timestamp"]), data);
-                }
-            }
-        }
-        session.Send(new ModeratorUserRoomVisitsComposer(targetHabbo, visits));
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _moderationQueryService.GetUserRoomVisits(session, packet.ReadInt());
 }

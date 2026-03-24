@@ -7,24 +7,12 @@ namespace Plus.Communication.Packets.Incoming.Moderation;
 
 internal class GetModeratorTicketChatlogsEvent : IPacketEvent
 {
-    private readonly IModerationManager _moderationManager;
+    private readonly IModerationQueryService _moderationQueryService;
 
-    public GetModeratorTicketChatlogsEvent(IModerationManager moderationManager)
+    public GetModeratorTicketChatlogsEvent(IModerationQueryService moderationQueryService)
     {
-        _moderationManager = moderationManager;
+        _moderationQueryService = moderationQueryService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (!(habbo?.Permissions?.HasRight("mod_tickets") ?? false))
-            return Task.CompletedTask;
-        var ticketId = packet.ReadInt();
-        if (!_moderationManager.TryGetTicket(ticketId, out var ticket) || ticket?.Room == null)
-            return Task.CompletedTask;
-        if (!RoomFactory.TryGetData(ticket.Room.Id, out var data))
-            return Task.CompletedTask;
-        session.Send(new ModeratorTicketChatlogComposer(ticket, data, ticket.Timestamp));
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _moderationQueryService.GetTicketChatlogs(session, packet.ReadInt());
 }
