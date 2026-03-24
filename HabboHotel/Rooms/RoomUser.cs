@@ -290,13 +290,15 @@ public class RoomUser
 
     public void Chat(string message, int colour = 0)
     {
-        if (GetRoom() == null)
+        var room = GetRoom();
+        if (room == null)
             return;
         if (!IsBot)
             return;
         if (IsPet)
         {
-            foreach (var user in GetRoom().GetRoomUserManager().GetUserList().ToList())
+            var roomUserManager = room.GetRoomUserManager();
+            foreach (var user in roomUserManager.GetUserList().ToList())
             {
                 if (user == null || user.IsBot)
                     continue;
@@ -310,7 +312,8 @@ public class RoomUser
         }
         else
         {
-            foreach (var user in GetRoom().GetRoomUserManager().GetUserList().ToList())
+            var roomUserManager = room.GetRoomUserManager();
+            foreach (var user in roomUserManager.GetUserList().ToList())
             {
                 if (user == null || user.IsBot)
                     continue;
@@ -364,12 +367,14 @@ public class RoomUser
     {
         var client = GetClient();
         var habbo = client?.GetHabbo();
-        if (habbo == null || _mRoom == null)
+        var room = _mRoom;
+        if (habbo == null || room == null)
             return;
-        if (_mRoom.GetWired().TriggerEvent(WiredBoxType.TriggerUserSays, habbo, message))
+        var roomUserManager = room.GetRoomUserManager();
+        if (room.GetWired().TriggerEvent(WiredBoxType.TriggerUserSays, habbo, message))
             return;
         habbo.HasSpoken = true;
-        if (_mRoom.WordFilterList.Count > 0 && habbo.Permissions != null && !habbo.Permissions.HasRight("word_filter_override")) message = _mRoom.GetFilter().CheckMessage(message);
+        if (room.WordFilterList.Count > 0 && habbo.Permissions != null && !habbo.Permissions.HasRight("word_filter_override")) message = room.GetFilter().CheckMessage(message);
         IServerPacket packet = null;
         if (shout)
             packet = new ShoutComposer(VirtualId, message, PlusEnvironment.Game.ChatManager.GetEmotions().GetEmotionsForText(message), colour);
@@ -377,9 +382,9 @@ public class RoomUser
             packet = new ChatComposer(VirtualId, message, PlusEnvironment.Game.ChatManager.GetEmotions().GetEmotionsForText(message), colour);
         if (habbo.TentId > 0)
         {
-            _mRoom.SendToTent(habbo.Id, habbo.TentId, packet);
+            room.SendToTent(habbo.Id, habbo.TentId, packet);
             packet = new WhisperComposer(VirtualId, $"[Tent Chat] {message}", 0, colour);
-            var toNotify = _mRoom.GetRoomUserManager().GetRoomUserByRank(2);
+            var toNotify = roomUserManager.GetRoomUserByRank(2);
             if (toNotify.Count > 0)
             {
                 foreach (var user in toNotify)
@@ -394,20 +399,20 @@ public class RoomUser
         }
         else
         {
-            foreach (var user in _mRoom.GetRoomUserManager().GetRoomUsers().ToList())
+            foreach (var user in roomUserManager.GetRoomUsers().ToList())
             {
                 var targetClient = user?.GetClient();
                 var targetHabbo = targetClient?.GetHabbo();
                 if (targetHabbo == null || targetHabbo.IgnoresComponent?.IsIgnored(habbo.Id) == true)
                     continue;
-                if (_mRoom.ChatDistance > 0 && Gamemap.TileDistance(X, Y, user.X, user.Y) > _mRoom.ChatDistance)
+                if (room.ChatDistance > 0 && Gamemap.TileDistance(X, Y, user.X, user.Y) > room.ChatDistance)
                     continue;
                 targetClient.Send((IServerPacket)packet);
             }
         }
         if (shout)
         {
-            foreach (var user in _mRoom.GetRoomUserManager().GetUserList().ToList())
+            foreach (var user in roomUserManager.GetUserList().ToList())
             {
                 if (!user.IsBot)
                     continue;
@@ -417,7 +422,7 @@ public class RoomUser
         }
         else
         {
-            foreach (var user in _mRoom.GetRoomUserManager().GetUserList().ToList())
+            foreach (var user in roomUserManager.GetUserList().ToList())
             {
                 if (!user.IsBot)
                     continue;
