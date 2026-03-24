@@ -7,6 +7,7 @@ using Plus.Communication.Packets.Outgoing.Rooms.Session;
 using Plus.Core;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
+using Plus.HabboHotel.Users;
 using Plus.HabboHotel.Rooms.AI;
 using Plus.HabboHotel.Rooms.Games.Teams;
 using Plus.HabboHotel.Rooms.PathFinding;
@@ -282,9 +283,7 @@ public class RoomUserManager
                     if (_room.GetTrading().TryGetTrade(user.TradeId, out trade))
                         trade.EndTrade(user.TradeId);
                 }
-
-                //Session.GetHabbo().CurrentRoomId = 0;
-                    habbo.Messenger?.NotifyChangesToFriends();
+                habbo.Messenger?.NotifyChangesToFriends();
                 using (var dbClient = PlusEnvironment.DatabaseManager.Connection())
                 {
                     dbClient.Execute("UPDATE user_roomvisits SET exit_timestamp = @exitTimestamp WHERE room_id = @roomId AND user_id = @userId ORDER BY exit_timestamp DESC LIMIT 1",
@@ -350,9 +349,9 @@ public class RoomUserManager
             {
                 if (toRemove == null)
                     continue;
-                var client = user.GetClient();
-                var habbo = client?.GetHabbo();
-                var pets = habbo?.Inventory?.Pets;
+                var userClient = user.GetClient();
+                var userHabbo = userClient?.GetHabbo();
+                var pets = userHabbo?.Inventory?.Pets;
                 if (pets == null)
                     continue;
                 if (pets.AddPet(toRemove.PetData))
@@ -418,15 +417,7 @@ public class RoomUserManager
         return user;
     }
 
-    public RoomUser GetRoomUserByHabbo(int id)
-    {
-        return GetUserList().FirstOrDefault(x =>
-        {
-            var client = x?.GetClient();
-            var habbo = client?.GetHabbo();
-            return habbo?.Id == id;
-        });
-    }
+    public RoomUser GetRoomUserByHabbo(int id) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Id == id);
 
     public List<RoomUser> GetRoomUsers()
     {
@@ -440,23 +431,14 @@ public class RoomUserManager
         var returnList = new List<RoomUser>();
         foreach (var user in GetUserList().ToList())
         {
-            var client = user?.GetClient();
-            var habbo = client?.GetHabbo();
+            var habbo = GetHabbo(user);
             if (user?.IsBot == false && habbo?.Rank >= minRank)
                 returnList.Add(user);
         }
         return returnList;
     }
 
-    public RoomUser GetRoomUserByHabbo(string pName)
-    {
-        return GetUserList().FirstOrDefault(x =>
-        {
-            var client = x?.GetClient();
-            var habbo = client?.GetHabbo();
-            return habbo?.Username.Equals(pName, StringComparison.OrdinalIgnoreCase) == true;
-        });
-    }
+    public RoomUser GetRoomUserByHabbo(string pName) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Username.Equals(pName, StringComparison.OrdinalIgnoreCase) == true);
 
     public void UpdatePets()
     {
@@ -556,11 +538,16 @@ public class RoomUserManager
             return false;
         if (user.IsBot)
             return true;
-        var client = user.GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo(user);
         if (habbo?.CurrentRoom != _room)
             return false;
         return true;
+    }
+
+    private Habbo GetHabbo(RoomUser user)
+    {
+        var client = user?.GetClient();
+        return client?.GetHabbo();
     }
 
     public void OnCycle()
