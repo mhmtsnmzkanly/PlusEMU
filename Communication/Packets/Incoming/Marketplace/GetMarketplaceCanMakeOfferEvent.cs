@@ -1,15 +1,16 @@
-﻿using Plus.Communication.Packets.Outgoing.Marketplace;
+﻿using Plus.HabboHotel.Catalog.Marketplace;
 using Plus.HabboHotel.GameClients;
 
 namespace Plus.Communication.Packets.Incoming.Marketplace;
 
 internal class GetMarketplaceCanMakeOfferEvent : IPacketEvent
 {
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    private readonly IMarketplaceService _marketplaceService;
+
+    public GetMarketplaceCanMakeOfferEvent(IMarketplaceService marketplaceService)
     {
-        var habbo = session.GetHabbo();
-        var errorCode = habbo?.TradingLockExpiry > 0 ? 6 : 1;
-        session.Send(new MarketplaceCanMakeOfferResultComposer(errorCode));
-        return Task.CompletedTask;
+        _marketplaceService = marketplaceService;
     }
+
+    public Task Parse(GameClient session, IIncomingPacket packet) => _marketplaceService.GetCanMakeOffer(session);
 }

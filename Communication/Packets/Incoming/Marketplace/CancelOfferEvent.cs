@@ -6,16 +6,12 @@ namespace Plus.Communication.Packets.Incoming.Marketplace;
 
 internal class CancelOfferEvent : IPacketEvent
 {
-    private readonly IMarketplaceManager _marketplaceManager;
+    private readonly IMarketplaceService _marketplaceService;
 
-    public CancelOfferEvent(IMarketplaceManager marketplaceManager)
+    public CancelOfferEvent(IMarketplaceService marketplaceService)
     {
-        _marketplaceManager = marketplaceManager;
+        _marketplaceService = marketplaceService;
     }
-    public async Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var offerId = packet.ReadUInt();
-        var success = await _marketplaceManager.TryCancelOffer(session.GetHabbo(), offerId);
-        session.Send(new MarketplaceCancelOfferResultComposer(offerId, success));
-    }
+
+    public Task Parse(GameClient session, IIncomingPacket packet) => _marketplaceService.CancelOffer(session, packet.ReadUInt());
 }
