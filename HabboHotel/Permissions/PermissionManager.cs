@@ -39,7 +39,7 @@ public sealed class PermissionManager : IPermissionManager
             if (getPermissions != null)
             {
                 foreach (DataRow row in getPermissions.Rows)
-                    _permissions.Add(Convert.ToInt32(row["id"]), new(Convert.ToInt32(row["id"]), Convert.ToString(row["permission"]), Convert.ToString(row["description"])));
+                    _permissions.Add(Convert.ToInt32(row["id"]), new(Convert.ToInt32(row["id"]), Convert.ToString(row["permission"]) ?? string.Empty, Convert.ToString(row["description"]) ?? string.Empty));
             }
         }
         using (var dbClient = _database.GetQueryReactor())
@@ -49,7 +49,12 @@ public sealed class PermissionManager : IPermissionManager
             if (getCommands != null)
             {
                 foreach (DataRow row in getCommands.Rows)
-                    _commands.Add(Convert.ToString(row["command"]), new(Convert.ToString(row["command"]), Convert.ToInt32(row["group_id"]), Convert.ToInt32(row["subscription_id"])));
+                {
+                    var command = Convert.ToString(row["command"]);
+                    if (string.IsNullOrEmpty(command))
+                        continue;
+                    _commands.Add(command, new(command, Convert.ToInt32(row["group_id"]), Convert.ToInt32(row["subscription_id"])));
+                }
             }
         }
         using (var dbClient = _database.GetQueryReactor())
@@ -59,7 +64,7 @@ public sealed class PermissionManager : IPermissionManager
             if (getPermissionGroups != null)
             {
                 foreach (DataRow row in getPermissionGroups.Rows)
-                    _permissionGroups.Add(Convert.ToInt32(row["id"]), new(Convert.ToString("name"), Convert.ToString("description"), Convert.ToString("badge")));
+                    _permissionGroups.Add(Convert.ToInt32(row["id"]), new(Convert.ToString(row["name"]) ?? string.Empty, Convert.ToString(row["description"]) ?? string.Empty, Convert.ToString(row["badge"]) ?? string.Empty));
             }
         }
         using (var dbClient = _database.GetQueryReactor())
@@ -73,8 +78,7 @@ public sealed class PermissionManager : IPermissionManager
                     var groupId = Convert.ToInt32(row["group_id"]);
                     var permissionId = Convert.ToInt32(row["permission_id"]);
                     if (!_permissionGroups.ContainsKey(groupId)) continue; // permission group does not exist
-                    Permission permission = null;
-                    if (!_permissions.TryGetValue(permissionId, out permission)) continue; // permission does not exist
+                    if (!_permissions.TryGetValue(permissionId, out var permission)) continue; // permission does not exist
                     if (_permissionGroupRights.ContainsKey(groupId))
                         _permissionGroupRights[groupId].Add(permission.PermissionName);
                     else
@@ -98,8 +102,7 @@ public sealed class PermissionManager : IPermissionManager
                 {
                     var permissionId = Convert.ToInt32(row["permission_id"]);
                     var subscriptionId = Convert.ToInt32(row["subscription_id"]);
-                    Permission permission = null;
-                    if (!_permissions.TryGetValue(permissionId, out permission))
+                    if (!_permissions.TryGetValue(permissionId, out var permission))
                         continue; // permission does not exist
                     if (_permissionSubscriptionRights.ContainsKey(subscriptionId))
                         _permissionSubscriptionRights[subscriptionId].Add(permission.PermissionName);
@@ -125,9 +128,9 @@ public sealed class PermissionManager : IPermissionManager
     public List<string> GetPermissionsForPlayer(Habbo player)
     {
         var permissionSet = new List<string>();
-        List<string> permRights = null;
+        List<string>? permRights = null;
         if (_permissionGroupRights.TryGetValue(player.Rank, out permRights)) permissionSet.AddRange(permRights);
-        List<string> subscriptionRights = null;
+        List<string>? subscriptionRights = null;
         if (_permissionSubscriptionRights.TryGetValue(player.VipRank, out subscriptionRights)) permissionSet.AddRange(subscriptionRights);
         return permissionSet;
     }
