@@ -121,7 +121,7 @@ internal class ModerationQueryService : IModerationQueryService
         if (!(habbo?.Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
 
-        var data = PlusEnvironment.GetHabboById(userId);
+        var data = _clientManager.GetClientByUserId(userId)?.GetHabbo();
         if (data == null)
         {
             session.SendNotification("Unable to load info for user.");
@@ -167,7 +167,7 @@ internal class ModerationQueryService : IModerationQueryService
         {
             foreach (DataRow row in data.Rows)
             {
-                var chatHabbo = PlusEnvironment.GetHabboById(Convert.ToInt32(row["user_id"]));
+                var chatHabbo = _clientManager.GetClientByUserId(Convert.ToInt32(row["user_id"]))?.GetHabbo();
                 if (chatHabbo != null)
                     chats.Add(new(Convert.ToInt32(row["user_id"]), roomId, Convert.ToString(row["message"]) ?? string.Empty, Convert.ToDouble(row["timestamp"]), chatHabbo));
             }
@@ -203,7 +203,7 @@ internal class ModerationQueryService : IModerationQueryService
         {
             foreach (DataRow row in data.Rows)
             {
-                var habbo = PlusEnvironment.GetHabboById(Convert.ToInt32(row["user_id"]));
+                var habbo = _clientManager.GetClientByUserId(Convert.ToInt32(row["user_id"]))?.GetHabbo();
                 if (habbo != null)
                     chats.Add(new(Convert.ToInt32(row["user_id"]), roomData.Id, Convert.ToString(row["message"]) ?? string.Empty, Convert.ToDouble(row["timestamp"]), habbo));
             }

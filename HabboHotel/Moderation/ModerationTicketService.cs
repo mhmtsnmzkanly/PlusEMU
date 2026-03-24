@@ -39,7 +39,7 @@ internal class ModerationTicketService : IModerationTicketService
             }
         }
 
-        var reportedUser = PlusEnvironment.GetHabboById(reportedUserId);
+        var reportedUser = _clientManager.GetClientByUserId(reportedUserId)?.GetHabbo();
         if (reportedUser == null)
             return;
 

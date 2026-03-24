@@ -105,7 +105,7 @@ internal class GroupService : IGroupService
         if (!group.HasRequest(userId))
             return Task.CompletedTask;
 
-        var targetHabbo = PlusEnvironment.GetHabboById(userId);
+        var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
             session.SendNotification("Oops, an error occurred whilst finding this user.");
@@ -201,7 +201,7 @@ internal class GroupService : IGroupService
         if (habbo.Id != group.CreatorId || !group.IsMember(userId))
             return Task.CompletedTask;
 
-        var targetHabbo = PlusEnvironment.GetHabboById(userId);
+        var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
             session.SendNotification("Oops, an error occurred whilst finding this user.");
@@ -225,7 +225,7 @@ internal class GroupService : IGroupService
         if (habbo.Id != group.CreatorId || !group.IsMember(userId))
             return Task.CompletedTask;
 
-        var targetHabbo = PlusEnvironment.GetHabboById(userId);
+        var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
             session.SendNotification("Oops, an error occurred whilst finding this user.");

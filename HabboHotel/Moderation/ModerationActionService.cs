@@ -194,7 +194,7 @@ internal class ModerationActionService : IModerationActionService
         if (days > 365)
             days = 365;
 
-        var length = PlusEnvironment.GetUnixTimestamp() + days * 86400;
+        var length = UnixTimestamp.GetNow() + days * 86400;
         using var connection = _database.Connection();
         await connection.ExecuteAsync(
             "UPDATE `user_info` SET `trading_locked` = @length, `trading_locks_count` = `trading_locks_count` + 1 WHERE `user_id` = @userId LIMIT 1",
