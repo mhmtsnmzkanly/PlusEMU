@@ -301,8 +301,8 @@ public class Item
             {
                 UpdateNeeded = false;
                 UpdateCounter = 0;
-                RoomUser user = null;
-                RoomUser user2 = null;
+                RoomUser? user = null;
+                RoomUser? user2 = null;
                 switch (Definition.InteractionType)
                 {
                     case InteractionType.GuildGate:
@@ -1010,7 +1010,7 @@ public class Item
                             foreach (var square in targetSquares.ToList())
                             {
                                 var affectedUsers = _room.GetGameMap().GetRoomUsers(square).ToList();
-                                if (affectedUsers == null || affectedUsers.Count == 0)
+                                if (affectedUsers.Count == 0)
                                     continue;
                                 foreach (var target in affectedUsers)
                                 {
@@ -1018,7 +1018,7 @@ public class Item
                                         continue;
                                     var targetClient = target.GetClient();
                                     var targetHabbo = GetHabbo(target);
-                                    if (targetHabbo == null)
+                                    if (targetHabbo == null || targetClient == null)
                                         continue;
                                     if (_room.CheckRights(targetClient, true))
                                         continue;
@@ -1099,7 +1099,7 @@ public class Item
             return _room;
         if (PlusEnvironment.Game.RoomManager.TryGetRoom(RoomId, out var room))
             return room;
-        return null;
+        return null!;
     }
 
     public void UserFurniCollision(RoomUser user)
@@ -1139,7 +1139,7 @@ public class Item
     public void Destroy()
     {
         _room = null;
-        Definition = null;
+        Definition = null!;
         GetAffectedTiles.Clear();
     }
 }
