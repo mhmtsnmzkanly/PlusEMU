@@ -132,7 +132,15 @@ public class RoomUser
 
     public bool IsPet => IsBot && BotData.IsPet;
 
-    public int CurrentEffect => GetClient()?.GetHabbo()?.Effects?.CurrentEffect ?? 0;
+    public int CurrentEffect
+    {
+        get
+        {
+            var client = GetClient();
+            var habbo = client?.GetHabbo();
+            return habbo?.Effects?.CurrentEffect ?? 0;
+        }
+    }
 
 
     public bool IsDancing
@@ -160,7 +168,8 @@ public class RoomUser
         {
             if (IsBot)
                 return false;
-            var habbo = GetClient()?.GetHabbo();
+            var client = GetClient();
+            var habbo = client?.GetHabbo();
             if (habbo == null)
                 return true;
             if (habbo.Permissions != null && habbo.Permissions.HasRight("mod_tool") || GetRoom().OwnerId == HabboId)
@@ -251,14 +260,19 @@ public class RoomUser
     {
         if (IsBot)
             return string.Empty;
-        return GetClient()?.GetHabbo()?.Username ?? PlusEnvironment.GetUsernameById(HabboId);
+        var client = GetClient();
+        var habbo = client?.GetHabbo();
+        return habbo?.Username ?? PlusEnvironment.GetUsernameById(HabboId);
     }
 
     public void UnIdle()
     {
         if (!IsBot)
-            if (GetClient()?.GetHabbo() is { } habbo)
+        {
+            var client = GetClient();
+            if (client?.GetHabbo() is { } habbo)
                 habbo.TimeAfk = 0;
+        }
         IdleTime = 0;
         if (IsAsleep)
         {
@@ -322,7 +336,8 @@ public class RoomUser
     public bool IncrementAndCheckFlood(out int muteTime)
     {
         muteTime = 0;
-        var habbo = GetClient()?.GetHabbo();
+        var client = GetClient();
+        var habbo = client?.GetHabbo();
         if (habbo?.Permissions == null)
             return false;
         ChatSpamCount++;
@@ -535,7 +550,9 @@ public class RoomUser
             _mRoom.SendPacket(new AvatarEffectComposer(VirtualId, effectId));
             return;
         }
-        var effects = GetClient()?.GetHabbo()?.Effects;
+        var client = GetClient();
+        var habbo = client?.GetHabbo();
+        var effects = habbo?.Effects;
         if (effects == null)
             return;
         effects.ApplyEffect(effectId);
