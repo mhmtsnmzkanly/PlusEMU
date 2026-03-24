@@ -447,11 +447,12 @@ public class Room : RoomData
         var habbo = session.GetHabbo();
         if (habbo == null)
             return false;
+        var habboId = habbo.Id;
 
-        if (MutedUsers.ContainsKey(habbo.Id))
+        if (MutedUsers.ContainsKey(habboId))
         {
-            if (MutedUsers[habbo.Id] < UnixTimestamp.GetNow())
-                MutedUsers.Remove(habbo.Id);
+            if (MutedUsers[habboId] < UnixTimestamp.GetNow())
+                MutedUsers.Remove(habboId);
             else
                 return true;
         }
