@@ -31,7 +31,9 @@ public class ModeratorRoomChatlogComposer : IServerPacket
         foreach (var entry in _chats)
         {
             var username = "Unknown";
-            if (entry.PlayerNullable() != null) username = entry.PlayerNullable().Username;
+            var player = entry.PlayerNullable();
+            if (player != null)
+                username = player.Username ?? "Unknown";
             packet.WriteString(UnixTimestamp.FromUnixTimestamp(entry.Timestamp).ToShortTimeString()); // time?
             packet.WriteInteger(entry.PlayerId); // User Id
             packet.WriteString(username); // Username

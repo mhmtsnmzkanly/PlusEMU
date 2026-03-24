@@ -37,7 +37,9 @@ public class ModeratorUserChatlogComposer : IServerPacket
             foreach (var entry in chatlog.Value)
             {
                 var username = "NOT FOUND";
-                if (entry.PlayerNullable() != null) username = entry.PlayerNullable().Username;
+                var player = entry.PlayerNullable();
+                if (player != null)
+                    username = player.Username ?? "NOT FOUND";
                 packet.WriteString(UnixTimestamp.FromUnixTimestamp(entry.Timestamp).ToShortTimeString());
                 packet.WriteInteger(entry.PlayerId); // UserId of message
                 packet.WriteString(username); // Username of message

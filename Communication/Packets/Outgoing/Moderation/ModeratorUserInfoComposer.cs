@@ -20,8 +20,8 @@ public class ModeratorUserInfoComposer : IServerPacket
     {
         var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(Convert.ToDouble(_info["trading_locked"]));
         packet.WriteInteger(_user != null ? Convert.ToInt32(_user["id"]) : 0);
-        packet.WriteString(_user != null ? Convert.ToString(_user["username"]) : "Unknown");
-        packet.WriteString(_user != null ? Convert.ToString(_user["look"]) : "Unknown");
+        packet.WriteString(_user != null ? Convert.ToString(_user["username"]) ?? "Unknown" : "Unknown");
+        packet.WriteString(_user != null ? Convert.ToString(_user["look"]) ?? "Unknown" : "Unknown");
         packet.WriteInteger(_user != null ? Convert.ToInt32(Math.Ceiling((UnixTimestamp.GetNow() - Convert.ToDouble(_user["account_created"])) / 60)) : 0);
         packet.WriteInteger(_user != null ? Convert.ToInt32(Math.Ceiling((UnixTimestamp.GetNow() - Convert.ToDouble(_user["last_online"])) / 60)) : 0);
         packet.WriteBoolean(_user != null ? PlusEnvironment.Game.ClientManager.GetClientByUserId(Convert.ToInt32(_user["id"])) != null : false);
@@ -34,7 +34,7 @@ public class ModeratorUserInfoComposer : IServerPacket
         packet.WriteString(""); //Purchases
         packet.WriteInteger(0); //Itendity information tool
         packet.WriteInteger(0); //Id bans.
-        packet.WriteString(_user != null ? Convert.ToString(_user["mail"]) : "Unknown");
+        packet.WriteString(_user != null ? Convert.ToString(_user["mail"]) ?? "Unknown" : "Unknown");
         packet.WriteString(""); //user_classification
     }
 }

@@ -17,7 +17,7 @@ public class MarketPlaceOwnOffersComposer : IServerPacket
     public void Compose(IOutgoingPacket packet)
     {
         var i = 0;
-        DataTable table = null;
+        DataTable? table = null;
         using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
         dbClient.SetQuery($"SELECT timestamp, state, offer_id, item_type, sprite_id, total_price, limited_number, limited_stack FROM catalog_marketplace_offers WHERE user_id = '{_userId}'");
         table = dbClient.GetTable();
@@ -30,7 +30,7 @@ public class MarketPlaceOwnOffersComposer : IServerPacket
             foreach (DataRow row in table.Rows)
             {
                 var num2 = Convert.ToInt32(Math.Floor(((double)row["timestamp"] + 172800.0 - UnixTimestamp.GetNow()) / 60.0));
-                var num3 = int.Parse(row["state"].ToString());
+                var num3 = int.Parse(Convert.ToString(row["state"]) ?? "0");
                 if (num2 <= 0 && num3 != 2)
                 {
                     num3 = 3;

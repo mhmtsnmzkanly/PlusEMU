@@ -21,10 +21,10 @@ public class ModeratorRoomInfoComposer : IServerPacket
         packet.WriteInteger(_data.UsersNow);
         packet.WriteBoolean(_ownerInRoom); // owner in room
         packet.WriteInteger(_data.OwnerId);
-        packet.WriteString(_data.OwnerName);
-        packet.WriteBoolean(_data != null);
-        packet.WriteString(_data.Name);
-        packet.WriteString(_data.Description);
+        packet.WriteString(_data.OwnerName ?? string.Empty);
+        packet.WriteBoolean(true);
+        packet.WriteString(_data.Name ?? string.Empty);
+        packet.WriteString(_data.Description ?? string.Empty);
         packet.WriteInteger(_data.Tags.Count);
         foreach (var tag in _data.Tags) packet.WriteString(tag);
         packet.WriteBoolean(false);

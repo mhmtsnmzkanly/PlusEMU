@@ -30,7 +30,8 @@ public class GroupInfoComposer : IServerPacket
         packet.WriteString(_group.Description);
         packet.WriteString(_group.Badge);
         packet.WriteUInteger(_group.RoomId);
-        packet.WriteString(_group.GetRoom() != null ? _group.GetRoom().Name : "No room found.."); // room name
+        var room = _group.GetRoom();
+        packet.WriteString(room?.Name ?? "No room found.."); // room name
         packet.WriteInteger(_group.CreatorId == habboId ? 3 : _group.HasRequest(habboId) ? 2 : _group.IsMember(habboId) ? 1 : 0);
         packet.WriteInteger(_group.MemberCount); // Members
         packet.WriteBoolean(false); //?? CHANGED
@@ -44,6 +45,6 @@ public class GroupInfoComposer : IServerPacket
             _group.IsAdmin(habboId) ? _group.RequestCount :
             _group.IsMember(habboId) ? 0 : 0); // Pending users
         //base.WriteInteger(0);//what the fuck
-        packet.WriteBoolean(_group?.ForumEnabled ?? true); //HabboTalk.
+        packet.WriteBoolean(_group.ForumEnabled); //HabboTalk.
     }
 }
