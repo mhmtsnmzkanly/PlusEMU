@@ -263,7 +263,9 @@ public class RoomUserManager
                     {
                         team.OnUserLeave(user);
                         user.Team = Team.None;
-                        var effects = user.GetClient()?.GetHabbo()?.Effects;
+                        var userClient = user.GetClient();
+                        var userHabbo = userClient?.GetHabbo();
+                        var effects = userHabbo?.Effects;
                         if (effects != null && effects.CurrentEffect != 0)
                             effects.ApplyEffect(0);
                     }
@@ -348,7 +350,8 @@ public class RoomUserManager
             {
                 if (toRemove == null)
                     continue;
-                var habbo = user.GetClient()?.GetHabbo();
+                var client = user.GetClient();
+                var habbo = client?.GetHabbo();
                 var pets = habbo?.Inventory?.Pets;
                 if (pets == null)
                     continue;
@@ -417,7 +420,12 @@ public class RoomUserManager
 
     public RoomUser GetRoomUserByHabbo(int id)
     {
-        return GetUserList().FirstOrDefault(x => x?.GetClient()?.GetHabbo()?.Id == id);
+        return GetUserList().FirstOrDefault(x =>
+        {
+            var client = x?.GetClient();
+            var habbo = client?.GetHabbo();
+            return habbo?.Id == id;
+        });
     }
 
     public List<RoomUser> GetRoomUsers()
@@ -432,7 +440,9 @@ public class RoomUserManager
         var returnList = new List<RoomUser>();
         foreach (var user in GetUserList().ToList())
         {
-            if (user?.IsBot == false && user.GetClient()?.GetHabbo()?.Rank >= minRank)
+            var client = user?.GetClient();
+            var habbo = client?.GetHabbo();
+            if (user?.IsBot == false && habbo?.Rank >= minRank)
                 returnList.Add(user);
         }
         return returnList;
@@ -440,7 +450,12 @@ public class RoomUserManager
 
     public RoomUser GetRoomUserByHabbo(string pName)
     {
-        return GetUserList().FirstOrDefault(x => x?.GetClient()?.GetHabbo()?.Username.Equals(pName, StringComparison.OrdinalIgnoreCase) == true);
+        return GetUserList().FirstOrDefault(x =>
+        {
+            var client = x?.GetClient();
+            var habbo = client?.GetHabbo();
+            return habbo?.Username.Equals(pName, StringComparison.OrdinalIgnoreCase) == true;
+        });
     }
 
     public void UpdatePets()
@@ -541,7 +556,9 @@ public class RoomUserManager
             return false;
         if (user.IsBot)
             return true;
-        if (user.GetClient()?.GetHabbo()?.CurrentRoom != _room)
+        var client = user.GetClient();
+        var habbo = client?.GetHabbo();
+        if (habbo?.CurrentRoom != _room)
             return false;
         return true;
     }
@@ -1107,7 +1124,8 @@ public class RoomUserManager
 
     private void UpdateUserEffect(RoomUser user, int x, int y)
     {
-        var habbo = user?.GetClient()?.GetHabbo();
+        var client = user?.GetClient();
+        var habbo = client?.GetHabbo();
         var effects = habbo?.Effects;
         if (user == null || user.IsBot || effects == null)
             return;
