@@ -547,7 +547,7 @@ public class Room : RoomData
         {
             var client = user?.GetClient();
             var habbo = GetHabbo(user);
-            if (habbo == null || habbo.IgnoresComponent?.IsIgnored(id) == true || habbo.TentId != tentId)
+            if (client == null || habbo == null || habbo.IgnoresComponent?.IsIgnored(id) == true || habbo.TentId != tentId)
                 continue;
             client.Send(packet);
         }
@@ -572,6 +572,8 @@ public class Room : RoomData
             var users = roomUserManager.GetUserList().ToList();
             foreach (var user in users)
             {
+                if (user == null)
+                    continue;
                 var client = user?.GetClient();
                 if (client == null || user.IsBot)
                     continue;

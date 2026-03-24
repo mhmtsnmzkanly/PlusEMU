@@ -19,8 +19,7 @@ public class AmbassadorsManager : IAmbassadorsManager
     public async Task Warn(Habbo ambassador, Habbo target, string message)
     {
         var ambassadorClient = ambassador.Client;
-        var ambassadorHabbo = ambassadorClient?.GetHabbo();
-        if (ambassadorHabbo == null || !ambassadorHabbo.IsAmbassador)
+        if (ambassadorClient?.GetHabbo() is not { IsAmbassador: true })
             return;
 
         var targetClient = target.Client;

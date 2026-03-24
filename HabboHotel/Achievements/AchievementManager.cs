@@ -36,6 +36,8 @@ public class AchievementManager : IAchievementManager, IStartable
         var data = Achievements[group];
         if (data == null) return false;
         var habbo = session.GetHabbo();
+        if (habbo == null)
+            return false;
         var userData = habbo.GetAchievementData(group);
         if (userData == null)
         {
@@ -63,8 +65,9 @@ public class AchievementManager : IAchievementManager, IStartable
             newLevel++;
             newTarget++;
             newProgress = 0;
-            if (targetLevel != 1)
-                habbo.Inventory.Badges.RemoveBadge(group + (targetLevel - 1));
+            var badges = habbo.Inventory?.Badges;
+            if (targetLevel != 1 && badges != null)
+                badges.RemoveBadge(group + (targetLevel - 1));
             _badgeManager.GiveBadge(habbo, group + targetLevel).Wait();
             if (newTarget > totalLevels) newTarget = totalLevels;
             session.Send(new AchievementUnlockedComposer(data, targetLevel, level.RewardPoints, level.RewardPixels));

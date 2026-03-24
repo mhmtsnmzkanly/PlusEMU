@@ -37,6 +37,8 @@ public class CacheManager : ICacheManager
     {
         if (TryGetUser(id, out var cachedUser))
         {
+            if (cachedUser == null)
+                return null;
             cachedUser.AddedTime = DateTime.UtcNow;
             return cachedUser;
         }
