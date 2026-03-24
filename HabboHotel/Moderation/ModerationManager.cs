@@ -1,12 +1,66 @@
 ﻿using System.Collections.Concurrent;
-using System.Data;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
+using Plus.Utilities;
 
 namespace Plus.HabboHotel.Moderation;
 
 public sealed class ModerationManager : IModerationManager
 {
+    private sealed class ModerationPresetRow
+    {
+        public string Type { get; init; } = string.Empty;
+        public string Message { get; init; } = string.Empty;
+    }
+
+    private sealed class ModerationTopicRow
+    {
+        public int Id { get; init; }
+        public string Caption { get; init; } = string.Empty;
+    }
+
+    private sealed class ModerationTopicActionRow
+    {
+        public int Id { get; init; }
+        public int ParentId { get; init; }
+        public string Type { get; init; } = string.Empty;
+        public string Caption { get; init; } = string.Empty;
+        public string MessageText { get; init; } = string.Empty;
+        public int MuteTime { get; init; }
+        public int BanTime { get; init; }
+        public int IpTime { get; init; }
+        public int TradeLockTime { get; init; }
+        public string DefaultSanction { get; init; } = string.Empty;
+    }
+
+    private sealed class ModerationPresetActionCategoryRow
+    {
+        public int Id { get; init; }
+        public string Caption { get; init; } = string.Empty;
+    }
+
+    private sealed class ModerationPresetActionMessageRow
+    {
+        public int Id { get; init; }
+        public int ParentId { get; init; }
+        public string Caption { get; init; } = string.Empty;
+        public string MessageText { get; init; } = string.Empty;
+        public int MuteHours { get; init; }
+        public int BanHours { get; init; }
+        public int IpBanHours { get; init; }
+        public int TradeLockDays { get; init; }
+        public string Notice { get; init; } = string.Empty;
+    }
+
+    private sealed class ModerationBanRow
+    {
+        public string BanType { get; init; } = string.Empty;
+        public string Value { get; init; } = string.Empty;
+        public string Reason { get; init; } = string.Empty;
+        public double Expire { get; init; }
+    }
+
     private readonly IDatabase _database;
     private readonly ILogger<ModerationManager> _logger;
     private readonly Dictionary<string, ModerationBan> _bans = new();
@@ -58,119 +112,85 @@ public sealed class ModerationManager : IModerationManager
             _moderationCfhTopics.Clear();
         if (_moderationCfhTopicActions.Count > 0)
             _moderationCfhTopicActions.Clear();
+        if (_userActionPresetCategories.Count > 0)
+            _userActionPresetCategories.Clear();
+        if (_userActionPresetMessages.Count > 0)
+            _userActionPresetMessages.Clear();
+        if (_roomPresets.Count > 0)
+            _roomPresets.Clear();
         if (_bans.Count > 0)
             _bans.Clear();
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            DataTable? presetsTable = null;
-            dbClient.SetQuery("SELECT * FROM `moderation_presets`;");
-            presetsTable = dbClient.GetTable();
-            if (presetsTable != null)
+            foreach (var row in connection.Query<ModerationPresetRow>(
+                         "SELECT `type` AS Type, `message` AS Message FROM `moderation_presets`"))
             {
-                foreach (DataRow row in presetsTable.Rows)
+                switch (row.Type.ToLower())
                 {
-                    var type = (Convert.ToString(row["type"]) ?? string.Empty).ToLower();
-                    switch (type)
-                    {
-                        case "user":
-                            _userPresets.Add(Convert.ToString(row["message"]) ?? string.Empty);
-                            break;
-                        case "room":
-                            _roomPresets.Add(Convert.ToString(row["message"]) ?? string.Empty);
-                            break;
-                    }
+                    case "user":
+                        _userPresets.Add(row.Message);
+                        break;
+                    case "room":
+                        _roomPresets.Add(row.Message);
+                        break;
                 }
             }
-        }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            DataTable? moderationTopics = null;
-            dbClient.SetQuery("SELECT * FROM `moderation_topics`;");
-            moderationTopics = dbClient.GetTable();
-            if (moderationTopics != null)
+
+            foreach (var row in connection.Query<ModerationTopicRow>(
+                         "SELECT `id` AS Id, `caption` AS Caption FROM `moderation_topics`"))
             {
-                foreach (DataRow row in moderationTopics.Rows)
-                {
-                    if (!_moderationCfhTopics.ContainsKey(Convert.ToInt32(row["id"])))
-                        _moderationCfhTopics.Add(Convert.ToInt32(row["id"]), Convert.ToString(row["caption"]) ?? string.Empty);
-                }
+                if (!_moderationCfhTopics.ContainsKey(row.Id))
+                    _moderationCfhTopics.Add(row.Id, row.Caption);
             }
-        }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            DataTable? moderationTopicsActions = null;
-            dbClient.SetQuery("SELECT * FROM `moderation_topic_actions`;");
-            moderationTopicsActions = dbClient.GetTable();
-            if (moderationTopicsActions != null)
+
+            foreach (var row in connection.Query<ModerationTopicActionRow>(
+                         """
+                         SELECT
+                             `id` AS Id,
+                             `parent_id` AS ParentId,
+                             `type` AS Type,
+                             `caption` AS Caption,
+                             `message_text` AS MessageText,
+                             `mute_time` AS MuteTime,
+                             `ban_time` AS BanTime,
+                             `ip_time` AS IpTime,
+                             `trade_lock_time` AS TradeLockTime,
+                             `default_sanction` AS DefaultSanction
+                         FROM `moderation_topic_actions`
+                         """))
             {
-                foreach (DataRow row in moderationTopicsActions.Rows)
-                {
-                    var parentId = Convert.ToInt32(row["parent_id"]);
-                    if (!_moderationCfhTopicActions.ContainsKey(parentId)) _moderationCfhTopicActions.Add(parentId, new());
-                    _moderationCfhTopicActions[parentId].Add(new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["parent_id"]), Convert.ToString(row["type"]) ?? string.Empty,
-                        Convert.ToString(row["caption"]) ?? string.Empty, Convert.ToString(row["message_text"]) ?? string.Empty,
-                        Convert.ToInt32(row["mute_time"]), Convert.ToInt32(row["ban_time"]), Convert.ToInt32(row["ip_time"]), Convert.ToInt32(row["trade_lock_time"]),
-                        Convert.ToString(row["default_sanction"]) ?? string.Empty));
-                }
+                if (!_moderationCfhTopicActions.ContainsKey(row.ParentId)) _moderationCfhTopicActions.Add(row.ParentId, new());
+                _moderationCfhTopicActions[row.ParentId].Add(new(row.Id, row.ParentId, row.Type, row.Caption, row.MessageText,
+                    row.MuteTime, row.BanTime, row.IpTime, row.TradeLockTime, row.DefaultSanction));
             }
-        }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            DataTable? presetsActionCats = null;
-            dbClient.SetQuery("SELECT * FROM `moderation_preset_action_categories`;");
-            presetsActionCats = dbClient.GetTable();
-            if (presetsActionCats != null)
-                foreach (DataRow row in presetsActionCats.Rows)
-                    _userActionPresetCategories.Add(Convert.ToInt32(row["id"]), Convert.ToString(row["caption"]) ?? string.Empty);
-        }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            DataTable? presetsActionMessages = null;
-            dbClient.SetQuery("SELECT * FROM `moderation_preset_action_messages`;");
-            presetsActionMessages = dbClient.GetTable();
-            if (presetsActionMessages != null)
+
+            foreach (var row in connection.Query<ModerationPresetActionCategoryRow>(
+                         "SELECT `id` AS Id, `caption` AS Caption FROM `moderation_preset_action_categories`"))
             {
-                foreach (DataRow row in presetsActionMessages.Rows)
-                {
-                    var parentId = Convert.ToInt32(row["parent_id"]);
-                    if (!_userActionPresetMessages.ContainsKey(parentId)) _userActionPresetMessages.Add(parentId, new());
-                    _userActionPresetMessages[parentId].Add(new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["parent_id"]), Convert.ToString(row["caption"]) ?? string.Empty,
-                        Convert.ToString(row["message_text"]) ?? string.Empty,
-                        Convert.ToInt32(row["mute_hours"]), Convert.ToInt32(row["ban_hours"]), Convert.ToInt32(row["ip_ban_hours"]), Convert.ToInt32(row["trade_lock_days"]),
-                        Convert.ToString(row["notice"]) ?? string.Empty));
-                }
+                _userActionPresetCategories[row.Id] = row.Caption;
             }
-        }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            DataTable? getBans = null;
-            dbClient.SetQuery("SELECT `bantype`,`value`,`reason`,`expire` FROM `bans` WHERE `bantype` = 'machine' OR `bantype` = 'user'");
-            getBans = dbClient.GetTable();
-            if (getBans != null)
+
+            foreach (var row in connection.Query<ModerationPresetActionMessageRow>(
+                         """
+                         SELECT
+                             `id` AS Id,
+                             `parent_id` AS ParentId,
+                             `caption` AS Caption,
+                             `message_text` AS MessageText,
+                             `mute_hours` AS MuteHours,
+                             `ban_hours` AS BanHours,
+                             `ip_ban_hours` AS IpBanHours,
+                             `trade_lock_days` AS TradeLockDays,
+                             `notice` AS Notice
+                         FROM `moderation_preset_action_messages`
+                         """))
             {
-                foreach (DataRow dRow in getBans.Rows)
-                {
-                    var value = Convert.ToString(dRow["value"]) ?? string.Empty;
-                    var reason = Convert.ToString(dRow["reason"]) ?? string.Empty;
-                    var expires = Convert.ToDouble(dRow["expire"]);
-                    var type = Convert.ToString(dRow["bantype"]) ?? string.Empty;
-                    var ban = new ModerationBan(BanTypeUtility.GetModerationBanType(type), value, reason, expires);
-                    if (ban != null)
-                    {
-                        if (expires > PlusEnvironment.GetUnixTimestamp())
-                        {
-                            if (!_bans.ContainsKey(value))
-                                _bans.Add(value, ban);
-                        }
-                        else
-                        {
-                            dbClient.SetQuery($"DELETE FROM `bans` WHERE `bantype` = '{BanTypeUtility.FromModerationBanType(ban.Type)}' AND `value` = @Key LIMIT 1");
-                            dbClient.AddParameter("Key", value);
-                            dbClient.RunQuery();
-                        }
-                    }
-                }
+                if (!_userActionPresetMessages.ContainsKey(row.ParentId)) _userActionPresetMessages.Add(row.ParentId, new());
+                _userActionPresetMessages[row.ParentId].Add(new(row.Id, row.ParentId, row.Caption, row.MessageText,
+                    row.MuteHours, row.BanHours, row.IpBanHours, row.TradeLockDays, row.Notice));
             }
+
+            RebuildBanCache(connection);
         }
         _logger.LogInformation("Loaded " + (_userPresets.Count + _roomPresets.Count) + " moderation presets.");
         _logger.LogInformation("Loaded " + _userActionPresetCategories.Count + " moderation categories.");
@@ -182,50 +202,29 @@ public sealed class ModerationManager : IModerationManager
     {
         if (_bans.Count > 0)
             _bans.Clear();
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            DataTable? getBans = null;
-            dbClient.SetQuery("SELECT `bantype`,`value`,`reason`,`expire` FROM `bans` WHERE `bantype` = 'machine' OR `bantype` = 'user'");
-            getBans = dbClient.GetTable();
-            if (getBans != null)
-            {
-                foreach (DataRow dRow in getBans.Rows)
-                {
-                    var value = Convert.ToString(dRow["value"]) ?? string.Empty;
-                    var reason = Convert.ToString(dRow["reason"]) ?? string.Empty;
-                    var expires = (double)dRow["expire"];
-                    var type = Convert.ToString(dRow["bantype"]) ?? string.Empty;
-                    var ban = new ModerationBan(BanTypeUtility.GetModerationBanType(type), value, reason, expires);
-                    if (ban != null)
-                    {
-                        if (expires > PlusEnvironment.GetUnixTimestamp())
-                        {
-                            if (!_bans.ContainsKey(value))
-                                _bans.Add(value, ban);
-                        }
-                        else
-                        {
-                            dbClient.SetQuery($"DELETE FROM `bans` WHERE `bantype` = '{BanTypeUtility.FromModerationBanType(ban.Type)}' AND `value` = @Key LIMIT 1");
-                            dbClient.AddParameter("Key", value);
-                            dbClient.RunQuery();
-                        }
-                    }
-                }
-            }
-        }
+        using (var connection = _database.Connection())
+            RebuildBanCache(connection);
         _logger.LogInformation("Cached " + _bans.Count + " username and machine bans.");
     }
 
     public void BanUser(string mod, ModerationBanType type, string banValue, string reason, double expireTimestamp)
     {
         var banType = type == ModerationBanType.Ip ? "ip" : type == ModerationBanType.Machine ? "machine" : "user";
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery(
-                $"REPLACE INTO `bans` (`bantype`, `value`, `reason`, `expire`, `added_by`,`added_date`) VALUES ('{banType}', '{banValue}', @reason, {expireTimestamp}, '{mod}', '{PlusEnvironment.GetUnixTimestamp()}');");
-            dbClient.AddParameter("reason", reason);
-            dbClient.RunQuery();
-        }
+        using (var connection = _database.Connection())
+            connection.Execute(
+                """
+                REPLACE INTO `bans` (`bantype`, `value`, `reason`, `expire`, `added_by`, `added_date`)
+                VALUES (@banType, @banValue, @reason, @expireTimestamp, @mod, @addedDate)
+                """,
+                new
+                {
+                    banType,
+                    banValue,
+                    reason,
+                    expireTimestamp,
+                    mod,
+                    addedDate = UnixTimestamp.GetNow()
+                });
         if (type == ModerationBanType.Machine || type == ModerationBanType.Username)
         {
             if (!_bans.ContainsKey(banValue))
@@ -259,12 +258,10 @@ public sealed class ModerationManager : IModerationManager
                 return true;
 
             //This ban has expired, let us quickly remove it here.
-            using (var dbClient = _database.GetQueryReactor())
-            {
-                dbClient.SetQuery($"DELETE FROM `bans` WHERE `bantype` = '{BanTypeUtility.FromModerationBanType(ban.Type)}' AND `value` = @Key LIMIT 1");
-                dbClient.AddParameter("Key", key);
-                dbClient.RunQuery();
-            }
+            using (var connection = _database.Connection())
+                connection.Execute(
+                    "DELETE FROM `bans` WHERE `bantype` = @banType AND `value` = @key LIMIT 1",
+                    new { banType = BanTypeUtility.FromModerationBanType(ban.Type), key });
 
             //And finally, let us remove the ban record from the cache.
             _bans.Remove(key);
@@ -282,14 +279,13 @@ public sealed class ModerationManager : IModerationManager
     {
         if (IsBanned(machineId, out var machineBanRecord))
         {
-            DataRow? banRow = null;
-            using var dbClient = _database.GetQueryReactor();
-            dbClient.SetQuery("SELECT * FROM `bans` WHERE `bantype` = 'machine' AND `value` = @value LIMIT 1");
-            dbClient.AddParameter("value", machineId);
-            banRow = dbClient.GetRow();
+            using var connection = _database.Connection();
+            var banExists = connection.ExecuteScalar<int>(
+                "SELECT 1 FROM `bans` WHERE `bantype` = 'machine' AND `value` = @value LIMIT 1",
+                new { value = machineId });
 
             //If there is no more ban record, then we can simply remove it from our cache!
-            if (banRow == null)
+            if (banExists == 0)
             {
                 RemoveBan(machineId);
                 return false;
@@ -308,14 +304,13 @@ public sealed class ModerationManager : IModerationManager
     {
         if (IsBanned(username, out var usernameBanRecord))
         {
-            DataRow? banRow = null;
-            using var dbClient = _database.GetQueryReactor();
-            dbClient.SetQuery("SELECT * FROM `bans` WHERE `bantype` = 'user' AND `value` = @value LIMIT 1");
-            dbClient.AddParameter("value", username);
-            banRow = dbClient.GetRow();
+            using var connection = _database.Connection();
+            var banExists = connection.ExecuteScalar<int>(
+                "SELECT 1 FROM `bans` WHERE `bantype` = 'user' AND `value` = @value LIMIT 1",
+                new { value = username });
 
             //If there is no more ban record, then we can simply remove it from our cache!
-            if (banRow == null)
+            if (banExists == 0)
             {
                 RemoveBan(username);
                 return false;
@@ -332,5 +327,25 @@ public sealed class ModerationManager : IModerationManager
     public void RemoveBan(string value)
     {
         _bans.Remove(value);
+    }
+
+    private void RebuildBanCache(System.Data.IDbConnection connection)
+    {
+        foreach (var row in connection.Query<ModerationBanRow>(
+                     "SELECT `bantype` AS BanType, `value` AS Value, `reason` AS Reason, `expire` AS Expire FROM `bans` WHERE `bantype` = 'machine' OR `bantype` = 'user'"))
+        {
+            var ban = new ModerationBan(BanTypeUtility.GetModerationBanType(row.BanType), row.Value, row.Reason, row.Expire);
+            if (row.Expire > UnixTimestamp.GetNow())
+            {
+                if (!_bans.ContainsKey(row.Value))
+                    _bans.Add(row.Value, ban);
+            }
+            else
+            {
+                connection.Execute(
+                    "DELETE FROM `bans` WHERE `bantype` = @banType AND `value` = @key LIMIT 1",
+                    new { banType = BanTypeUtility.FromModerationBanType(ban.Type), key = row.Value });
+            }
+        }
     }
 }
