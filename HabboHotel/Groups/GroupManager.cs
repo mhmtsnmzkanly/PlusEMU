@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Data;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 using Plus.HabboHotel.Rooms;
@@ -10,6 +10,30 @@ namespace Plus.HabboHotel.Groups;
 
 public class GroupManager : IGroupManager
 {
+    private sealed class GroupItemRow
+    {
+        public int Id { get; init; }
+        public string Type { get; init; } = string.Empty;
+        public string FirstValue { get; init; } = string.Empty;
+        public string SecondValue { get; init; } = string.Empty;
+    }
+
+    private sealed class GroupRow
+    {
+        public int Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Desc { get; init; } = string.Empty;
+        public string Badge { get; init; } = string.Empty;
+        public uint RoomId { get; init; }
+        public int OwnerId { get; init; }
+        public int Created { get; init; }
+        public int State { get; init; }
+        public int Colour1 { get; init; }
+        public int Colour2 { get; init; }
+        public int AdminDeco { get; init; }
+        public int ForumEnabled { get; init; }
+    }
+
     private readonly ILogger<GroupManager> _logger;
     private readonly IDatabase _database;
     private readonly Dictionary<int, GroupColours> _backgroundColours;
@@ -53,32 +77,36 @@ public class GroupManager : IGroupManager
         _baseColours.Clear();
         _symbolColours.Clear();
         _backgroundColours.Clear();
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("SELECT `id`,`type`,`firstvalue`,`secondvalue` FROM `groups_items` WHERE `enabled` = '1'");
-        var groupItems = dbClient.GetTable();
-        if (groupItems == null)
-            return;
+        using var connection = _database.Connection();
+        var groupItems = connection.Query<GroupItemRow>(
+            """
+            SELECT
+                `id` AS Id,
+                `type` AS Type,
+                `firstvalue` AS FirstValue,
+                `secondvalue` AS SecondValue
+            FROM `groups_items`
+            WHERE `enabled` = '1'
+            """);
 
-        foreach (DataRow groupItem in groupItems.Rows)
+        foreach (var groupItem in groupItems)
         {
-            var firstValue = Convert.ToString(groupItem["firstvalue"]) ?? string.Empty;
-            var secondValue = Convert.ToString(groupItem["secondvalue"]) ?? string.Empty;
-            switch (groupItem["type"].ToString())
+            switch (groupItem.Type)
             {
                 case "base":
-                    _bases.Add(new(Convert.ToInt32(groupItem["id"]), firstValue, secondValue));
+                    _bases.Add(new(groupItem.Id, groupItem.FirstValue, groupItem.SecondValue));
                     break;
                 case "symbol":
-                    _symbols.Add(new(Convert.ToInt32(groupItem["id"]), firstValue, secondValue));
+                    _symbols.Add(new(groupItem.Id, groupItem.FirstValue, groupItem.SecondValue));
                     break;
                 case "color":
-                    _baseColours.Add(new(Convert.ToInt32(groupItem["id"]), firstValue));
+                    _baseColours.Add(new(groupItem.Id, groupItem.FirstValue));
                     break;
                 case "color2":
-                    _symbolColours.Add(Convert.ToInt32(groupItem["id"]), new(Convert.ToInt32(groupItem["id"]), firstValue));
+                    _symbolColours.Add(groupItem.Id, new(groupItem.Id, groupItem.FirstValue));
                     break;
                 case "color3":
-                    _backgroundColours.Add(Convert.ToInt32(groupItem["id"]), new(Convert.ToInt32(groupItem["id"]), firstValue));
+                    _backgroundColours.Add(groupItem.Id, new(groupItem.Id, groupItem.FirstValue));
                     break;
             }
         }
@@ -93,17 +121,34 @@ public class GroupManager : IGroupManager
         {
             if (_groups.ContainsKey(id))
                 return _groups.TryGetValue(id, out group!);
-            using var dbClient = _database.GetQueryReactor();
-            dbClient.SetQuery("SELECT * FROM `groups` WHERE `id` = @id LIMIT 1");
-            dbClient.AddParameter("id", id);
-            var row = dbClient.GetRow();
+            using var connection = _database.Connection();
+            var row = connection.QueryFirstOrDefault<GroupRow>(
+                """
+                SELECT
+                    `id` AS Id,
+                    `name` AS Name,
+                    `desc` AS `Desc`,
+                    `badge` AS Badge,
+                    `room_id` AS RoomId,
+                    `owner_id` AS OwnerId,
+                    `created` AS Created,
+                    `state` AS State,
+                    `colour1` AS Colour1,
+                    `colour2` AS Colour2,
+                    `admindeco` AS AdminDeco,
+                    `forum_enabled` AS ForumEnabled
+                FROM `groups`
+                WHERE `id` = @id
+                LIMIT 1
+                """,
+                new { id });
             if (row != null)
             {
                 group = new(
-                    Convert.ToInt32(row["id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToString(row["desc"]) ?? string.Empty, Convert.ToString(row["badge"]) ?? string.Empty, Convert.ToUInt32(row["room_id"]),
-                    Convert.ToInt32(row["owner_id"]),
-                    Convert.ToInt32(row["created"]), Convert.ToInt32(row["state"]), Convert.ToInt32(row["colour1"]), Convert.ToInt32(row["colour2"]), Convert.ToInt32(row["admindeco"]),
-                    Convert.ToInt32(row["forum_enabled"]) == 1);
+                    row.Id, row.Name, row.Desc, row.Badge, row.RoomId,
+                    row.OwnerId,
+                    row.Created, row.State, row.Colour1, row.Colour2, row.AdminDeco,
+                    row.ForumEnabled == 1);
                 _groups.TryAdd(group.Id, group);
                 return true;
             }
@@ -116,26 +161,33 @@ public class GroupManager : IGroupManager
         group = new(0, name, description, badge, roomId, player.Id, (int)UnixTimestamp.GetNow(), 0, colour1, colour2, 0, false);
         if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(badge))
             return false;
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery(
-            "INSERT INTO `groups` (`name`, `desc`, `badge`, `owner_id`, `created`, `room_id`, `state`, `colour1`, `colour2`, `admindeco`) VALUES (@name, @desc, @badge, @owner, UNIX_TIMESTAMP(), @room, '0', @colour1, @colour2, '0')");
-        dbClient.AddParameter("name", group.Name);
-        dbClient.AddParameter("desc", group.Description);
-        dbClient.AddParameter("owner", group.CreatorId);
-        dbClient.AddParameter("badge", group.Badge);
-        dbClient.AddParameter("room", group.RoomId);
-        dbClient.AddParameter("colour1", group.Colour1);
-        dbClient.AddParameter("colour2", group.Colour2);
-        group.Id = Convert.ToInt32(dbClient.InsertQuery());
+        using var connection = _database.Connection();
+        group.Id = Convert.ToInt32(connection.ExecuteScalar<long>(
+            """
+            INSERT INTO `groups` (`name`, `desc`, `badge`, `owner_id`, `created`, `room_id`, `state`, `colour1`, `colour2`, `admindeco`)
+            VALUES (@name, @desc, @badge, @owner, UNIX_TIMESTAMP(), @room, '0', @colour1, @colour2, '0');
+            SELECT LAST_INSERT_ID();
+            """,
+            new
+            {
+                name = group.Name,
+                desc = group.Description,
+                owner = group.CreatorId,
+                badge = group.Badge,
+                room = group.RoomId,
+                colour1 = group.Colour1,
+                colour2 = group.Colour2
+            }));
         group.AddMember(player.Id);
         group.MakeAdmin(player.Id);
         if (!_groups.TryAdd(group.Id, group))
             return false;
-        dbClient.SetQuery("UPDATE `rooms` SET `group_id` = @gid WHERE `id` = @rid LIMIT 1");
-        dbClient.AddParameter("gid", group.Id);
-        dbClient.AddParameter("rid", group.RoomId);
-        dbClient.RunQuery();
-        dbClient.RunQuery($"DELETE FROM `room_rights` WHERE `room_id` = '{roomId}'");
+        connection.Execute(
+            "UPDATE `rooms` SET `group_id` = @gid WHERE `id` = @rid LIMIT 1",
+            new { gid = group.Id, rid = group.RoomId });
+        connection.Execute(
+            "DELETE FROM `room_rights` WHERE `room_id` = @roomId",
+            new { roomId });
         return true;
     }
 
@@ -163,17 +215,14 @@ public class GroupManager : IGroupManager
     public List<Group> GetGroupsForUser(int userId)
     {
         var groups = new List<Group>();
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("SELECT g.id FROM `group_memberships` AS m RIGHT JOIN `groups` AS g ON m.group_id = g.id WHERE m.user_id = @user");
-        dbClient.AddParameter("user", userId);
-        var getGroups = dbClient.GetTable();
-        if (getGroups != null)
+        using var connection = _database.Connection();
+        var groupIds = connection.Query<int>(
+            "SELECT g.id FROM `group_memberships` AS m RIGHT JOIN `groups` AS g ON m.group_id = g.id WHERE m.user_id = @user",
+            new { user = userId });
+        foreach (var groupId in groupIds)
         {
-            foreach (DataRow row in getGroups.Rows)
-            {
-                if (TryGetGroup(Convert.ToInt32(row["id"]), out var group))
-                    groups.Add(group);
-            }
+            if (TryGetGroup(groupId, out var group))
+                groups.Add(group);
         }
         return groups;
     }
