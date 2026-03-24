@@ -16,7 +16,8 @@ internal class SuperPushCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        if (!room.SuperPushEnabled && !room.CheckRights(session, true) && !session.GetHabbo().Permissions.HasRight("room_override_custom_config"))
+        var habbo = session.GetHabbo();
+        if (!room.SuperPushEnabled && !room.CheckRights(session, true) && !(habbo?.Permissions?.HasRight("room_override_custom_config") ?? false))
         {
             session.SendWhisper("Oops, it appears that the room owner has disabled the ability to use the push command in here.");
             return Task.CompletedTask;
@@ -27,7 +28,7 @@ internal class SuperPushCommand : ITargetChatCommand
             session.SendWhisper("An error occoured whilst finding that user, maybe they're not online or in this room.");
             return Task.CompletedTask;
         }
-        if (target == session.GetHabbo())
+        if (target == habbo)
         {
             session.SendWhisper("Come on, surely you don't want to push yourself!");
             return Task.CompletedTask;
@@ -37,7 +38,7 @@ internal class SuperPushCommand : ITargetChatCommand
             session.SendWhisper("Oops, you cannot push a user whilst they have their teleport mode enabled.");
             return Task.CompletedTask;
         }
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var thisUser = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (thisUser == null)
             return Task.CompletedTask;
         if (!(Math.Abs(targetUser.X - thisUser.X) >= 2 || Math.Abs(targetUser.Y - thisUser.Y) >= 2))

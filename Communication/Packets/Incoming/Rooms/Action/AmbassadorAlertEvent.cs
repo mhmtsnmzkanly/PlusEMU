@@ -13,6 +13,8 @@ internal class AmbassadorAlertEvent : IPacketEvent
     {
         var userid = packet.ReadInt();
         var target = PlusEnvironment.GetHabboById(userid);
+        if (target == null)
+            return;
 
         await _ambassadorsManager.Warn(session.GetHabbo(), target, "Alert");
     }

@@ -29,7 +29,11 @@ internal class BuyOfferEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var offerId = packet.ReadInt();
-        DataRow row;
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
+        if (habbo == null || furniture == null)
+            return Task.CompletedTask;
+        DataRow? row;
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery(
@@ -61,23 +65,24 @@ internal class BuyOfferEvent : IPacketEvent
             return Task.CompletedTask;
         }
         {
-            if (Convert.ToInt32(row["user_id"]) == session.GetHabbo().Id)
+            if (Convert.ToInt32(row["user_id"]) == habbo.Id)
             {
                 session.SendNotification("To prevent average boosting you cannot purchase your own marketplace offers.");
                 return Task.CompletedTask;
             }
-            if (Convert.ToInt32(row["total_price"]) > session.GetHabbo().Credits)
+            if (Convert.ToInt32(row["total_price"]) > habbo.Credits)
             {
                 session.SendNotification("Oops, you do not have enough credits for this.");
                 return Task.CompletedTask;
             }
-            session.GetHabbo().Credits -= Convert.ToInt32(row["total_price"]);
-            session.Send(new CreditBalanceComposer(session.GetHabbo().Credits));
-            var giveItem = _itemFactory.CreateSingleItem(item, session.GetHabbo(), Convert.ToString(row["extra_data"]), Convert.ToString(row["extra_data"]), Convert.ToUInt32(row["furni_id"]),
+            habbo.Credits -= Convert.ToInt32(row["total_price"]);
+            session.Send(new CreditBalanceComposer(habbo.Credits));
+            var extraData = Convert.ToString(row["extra_data"]) ?? string.Empty;
+            var giveItem = _itemFactory.CreateSingleItem(item, habbo, extraData, extraData, Convert.ToUInt32(row["furni_id"]),
                 Convert.ToUInt32(row["limited_number"]), Convert.ToUInt32(row["limited_stack"])).ToInventoryItem();
             if (giveItem != null)
             {
-                session.GetHabbo().Inventory.Furniture.AddItem(giveItem);
+                furniture.AddItem(giveItem);
                 session.Send(new FurniListNotificationComposer(giveItem.Id, 1));
                 session.Send(new PurchaseOkComposer());
                 session.Send(new FurniListAddComposer(giveItem));
@@ -121,7 +126,7 @@ internal class BuyOfferEvent : IPacketEvent
         var maxCost = -1;
         var searchQuery = "";
         var filterMode = 1;
-        DataTable table = null;
+        DataTable? table = null;
         var builder = new StringBuilder();
         string str;
         builder.Append($"WHERE `state` = '1' AND `timestamp` >= {_marketplace.FormatTimestampString()}");
@@ -151,7 +156,7 @@ internal class BuyOfferEvent : IPacketEvent
             {
                 if (!_marketplace.MarketItemKeys.Contains(Convert.ToInt32(row["offer_id"])))
                 {
-                    var item = new MarketOffer(Convert.ToUInt32(row["offer_id"]), Convert.ToUInt32(row["sprite_id"]), Convert.ToInt32(row["total_price"]), int.Parse(row["item_type"].ToString()),
+                    var item = new MarketOffer(Convert.ToUInt32(row["offer_id"]), Convert.ToUInt32(row["sprite_id"]), Convert.ToInt32(row["total_price"]), int.Parse(row["item_type"].ToString() ?? "0"),
                         Convert.ToUInt32(row["limited_number"]), Convert.ToUInt32(row["limited_stack"]));
                     _marketplace.MarketItemKeys.Add(Convert.ToInt32(row["offer_id"]));
                     _marketplace.MarketItems.Add(item);

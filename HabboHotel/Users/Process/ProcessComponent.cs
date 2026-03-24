@@ -25,12 +25,12 @@ internal sealed class ProcessComponent
     /// <summary>
     /// Player to update, handle, change etc.
     /// </summary>
-    private Habbo _player;
+    private Habbo? _player;
 
     /// <summary>
     /// ThreadPooled Timer.
     /// </summary>
-    private Timer _timer;
+    private Timer? _timer;
 
 #pragma warning disable CS0414 // The field 'ProcessComponent._timerLagging' is assigned but its value is never used
     /// <summary>
@@ -63,11 +63,13 @@ internal sealed class ProcessComponent
     /// Called for each time the timer ticks.
     /// </summary>
     /// <param name="state"></param>
-    public void Run(object state)
+    public void Run(object? state)
     {
         try
         {
             if (_disabled)
+                return;
+            if (_player == null)
                 return;
             if (_timerRunning)
             {

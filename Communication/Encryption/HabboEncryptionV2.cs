@@ -8,8 +8,8 @@ namespace Plus.Communication.Encryption;
 
 public static class HabboEncryptionV2
 {
-    private static RsaKey _rsa;
-    private static DiffieHellman _diffieHellman;
+    private static RsaKey? _rsa;
+    private static DiffieHellman? _diffieHellman;
 
     public static void Initialize(RsaKeys keys)
     {
@@ -19,6 +19,8 @@ public static class HabboEncryptionV2
 
     private static string GetRsaStringEncrypted(string message)
     {
+        if (_rsa == null)
+            return "0";
         try
         {
             var m = Encoding.Default.GetBytes(message);
@@ -33,24 +35,32 @@ public static class HabboEncryptionV2
 
     public static string GetRsaDiffieHellmanPrimeKey()
     {
+        if (_diffieHellman == null)
+            return "0";
         var key = _diffieHellman.Prime.ToString(10);
         return GetRsaStringEncrypted(key);
     }
 
     public static string GetRsaDiffieHellmanGeneratorKey()
     {
+        if (_diffieHellman == null)
+            return "0";
         var key = _diffieHellman.Generator.ToString(10);
         return GetRsaStringEncrypted(key);
     }
 
     public static string GetRsaDiffieHellmanPublicKey()
     {
+        if (_diffieHellman == null)
+            return "0";
         var key = _diffieHellman.PublicKey.ToString(10);
         return GetRsaStringEncrypted(key);
     }
 
     public static BigInteger CalculateDiffieHellmanSharedKey(string publicKey)
     {
+        if (_rsa == null || _diffieHellman == null)
+            return 0;
         try
         {
             var cbytes = Converter.HexStringToBytes(publicKey);

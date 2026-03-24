@@ -20,12 +20,16 @@ internal class UpdateGroupColoursEvent : IPacketEvent
     }
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         var mainColour = packet.ReadInt();
         var secondaryColour = packet.ReadInt();
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        if (group.CreatorId != session.GetHabbo().Id)
+        if (group.CreatorId != habbo.Id)
             return Task.CompletedTask;
         using (var connection = _database.Connection())
         {
@@ -35,16 +39,17 @@ internal class UpdateGroupColoursEvent : IPacketEvent
         group.Colour1 = mainColour;
         group.Colour2 = secondaryColour;
         session.Send(new GroupInfoComposer(group, session));
-        if (session.GetHabbo().CurrentRoom != null)
+        var currentRoom = habbo.CurrentRoom;
+        if (currentRoom != null)
         {
-            foreach (var item in session.GetHabbo().CurrentRoom.GetRoomItemHandler().GetFloor.ToList())
+            foreach (var item in currentRoom.GetRoomItemHandler().GetFloor.ToList())
             {
                 if (item == null || item.Definition== null)
                     continue;
                 if (item.Definition.InteractionType != InteractionType.GuildItem && item.Definition.InteractionType != InteractionType.GuildGate ||
                     item.Definition.InteractionType != InteractionType.GuildForum)
                     continue;
-                session.GetHabbo().CurrentRoom.SendPacket(new ObjectUpdateComposer(item));
+                currentRoom.SendPacket(new ObjectUpdateComposer(item));
             }
         }
         return Task.CompletedTask;

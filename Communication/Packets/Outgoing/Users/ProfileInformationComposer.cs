@@ -26,29 +26,31 @@ public class ProfileInformationComposer : IServerPacket
 
     public void Compose(IOutgoingPacket packet)
     {
+        var sessionHabbo = _session.GetHabbo();
         var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(_habbo.AccountCreated);
+        var messenger = sessionHabbo?.Messenger;
         packet.WriteInteger(_habbo.Id);
-        packet.WriteString(_habbo.Username);
-        packet.WriteString(_habbo.Look);
-        packet.WriteString(_habbo.Motto);
+        packet.WriteString(_habbo.Username ?? string.Empty);
+        packet.WriteString(_habbo.Look ?? string.Empty);
+        packet.WriteString(_habbo.Motto ?? string.Empty);
         packet.WriteString(origin.ToString("dd/MM/yyyy"));
         packet.WriteInteger(_habboStats?.AchievementPoints ?? 0);
         packet.WriteInteger(_friendCount); // Friend Count
-        packet.WriteBoolean(_habbo.Id != _session.GetHabbo().Id && _session.GetHabbo().Messenger.FriendshipExists(_habbo.Id)); //  Is friend
-        packet.WriteBoolean(_habbo.Id != _session.GetHabbo().Id && !_session.GetHabbo().Messenger.FriendshipExists(_habbo.Id) &&
-                            _session.GetHabbo().Messenger.OutstandingFriendRequests.Contains(_habbo.Id)); // Sent friend request
+        packet.WriteBoolean(_habbo.Id != (sessionHabbo?.Id ?? 0) && (messenger?.FriendshipExists(_habbo.Id) ?? false)); //  Is friend
+        packet.WriteBoolean(_habbo.Id != (sessionHabbo?.Id ?? 0) && !(messenger?.FriendshipExists(_habbo.Id) ?? false) &&
+                            (messenger?.OutstandingFriendRequests.Contains(_habbo.Id) ?? false)); // Sent friend request
         packet.WriteBoolean(PlusEnvironment.Game.ClientManager.GetClientByUserId(_habbo.Id) != null);
         packet.WriteInteger(_groups.Count);
         foreach (var group in _groups)
         {
             packet.WriteInteger(group.Id);
-            packet.WriteString(group.Name);
-            packet.WriteString(group.Badge);
+            packet.WriteString(group.Name ?? string.Empty);
+            packet.WriteString(group.Badge ?? string.Empty);
             packet.WriteString(PlusEnvironment.Game.GroupManager.GetColourCode(group.Colour1, true));
             packet.WriteString(PlusEnvironment.Game.GroupManager.GetColourCode(group.Colour2, false));
             packet.WriteBoolean(_habboStats?.FavouriteGroupId == group.Id); // todo favs
             packet.WriteInteger(0); //what the fuck
-            packet.WriteBoolean(group?.ForumEnabled ?? true); //HabboTalk
+            packet.WriteBoolean(group.ForumEnabled); //HabboTalk
         }
         packet.WriteInteger(Convert.ToInt32(UnixTimestamp.GetNow() - _habbo.LastOnline)); // Last online
         packet.WriteBoolean(true); // Show the profile

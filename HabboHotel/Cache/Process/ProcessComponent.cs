@@ -31,15 +31,10 @@ public sealed class ProcessComponent : IProcessComponent
     /// <summary>
     /// ThreadPooled Timer.
     /// </summary>
-    private Timer _timer;
+    private Timer? _timer;
 
     /// <summary>
     /// Checks if the timer is lagging behind (server can't keep up).
-    /// </summary>
-    private bool _timerLagging;
-
-    /// <summary>
-    /// Prevents the timer from overlapping itself.
     /// </summary>
     private bool _timerRunning;
 
@@ -55,7 +50,7 @@ public sealed class ProcessComponent : IProcessComponent
     /// Called for each time the timer ticks.
     /// </summary>
     /// <param name="state"></param>
-    public void Run(object state)
+    public void Run(object? state)
     {
         try
         {
@@ -63,7 +58,7 @@ public sealed class ProcessComponent : IProcessComponent
                 return;
             if (_timerRunning)
             {
-                _timerLagging = true;
+                _logger.LogWarning("Cache process timer is lagging behind.");
                 return;
             }
             _resetEvent.Reset();
@@ -96,7 +91,7 @@ public sealed class ProcessComponent : IProcessComponent
                     {
                         if (data == null)
                             continue;
-                        Habbo temp = null;
+                        Habbo? temp = null;
                         if (data.CacheExpired())
                             PlusEnvironment.RemoveFromCache(data.Id, out temp);
                         if (temp != null)
@@ -112,7 +107,6 @@ public sealed class ProcessComponent : IProcessComponent
 
             // Reset the values
             _timerRunning = false;
-            _timerLagging = false;
             _resetEvent.Set();
         }
         catch (Exception e)

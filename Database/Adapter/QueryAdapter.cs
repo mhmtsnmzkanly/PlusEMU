@@ -8,7 +8,7 @@ namespace Plus.Database.Adapter;
 public class QueryAdapter : IRegularQueryAdapter
 {
     protected IDatabaseClient Client;
-    protected MySqlCommand Command;
+    protected MySqlCommand Command = null!;
 
     public bool DbEnabled = true;
 
@@ -55,7 +55,7 @@ public class QueryAdapter : IRegularQueryAdapter
     public DataRow GetRow
         ()
     {
-        DataRow row = null;
+        DataRow? row = null;
         try
         {
             var dataSet = new DataSet();
@@ -69,7 +69,7 @@ public class QueryAdapter : IRegularQueryAdapter
         {
             ExceptionLogger.LogQueryError(Command.CommandText, exception);
         }
-        return row;
+        return row!;
     }
 
     public string GetString()
@@ -78,7 +78,7 @@ public class QueryAdapter : IRegularQueryAdapter
         try
         {
             var obj2 = Command.ExecuteScalar();
-            if (obj2 != null) str = obj2.ToString();
+            if (obj2 != null) str = obj2.ToString() ?? string.Empty;
         }
         catch (Exception exception)
         {

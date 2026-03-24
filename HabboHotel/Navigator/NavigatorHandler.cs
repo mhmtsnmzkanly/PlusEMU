@@ -11,6 +11,10 @@ internal static class NavigatorHandler
     {
         if (session == null)
             return;
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
         switch (result.CategoryType)
         {
             default:
@@ -131,7 +135,7 @@ internal static class NavigatorHandler
             }
             case NavigatorCategoryType.MyRooms:
             {
-                ICollection<RoomData> rooms = RoomFactory.GetRoomsDataByOwnerSortByName(session.GetHabbo().Id).OrderByDescending(x => x.UsersNow).ToList();
+                ICollection<RoomData> rooms = RoomFactory.GetRoomsDataByOwnerSortByName(habbo.Id).OrderByDescending(x => x.UsersNow).ToList();
                 packet.WriteInteger(rooms.Count);
                 foreach (var data in rooms.ToList()) RoomAppender.WriteRoom(packet, data, data.Promotion);
                 break;
@@ -139,7 +143,7 @@ internal static class NavigatorHandler
             case NavigatorCategoryType.MyFavourites:
             {
                 var favourites = new List<RoomData>();
-                foreach (var id in session.GetHabbo().FavoriteRooms.ToArray())
+                foreach (var id in habbo.FavoriteRooms.ToArray())
                 {
                     RoomData data = null;
                     if (!RoomFactory.TryGetData((uint)id, out data))
@@ -155,7 +159,7 @@ internal static class NavigatorHandler
             case NavigatorCategoryType.MyGroups:
             {
                 var myGroups = new List<RoomData>();
-                foreach (var group in PlusEnvironment.Game.GroupManager.GetGroupsForUser(session.GetHabbo().Id).ToList())
+                foreach (var group in PlusEnvironment.Game.GroupManager.GetGroupsForUser(habbo.Id).ToList())
                 {
                     if (group == null)
                         continue;
@@ -173,11 +177,11 @@ internal static class NavigatorHandler
             case NavigatorCategoryType.MyFriendsRooms:
             {
                 var roomIds = new List<uint>();
-                if (session == null || session.GetHabbo() == null || session.GetHabbo().Messenger == null)
+                if (habbo.Messenger == null)
                     return;
-                foreach (var buddy in session.GetHabbo().Messenger.Friends.Values.Where(p => p.InRoom))
+                foreach (var buddy in habbo.Messenger.Friends.Values.Where(p => p.InRoom))
                 {
-                    if (buddy == null || !buddy.InRoom || buddy.Id == session.GetHabbo().Id)
+                    if (buddy == null || !buddy.InRoom || buddy.Id == habbo.Id)
                         continue;
                     if (!roomIds.Contains(buddy.CurrentRoom.Id))
                         roomIds.Add(buddy.CurrentRoom.Id);
@@ -191,11 +195,10 @@ internal static class NavigatorHandler
             case NavigatorCategoryType.MyRights:
             {
                 var myRights = new List<RoomData>();
-                if (session != null)
+                using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
                 {
-                    using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
                     dbClient.SetQuery("SELECT `room_id` FROM `room_rights` WHERE `user_id` = @UserId LIMIT @FetchLimit");
-                    dbClient.AddParameter("UserId", session.GetHabbo().Id);
+                    dbClient.AddParameter("UserId", habbo.Id);
                     dbClient.AddParameter("FetchLimit", limit);
                     var getRights = dbClient.GetTable();
                     foreach (DataRow row in getRights.Rows)

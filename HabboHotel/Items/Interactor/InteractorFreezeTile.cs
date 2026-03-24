@@ -12,15 +12,16 @@ internal class InteractorFreezeTile : IFurniInteractor
 
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
-        if (session == null || !session.GetHabbo().InRoom || item == null || item.InteractingUser > 0)
+        var habbo = session?.GetHabbo();
+        if (habbo == null || !habbo.InRoom || item == null || item.InteractingUser > 0)
             return;
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         if (user.Team != Team.None)
         {
             user.FreezeInteracting = true;
-            item.InteractingUser = session.GetHabbo().Id;
+            item.InteractingUser = habbo.Id;
             if (item.Definition.InteractionType == InteractionType.FreezeTileBlock)
             {
                 if (Gamemap.TileDistance(user.X, user.Y, item.GetX, item.GetY) < 2)

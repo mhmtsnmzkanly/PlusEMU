@@ -56,9 +56,9 @@ public class CacheManager : ICacheManager
         return cachedUser;
     }
 
-    public bool TryRemoveUser(int id, out CachedUser cachedUser) => _usersCached.TryRemove(id, out cachedUser);
+    public bool TryRemoveUser(int id, out CachedUser? cachedUser) => _usersCached.TryRemove(id, out cachedUser);
 
-    public bool TryGetUser(int id, out CachedUser cachedUser) => _usersCached.TryGetValue(id, out cachedUser);
+    public bool TryGetUser(int id, out CachedUser? cachedUser) => _usersCached.TryGetValue(id, out cachedUser);
 
     public ICollection<CachedUser> GetUserCache() => _usersCached.Values;
 }

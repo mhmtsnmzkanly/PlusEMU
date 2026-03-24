@@ -16,18 +16,22 @@ public class AddFavouriteRoomEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var roomId = packet.ReadUInt();
         if (!RoomFactory.TryGetData(roomId, out var data))
             return Task.CompletedTask;
-        if (data == null || session.GetHabbo().FavoriteRooms.Count >= 30 || session.GetHabbo().FavoriteRooms.Contains(roomId))
+        if (data == null || habbo.FavoriteRooms.Count >= 30 || habbo.FavoriteRooms.Contains(roomId))
         {
             // send packet that favourites is full.
             return Task.CompletedTask;
         }
-        session.GetHabbo().FavoriteRooms.Add(roomId);
+        habbo.FavoriteRooms.Add(roomId);
         session.Send(new UpdateFavouriteRoomComposer(roomId, true));
         using var dbClient = _database.GetQueryReactor();
-        dbClient.RunQuery($"INSERT INTO user_favorites (user_id,room_id) VALUES ({session.GetHabbo().Id},{roomId})");
+        dbClient.RunQuery($"INSERT INTO user_favorites (user_id,room_id) VALUES ({habbo.Id},{roomId})");
         return Task.CompletedTask;
     }
 }

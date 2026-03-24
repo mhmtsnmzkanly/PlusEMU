@@ -34,7 +34,7 @@ public sealed class PacketManager : IPacketManager, IDisposable
                 _logger.LogWarning("No incoming header defined for {packet}", packet.GetType().Name);
                 continue;
             }
-            var header = (uint) field.GetValue(null);
+            var header = (uint)field.GetValue(null)!;
             _incomingPackets.Add(header, packet);
             _packetNames.Add(header, packet.GetType().Name);
             if (packet.GetType().GetCustomAttribute<NoAuthenticationRequiredAttribute>() != null)

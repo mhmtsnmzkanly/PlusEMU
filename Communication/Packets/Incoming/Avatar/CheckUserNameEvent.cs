@@ -1,5 +1,4 @@
 ﻿using Plus.Communication.Packets.Outgoing.Users;
-using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms.Chat.Filter;
 using Plus.HabboHotel.Users.UserData;
@@ -10,17 +9,16 @@ internal class CheckUserNameEvent : IPacketEvent
 {
     private readonly IUserDataFactory _userDataFactory;
     private readonly IWordFilterManager _wordFilterManager;
-    private readonly IDatabase _database;
-
-    public CheckUserNameEvent(IUserDataFactory userDataFactory, IWordFilterManager wordFilterManager, IDatabase database)
+    public CheckUserNameEvent(IUserDataFactory userDataFactory, IWordFilterManager wordFilterManager)
     {
         _userDataFactory = userDataFactory;
         _wordFilterManager = wordFilterManager;
-        _database = database;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
         var name = packet.ReadString();
         var inUse = await _userDataFactory.HabboExists(name);
         var letters = name.ToLower().ToCharArray();
@@ -35,13 +33,13 @@ internal class CheckUserNameEvent : IPacketEvent
             session.Send(new NameChangeUpdateComposer(name, 4));
             return;
         }
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool") && name.ToLower().Contains("mod") || name.ToLower().Contains("adm") || name.ToLower().Contains("admin") ||
+        if (!(permissions?.HasRight("mod_tool") ?? false) && name.ToLower().Contains("mod") || name.ToLower().Contains("adm") || name.ToLower().Contains("admin") ||
             name.ToLower().Contains("m0d"))
         {
             session.Send(new NameChangeUpdateComposer(name, 4));
             return;
         }
-        if (!name.ToLower().Contains("mod") && (session.GetHabbo().Rank == 2 || session.GetHabbo().Rank == 3))
+        if (!name.ToLower().Contains("mod") && (habbo?.Rank == 2 || habbo?.Rank == 3))
         {
             session.Send(new NameChangeUpdateComposer(name, 4));
             return;

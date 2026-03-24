@@ -20,7 +20,12 @@ internal class BubbleCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
+        if (habbo == null)
+            return;
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         if (parameters.Length == 0)
@@ -33,13 +38,13 @@ internal class BubbleCommand : IChatCommand
             session.SendWhisper("Please enter a valid number.");
             return;
         }
-        if (!_chatStyleManager.TryGetStyle(bubble, out var style) || style.RequiredRight.Length > 0 && !session.GetHabbo().Permissions.HasRight(style.RequiredRight))
+        if (!_chatStyleManager.TryGetStyle(bubble, out var style) || style.RequiredRight.Length > 0 && !(permissions?.HasRight(style.RequiredRight) ?? false))
         {
             session.SendWhisper("Oops, you cannot use this bubble due to a rank requirement, sorry!");
             return;
         }
         user.LastBubble = bubble;
-        session.GetHabbo().CustomBubbleId = bubble;
+        habbo.CustomBubbleId = bubble;
         session.SendWhisper($"Bubble set to: {bubble}");
     }
 }

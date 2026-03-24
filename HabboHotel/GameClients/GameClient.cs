@@ -28,9 +28,9 @@ public abstract class GameClient
     [Obsolete("Will be removed")]
     public int PingCount { get; set; }
 
-    public Revision Revision { get; set; }
+    public Revision Revision { get; set; } = null!;
 
-    internal Func<SocketAsyncEventArgs, bool> SendCallback { get; set; }
+    internal Func<SocketAsyncEventArgs, bool> SendCallback { get; set; } = _ => false;
     internal Action? DisconnectRequested { get; set; }
 
     public Guid Id { get; set; }

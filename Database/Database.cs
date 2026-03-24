@@ -61,7 +61,7 @@ public sealed class Database : IDatabase
         catch (Exception e)
         {
             ExceptionLogger.LogException(e);
-            return null;
+            return null!;
         }
     }
 

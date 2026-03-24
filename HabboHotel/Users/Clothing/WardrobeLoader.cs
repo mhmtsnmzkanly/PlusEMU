@@ -37,12 +37,12 @@ public class WardrobeLoader : IWardrobeLoader
 
 public class Wardrobe
 {
-    public List<SavedLook> SavedLooks { get; set; }
+    public List<SavedLook> SavedLooks { get; set; } = new();
 }
 
 public class SavedLook
 {
     public int SlotId { get; set; }
-    public string Look { get; set; }
-    public string Gender { get; set; }
+    public string Look { get; set; } = string.Empty;
+    public string Gender { get; set; } = string.Empty;
 }

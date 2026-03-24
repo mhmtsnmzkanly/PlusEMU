@@ -14,7 +14,8 @@ internal class ModerationTradeLockEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_trade_lock"))
+        var sessionHabbo = session.GetHabbo();
+        if (!(sessionHabbo.Permissions?.HasRight("mod_trade_lock") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         var message = packet.ReadString();
@@ -28,7 +29,7 @@ internal class ModerationTradeLockEvent : IPacketEvent
             session.SendWhisper("An error occoured whilst finding that user in the database.");
             return Task.CompletedTask;
         }
-        if (habbo.Permissions.HasRight("mod_trade_lock") && !session.GetHabbo().Permissions.HasRight("mod_trade_lock_any"))
+        if ((habbo.Permissions?.HasRight("mod_trade_lock") ?? false) && !(sessionHabbo.Permissions?.HasRight("mod_trade_lock_any") ?? false))
         {
             session.SendWhisper("Oops, you cannot trade lock another user ranked 5 or higher.");
             return Task.CompletedTask;

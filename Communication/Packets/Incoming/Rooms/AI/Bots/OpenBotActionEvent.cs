@@ -7,11 +7,12 @@ internal class OpenBotActionEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
         var botId = packet.ReadInt();
         var actionId = packet.ReadInt();
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         if (!room.GetRoomUserManager().TryGetBot(botId, out var botUser))

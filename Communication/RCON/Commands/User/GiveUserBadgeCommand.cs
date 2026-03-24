@@ -24,16 +24,17 @@ internal class GiveUserBadgeCommand : IRconCommand
         if (!int.TryParse(parameters[0], out var userId))
             return false;
         var client = _gameClientManager.GetClientByUserId(userId);
-        if (client == null || client.GetHabbo() == null)
+        var habbo = client?.GetHabbo();
+        if (habbo == null)
             return false;
 
         // Validate the badge
-        if (string.IsNullOrEmpty(Convert.ToString(parameters[1])))
-            return false;
         var badge = Convert.ToString(parameters[1]);
-        if (!client.GetHabbo().Inventory.Badges.HasBadge(badge))
+        if (string.IsNullOrEmpty(badge))
+            return false;
+        if (!habbo.Inventory.Badges.HasBadge(badge))
         {
-            await _badgeManager.GiveBadge(client.GetHabbo(), badge);
+            await _badgeManager.GiveBadge(habbo, badge);
             client.Send(new BroadcastMessageAlertComposer("You have been given a new badge!"));
         }
         return true;

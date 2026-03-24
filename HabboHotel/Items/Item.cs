@@ -416,12 +416,12 @@ public class Item
                                     {
                                         var roomHopId = ItemHopperFinder.GetAHopper(user.RoomId); // TODO @80O: Remove cast
                                         var nextHopperId = ItemHopperFinder.GetHopperId(roomHopId);
-                                        if (!user.IsBot && user.GetClient() != null &&
-                                            user.GetClient().GetHabbo() != null)
+                                        var habbo = user.GetClient()?.GetHabbo();
+                                        if (!user.IsBot && habbo != null)
                                         {
-                                            user.GetClient().GetHabbo().IsHopping = true;
-                                            user.GetClient().GetHabbo().HopperId = nextHopperId;
-                                            user.GetClient().GetHabbo().PrepareRoom(roomHopId, "");
+                                            habbo.IsHopping = true;
+                                            habbo.HopperId = nextHopperId;
+                                            habbo.PrepareRoom(roomHopId, "");
                                             //User.GetClient().SendMessage(new RoomForwardComposer(RoomHopId));
                                             InteractingUser = 0;
                                         }
@@ -565,13 +565,13 @@ public class Item
                                                 if (user.TeleDelay == 0)
                                                 {
                                                     // Let's run the teleport delegate to take futher care of this.. WHY DARIO?!
-                                                    if (!user.IsBot && user != null && user.GetClient() != null &&
-                                                        user.GetClient().GetHabbo() != null)
+                                                    var habbo = user?.GetClient()?.GetHabbo();
+                                                    if (!user.IsBot && habbo != null)
                                                     {
-                                                        user.GetClient().GetHabbo().IsTeleporting = true;
-                                                        user.GetClient().GetHabbo().TeleportingRoomId = roomId;
-                                                        user.GetClient().GetHabbo().TeleporterId = teleId;
-                                                        user.GetClient().GetHabbo().PrepareRoom(roomId, "");
+                                                        habbo.IsTeleporting = true;
+                                                        habbo.TeleportingRoomId = roomId;
+                                                        habbo.TeleporterId = teleId;
+                                                        habbo.PrepareRoom(roomId, "");
                                                         //User.GetClient().SendMessage(new RoomForwardComposer(RoomId));
                                                         InteractingUser = 0;
                                                     }
@@ -1015,14 +1015,16 @@ public class Item
                                 {
                                     if (target == null || target.IsBot || target.IsPet)
                                         continue;
-                                    if (target.GetClient() == null || target.GetClient().GetHabbo() == null)
+                                    var targetClient = target.GetClient();
+                                    var targetHabbo = targetClient?.GetHabbo();
+                                    if (targetHabbo == null)
                                         continue;
-                                    if (_room.CheckRights(target.GetClient(), true))
+                                    if (_room.CheckRights(targetClient, true))
                                         continue;
                                     target.ApplyEffect(4);
-                                    target.GetClient().Send(new RoomNotificationComposer("Kicked from room", "You were hit by a cannonball!", "room_kick_cannonball", ""));
+                                    targetClient.Send(new RoomNotificationComposer("Kicked from room", "You were hit by a cannonball!", "room_kick_cannonball", ""));
                                     target.ApplyEffect(0);
-                                    _room.GetRoomUserManager().RemoveUserFromRoom(target.GetClient(), true);
+                                    _room.GetRoomUserManager().RemoveUserFromRoom(targetClient, true);
                                 }
                             }
                         }
@@ -1101,27 +1103,30 @@ public class Item
 
     public void UserFurniCollision(RoomUser user)
     {
-        if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+        var habbo = user?.GetClient()?.GetHabbo();
+        if (habbo == null)
             return;
-        GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerUserFurniCollision, user.GetClient().GetHabbo(), this);
+        GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerUserFurniCollision, habbo, this);
     }
 
     public void UserWalksOnFurni(RoomUser user)
     {
-        if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+        var habbo = user?.GetClient()?.GetHabbo();
+        if (habbo == null)
             return;
         if (Definition.InteractionType == InteractionType.Tent || Definition.InteractionType == InteractionType.TentSmall) GetRoom().AddUserToTent(Id, user);
-        GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerWalkOnFurni, user.GetClient().GetHabbo(), this);
+        GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerWalkOnFurni, habbo, this);
         user.LastItem = this;
     }
 
     public void UserWalksOffFurni(RoomUser user)
     {
-        if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+        var habbo = user?.GetClient()?.GetHabbo();
+        if (habbo == null)
             return;
         if (Definition.InteractionType == InteractionType.Tent || Definition.InteractionType == InteractionType.TentSmall)
             GetRoom().RemoveUserFromTent(Id, user);
-        GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerWalkOffFurni, user.GetClient().GetHabbo(), this);
+        GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerWalkOffFurni, habbo, this);
     }
 
     public void Destroy()

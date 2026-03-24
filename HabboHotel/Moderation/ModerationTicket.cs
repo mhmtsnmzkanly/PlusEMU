@@ -31,7 +31,7 @@ public class ModerationTicket
     public bool Answered { get; set; }
     public Habbo Sender { get; set; }
     public Habbo Reported { get; set; }
-    public Habbo Moderator { get; set; }
+    public Habbo? Moderator { get; set; }
     public string Issue { get; set; }
     public RoomData Room { get; set; }
 

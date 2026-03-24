@@ -16,18 +16,20 @@ internal class GetGroupFurniSettingsEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
+        if (habbo == null || !habbo.InRoom || currentRoom == null)
             return Task.CompletedTask;
         var itemId = packet.ReadUInt();
         var groupId = packet.ReadInt();
-        var item = session.GetHabbo().CurrentRoom.GetRoomItemHandler().GetItem(itemId);
+        var item = currentRoom.GetRoomItemHandler().GetItem(itemId);
         if (item == null)
             return Task.CompletedTask;
         if (item.Definition.InteractionType != InteractionType.GuildGate)
             return Task.CompletedTask;
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        session.Send(new GroupFurniSettingsComposer(group, itemId, session.GetHabbo().Id));
+        session.Send(new GroupFurniSettingsComposer(group, itemId, habbo.Id));
         session.Send(new GroupInfoComposer(group, session));
         return Task.CompletedTask;
     }

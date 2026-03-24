@@ -20,7 +20,7 @@ public class TalentTrackManager : ITalentTrackManager
 
     public void Init()
     {
-        DataTable data = null;
+        DataTable? data = null;
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT `type`,`level`,`data_actions`,`data_gifts` FROM `talents`");
@@ -31,7 +31,7 @@ public class TalentTrackManager : ITalentTrackManager
             foreach (DataRow row in data.Rows)
             {
                 _citizenshipLevels.Add(Convert.ToInt32(row["level"]),
-                    new(Convert.ToString(row["type"]), Convert.ToInt32(row["level"]), Convert.ToString(row["data_actions"]), Convert.ToString(row["data_gifts"])));
+                    new(Convert.ToString(row["type"]) ?? string.Empty, Convert.ToInt32(row["level"]), Convert.ToString(row["data_actions"]) ?? string.Empty, Convert.ToString(row["data_gifts"]) ?? string.Empty));
             }
         }
         _logger.LogInformation("Loaded " + _citizenshipLevels.Count + " talent track levels");

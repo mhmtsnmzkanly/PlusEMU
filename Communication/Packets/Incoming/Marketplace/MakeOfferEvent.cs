@@ -21,10 +21,18 @@ internal class MakeOfferEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var inventory = habbo?.Inventory;
+        if (inventory?.Furniture == null)
+        {
+            session.Send(new MarketplaceMakeOfferResultComposer(0));
+            return Task.CompletedTask;
+        }
+
         var sellingPrice = packet.ReadInt();
         packet.ReadInt(); //comission
         var itemId = packet.ReadUInt();
-        var item = session.GetHabbo().Inventory.Furniture.GetItem(itemId);
+        var item = inventory.Furniture.GetItem(itemId);
         if (item == null)
         {
             session.Send(new MarketplaceMakeOfferResultComposer(0));
@@ -50,13 +58,13 @@ internal class MakeOfferEvent : IPacketEvent
         {
             // TODO @80O: Do not delete items from the items table when putting on marketplace. Just reference the furniture instead.
             dbClient.SetQuery(
-                $"INSERT INTO `catalog_marketplace_offers` (`furni_id`,`item_id`,`user_id`,`asking_price`,`total_price`,`public_name`,`sprite_id`,`item_type`,`timestamp`,`extra_data`,`limited_number`,`limited_stack`) VALUES ('{itemId}','{item.Definition.Id}','{session.GetHabbo().Id}','{sellingPrice}','{totalPrice}',@public_name,'{item.Definition.SpriteId}','{itemType}','{UnixTimestamp.GetNow()}',@extra_data, '{item.UniqueNumber}', '{item.UniqueSeries}')");
+                $"INSERT INTO `catalog_marketplace_offers` (`furni_id`,`item_id`,`user_id`,`asking_price`,`total_price`,`public_name`,`sprite_id`,`item_type`,`timestamp`,`extra_data`,`limited_number`,`limited_stack`) VALUES ('{itemId}','{item.Definition.Id}','{habbo.Id}','{sellingPrice}','{totalPrice}',@public_name,'{item.Definition.SpriteId}','{itemType}','{UnixTimestamp.GetNow()}',@extra_data, '{item.UniqueNumber}', '{item.UniqueSeries}')");
             dbClient.AddParameter("public_name", item.Definition.PublicName);
             dbClient.AddParameter("extra_data", item.ExtraData);
             dbClient.RunQuery();
-            dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{itemId}' AND `user_id` = '{session.GetHabbo().Id}' LIMIT 1");
+            dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{itemId}' AND `user_id` = '{habbo.Id}' LIMIT 1");
         }
-        session.GetHabbo().Inventory.Furniture.RemoveItem(itemId);
+        inventory.Furniture.RemoveItem(itemId);
         session.Send(new FurniListRemoveComposer(itemId));
         session.Send(new MarketplaceMakeOfferResultComposer(1));
         return Task.CompletedTask;

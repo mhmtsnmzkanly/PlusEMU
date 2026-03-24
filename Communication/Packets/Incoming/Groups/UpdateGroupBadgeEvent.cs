@@ -19,10 +19,14 @@ internal class UpdateGroupBadgeEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        if (group.CreatorId != session.GetHabbo().Id)
+        if (group.CreatorId != habbo.Id)
             return Task.CompletedTask;
         var count = packet.ReadInt();
         var badge = "";

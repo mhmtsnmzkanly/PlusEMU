@@ -7,7 +7,11 @@ internal class DropHandItemEvent : RoomPacketEvent
 {
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return Task.CompletedTask;
         if (user.CarryItemId > 0 && user.CarryTimer > 0)

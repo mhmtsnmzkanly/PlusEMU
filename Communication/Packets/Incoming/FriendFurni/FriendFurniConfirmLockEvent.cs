@@ -16,9 +16,13 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var pId = packet.ReadUInt();
         var isConfirmed = packet.ReadBool();
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         var item = room.GetRoomItemHandler().GetItem(pId);
@@ -35,7 +39,11 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
             session.SendNotification("Your partner has left the room or has cancelled the love lock.");
             return Task.CompletedTask;
         }
-        if (userOne.GetClient() == null || userTwo.GetClient() == null)
+        var userOneClient = userOne?.GetClient();
+        var userTwoClient = userTwo?.GetClient();
+        var userOneHabbo = userOneClient?.GetHabbo();
+        var userTwoHabbo = userTwoClient?.GetHabbo();
+        if (userOneClient == null || userTwoClient == null || userOneHabbo == null || userTwoHabbo == null)
         {
             item.InteractingUser = 0;
             item.InteractingUser2 = 0;
@@ -82,12 +90,12 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
             userTwo.CanWalk = true;
             return Task.CompletedTask;
         }
-        if (userOneId == session.GetHabbo().Id)
+        if (userOneId == habbo.Id)
         {
             session.Send(new LoveLockDialogueSetLockedComposer(pId));
             userOne.LlPartner = userTwoId;
         }
-        else if (userTwoId == session.GetHabbo().Id)
+        else if (userTwoId == habbo.Id)
         {
             session.Send(new LoveLockDialogueSetLockedComposer(pId));
             userTwo.LlPartner = userOneId;
@@ -95,7 +103,7 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
         if (userOne.LlPartner == 0 || userTwo.LlPartner == 0)
             return Task.CompletedTask;
         item.ExtraData.Store(
-            $"1{(char)5}{userOne.GetUsername()}{(char)5}{userTwo.GetUsername()}{(char)5}{userOne.GetClient().GetHabbo().Look}{(char)5}{userTwo.GetClient().GetHabbo().Look}{(char)5}{DateTime.Now:dd/MM/yyyy}");
+            $"1{(char)5}{userOne.GetUsername()}{(char)5}{userTwo.GetUsername()}{(char)5}{userOneHabbo.Look}{(char)5}{userTwoHabbo.Look}{(char)5}{DateTime.Now:dd/MM/yyyy}");
         item.InteractingUser = 0;
         item.InteractingUser2 = 0;
         userOne.LlPartner = 0;
@@ -108,8 +116,8 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
             dbClient.AddParameter("ID", item.Id);
             dbClient.RunQuery();
         }
-        userOne.GetClient().Send(new LoveLockDialogueCloseComposer(pId));
-        userTwo.GetClient().Send(new LoveLockDialogueCloseComposer(pId));
+        userOneClient.Send(new LoveLockDialogueCloseComposer(pId));
+        userTwoClient.Send(new LoveLockDialogueCloseComposer(pId));
         userOne.CanWalk = true;
         userTwo.CanWalk = true;
         userOne = null;

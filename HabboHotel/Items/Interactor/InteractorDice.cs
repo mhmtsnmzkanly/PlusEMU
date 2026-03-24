@@ -22,8 +22,9 @@ public class InteractorDice : IFurniInteractor
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
         RoomUser user = null;
-        if (session != null)
-            user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session?.GetHabbo();
+        if (habbo != null)
+            user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         if (Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y))

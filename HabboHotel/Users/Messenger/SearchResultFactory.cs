@@ -25,7 +25,12 @@ public class SearchResultFactory : ISearchResultFactory
         if (dTable != null)
         {
             foreach (DataRow dRow in dTable.Rows)
-                results.Add(new(Convert.ToInt32(dRow[0]), Convert.ToString(dRow[1]), Convert.ToString(dRow[2]), Convert.ToString(dRow[3]), dRow[4].ToString()));
+                results.Add(new(
+                    Convert.ToInt32(dRow[0]),
+                    Convert.ToString(dRow[1]) ?? string.Empty,
+                    Convert.ToString(dRow[2]) ?? string.Empty,
+                    Convert.ToString(dRow[3]) ?? string.Empty,
+                    dRow[4].ToString() ?? string.Empty));
         }
         return results;
     }

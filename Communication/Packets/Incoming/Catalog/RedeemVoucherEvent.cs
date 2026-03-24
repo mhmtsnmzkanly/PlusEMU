@@ -20,6 +20,10 @@ public class RedeemVoucherEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var code = packet.ReadString().Replace("\r", "");
         if (!_voucherManager.TryGetVoucher(code, out var voucher))
         {
@@ -35,7 +39,7 @@ public class RedeemVoucherEvent : IPacketEvent
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT * FROM `user_vouchers` WHERE `user_id` = @userId AND `voucher` = @Voucher LIMIT 1");
-            dbClient.AddParameter("userId", session.GetHabbo().Id);
+            dbClient.AddParameter("userId", habbo.Id);
             dbClient.AddParameter("Voucher", code);
             row = dbClient.GetRow();
         }
@@ -47,20 +51,20 @@ public class RedeemVoucherEvent : IPacketEvent
         {
             using var dbClient = _database.GetQueryReactor();
             dbClient.SetQuery("INSERT INTO `user_vouchers` (`user_id`,`voucher`) VALUES (@userId, @Voucher)");
-            dbClient.AddParameter("userId", session.GetHabbo().Id);
+            dbClient.AddParameter("userId", habbo.Id);
             dbClient.AddParameter("Voucher", code);
             dbClient.RunQuery();
         }
         voucher.UpdateUses();
         if (voucher.Type == VoucherType.Credit)
         {
-            session.GetHabbo().Credits += voucher.Value;
-            session.Send(new CreditBalanceComposer(session.GetHabbo().Credits));
+            habbo.Credits += voucher.Value;
+            session.Send(new CreditBalanceComposer(habbo.Credits));
         }
         else if (voucher.Type == VoucherType.Ducket)
         {
-            session.GetHabbo().Duckets += voucher.Value;
-            session.Send(new HabboActivityPointNotificationComposer(session.GetHabbo().Duckets, voucher.Value));
+            habbo.Duckets += voucher.Value;
+            session.Send(new HabboActivityPointNotificationComposer(habbo.Duckets, voucher.Value));
         }
         session.Send(new VoucherRedeemOkComposer());
         return Task.CompletedTask;

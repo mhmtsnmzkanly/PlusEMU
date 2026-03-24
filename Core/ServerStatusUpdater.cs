@@ -21,7 +21,7 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
         _roomManager = roomManager;
     }
 
-    private Timer _timer;
+    private Timer? _timer;
 
     public void Dispose()
     {
@@ -29,7 +29,7 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
         {
             dbClient.RunQuery("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
         }
-        _timer.Dispose();
+        _timer?.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -40,7 +40,7 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
         _logger.LogInformation("Server Status Updater has been started.");
     }
 
-    public void OnTick(object obj)
+    public void OnTick(object? obj)
     {
         UpdateOnlineUsers();
     }

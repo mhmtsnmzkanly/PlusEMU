@@ -122,26 +122,27 @@ public class RoomUserManager
             return false;
         if (session == null)
             return false;
-        if (session.GetHabbo().CurrentRoom == null)
+        var habbo = session.GetHabbo();
+        if (habbo == null || habbo.CurrentRoom == null)
             return false;
-        if (_users.Any(u => u.Value.UserId == session.GetHabbo().Id))
+        if (_users.Any(u => u.Value.UserId == habbo.Id))
             return false;
-        var user = new RoomUser(session.GetHabbo().Id, _room.RoomId, _primaryPrivateUserId++, _room);
+        var user = new RoomUser(habbo.Id, _room.RoomId, _primaryPrivateUserId++, _room);
         if (user == null || user.GetClient() == null)
             return false;
-        user.UserId = session.GetHabbo().Id;
-        session.GetHabbo().TentId = 0;
+        user.UserId = habbo.Id;
+        habbo.TentId = 0;
         var personalId = _secondaryPrivateUserId++;
         user.InternalRoomId = personalId;
-        session.GetHabbo().CurrentRoom = _room;
+        habbo.CurrentRoom = _room;
         if (!_users.TryAdd(personalId, user))
             return false;
         var model = _room.GetGameMap().Model;
         if (model == null)
             return false;
-        if (!_room.PetMorphsAllowed && session.GetHabbo().PetId != 0)
-            session.GetHabbo().PetId = 0;
-        if (!session.GetHabbo().IsTeleporting && !session.GetHabbo().IsHopping)
+        if (!_room.PetMorphsAllowed && habbo.PetId != 0)
+            habbo.PetId = 0;
+        if (!habbo.IsTeleporting && !habbo.IsHopping)
         {
             if (!model.DoorIsValid())
             {
@@ -153,33 +154,33 @@ public class RoomUserManager
             user.SetPos(model.DoorX, model.DoorY, model.DoorZ);
             user.SetRot(model.DoorOrientation, false);
         }
-        else if (!user.IsBot && (user.GetClient().GetHabbo().IsTeleporting || user.GetClient().GetHabbo().IsHopping))
+        else if (!user.IsBot && (habbo.IsTeleporting || habbo.IsHopping))
         {
             Item item = null;
-            if (session.GetHabbo().IsTeleporting)
-                item = _room.GetRoomItemHandler().GetItem(session.GetHabbo().TeleporterId);
-            else if (session.GetHabbo().IsHopping)
-                item = _room.GetRoomItemHandler().GetItem(session.GetHabbo().HopperId);
+            if (habbo.IsTeleporting)
+                item = _room.GetRoomItemHandler().GetItem(habbo.TeleporterId);
+            else if (habbo.IsHopping)
+                item = _room.GetRoomItemHandler().GetItem(habbo.HopperId);
             if (item != null)
             {
-                if (session.GetHabbo().IsTeleporting)
+                if (habbo.IsTeleporting)
                 {
                     item.LegacyDataString = "2";
                     item.UpdateState(false, true);
                     user.SetPos(item.GetX, item.GetY, item.GetZ);
                     user.SetRot(item.Rotation, false);
-                    item.InteractingUser2 = session.GetHabbo().Id;
+                    item.InteractingUser2 = habbo.Id;
                     item.LegacyDataString = "0";
                     item.UpdateState(false, true);
                 }
-                else if (session.GetHabbo().IsHopping)
+                else if (habbo.IsHopping)
                 {
                     item.LegacyDataString = "1";
                     item.UpdateState(false, true);
                     user.SetPos(item.GetX, item.GetY, item.GetZ);
                     user.SetRot(item.Rotation, false);
                     user.AllowOverride = false;
-                    item.InteractingUser2 = session.GetHabbo().Id;
+                    item.InteractingUser2 = habbo.Id;
                     item.LegacyDataString = "2";
                     item.UpdateState(false, true);
                 }
@@ -210,10 +211,13 @@ public class RoomUserManager
         else
             session.Send(new YouAreNotControllerComposer());
         user.UpdateNeeded = true;
-        if (session.GetHabbo().Permissions.HasRight("mod_tool") && !session.GetHabbo().DisableForcedEffects)
-            session.GetHabbo().Effects.ApplyEffect(102);
-        if (session.GetHabbo().IsAmbassador && !session.GetHabbo().DisableForcedEffects && !session.GetHabbo().Permissions.HasRight("mod_tool"))
-            session.GetHabbo().Effects.ApplyEffect(178);
+        if (habbo.Permissions != null && habbo.Effects != null)
+        {
+            if (habbo.Permissions.HasRight("mod_tool") && !habbo.DisableForcedEffects)
+                habbo.Effects.ApplyEffect(102);
+            if (habbo.IsAmbassador && !habbo.DisableForcedEffects && !habbo.Permissions.HasRight("mod_tool"))
+                habbo.Effects.ApplyEffect(178);
+        }
         foreach (var bot in _bots.Values.ToList())
         {
             if (bot == null || bot.BotAi == null)
@@ -229,16 +233,17 @@ public class RoomUserManager
         {
             if (_room == null)
                 return;
-            if (session == null || session.GetHabbo() == null)
+            var habbo = session?.GetHabbo();
+            if (habbo == null)
                 return;
             if (notifyKick)
                 session.Send(new GenericErrorComposer(4008));
             if (nofityUser)
                 session.Send(new CloseConnectionComposer());
-            if (session.GetHabbo().TentId > 0)
-                session.GetHabbo().TentId = 0;
-            session.GetHabbo().CurrentRoom = null;
-            var user = GetRoomUserByHabbo(session.GetHabbo().Id);
+            if (habbo.TentId > 0)
+                habbo.TentId = 0;
+            habbo.CurrentRoom = null;
+            var user = GetRoomUserByHabbo(habbo.Id);
             if (user != null)
             {
                 if (user.RidingHorse)
@@ -258,15 +263,16 @@ public class RoomUserManager
                     {
                         team.OnUserLeave(user);
                         user.Team = Team.None;
-                        if (user.GetClient().GetHabbo().Effects.CurrentEffect != 0)
-                            user.GetClient().GetHabbo().Effects.ApplyEffect(0);
+                        var effects = user.GetClient()?.GetHabbo()?.Effects;
+                        if (effects != null && effects.CurrentEffect != 0)
+                            effects.ApplyEffect(0);
                     }
                 }
                 RemoveRoomUser(user);
                 if (user.CurrentItemEffect != ItemEffectType.None)
                 {
-                    if (session.GetHabbo().Effects != null)
-                        session.GetHabbo().Effects.CurrentEffect = -1;
+                    if (habbo.Effects != null)
+                        habbo.Effects.CurrentEffect = -1;
                 }
                 if (user.IsTrading)
                 {
@@ -276,13 +282,13 @@ public class RoomUserManager
                 }
 
                 //Session.GetHabbo().CurrentRoomId = 0;
-                    session.GetHabbo().Messenger?.NotifyChangesToFriends();
+                    habbo.Messenger?.NotifyChangesToFriends();
                 using (var dbClient = PlusEnvironment.DatabaseManager.Connection())
                 {
                     dbClient.Execute("UPDATE user_roomvisits SET exit_timestamp = @exitTimestamp WHERE room_id = @roomId AND user_id = @userId ORDER BY exit_timestamp DESC LIMIT 1",
                         new
                         {
-                            userId = session.GetHabbo().Id,
+                            userId = habbo.Id,
                             roomId = _room.RoomId,
                             exitTimestamp = UnixTimestamp.GetNow(),
                         });
@@ -342,9 +348,11 @@ public class RoomUserManager
             {
                 if (toRemove == null)
                     continue;
-                if (user.GetClient() == null || user.GetClient().GetHabbo() == null || user.GetClient().GetHabbo().Inventory == null)
+                var habbo = user.GetClient()?.GetHabbo();
+                var pets = habbo?.Inventory?.Pets;
+                if (pets == null)
                     continue;
-                if (user.GetClient().GetHabbo().Inventory.Pets.AddPet(toRemove.PetData))
+                if (pets.AddPet(toRemove.PetData))
                 {
                     toRemove.PetData.RoomId = 0;
                     toRemove.PetData.PlacedInRoom = false;
@@ -409,10 +417,7 @@ public class RoomUserManager
 
     public RoomUser GetRoomUserByHabbo(int id)
     {
-        var user = GetUserList().Where(x => x != null && x.GetClient() != null && x.GetClient().GetHabbo() != null && x.GetClient().GetHabbo().Id == id).FirstOrDefault();
-        if (user != null)
-            return user;
-        return null;
+        return GetUserList().FirstOrDefault(x => x?.GetClient()?.GetHabbo()?.Id == id);
     }
 
     public List<RoomUser> GetRoomUsers()
@@ -427,9 +432,7 @@ public class RoomUserManager
         var returnList = new List<RoomUser>();
         foreach (var user in GetUserList().ToList())
         {
-            if (user == null)
-                continue;
-            if (!user.IsBot && user.GetClient() != null && user.GetClient().GetHabbo() != null && user.GetClient().GetHabbo().Rank >= minRank)
+            if (user?.IsBot == false && user.GetClient()?.GetHabbo()?.Rank >= minRank)
                 returnList.Add(user);
         }
         return returnList;
@@ -437,11 +440,7 @@ public class RoomUserManager
 
     public RoomUser GetRoomUserByHabbo(string pName)
     {
-        var user = GetUserList().FirstOrDefault(x =>
-            x != null && x.GetClient() != null && x.GetClient().GetHabbo() != null && x.GetClient().GetHabbo().Username.Equals(pName, StringComparison.OrdinalIgnoreCase));
-        if (user != null)
-            return user;
-        return null;
+        return GetUserList().FirstOrDefault(x => x?.GetClient()?.GetHabbo()?.Username.Equals(pName, StringComparison.OrdinalIgnoreCase) == true);
     }
 
     public void UpdatePets()
@@ -542,11 +541,7 @@ public class RoomUserManager
             return false;
         if (user.IsBot)
             return true;
-        if (user.GetClient() == null)
-            return false;
-        if (user.GetClient().GetHabbo() == null)
-            return false;
-        if (user.GetClient().GetHabbo().CurrentRoom != _room)
+        if (user.GetClient()?.GetHabbo()?.CurrentRoom != _room)
             return false;
         return true;
     }
@@ -741,15 +736,16 @@ public class RoomUserManager
                             }
                             if (!user.IsBot && !user.IsPet && user.GetClient() != null)
                             {
-                                if (user.GetClient().GetHabbo().IsTeleporting)
+                                var habbo = user.GetClient()?.GetHabbo();
+                                if (habbo?.IsTeleporting == true)
                                 {
-                                    user.GetClient().GetHabbo().IsTeleporting = false;
-                                    user.GetClient().GetHabbo().TeleporterId = 0;
+                                    habbo.IsTeleporting = false;
+                                    habbo.TeleporterId = 0;
                                 }
-                                else if (user.GetClient().GetHabbo().IsHopping)
+                                else if (habbo?.IsHopping == true)
                                 {
-                                    user.GetClient().GetHabbo().IsHopping = false;
-                                    user.GetClient().GetHabbo().HopperId = 0;
+                                    habbo.IsHopping = false;
+                                    habbo.HopperId = 0;
                                 }
                             }
                             if (!user.IsBot && user.RidingHorse && user.IsPet == false)
@@ -933,8 +929,12 @@ public class RoomUserManager
                         {
                             if (cyclegameitems)
                             {
+                                var habbo = user.GetClient()?.GetHabbo();
+                                var effects = habbo?.Effects;
+                                var t = habbo?.CurrentRoom?.GetTeamManagerForBanzai();
+                                if (effects == null || t == null)
+                                    break;
                                 var effectId = Convert.ToInt32(item.Team + 32);
-                                var t = user.GetClient().GetHabbo().CurrentRoom.GetTeamManagerForBanzai();
                                 if (user.Team == Team.None)
                                 {
                                     if (t.CanEnterOnTeam(item.Team))
@@ -943,22 +943,22 @@ public class RoomUserManager
                                             t.OnUserLeave(user);
                                         user.Team = item.Team;
                                         t.AddUser(user);
-                                        if (user.GetClient().GetHabbo().Effects.CurrentEffect != effectId)
-                                            user.GetClient().GetHabbo().Effects.ApplyEffect(effectId);
+                                        if (effects.CurrentEffect != effectId)
+                                            effects.ApplyEffect(effectId);
                                     }
                                 }
                                 else if (user.Team != Team.None && user.Team != item.Team)
                                 {
                                     t.OnUserLeave(user);
                                     user.Team = Team.None;
-                                    user.GetClient().GetHabbo().Effects.ApplyEffect(0);
+                                    effects.ApplyEffect(0);
                                 }
                                 else
                                 {
                                     //usersOnTeam--;
                                     t.OnUserLeave(user);
-                                    if (user.GetClient().GetHabbo().Effects.CurrentEffect == effectId)
-                                        user.GetClient().GetHabbo().Effects.ApplyEffect(0);
+                                    if (effects.CurrentEffect == effectId)
+                                        effects.ApplyEffect(0);
                                     user.Team = Team.None;
                                 }
                                 //Item.ExtraData = usersOnTeam.ToString();
@@ -973,8 +973,12 @@ public class RoomUserManager
                         {
                             if (cyclegameitems)
                             {
+                                var habbo = user.GetClient()?.GetHabbo();
+                                var effects = habbo?.Effects;
+                                var t = habbo?.CurrentRoom?.GetTeamManagerForFreeze();
+                                if (effects == null || t == null)
+                                    break;
                                 var effectId = Convert.ToInt32(item.Team + 39);
-                                var t = user.GetClient().GetHabbo().CurrentRoom.GetTeamManagerForFreeze();
                                 if (user.Team == Team.None)
                                 {
                                     if (t.CanEnterOnTeam(item.Team))
@@ -983,22 +987,22 @@ public class RoomUserManager
                                             t.OnUserLeave(user);
                                         user.Team = item.Team;
                                         t.AddUser(user);
-                                        if (user.GetClient().GetHabbo().Effects.CurrentEffect != effectId)
-                                            user.GetClient().GetHabbo().Effects.ApplyEffect(effectId);
+                                        if (effects.CurrentEffect != effectId)
+                                            effects.ApplyEffect(effectId);
                                     }
                                 }
                                 else if (user.Team != Team.None && user.Team != item.Team)
                                 {
                                     t.OnUserLeave(user);
                                     user.Team = Team.None;
-                                    user.GetClient().GetHabbo().Effects.ApplyEffect(0);
+                                    effects.ApplyEffect(0);
                                 }
                                 else
                                 {
                                     //usersOnTeam--;
                                     t.OnUserLeave(user);
-                                    if (user.GetClient().GetHabbo().Effects.CurrentEffect == effectId)
-                                        user.GetClient().GetHabbo().Effects.ApplyEffect(0);
+                                    if (effects.CurrentEffect == effectId)
+                                        effects.ApplyEffect(0);
                                     user.Team = Team.None;
                                 }
                                 //Item.ExtraData = usersOnTeam.ToString();
@@ -1018,11 +1022,12 @@ public class RoomUserManager
                                 return;
                             if (!user.IsBot)
                             {
-                                if (item == null || item.Definition == null || user.GetClient() == null || user.GetClient().GetHabbo() == null || user.GetClient().GetHabbo().Effects == null)
+                                var effects = user.GetClient()?.GetHabbo()?.Effects;
+                                if (item == null || item.Definition == null || effects == null)
                                     return;
-                                if (item.Definition.EffectId == 0 && user.GetClient().GetHabbo().Effects.CurrentEffect == 0)
+                                if (item.Definition.EffectId == 0 && effects.CurrentEffect == 0)
                                     return;
-                                user.GetClient().GetHabbo().Effects.ApplyEffect(item.Definition.EffectId);
+                                effects.ApplyEffect(item.Definition.EffectId);
                                 item.LegacyDataString = "1";
                                 item.UpdateState(false, true);
                                 item.RequestUpdate(2, true);
@@ -1033,9 +1038,11 @@ public class RoomUserManager
                         {
                             if (user.GoalX == item.GetX && user.GoalY == item.GetY)
                             {
-                                if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+                                var client = user?.GetClient();
+                                var habbo = client?.GetHabbo();
+                                if (habbo == null)
                                     continue;
-                                var room = user.GetClient().GetHabbo().CurrentRoom;
+                                var room = habbo.CurrentRoom;
                                 if (room == null)
                                     return;
                                 if (!ItemTeleporterFinder.IsTeleLinked(item.Id, room))
@@ -1049,20 +1056,19 @@ public class RoomUserManager
                                         var targetItem = room.GetRoomItemHandler().GetItem(linkedTele);
                                         if (targetItem == null)
                                         {
-                                            if (user.GetClient() != null)
-                                                user.GetClient().SendWhisper("Hey, that arrow is poorly!");
+                                            client?.SendWhisper("Hey, that arrow is poorly!");
                                             return;
                                         }
                                         room.GetGameMap().TeleportToItem(user, targetItem);
                                     }
                                     else if (teleRoomId != room.RoomId)
                                     {
-                                        if (user != null && !user.IsBot && user.GetClient() != null && user.GetClient().GetHabbo() != null)
+                                        if (user != null && !user.IsBot)
                                         {
-                                            user.GetClient().GetHabbo().IsTeleporting = true;
-                                            user.GetClient().GetHabbo().TeleportingRoomId = teleRoomId;
-                                            user.GetClient().GetHabbo().TeleporterId = linkedTele;
-                                            user.GetClient().GetHabbo().PrepareRoom(teleRoomId, "");
+                                            habbo.IsTeleporting = true;
+                                            habbo.TeleportingRoomId = teleRoomId;
+                                            habbo.TeleporterId = linkedTele;
+                                            habbo.PrepareRoom(teleRoomId, "");
                                         }
                                     }
                                     else if (_room.GetRoomItemHandler().GetItem(linkedTele) != null)
@@ -1101,14 +1107,16 @@ public class RoomUserManager
 
     private void UpdateUserEffect(RoomUser user, int x, int y)
     {
-        if (user == null || user.IsBot || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+        var habbo = user?.GetClient()?.GetHabbo();
+        var effects = habbo?.Effects;
+        if (user == null || user.IsBot || effects == null)
             return;
         try
         {
             var newCurrentUserItemEffect = _room.GetGameMap().EffectMap[x, y];
             if (newCurrentUserItemEffect > 0)
             {
-                if (user.GetClient().GetHabbo().Effects.CurrentEffect == 0)
+                if (effects.CurrentEffect == 0)
                     user.CurrentItemEffect = ItemEffectType.None;
                 var type = ByteToItemEffectEnum.Parse(newCurrentUserItemEffect);
                 if (type != user.CurrentItemEffect)
@@ -1117,37 +1125,37 @@ public class RoomUserManager
                     {
                         case ItemEffectType.Iceskates:
                             {
-                                user.GetClient().GetHabbo().Effects.ApplyEffect(user.GetClient().GetHabbo().Gender == "M" ? 38 : 39);
+                                effects.ApplyEffect(habbo.Gender == "M" ? 38 : 39);
                                 user.CurrentItemEffect = ItemEffectType.Iceskates;
                                 break;
                             }
                         case ItemEffectType.Normalskates:
                             {
-                                user.GetClient().GetHabbo().Effects.ApplyEffect(user.GetClient().GetHabbo().Gender == "M" ? 55 : 56);
+                                effects.ApplyEffect(habbo.Gender == "M" ? 55 : 56);
                                 user.CurrentItemEffect = type;
                                 break;
                             }
                         case ItemEffectType.Swim:
                             {
-                                user.GetClient().GetHabbo().Effects.ApplyEffect(29);
+                                effects.ApplyEffect(29);
                                 user.CurrentItemEffect = type;
                                 break;
                             }
                         case ItemEffectType.SwimLow:
                             {
-                                user.GetClient().GetHabbo().Effects.ApplyEffect(30);
+                                effects.ApplyEffect(30);
                                 user.CurrentItemEffect = type;
                                 break;
                             }
                         case ItemEffectType.SwimHalloween:
                             {
-                                user.GetClient().GetHabbo().Effects.ApplyEffect(37);
+                                effects.ApplyEffect(37);
                                 user.CurrentItemEffect = type;
                                 break;
                             }
                         case ItemEffectType.None:
                             {
-                                user.GetClient().GetHabbo().Effects.ApplyEffect(-1);
+                                effects.ApplyEffect(-1);
                                 user.CurrentItemEffect = type;
                                 break;
                             }
@@ -1156,7 +1164,7 @@ public class RoomUserManager
             }
             else if (user.CurrentItemEffect != ItemEffectType.None && newCurrentUserItemEffect == 0)
             {
-                user.GetClient().GetHabbo().Effects.ApplyEffect(-1);
+                effects.ApplyEffect(-1);
                 user.CurrentItemEffect = ItemEffectType.None;
             }
         }

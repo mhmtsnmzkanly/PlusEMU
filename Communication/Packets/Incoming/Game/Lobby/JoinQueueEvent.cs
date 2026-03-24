@@ -15,11 +15,15 @@ internal class JoinQueueEvent : IPacketEvent
     }
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var gameId = packet.ReadInt();
         GameData gameData = null;
         if (_gameDataManager.TryGetGame(gameId, out gameData))
         {
-            var ssoTicket = $"HABBOON-Fastfood-{GenerateSso(32)}-{session.GetHabbo().Id}";
+            var ssoTicket = $"HABBOON-Fastfood-{GenerateSso(32)}-{habbo.Id}";
             session.Send(new JoinQueueComposer(gameData.Id));
             session.Send(new LoadGameComposer(gameData, ssoTicket));
         }

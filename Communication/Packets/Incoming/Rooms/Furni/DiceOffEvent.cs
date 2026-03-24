@@ -6,7 +6,7 @@ internal class DiceOffEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var room = session.GetHabbo().CurrentRoom;
+        var room = session.GetHabbo()?.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         var item = room.GetRoomItemHandler().GetItem(packet.ReadUInt());

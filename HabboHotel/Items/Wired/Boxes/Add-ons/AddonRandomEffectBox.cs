@@ -11,6 +11,8 @@ internal class AddonRandomEffectBox : IWiredItem
         Instance = instance;
         Item = item;
         SetItems = new();
+        StringData = string.Empty;
+        ItemsData = string.Empty;
         if (SetItems.Count > 0)
             SetItems.Clear();
     }

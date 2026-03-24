@@ -22,7 +22,11 @@ internal class FreezeCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var targetUser = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
+        var currentRoom = session.GetHabbo().CurrentRoom;
+        if (currentRoom == null)
+            return Task.CompletedTask;
+
+        var targetUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
         if (targetUser != null)
             targetUser.Frozen = true;
         session.SendWhisper($"Successfully froze {target.Username}!");

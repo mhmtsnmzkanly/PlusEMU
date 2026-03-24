@@ -11,12 +11,13 @@ internal class InteractorCannon : IFurniInteractor
 
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
-        if (session == null || session.GetHabbo() == null || item == null)
+        var habbo = session?.GetHabbo();
+        if (habbo == null || item == null)
             return;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return;
-        var actor = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var actor = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (actor == null)
             return;
         if (item.LegacyDataString == "1")

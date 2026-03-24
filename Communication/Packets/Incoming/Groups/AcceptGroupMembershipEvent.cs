@@ -15,22 +15,26 @@ internal class AcceptGroupMembershipEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo?.Permissions == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         var userId = packet.ReadInt();
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        if (session.GetHabbo().Id != group.CreatorId && !group.IsAdmin(session.GetHabbo().Id) && !session.GetHabbo().Permissions.HasRight("fuse_group_accept_any"))
+        if (habbo.Id != group.CreatorId && !group.IsAdmin(habbo.Id) && !habbo.Permissions.HasRight("fuse_group_accept_any"))
             return Task.CompletedTask;
         if (!group.HasRequest(userId))
             return Task.CompletedTask;
-        var habbo = PlusEnvironment.GetHabboById(userId);
-        if (habbo == null)
+        var targetHabbo = PlusEnvironment.GetHabboById(userId);
+        if (targetHabbo == null)
         {
             session.SendNotification("Oops, an error occurred whilst finding this user.");
             return Task.CompletedTask;
         }
         group.HandleRequest(userId, true);
-        session.Send(new GroupMemberUpdatedComposer(groupId, habbo, 4));
+        session.Send(new GroupMemberUpdatedComposer(groupId, targetHabbo, 4));
         return Task.CompletedTask;
     }
 }

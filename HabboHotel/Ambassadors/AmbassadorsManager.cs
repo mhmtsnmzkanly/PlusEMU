@@ -18,7 +18,13 @@ public class AmbassadorsManager : IAmbassadorsManager
 
     public async Task Warn(Habbo ambassador, Habbo target, string message)
     {
-        if (!ambassador.Client.GetHabbo().IsAmbassador)
+        var ambassadorClient = ambassador.Client;
+        var ambassadorHabbo = ambassadorClient?.GetHabbo();
+        if (ambassadorHabbo == null || !ambassadorHabbo.IsAmbassador)
+            return;
+
+        var targetClient = target.Client;
+        if (targetClient == null)
             return;
 
         using var connection = _database.Connection();
@@ -30,7 +36,7 @@ public class AmbassadorsManager : IAmbassadorsManager
                 sanctions_type = message,
                 timestamp = UnixTimestamp.GetNow()
             });
-        ambassador.Client.SendWhisper($"You have successfully warned {target.Username}.");
-        target.Client.Send(new RoomNotificationComposer("ambassador.alert.warning", "message", "${notification.ambassador.alert.warning.message}"));
+        ambassadorClient.SendWhisper($"You have successfully warned {target.Username}.");
+        targetClient.Send(new RoomNotificationComposer("ambassador.alert.warning", "message", "${notification.ambassador.alert.warning.message}"));
     }
 }

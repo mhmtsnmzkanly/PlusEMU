@@ -56,24 +56,29 @@ public class GroupManager : IGroupManager
         using var dbClient = _database.GetQueryReactor();
         dbClient.SetQuery("SELECT `id`,`type`,`firstvalue`,`secondvalue` FROM `groups_items` WHERE `enabled` = '1'");
         var groupItems = dbClient.GetTable();
+        if (groupItems == null)
+            return;
+
         foreach (DataRow groupItem in groupItems.Rows)
         {
+            var firstValue = Convert.ToString(groupItem["firstvalue"]) ?? string.Empty;
+            var secondValue = Convert.ToString(groupItem["secondvalue"]) ?? string.Empty;
             switch (groupItem["type"].ToString())
             {
                 case "base":
-                    _bases.Add(new(Convert.ToInt32(groupItem["id"]), groupItem["firstvalue"].ToString(), groupItem["secondvalue"].ToString()));
+                    _bases.Add(new(Convert.ToInt32(groupItem["id"]), firstValue, secondValue));
                     break;
                 case "symbol":
-                    _symbols.Add(new(Convert.ToInt32(groupItem["id"]), groupItem["firstvalue"].ToString(), groupItem["secondvalue"].ToString()));
+                    _symbols.Add(new(Convert.ToInt32(groupItem["id"]), firstValue, secondValue));
                     break;
                 case "color":
-                    _baseColours.Add(new(Convert.ToInt32(groupItem["id"]), groupItem["firstvalue"].ToString()));
+                    _baseColours.Add(new(Convert.ToInt32(groupItem["id"]), firstValue));
                     break;
                 case "color2":
-                    _symbolColours.Add(Convert.ToInt32(groupItem["id"]), new(Convert.ToInt32(groupItem["id"]), groupItem["firstvalue"].ToString()));
+                    _symbolColours.Add(Convert.ToInt32(groupItem["id"]), new(Convert.ToInt32(groupItem["id"]), firstValue));
                     break;
                 case "color3":
-                    _backgroundColours.Add(Convert.ToInt32(groupItem["id"]), new(Convert.ToInt32(groupItem["id"]), groupItem["firstvalue"].ToString()));
+                    _backgroundColours.Add(Convert.ToInt32(groupItem["id"]), new(Convert.ToInt32(groupItem["id"]), firstValue));
                     break;
             }
         }
@@ -81,7 +86,7 @@ public class GroupManager : IGroupManager
 
     public bool TryGetGroup(int id, out Group group)
     {
-        group = null;
+        group = null!;
         if (_groups.ContainsKey(id))
             return _groups.TryGetValue(id, out group);
         lock (_groupLoadingSync)
@@ -95,7 +100,7 @@ public class GroupManager : IGroupManager
             if (row != null)
             {
                 group = new(
-                    Convert.ToInt32(row["id"]), Convert.ToString(row["name"]), Convert.ToString(row["desc"]), Convert.ToString(row["badge"]), Convert.ToUInt32(row["room_id"]),
+                    Convert.ToInt32(row["id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToString(row["desc"]) ?? string.Empty, Convert.ToString(row["badge"]) ?? string.Empty, Convert.ToUInt32(row["room_id"]),
                     Convert.ToInt32(row["owner_id"]),
                     Convert.ToInt32(row["created"]), Convert.ToInt32(row["state"]), Convert.ToInt32(row["colour1"]), Convert.ToInt32(row["colour2"]), Convert.ToInt32(row["admindeco"]),
                     Convert.ToInt32(row["forum_enabled"]) == 1);
@@ -149,7 +154,7 @@ public class GroupManager : IGroupManager
 
     public void DeleteGroup(int id)
     {
-        Group group = null;
+        Group? group = null;
         if (_groups.ContainsKey(id))
             _groups.TryRemove(id, out group);
         if (group != null) group.Dispose();

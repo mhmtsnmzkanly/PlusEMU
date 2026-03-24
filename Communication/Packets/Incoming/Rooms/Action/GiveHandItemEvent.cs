@@ -15,13 +15,17 @@ internal class GiveHandItemEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return Task.CompletedTask;
         var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(packet.ReadInt());
         if (targetUser == null)
             return Task.CompletedTask;
-        if (!(Math.Abs(user.X - targetUser.X) >= 3 || Math.Abs(user.Y - targetUser.Y) >= 3) || session.GetHabbo().Permissions.HasRight("mod_tool"))
+        if (!(Math.Abs(user.X - targetUser.X) >= 3 || Math.Abs(user.Y - targetUser.Y) >= 3) || (habbo.Permissions?.HasRight("mod_tool") ?? false))
         {
             if (user.CarryItemId > 0 && user.CarryTimer > 0)
             {

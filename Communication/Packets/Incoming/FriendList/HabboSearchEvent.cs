@@ -16,6 +16,10 @@ internal class HabboSearchEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var messenger = session.GetHabbo()?.Messenger;
+        if (messenger == null)
+            return Task.CompletedTask;
+
         var query = StringCharFilter.Escape(packet.ReadString().Replace("%", ""));
         if (query.Length < 1 || query.Length > 100)
             return Task.CompletedTask;
@@ -24,7 +28,7 @@ internal class HabboSearchEvent : IPacketEvent
         var results = _searchResultFactory.GetSearchResult(query);
         foreach (var result in results.ToList())
         {
-            if (session.GetHabbo().Messenger.FriendshipExists(result.UserId))
+            if (messenger.FriendshipExists(result.UserId))
                 friends.Add(result);
             else
                 othersUsers.Add(result);

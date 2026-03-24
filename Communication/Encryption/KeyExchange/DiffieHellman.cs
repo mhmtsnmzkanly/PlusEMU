@@ -6,7 +6,7 @@ public class DiffieHellman
 {
     public readonly int Bitlength = 32;
 
-    private BigInteger _privateKey;
+    private BigInteger _privateKey = 0;
 
     public DiffieHellman()
     {
@@ -26,9 +26,9 @@ public class DiffieHellman
         Initialize(true);
     }
 
-    public BigInteger Prime { get; private set; }
-    public BigInteger Generator { get; private set; }
-    public BigInteger PublicKey { get; private set; }
+    public BigInteger Prime { get; private set; } = 0;
+    public BigInteger Generator { get; private set; } = 0;
+    public BigInteger PublicKey { get; private set; } = 0;
 
     private void Initialize(bool ignoreBaseKeys = false)
     {

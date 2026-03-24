@@ -32,14 +32,18 @@ public class InteractorVendor : IFurniInteractor
         if (item.LegacyDataString != "1" && item.Definition.VendingIds.Count >= 1 && item.InteractingUser == 0 &&
             session != null)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+            var habbo = session.GetHabbo();
+            if (habbo == null)
+                return;
+
+            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user == null) return;
             if (!Gamemap.TilesTouching(user.X, user.Y, item.GetX, item.GetY))
             {
                 user.MoveTo(item.SquareInFront);
                 return;
             }
-            item.InteractingUser = session.GetHabbo().Id;
+            item.InteractingUser = habbo.Id;
             user.CanWalk = false;
             user.ClearMovement(true);
             user.SetRot(Rotation.Calculate(user.X, user.Y, item.GetX, item.GetY), false);

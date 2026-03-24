@@ -8,7 +8,11 @@ internal class GetFriendRequestsEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        ICollection<MessengerRequest> requests = session.GetHabbo().Messenger.Requests.Values.ToList();
+        var messenger = session.GetHabbo()?.Messenger;
+        if (messenger == null)
+            return Task.CompletedTask;
+
+        ICollection<MessengerRequest> requests = messenger.Requests.Values.ToList();
         session.Send(new BuddyRequestsComposer(requests));
         return Task.CompletedTask;
     }

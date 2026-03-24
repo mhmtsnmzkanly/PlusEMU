@@ -22,7 +22,7 @@ public class ClothingManager : IClothingManager
         using var connection = _database.Connection();
         var data = await connection.QueryAsync<(int Id, string ClothingName, string PartIds)>("SELECT `id`,`clothing_name`,`clothing_parts` FROM `catalog_clothing`");
         foreach (var row in data)
-            _clothing.Add(row.Id, new(row.Id, row.ClothingName, row.PartIds));
+            _clothing.Add(row.Id, new(row.Id, row.ClothingName ?? string.Empty, row.PartIds ?? string.Empty));
     }
 
     public bool TryGetClothing(int itemId, out ClothingItem clothing) => _clothing.TryGetValue(itemId, out clothing);

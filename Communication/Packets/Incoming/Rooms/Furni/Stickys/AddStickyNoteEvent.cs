@@ -10,11 +10,15 @@ internal class AddStickyNoteEvent : RoomPacketEvent
 {
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var furniture = session.GetHabbo()?.Inventory?.Furniture;
+        if (furniture == null)
+            return Task.CompletedTask;
+
         var itemId = packet.ReadUInt();
         var locationData = packet.ReadString();
         if (!room.CheckRights(session))
             return Task.CompletedTask;
-        var item = session.GetHabbo().Inventory.Furniture.GetItem(itemId);
+        var item = furniture.GetItem(itemId);
         if (item == null)
             return Task.CompletedTask;
         try
@@ -24,7 +28,7 @@ internal class AddStickyNoteEvent : RoomPacketEvent
             roomItem.WallCoordinates = wallPossition;
             if (room.GetRoomItemHandler().SetWallItem(session, roomItem))
             {
-                session.GetHabbo().Inventory.Furniture.RemoveItem(itemId);
+                furniture.RemoveItem(itemId);
                 session.Send(new FurniListRemoveComposer(itemId));
             }
         }

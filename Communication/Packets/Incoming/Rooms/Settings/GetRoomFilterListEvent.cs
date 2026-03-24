@@ -15,9 +15,10 @@ internal class GetRoomFilterListEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var instance = session.GetHabbo().CurrentRoom;
+        var instance = habbo.CurrentRoom;
         if (instance == null)
             return Task.CompletedTask;
         if (!instance.CheckRights(session))

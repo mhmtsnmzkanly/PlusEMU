@@ -19,11 +19,12 @@ internal class GetModeratorUserRoomVisitsEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool"))
+        if (!(session.GetHabbo().Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         var target = _clientManager.GetClientByUserId(userId);
-        if (target == null)
+        var targetHabbo = target?.GetHabbo();
+        if (targetHabbo == null)
             return Task.CompletedTask;
         var visits = new Dictionary<double, RoomData>();
         using (var dbClient = _database.GetQueryReactor())
@@ -42,7 +43,7 @@ internal class GetModeratorUserRoomVisitsEvent : IPacketEvent
                 }
             }
         }
-        session.Send(new ModeratorUserRoomVisitsComposer(target.GetHabbo(), visits));
+        session.Send(new ModeratorUserRoomVisitsComposer(targetHabbo, visits));
         return Task.CompletedTask;
     }
 }

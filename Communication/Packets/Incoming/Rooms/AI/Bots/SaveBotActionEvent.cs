@@ -18,9 +18,10 @@ internal class SaveBotActionEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (!habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         var botId = packet.ReadInt();
@@ -30,7 +31,7 @@ internal class SaveBotActionEvent : IPacketEvent
             return Task.CompletedTask;
         if (!room.GetRoomUserManager().TryGetBot(botId, out var bot))
             return Task.CompletedTask;
-        if (bot.BotData.OwnerId != session.GetHabbo().Id && !session.GetHabbo().Permissions.HasRight("bot_edit_any_override"))
+        if (bot.BotData.OwnerId != habbo.Id && !(habbo.Permissions?.HasRight("bot_edit_any_override") ?? false))
             return Task.CompletedTask;
         var roomBot = bot.BotData;
         if (roomBot == null)
@@ -46,15 +47,15 @@ internal class SaveBotActionEvent : IPacketEvent
             case 1:
             {
                 //Change the defaults
-                bot.BotData.Look = session.GetHabbo().Look;
-                bot.BotData.Gender = session.GetHabbo().Gender;
+                bot.BotData.Look = habbo.Look;
+                bot.BotData.Gender = habbo.Gender;
 
                 var userChangeComposer = new UserChangeComposer(bot.BotData);
                 room.SendPacket(userChangeComposer);
 
                 using var dbClient = _database.GetQueryReactor();
-                dbClient.SetQuery($"UPDATE `bots` SET `look` = @look, `gender` = '{session.GetHabbo().Gender}' WHERE `id` = '{bot.BotData.Id}' LIMIT 1");
-                dbClient.AddParameter("look", session.GetHabbo().Look);
+                dbClient.SetQuery($"UPDATE `bots` SET `look` = @look, `gender` = '{habbo.Gender}' WHERE `id` = '{bot.BotData.Id}' LIMIT 1");
+                dbClient.AddParameter("look", habbo.Look);
                 dbClient.RunQuery();
 
                 //Room.SendMessage(new UserChangeComposer(BotUser.GetClient(), true));
@@ -99,7 +100,9 @@ internal class SaveBotActionEvent : IPacketEvent
                 dbClient.SetQuery("SELECT `text` FROM `bots_speech` WHERE `bot_id` = @id");
                 dbClient.AddParameter("id", botId);
                 var botSpeech = dbClient.GetTable();
-                foreach (DataRow speech in botSpeech.Rows) roomBot.RandomSpeech.Add(new(Convert.ToString(speech["text"]), botId));
+                if (botSpeech != null)
+                    foreach (DataRow speech in botSpeech.Rows)
+                        roomBot.RandomSpeech.Add(new(Convert.ToString(speech["text"]) ?? string.Empty, botId));
                 break;
             }
             case 3:

@@ -21,10 +21,14 @@ internal class SubmitNewTicketEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         // Run a quick check to see if we have any existing tickets.
-        if (_moderationManager.UserHasTickets(session.GetHabbo().Id))
+        if (_moderationManager.UserHasTickets(habbo.Id))
         {
-            var pendingTicket = _moderationManager.GetTicketBySenderId(session.GetHabbo().Id);
+            var pendingTicket = _moderationManager.GetTicketBySenderId(habbo.Id);
             if (pendingTicket != null)
             {
                 session.Send(new CallForHelpPendingCallsComposer(pendingTicket));
@@ -48,7 +52,7 @@ internal class SubmitNewTicketEvent : IPacketEvent
             packet.ReadInt();
             chats.Add(packet.ReadString());
         }
-        var ticket = new ModerationTicket(1, type, category, UnixTimestamp.GetNow(), 1, session.GetHabbo(), reportedUser, message, session.GetHabbo().CurrentRoom, chats);
+        var ticket = new ModerationTicket(1, type, category, UnixTimestamp.GetNow(), 1, habbo, reportedUser, message, habbo.CurrentRoom, chats);
         if (!_moderationManager.TryAddTicket(ticket))
             return Task.CompletedTask;
         using (var dbClient = _database.GetQueryReactor())
@@ -57,10 +61,10 @@ internal class SubmitNewTicketEvent : IPacketEvent
             /*dbClient.SetQuery("INSERT INTO `moderation_tickets` (`score`,`type`,`status`,`sender_id`,`reported_id`,`moderator_id`,`message`,`room_id`,`room_name`,`timestamp`) VALUES (1, '" + Category + "', 'open', '" + Session.GetHabbo().Id + "', '" + ReportedUserId + "', '0', @message, '0', '', '" + PlusEnvironment.GetNow() + "')");
             dbClient.AddParameter("message", Message);
             dbClient.RunQuery();*/
-            dbClient.RunQuery($"UPDATE `user_info` SET `cfhs` = `cfhs` + '1' WHERE `user_id` = '{session.GetHabbo().Id}' LIMIT 1");
+            dbClient.RunQuery($"UPDATE `user_info` SET `cfhs` = `cfhs` + '1' WHERE `user_id` = '{habbo.Id}' LIMIT 1");
         }
         _clientManager.ModAlert("A new support ticket has been submitted!");
-        _clientManager.SendPacket(new ModeratorSupportTicketComposer(session.GetHabbo().Id, ticket), "mod_tool");
+        _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
         return Task.CompletedTask;
     }
 }

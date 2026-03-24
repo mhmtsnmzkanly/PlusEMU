@@ -15,10 +15,14 @@ internal class ManageGroupEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo?.Permissions == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        if (group.CreatorId != session.GetHabbo().Id && !session.GetHabbo().Permissions.HasRight("group_management_override"))
+        if (group.CreatorId != habbo.Id && !habbo.Permissions.HasRight("group_management_override"))
             return Task.CompletedTask;
         session.Send(new ManageGroupComposer(group, group.Badge.Replace("b", "").Split('s')));
         return Task.CompletedTask;

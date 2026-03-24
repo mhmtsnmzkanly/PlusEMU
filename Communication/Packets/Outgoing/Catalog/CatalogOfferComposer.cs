@@ -18,7 +18,7 @@ public class CatalogOfferComposer : IServerPacket
     public void Compose(IOutgoingPacket packet)
     {
         packet.WriteInteger(_item.OfferId);
-        packet.WriteString(_item.Definition.ItemName);
+        packet.WriteString(_item.Definition.ItemName ?? string.Empty);
         packet.WriteBoolean(false); //IsRentable
         packet.WriteInteger(_item.CostCredits);
         if (_item.CostDiamonds > 0)
@@ -40,24 +40,26 @@ public class CatalogOfferComposer : IServerPacket
         }
         packet.WriteString(_item.Definition.Type.ToString());
         if (_item.Definition.Type.ToString().ToLower() == "b")
-            packet.WriteString(_item.Definition.ItemName); //Badge name.
+            packet.WriteString(_item.Definition.ItemName ?? string.Empty); //Badge name.
         else
         {
             packet.WriteInteger(_item.Definition.SpriteId);
             if (_item.Definition.InteractionType == InteractionType.Wallpaper || _item.Definition.InteractionType == InteractionType.Floor || _item.Definition.InteractionType == InteractionType.Landscape)
-                packet.WriteString(_item.CatalogName.Split('_')[2]);
+                packet.WriteString((_item.CatalogName ?? string.Empty).Split('_').ElementAtOrDefault(2) ?? string.Empty);
 
             // TODO @80O: Dont make this static hardcoded page 9
             else if (_item.PageId == 9) //Bots
             {
-                CatalogBot cataBot = null;
+                CatalogBot? cataBot = null;
                 if (!PlusEnvironment.Game.Catalog.TryGetBot(_item.ItemId, out cataBot))
                     packet.WriteString("hd-180-7.ea-1406-62.ch-210-1321.hr-831-49.ca-1813-62.sh-295-1321.lg-285-92");
                 else
-                    packet.WriteString(cataBot.Figure);
+                    packet.WriteString(cataBot.Figure ?? string.Empty);
             }
             else if (_item.ExtraData != null)
-                packet.WriteString(_item.ExtraData != null ? _item.ExtraData : string.Empty);
+                packet.WriteString(_item.ExtraData);
+            else
+                packet.WriteString(string.Empty);
             packet.WriteInteger(_item.Amount);
             packet.WriteBoolean(_item.IsLimited); // IsLimited
             if (_item.IsLimited)

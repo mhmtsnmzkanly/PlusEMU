@@ -10,9 +10,9 @@ namespace Plus.Communication.Nitro;
 
 public class NitroServerConfiguration : IGameServerOptions
 {
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public int Port { get; set; }
-    public string Hostname { get; set; }
+    public string Hostname { get; set; } = string.Empty;
 }
 
 public interface INitroServer : IGameServer

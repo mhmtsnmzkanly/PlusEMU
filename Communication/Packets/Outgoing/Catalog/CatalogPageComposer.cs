@@ -22,18 +22,18 @@ public class CatalogPageComposer : IServerPacket
     {
         packet.WriteInteger(_page.Id);
         packet.WriteString(_mode);
-        packet.WriteString(_page.Layout);
+        packet.WriteString(_page.Layout ?? string.Empty);
         packet.WriteInteger(_page.PageStringsList1.Count);
-        foreach (var s in _page.PageStringsList1) packet.WriteString(s);
+        foreach (var s in _page.PageStringsList1) packet.WriteString(s ?? string.Empty);
         packet.WriteInteger(_page.PageStringsList2.Count);
-        foreach (var s in _page.PageStringsList2) packet.WriteString(s);
-        if (!_page.Layout.Equals("frontpage") && !_page.Layout.Equals("club_buy"))
+        foreach (var s in _page.PageStringsList2) packet.WriteString(s ?? string.Empty);
+        if (!string.Equals(_page.Layout, "frontpage", StringComparison.Ordinal) && !string.Equals(_page.Layout, "club_buy", StringComparison.Ordinal))
         {
             packet.WriteInteger(_page.Items.Count);
             foreach (var item in _page.Items.Values)
             {
                 packet.WriteInteger(item.Id);
-                packet.WriteString(item.CatalogName);
+                packet.WriteString(item.CatalogName ?? string.Empty);
                 packet.WriteBoolean(false); //IsRentable
                 packet.WriteInteger(item.CostCredits);
                 if (item.CostDiamonds > 0)
@@ -49,7 +49,7 @@ public class CatalogPageComposer : IServerPacket
                 packet.WriteBoolean(ItemUtility.CanGiftItem(item));
                 if (item.Definition.InteractionType == InteractionType.Deal || item.Definition.InteractionType == InteractionType.Roomdeal)
                 {
-                    CatalogDeal deal = null;
+                    CatalogDeal? deal = null;
                     if (!PlusEnvironment.Game.Catalog.TryGetDeal(item.Definition.BehaviourData, out deal))
                         packet.WriteInteger(0); //Count
                     else
@@ -77,22 +77,23 @@ public class CatalogPageComposer : IServerPacket
                     if (item.Definition.Type.ToString().ToLower() == "b")
                     {
                         //This is just a badge, append the name.
-                        packet.WriteString(item.Definition.ItemName);
+                        packet.WriteString(item.Definition.ItemName ?? string.Empty);
                     }
                     else
                     {
                         packet.WriteInteger(item.Definition.SpriteId);
                         if (item.Definition.InteractionType == InteractionType.Wallpaper || item.Definition.InteractionType == InteractionType.Floor || item.Definition.InteractionType == InteractionType.Landscape)
-                            packet.WriteString(item.CatalogName.Split('_')[2]);
+                            packet.WriteString((item.CatalogName ?? string.Empty).Split('_').ElementAtOrDefault(2) ?? string.Empty);
                         else if (item.Definition.InteractionType == InteractionType.Bot) //Bots
                         {
-                            CatalogBot catalogBot = null;
+                            CatalogBot? catalogBot = null;
                             if (!PlusEnvironment.Game.Catalog.TryGetBot(item.ItemId, out catalogBot))
                                 packet.WriteString("hd-180-7.ea-1406-62.ch-210-1321.hr-831-49.ca-1813-62.sh-295-1321.lg-285-92");
                             else
-                                packet.WriteString(catalogBot.Figure);
+                                packet.WriteString(catalogBot.Figure ?? string.Empty);
                         }
-                        else if (item.ExtraData != null) packet.WriteString(item.ExtraData != null ? item.ExtraData : string.Empty);
+                        else if (item.ExtraData != null) packet.WriteString(item.ExtraData);
+                        else packet.WriteString(string.Empty);
                         packet.WriteInteger(item.Amount);
                         packet.WriteBoolean(item.IsLimited); // IsLimited
                         if (item.IsLimited)
@@ -116,10 +117,10 @@ public class CatalogPageComposer : IServerPacket
         foreach (var promotion in PlusEnvironment.Game.Catalog.Promotions.ToList())
         {
             packet.WriteInteger(promotion.Id);
-            packet.WriteString(promotion.Title);
-            packet.WriteString(promotion.Image);
+            packet.WriteString(promotion.Title ?? string.Empty);
+            packet.WriteString(promotion.Image ?? string.Empty);
             packet.WriteInteger(promotion.Unknown);
-            packet.WriteString(promotion.PageLink);
+            packet.WriteString(promotion.PageLink ?? string.Empty);
             packet.WriteInteger(promotion.ParentId);
         }
     }

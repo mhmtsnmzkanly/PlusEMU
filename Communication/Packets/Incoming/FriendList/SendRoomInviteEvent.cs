@@ -19,7 +19,12 @@ internal class SendRoomInviteEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (session.GetHabbo().TimeMuted > 0)
+        var habbo = session.GetHabbo();
+        var messenger = habbo?.Messenger;
+        if (habbo == null || messenger == null)
+            return Task.CompletedTask;
+
+        if (habbo.TimeMuted > 0)
         {
             session.SendNotification("Oops, you're currently muted - you cannot send room invitations.");
             return Task.CompletedTask;
@@ -39,16 +44,17 @@ internal class SendRoomInviteEvent : IPacketEvent
             message = message.Substring(0, 121);
         foreach (var userId in targets)
         {
-            if (!session.GetHabbo().Messenger.FriendshipExists(userId))
+            if (!messenger.FriendshipExists(userId))
                 continue;
             var client = _clientManager.GetClientByUserId(userId);
-            if (client == null || client.GetHabbo() == null || client.GetHabbo().AllowMessengerInvites || client.GetHabbo().AllowConsoleMessages == false)
+            var targetHabbo = client?.GetHabbo();
+            if (targetHabbo == null || targetHabbo.AllowMessengerInvites || targetHabbo.AllowConsoleMessages == false)
                 continue;
-            client.Send(new RoomInviteComposer(session.GetHabbo().Id, message));
+            client.Send(new RoomInviteComposer(habbo.Id, message));
         }
         using var connection = _database.Connection();
         connection.Execute("INSERT INTO `chatlogs_console_invitations` (`user_id`,`message`,`timestamp`) VALUES (@userId, @message, UNIX_TIMESTAMP())",
-            new { userId = session.GetHabbo().Id, message = message });
+            new { userId = habbo.Id, message = message });
         return Task.CompletedTask;
     }
 }

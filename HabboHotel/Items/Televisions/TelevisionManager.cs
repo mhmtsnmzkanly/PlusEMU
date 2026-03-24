@@ -35,8 +35,8 @@ public class TelevisionManager : ITelevisionManager
                 foreach (DataRow row in getData.Rows)
                 {
                     Televisions.Add(Convert.ToInt32(row["id"]),
-                        new(Convert.ToInt32(row["id"]), row["youtube_id"].ToString(), row["title"].ToString(), row["description"].ToString(),
-                            ConvertExtensions.EnumToBool(row["enabled"].ToString())));
+                        new(Convert.ToInt32(row["id"]), row["youtube_id"].ToString() ?? string.Empty, row["title"].ToString() ?? string.Empty, row["description"].ToString() ?? string.Empty,
+                            ConvertExtensions.EnumToBool(row["enabled"].ToString() ?? "0")));
                 }
             }
         }

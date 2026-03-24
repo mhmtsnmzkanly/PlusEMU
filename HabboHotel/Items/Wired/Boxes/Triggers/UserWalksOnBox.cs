@@ -13,6 +13,7 @@ internal class UserWalksOnBox : IWiredItem
         Item = item;
         StringData = "";
         SetItems = new();
+        ItemsData = string.Empty;
     }
 
     public Room Instance { get; set; }
@@ -64,12 +65,12 @@ internal class UserWalksOnBox : IWiredItem
         {
             //Okay, so we have a random addon effect, now lets get the IWiredItem and attempt to execute it.
             var randomBox = effects.FirstOrDefault(x => x.Type == WiredBoxType.AddonRandomEffect);
-            if (!randomBox.Execute())
+            if (randomBox == null || !randomBox.Execute())
                 return false;
 
             //Success! Let's get our selected box and continue.
             var selectedBox = Instance.GetWired().GetRandomEffect(effects.ToList());
-            if (!selectedBox.Execute())
+            if (selectedBox == null || !selectedBox.Execute())
                 return false;
 
             //Woo! Almost there captain, now lets broadcast the update to the room instance.

@@ -20,9 +20,11 @@ internal class UseSellableClothingEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        var clothingComponent = habbo?.Clothing;
+        if (habbo == null || clothingComponent == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         var itemId = packet.ReadUInt();
@@ -31,7 +33,7 @@ internal class UseSellableClothingEvent : IPacketEvent
             return Task.CompletedTask;
         if (item.Definition == null)
             return Task.CompletedTask;
-        if (item.UserId != session.GetHabbo().Id)
+        if (item.UserId != habbo.Id)
             return Task.CompletedTask;
         if (item.Definition.InteractionType != InteractionType.PurchasableClothing)
         {
@@ -59,8 +61,8 @@ internal class UseSellableClothingEvent : IPacketEvent
 
         //Remove the item.
         room.GetRoomItemHandler().RemoveFurniture(session, item.Id);
-        session.GetHabbo().Clothing.AddClothing(clothing.ClothingName, clothing.PartIds);
-        session.Send(new FigureSetIdsComposer(session.GetHabbo().Clothing.GetClothingParts));
+        clothingComponent.AddClothing(clothing.ClothingName, clothing.PartIds);
+        session.Send(new FigureSetIdsComposer(clothingComponent.GetClothingParts));
         session.Send(new RoomNotificationComposer("figureset.redeemed.success"));
         session.SendWhisper("If for some reason cannot see your new clothing, reload the hotel!");
         return Task.CompletedTask;

@@ -19,11 +19,12 @@ public class GameAchievementListComposer : IServerPacket
 
     public void Compose(IOutgoingPacket packet)
     {
+        var habbo = _session.GetHabbo();
         packet.WriteInteger(_gameId);
         packet.WriteInteger(_achievements.Count);
         foreach (var ach in _achievements.ToList())
         {
-            var userData = _session.GetHabbo().GetAchievementData(ach.GroupName);
+            var userData = habbo?.GetAchievementData(ach.GroupName);
             var targetLevel = userData != null ? userData.Level + 1 : 1;
             var targetLevelData = ach.Levels[targetLevel];
             packet.WriteInteger(ach.Id); // ach id

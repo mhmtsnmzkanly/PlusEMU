@@ -26,20 +26,25 @@ internal class UpdateFigureDataEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var gender = packet.ReadString().ToUpper();
-        var look = _figureManager.ProcessFigure(packet.ReadString(), gender, session.GetHabbo().Clothing.GetClothingParts, true);
-        if (look == session.GetHabbo().Look)
+        var habbo = session.GetHabbo();
+        var clothing = habbo?.Clothing;
+        if (habbo == null || clothing == null)
             return Task.CompletedTask;
-        if ((DateTime.Now - session.GetHabbo().LastClothingUpdateTime).TotalSeconds <= 2.0)
+
+        var gender = packet.ReadString().ToUpper();
+        var look = _figureManager.ProcessFigure(packet.ReadString(), gender, clothing.GetClothingParts, true);
+        if (look == habbo.Look)
+            return Task.CompletedTask;
+        if ((DateTime.Now - habbo.LastClothingUpdateTime).TotalSeconds <= 2.0)
         {
-            session.GetHabbo().ClothingUpdateWarnings += 1;
-            if (session.GetHabbo().ClothingUpdateWarnings >= 25)
-                session.GetHabbo().SessionClothingBlocked = true;
+            habbo.ClothingUpdateWarnings += 1;
+            if (habbo.ClothingUpdateWarnings >= 25)
+                habbo.SessionClothingBlocked = true;
             return Task.CompletedTask;
         }
-        if (session.GetHabbo().SessionClothingBlocked)
+        if (habbo.SessionClothingBlocked)
             return Task.CompletedTask;
-        session.GetHabbo().LastClothingUpdateTime = DateTime.Now;
+        habbo.LastClothingUpdateTime = DateTime.Now;
         string[] allowedGenders = { "M", "F" };
         if (!allowedGenders.Contains(gender))
         {
@@ -47,26 +52,30 @@ internal class UpdateFigureDataEvent : IPacketEvent
             return Task.CompletedTask;
         }
         _questManager.ProgressUserQuest(session, QuestType.ProfileChangeLook);
-        session.GetHabbo().Look = _figureManager.FilterFigure(look);
-        session.GetHabbo().Gender = gender.ToLower();
+        habbo.Look = _figureManager.FilterFigure(look);
+        habbo.Gender = gender.ToLower();
         using (var dbClient = _database.GetQueryReactor())
         {
-            dbClient.SetQuery($"UPDATE `users` SET `look` = @look, `gender` = @gender WHERE `id` = '{session.GetHabbo().Id}' LIMIT 1");
+            dbClient.SetQuery($"UPDATE `users` SET `look` = @look, `gender` = @gender WHERE `id` = '{habbo.Id}' LIMIT 1");
             dbClient.AddParameter("look", look);
             dbClient.AddParameter("gender", gender);
             dbClient.RunQuery();
         }
         _achievementManager.ProgressAchievement(session, "ACH_AvatarLooks", 1);
         session.Send(new AvatarAspectUpdateComposer(look, gender));
-        if (session.GetHabbo().Look.Contains("ha-1006"))
+        if (habbo.Look.Contains("ha-1006"))
             _questManager.ProgressUserQuest(session, QuestType.WearHat);
-        if (session.GetHabbo().InRoom)
+        if (habbo.InRoom)
         {
-            var roomUser = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+            var currentRoom = habbo.CurrentRoom;
+            if (currentRoom == null)
+                return Task.CompletedTask;
+
+            var roomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (roomUser != null)
             {
                 session.Send(new UserChangeComposer(roomUser, true));
-                session.GetHabbo().CurrentRoom.SendPacket(new UserChangeComposer(roomUser, false));
+                currentRoom.SendPacket(new UserChangeComposer(roomUser, false));
             }
         }
         return Task.CompletedTask;

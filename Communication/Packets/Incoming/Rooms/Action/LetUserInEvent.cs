@@ -21,18 +21,19 @@ internal class LetUserInEvent : RoomPacketEvent
         var name = packet.ReadString();
         var accepted = packet.ReadBool();
         var client = _clientManager.GetClientByUsername(name);
-        if (client == null)
+        var habbo = client?.GetHabbo();
+        if (habbo == null)
             return Task.CompletedTask;
         if (accepted)
         {
-            client.GetHabbo().RoomAuthOk = true;
+            habbo.RoomAuthOk = true;
             client.Send(new FlatAccessibleComposer(""));
-            room.SendPacket(new FlatAccessibleComposer(client.GetHabbo().Username), true);
+            room.SendPacket(new FlatAccessibleComposer(habbo.Username), true);
         }
         else
         {
             client.Send(new FlatAccessDeniedComposer(""));
-            room.SendPacket(new FlatAccessDeniedComposer(client.GetHabbo().Username), true);
+            room.SendPacket(new FlatAccessDeniedComposer(habbo.Username), true);
         }
         return Task.CompletedTask;
     }

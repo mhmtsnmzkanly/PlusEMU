@@ -15,21 +15,24 @@ internal class MuteUserEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (habbo?.Permissions == null || !habbo.InRoom)
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         packet.ReadInt(); //roomId
         var time = packet.ReadInt();
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         if (room.WhoCanMute == 0 && !room.CheckRights(session, true) && room.Group == null || room.WhoCanMute == 1 && !room.CheckRights(session) && room.Group == null ||
             room.Group != null && !room.CheckRights(session, false, true))
             return Task.CompletedTask;
         var target = room.GetRoomUserManager().GetRoomUserByHabbo(PlusEnvironment.GetUsernameById(userId));
-        if (target == null)
+        var targetClient = target?.GetClient();
+        var targetHabbo = targetClient?.GetHabbo();
+        if (targetHabbo == null)
             return Task.CompletedTask;
-        if (target.GetClient().GetHabbo().Permissions.HasRight("mod_tool"))
+        if (targetHabbo.Permissions?.HasRight("mod_tool") == true)
             return Task.CompletedTask;
         if (room.MutedUsers.ContainsKey(userId))
         {
@@ -39,7 +42,7 @@ internal class MuteUserEvent : IPacketEvent
                 return Task.CompletedTask;
         }
         room.MutedUsers.Add(userId, UnixTimestamp.GetNow() + time * 60);
-        target.GetClient().SendWhisper($"The room owner has muted you for {time} minutes!");
+        targetClient.SendWhisper($"The room owner has muted you for {time} minutes!");
         _achievementManager.ProgressAchievement(session, "ACH_SelfModMuteSeen", 1);
         return Task.CompletedTask;
     }

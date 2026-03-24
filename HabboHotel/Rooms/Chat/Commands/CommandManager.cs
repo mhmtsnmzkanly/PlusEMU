@@ -38,7 +38,9 @@ public class CommandManager : ICommandManager
     /// <returns>True if parsed or false if not.</returns>
     public async Task<bool> Parse(GameClient session, string message)
     {
-        if (session == null || session.GetHabbo() == null || session.GetHabbo().CurrentRoom == null)
+        var habbo = session?.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
+        if (habbo?.Permissions == null || currentRoom == null)
             return false;
         if (!message.StartsWith(_prefix))
             return false;
@@ -50,7 +52,7 @@ public class CommandManager : ICommandManager
             {
                 if (!string.IsNullOrEmpty(cmdList.Value.PermissionRequired))
                 {
-                    if (!session.GetHabbo().Permissions.HasCommand(cmdList.Value.PermissionRequired))
+                    if (!habbo.Permissions.HasCommand(cmdList.Value.PermissionRequired))
                         continue;
                 }
                 list.Append($":{cmdList.Key} {cmdList.Value.Parameters} - {cmdList.Value.Description}\n");
@@ -67,19 +69,19 @@ public class CommandManager : ICommandManager
         var parameters = split.Length > 1 ? split[1..] : Array.Empty<string>();
         if (_commands.TryGetValue(key.ToLower(), out var command))
         {
-            if (session.GetHabbo().Permissions.HasRight("mod_tool"))
-                LogCommand(session.GetHabbo().Id, message, session.GetHabbo().MachineId);
+            if (habbo.Permissions.HasRight("mod_tool"))
+                LogCommand(habbo.Id, message, habbo.MachineId);
             if (!string.IsNullOrEmpty(command.PermissionRequired))
             {
-                if (!session.GetHabbo().Permissions.HasCommand(command.PermissionRequired))
+                if (!habbo.Permissions.HasCommand(command.PermissionRequired))
                     return false;
             }
-            session.GetHabbo().ChatCommand = command;
-            session.GetHabbo().CurrentRoom.GetWired().TriggerEvent(WiredBoxType.TriggerUserSaysCommand, session.GetHabbo(), this);
+            habbo.ChatCommand = command;
+            currentRoom.GetWired()?.TriggerEvent(WiredBoxType.TriggerUserSaysCommand, habbo, this);
 
             if (command is IChatCommand chatCommand)
             {
-                chatCommand.Execute(session, session.GetHabbo().CurrentRoom, parameters);
+                chatCommand.Execute(session, currentRoom, parameters);
             }
             else if (command is ITargetChatCommand targetChatCommand)
             {
@@ -98,13 +100,17 @@ public class CommandManager : ICommandManager
                     return true;
                 }
 
-                if (targetChatCommand.MustBeInSameRoom && session.GetHabbo().CurrentRoom != target.GetHabbo().CurrentRoom)
+                if (targetChatCommand.MustBeInSameRoom && currentRoom != target.GetHabbo()?.CurrentRoom)
                 {
                     session.SendWhisper($"You must be in the same room as {username} to execute this command.");
                     return true;
                 }
 
-                await targetChatCommand.Execute(session, session.GetHabbo().CurrentRoom, target.GetHabbo(), parameters);
+                var targetHabbo = target.GetHabbo();
+                if (targetHabbo == null)
+                    return true;
+
+                await targetChatCommand.Execute(session, currentRoom, targetHabbo, parameters);
             }
             return true;
         }

@@ -17,19 +17,20 @@ internal class GiveCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        if (!parameters.Any())
+        if (parameters.Length < 3)
         {
-            session.SendWhisper("Please enter a currency type! (coins, duckets, diamonds, gotw)");
+            session.SendWhisper("Please enter a currency type and amount! (coins, duckets, diamonds, gotw)");
             return Task.CompletedTask;
         }
 
+        var permissions = session.GetHabbo().Permissions;
         var updateVal = parameters[1];
         switch (updateVal.ToLower())
         {
             case "coins":
             case "credits":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_give_coins"))
+                if (!(permissions?.HasCommand("command_give_coins") ?? false))
                 {
                     session.SendWhisper("Oops, it appears that you do not have the permissions to use this command!");
                     break;
@@ -49,7 +50,7 @@ internal class GiveCommand : ITargetChatCommand
             case "pixels":
             case "duckets":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_give_pixels"))
+                if (!(permissions?.HasCommand("command_give_pixels") ?? false))
                 {
                     session.SendWhisper("Oops, it appears that you do not have the permissions to use this command!");
                     break;
@@ -68,7 +69,7 @@ internal class GiveCommand : ITargetChatCommand
             }
             case "diamonds":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_give_diamonds"))
+                if (!(permissions?.HasCommand("command_give_diamonds") ?? false))
                 {
                     session.SendWhisper("Oops, it appears that you do not have the permissions to use this command!");
                     break;
@@ -88,7 +89,7 @@ internal class GiveCommand : ITargetChatCommand
             case "gotw":
             case "gotwpoints":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_give_gotw"))
+                if (!(permissions?.HasCommand("command_give_gotw") ?? false))
                 {
                     session.SendWhisper("Oops, it appears that you do not have the permissions to use this command!");
                     break;

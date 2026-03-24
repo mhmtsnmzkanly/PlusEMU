@@ -7,7 +7,9 @@ internal class GetBadgesEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        session.Send(new BadgesComposer(session.GetHabbo().Id, session.GetHabbo().Inventory.Badges.Badges));
+        var habbo = session.GetHabbo();
+        var badges = habbo.Inventory?.Badges?.Badges ?? new Dictionary<string, Plus.HabboHotel.Users.Badges.Badge>();
+        session.Send(new BadgesComposer(habbo.Id, badges));
         return Task.CompletedTask;
     }
 }

@@ -35,10 +35,19 @@ public class BadgeManager : IBadgeManager
 
     public async Task GiveBadge(Habbo habbo, string code)
     {
-        if (habbo.Inventory.Badges.HasBadge(code))
+        var badges = habbo.Inventory?.Badges;
+        var client = habbo.Client;
+        if (badges == null || client == null)
             return;
 
-        if (!_badges.TryGetValue(code.ToUpper(), out var badge) || badge.RequiredRight.Length > 0 && !habbo.Permissions.HasRight(badge.RequiredRight))
+        if (badges.HasBadge(code))
+            return;
+
+        if (!_badges.TryGetValue(code.ToUpper(), out var badge))
+            return;
+
+        var requiredRight = badge.RequiredRight ?? string.Empty;
+        if (requiredRight.Length > 0 && !(habbo.Permissions?.HasRight(requiredRight) ?? false))
             return;
 
         using var connection = _database.Connection();
@@ -47,22 +56,23 @@ public class BadgeManager : IBadgeManager
             userId = habbo.Id,
             badge = badge.Code
         });
-        habbo.Inventory.Badges.AddBadge(new Badge(code, 0));
+        badges.AddBadge(new Badge(code, 0));
 
-        habbo.Client.Send(new BadgesComposer(habbo.Id, habbo.Inventory.Badges.Badges));
-        habbo.Client.Send(new FurniListNotificationComposer(1, 4));
+        client.Send(new BadgesComposer(habbo.Id, badges.Badges));
+        client.Send(new FurniListNotificationComposer(1, 4));
     }
 
     public async Task RemoveBadge(Habbo habbo, string badge)
     {
-        if (!habbo.Inventory.Badges.HasBadge(badge)) return;
+        var badges = habbo.Inventory?.Badges;
+        if (badges == null || !badges.HasBadge(badge)) return;
         using var connection = _database.Connection();
         await connection.ExecuteAsync("DELETE FROM user_badges WHERE badge_id = @badge AND user_id = @userId LIMIT 1", new
         {
             badge,
             userId = habbo.Id
         });
-        habbo.Inventory.Badges.RemoveBadge(badge);
+        badges.RemoveBadge(badge);
     }
 
     public async Task<List<Badge>> LoadBadgesForHabbo(int userId)

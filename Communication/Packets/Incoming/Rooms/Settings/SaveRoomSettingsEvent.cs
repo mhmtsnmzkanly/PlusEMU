@@ -30,6 +30,10 @@ internal class SaveRoomSettingsEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var roomId = packet.ReadUInt();
         if (!_roomManager.TryLoadRoom(roomId, out var room))
             return Task.CompletedTask;
@@ -100,8 +104,8 @@ internal class SaveRoomSettingsEvent : IPacketEvent
             maxUsers = 50;
         if (!_navigationManager.TryGetSearchResultList(categoryId, out var searchResultList))
             categoryId = 36;
-        if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > session.GetHabbo().Rank ||
-            session.GetHabbo().Id != room.OwnerId && session.GetHabbo().Rank >= searchResultList.RequiredRank)
+        if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank ||
+            habbo.Id != room.OwnerId && habbo.Rank >= searchResultList.RequiredRank)
             categoryId = 36;
         if (tagCount > 2)
             return Task.CompletedTask;
@@ -174,7 +178,7 @@ internal class SaveRoomSettingsEvent : IPacketEvent
             dbClient.RunQuery();
         }
         room.GetGameMap().GenerateMaps();
-        if (session.GetHabbo().CurrentRoom == null)
+        if (habbo.CurrentRoom == null)
         {
             session.Send(new RoomSettingsSavedComposer(room.RoomId));
             session.Send(new RoomInfoUpdatedComposer(room.RoomId));

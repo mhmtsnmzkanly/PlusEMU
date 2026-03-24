@@ -28,7 +28,9 @@ internal class BartenderBot : BotAi
 
     public override void OnUserSay(RoomUser user, string message)
     {
-        if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+        var client = user?.GetClient();
+        var habbo = client?.GetHabbo();
+        if (habbo == null)
             return;
         if (Gamemap.TileDistance(GetRoomUser().X, GetRoomUser().Y, user.X, user.Y) > 8)
             return;
@@ -38,13 +40,13 @@ internal class BartenderBot : BotAi
         switch (response.ResponseType.ToLower())
         {
             case "say":
-                GetRoomUser().Chat(response.ResponseText.Replace("{username}", user.GetClient().GetHabbo().Username));
+                GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "shout":
-                GetRoomUser().Chat(response.ResponseText.Replace("{username}", user.GetClient().GetHabbo().Username));
+                GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "whisper":
-                user.GetClient().Send(new WhisperComposer(GetRoomUser().VirtualId, response.ResponseText.Replace("{username}", user.GetClient().GetHabbo().Username), 0, 0));
+                client.Send(new WhisperComposer(GetRoomUser().VirtualId, response.ResponseText.Replace("{username}", habbo.Username), 0, 0));
                 break;
         }
         if (response.BeverageIds.Count > 0) user.CarryItem(response.BeverageIds[Random.Shared.Next(0, response.BeverageIds.Count)]);
@@ -52,7 +54,9 @@ internal class BartenderBot : BotAi
 
     public override void OnUserShout(RoomUser user, string message)
     {
-        if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+        var client = user?.GetClient();
+        var habbo = client?.GetHabbo();
+        if (habbo == null)
             return;
         if (Gamemap.TileDistance(GetRoomUser().X, GetRoomUser().Y, user.X, user.Y) > 8)
             return;
@@ -62,13 +66,13 @@ internal class BartenderBot : BotAi
         switch (response.ResponseType.ToLower())
         {
             case "say":
-                GetRoomUser().Chat(response.ResponseText.Replace("{username}", user.GetClient().GetHabbo().Username));
+                GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "shout":
-                GetRoomUser().Chat(response.ResponseText.Replace("{username}", user.GetClient().GetHabbo().Username));
+                GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "whisper":
-                user.GetClient().Send(new WhisperComposer(GetRoomUser().VirtualId, response.ResponseText.Replace("{username}", user.GetClient().GetHabbo().Username), 0, 0));
+                client.Send(new WhisperComposer(GetRoomUser().VirtualId, response.ResponseText.Replace("{username}", habbo.Username), 0, 0));
                 break;
         }
         if (response.BeverageIds.Count > 0) user.CarryItem(response.BeverageIds[Random.Shared.Next(0, response.BeverageIds.Count)]);

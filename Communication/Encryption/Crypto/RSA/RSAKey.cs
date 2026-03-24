@@ -81,9 +81,9 @@ public class RsaKey
 
     public static RsaKey ParsePrivateKey(string n, string e,
         string d,
-        string p = null, string q = null,
-        string dmp1 = null, string dmq1 = null,
-        string coeff = null)
+        string? p = null, string? q = null,
+        string? dmp1 = null, string? dmq1 = null,
+        string? coeff = null)
     {
         if (p == null)
             return new(new(n, 16), Convert.ToInt32(e, 16), new(d, 16), 0, 0, 0, 0, 0);
@@ -108,14 +108,14 @@ public class RsaKey
             var bl = GetBlockSize();
             var paddedBytes = Pkcs1Pad(src, bl, type);
             var m = new BigInteger(paddedBytes);
-            if (m == 0) return null;
+            if (m == 0) return Array.Empty<byte>();
             var c = method(m);
-            if (c == 0) return null;
+            if (c == 0) return Array.Empty<byte>();
             return c.getBytes();
         }
         catch
         {
-            return null;
+            return Array.Empty<byte>();
         }
     }
 
@@ -125,14 +125,14 @@ public class RsaKey
         {
             var c = new BigInteger(src);
             var m = method(c);
-            if (m == 0) return null;
+            if (m == 0) return Array.Empty<byte>();
             var bl = GetBlockSize();
             var bytes = Pkcs1Unpad(m.getBytes(), bl, type);
             return bytes;
         }
         catch
         {
-            return null;
+            return Array.Empty<byte>();
         }
     }
 
@@ -168,7 +168,7 @@ public class RsaKey
         if (src.Length - i != n - 1 || src[i] > 2)
         {
             Console.WriteLine("PKCS#1 unpad: i={0}, expected src[i]==[0,1,2], got src[i]={1}", i, src[i].ToString("X"));
-            return null;
+            return Array.Empty<byte>();
         }
         ++i;
         while (src[i] != 0)

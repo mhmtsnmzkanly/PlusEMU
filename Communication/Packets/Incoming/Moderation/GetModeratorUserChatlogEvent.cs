@@ -21,7 +21,7 @@ internal class GetModeratorUserChatlogEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool"))
+        if (!(session.GetHabbo().Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
         var data = PlusEnvironment.GetHabboById(packet.ReadInt());
         if (data == null)
@@ -60,7 +60,7 @@ internal class GetModeratorUserChatlogEvent : IPacketEvent
             foreach (DataRow row in data.Rows)
             {
                 var habbo = PlusEnvironment.GetHabboById(Convert.ToInt32(row["user_id"]));
-                if (habbo != null) chats.Add(new(Convert.ToInt32(row["user_id"]), roomData.Id, Convert.ToString(row["message"]), Convert.ToDouble(row["timestamp"]), habbo));
+                if (habbo != null) chats.Add(new(Convert.ToInt32(row["user_id"]), roomData.Id, Convert.ToString(row["message"]) ?? string.Empty, Convert.ToDouble(row["timestamp"]), habbo));
             }
         }
         return chats;

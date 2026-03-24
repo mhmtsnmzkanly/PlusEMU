@@ -13,7 +13,7 @@ public class BansComponent
     /// <summary>
     /// The RoomInstance that created this BanComponent.
     /// </summary>
-    private Room _instance;
+    private Room? _instance;
 
     /// <summary>
     /// Create the BanComponent for the RoomInstance.
@@ -21,11 +21,9 @@ public class BansComponent
     /// <param name="instance">The instance that created this component.</param>
     public BansComponent(Room instance)
     {
-        if (instance == null)
-            return;
         _instance = instance;
         _bans = new();
-        DataTable getBans = null;
+        DataTable? getBans = null;
         using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
         dbClient.SetQuery($"SELECT `user_id`, `expire` FROM `room_bans` WHERE `room_id` = {_instance.Id} AND `expire` > UNIX_TIMESTAMP();");
         getBans = dbClient.GetTable();
@@ -38,7 +36,7 @@ public class BansComponent
 
     public void Ban(RoomUser avatar, double time)
     {
-        if (avatar == null || _instance.CheckRights(avatar.GetClient(), true) || IsBanned(avatar.UserId))
+        if (_instance == null || avatar == null || _instance.CheckRights(avatar.GetClient(), true) || IsBanned(avatar.UserId))
             return;
         var banTime = UnixTimestamp.GetNow() + time;
         if (!_bans.TryAdd(avatar.UserId, banTime))
@@ -56,7 +54,7 @@ public class BansComponent
 
     public bool IsBanned(int userId)
     {
-        if (!_bans.ContainsKey(userId))
+        if (_instance == null || !_bans.ContainsKey(userId))
             return false;
         var banTime = _bans[userId] - UnixTimestamp.GetNow();
         if (banTime <= 0)
@@ -74,7 +72,7 @@ public class BansComponent
 
     public bool Unban(int userId)
     {
-        if (!_bans.ContainsKey(userId))
+        if (_instance == null || !_bans.ContainsKey(userId))
             return false;
         if (_bans.TryRemove(userId, out var time))
         {
@@ -90,7 +88,10 @@ public class BansComponent
 
     public List<int> BannedUsers()
     {
-        DataTable getBans = null;
+        if (_instance == null)
+            return new List<int>();
+
+        DataTable? getBans = null;
         var bans = new List<int>();
         using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
         dbClient.SetQuery($"SELECT `user_id` FROM `room_bans` WHERE `room_id` = '{_instance.Id}' AND `expire` > UNIX_TIMESTAMP();");
@@ -110,6 +111,5 @@ public class BansComponent
     {
         _bans.Clear();
         _instance = null;
-        _bans = null;
     }
 }

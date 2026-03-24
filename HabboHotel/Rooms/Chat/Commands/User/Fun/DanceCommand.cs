@@ -14,7 +14,12 @@ internal class DanceCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var thisUser = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
+        if (habbo == null || currentRoom == null)
+            return;
+
+        var thisUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (thisUser == null)
             return;
         if (parameters.Length == 0)
@@ -29,7 +34,7 @@ internal class DanceCommand : IChatCommand
                 session.SendWhisper("The dance ID must be between 0 and 4!");
                 return;
             }
-            session.GetHabbo().CurrentRoom.SendPacket(new DanceComposer(thisUser, danceId));
+            currentRoom.SendPacket(new DanceComposer(thisUser, danceId));
         }
         else
             session.SendWhisper("Please enter a valid dance ID.");

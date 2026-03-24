@@ -19,7 +19,8 @@ internal class ModerateRoomEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool"))
+        var moderator = session.GetHabbo();
+        if (moderator?.Permissions == null || !moderator.Permissions.HasRight("mod_tool"))
             return Task.CompletedTask;
         if (!_roomManager.TryGetRoom(packet.ReadUInt(), out var room))
             return Task.CompletedTask;
@@ -60,11 +61,13 @@ internal class ModerateRoomEvent : IPacketEvent
             {
                 if (roomUser == null || roomUser.IsBot)
                     continue;
-                if (roomUser.GetClient() == null || roomUser.GetClient().GetHabbo() == null)
+                var client = roomUser.GetClient();
+                var targetHabbo = client?.GetHabbo();
+                if (targetHabbo == null)
                     continue;
-                if (roomUser.GetClient().GetHabbo().Rank >= session.GetHabbo().Rank || roomUser.GetClient().GetHabbo().Id == session.GetHabbo().Id)
+                if (targetHabbo.Rank >= moderator.Rank || targetHabbo.Id == moderator.Id)
                     continue;
-                room.GetRoomUserManager().RemoveUserFromRoom(roomUser.GetClient(), true);
+                room.GetRoomUserManager().RemoveUserFromRoom(client, true);
             }
         }
         return Task.CompletedTask;

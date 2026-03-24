@@ -26,9 +26,14 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
+        if (habbo == null || furniture == null)
+            return Task.CompletedTask;
+
         var itemId = packet.ReadUInt();
         var item = room.GetRoomItemHandler().GetItem(itemId);
-        if (item == null || item.Definition == null || item.UserId != session.GetHabbo().Id || item.Definition.InteractionType != InteractionType.GnomeBox)
+        if (item == null || item.Definition == null || item.UserId != habbo.Id || item.Definition.InteractionType != InteractionType.GnomeBox)
             return Task.CompletedTask;
         var petName = packet.ReadString();
         if (string.IsNullOrEmpty(petName))
@@ -57,7 +62,7 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
         session.Send(new CheckGnomeNameComposer(petName, 0));
 
         //Create the pet here.
-        var pet = PetUtility.CreatePet(session.GetHabbo().Id, petName, 26, "30", "ffffff");
+        var pet = PetUtility.CreatePet(habbo.Id, petName, 26, "30", "ffffff");
         if (pet == null)
         {
             session.SendNotification("Oops, an error occoured. Please report this!");
@@ -80,10 +85,11 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
         //Give the food.
         if (_itemDataManager.Items.TryGetValue(320, out var petFood))
         {
-            var food = _itemFactory.CreateSingleItemNullable(petFood, session.GetHabbo(), "", "").ToInventoryItem();
+            var createdFood = _itemFactory.CreateSingleItemNullable(petFood, habbo, "", "");
+            var food = createdFood?.ToInventoryItem();
             if (food != null)
             {
-                session.GetHabbo().Inventory.Furniture.AddItem(food);
+                furniture.AddItem(food);
                 session.Send(new FurniListNotificationComposer(food.Id, 1));
             }
         }

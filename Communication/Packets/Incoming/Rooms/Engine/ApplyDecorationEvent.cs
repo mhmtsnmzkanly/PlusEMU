@@ -25,9 +25,14 @@ internal class ApplyDecorationEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
+        if (furniture == null)
+            return Task.CompletedTask;
+
         if (!room.CheckRights(session, true))
             return Task.CompletedTask;
-        var item = session.GetHabbo().Inventory.Furniture.GetItem(packet.ReadUInt());
+        var item = furniture.GetItem(packet.ReadUInt());
         if (item == null)
             return Task.CompletedTask;
         if (item.Definition == null)
@@ -73,7 +78,7 @@ internal class ApplyDecorationEvent : RoomPacketEvent
             dbClient.RunQuery();
             dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{item.Id}' LIMIT 1");
         }
-        session.GetHabbo().Inventory.Furniture.RemoveItem(item.Id);
+        furniture.RemoveItem(item.Id);
         session.Send(new FurniListRemoveComposer(item.Id));
         room.SendPacket(new RoomPropertyComposer(decorationKey, data));
         return Task.CompletedTask;

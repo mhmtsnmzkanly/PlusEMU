@@ -30,18 +30,18 @@ public class PlusEnvironment : IPlusEnvironment
     public const string PrettyBuild = "3.4.3.0";
     private static readonly ILogger Log = LogManager.GetLogger("Plus.PlusEnvironment");
 
-    private static Encoding _defaultEncoding;
-    public static CultureInfo CultureInfo;
+    private static Encoding _defaultEncoding = Encoding.Default;
+    public static CultureInfo CultureInfo = CultureInfo.InvariantCulture;
 
-    private static IGame _game;
-    private static ILanguageManager _languageManager;
-    private static ISettingsManager _settingsManager;
-    private static IDatabase _database;
-    private static IRconSocket _rcon;
-    private static IFlashServer _flashServer;
+    private static IGame _game = null!;
+    private static ILanguageManager _languageManager = null!;
+    private static ISettingsManager _settingsManager = null!;
+    private static IDatabase _database = null!;
+    private static IRconSocket _rcon = null!;
+    private static IFlashServer _flashServer = null!;
     private readonly INitroServer _nitroServer;
-    private static IFigureDataManager _figureManager;
-    private static IItemDataManager _itemDataManager;
+    private static IFigureDataManager _figureManager = null!;
+    private static IItemDataManager _itemDataManager = null!;
 
     public static DateTime ServerStarted;
 
@@ -231,7 +231,7 @@ public class PlusEnvironment : IPlusEnvironment
     }
 
     [Obsolete("Use GameClientManager instead")]
-    public static Habbo GetHabboById(int userId)
+    public static Habbo? GetHabboById(int userId)
     {
         try
         {
@@ -277,7 +277,7 @@ public class PlusEnvironment : IPlusEnvironment
         }
     }
 
-    public static Habbo GetHabboByUsername(string userName)
+    public static Habbo? GetHabboByUsername(string userName)
     {
         try
         {

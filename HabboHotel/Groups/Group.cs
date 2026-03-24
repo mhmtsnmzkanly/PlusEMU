@@ -9,7 +9,7 @@ public class Group
     private readonly List<int> _members;
     private readonly List<int> _requests;
 
-    private RoomData _room;
+    private RoomData? _room;
     public bool HasForum;
 
     public Group(int id, string name, string description, string badge, uint roomId, int owner, int time, int type, int colour1, int colour2, int adminOnlyDeco, bool hasForum)
@@ -209,7 +209,7 @@ public class Group
             _requests.Remove(id);
     }
 
-    public RoomData GetRoom()
+    public RoomData? GetRoom()
     {
         if (_room == null)
         {

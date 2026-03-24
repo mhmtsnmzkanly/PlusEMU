@@ -16,16 +16,18 @@ internal class ModerationCautionEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_caution"))
+        var moderator = session.GetHabbo();
+        if (moderator?.Permissions == null || !moderator.Permissions.HasRight("mod_caution"))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         var message = packet.ReadString();
         var client = _clientManager.GetClientByUserId(userId);
-        if (client == null || client.GetHabbo() == null)
+        var targetHabbo = client?.GetHabbo();
+        if (targetHabbo == null)
             return Task.CompletedTask;
         using (var dbClient = _database.GetQueryReactor())
         {
-            dbClient.RunQuery($"UPDATE `user_info` SET `cautions` = `cautions` + '1' WHERE `user_id` = '{client.GetHabbo().Id}' LIMIT 1");
+            dbClient.RunQuery($"UPDATE `user_info` SET `cautions` = `cautions` + '1' WHERE `user_id` = '{targetHabbo.Id}' LIMIT 1");
         }
         client.SendNotification(message);
         return Task.CompletedTask;

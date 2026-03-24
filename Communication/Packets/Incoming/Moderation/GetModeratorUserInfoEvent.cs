@@ -19,11 +19,11 @@ internal class GetModeratorUserInfoEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool"))
+        if (!(session.GetHabbo().Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
-        DataRow user;
-        DataRow info;
+        DataRow? user;
+        DataRow? info;
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery($"SELECT `id`,`username`,`online`,`mail`,`ip_last`,`look`,`account_created`,`last_online` FROM `users` WHERE `id` = '{userId}' LIMIT 1");
@@ -42,6 +42,9 @@ internal class GetModeratorUserInfoEvent : IPacketEvent
                 info = dbClient.GetRow();
             }
         }
+        if (info == null)
+            return Task.CompletedTask;
+
         session.Send(new ModeratorUserInfoComposer(user, info));
         return Task.CompletedTask;
     }

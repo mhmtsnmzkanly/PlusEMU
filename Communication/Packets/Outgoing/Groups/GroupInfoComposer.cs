@@ -20,6 +20,8 @@ public class GroupInfoComposer : IServerPacket
 
     public void Compose(IOutgoingPacket packet)
     {
+        var habbo = _session.GetHabbo();
+        var habboId = habbo?.Id ?? 0;
         var origin = DateTime.UnixEpoch.AddSeconds(_group.CreateTime);
         packet.WriteInteger(_group.Id);
         packet.WriteBoolean(true);
@@ -29,18 +31,18 @@ public class GroupInfoComposer : IServerPacket
         packet.WriteString(_group.Badge);
         packet.WriteUInteger(_group.RoomId);
         packet.WriteString(_group.GetRoom() != null ? _group.GetRoom().Name : "No room found.."); // room name
-        packet.WriteInteger(_group.CreatorId == _session.GetHabbo().Id ? 3 : _group.HasRequest(_session.GetHabbo().Id) ? 2 : _group.IsMember(_session.GetHabbo().Id) ? 1 : 0);
+        packet.WriteInteger(_group.CreatorId == habboId ? 3 : _group.HasRequest(habboId) ? 2 : _group.IsMember(habboId) ? 1 : 0);
         packet.WriteInteger(_group.MemberCount); // Members
         packet.WriteBoolean(false); //?? CHANGED
         packet.WriteString($"{origin.Day}-{origin.Month}-{origin.Year}");
-        packet.WriteBoolean(_group.CreatorId == _session.GetHabbo().Id);
-        packet.WriteBoolean(_group.IsAdmin(_session.GetHabbo().Id)); // admin
+        packet.WriteBoolean(_group.CreatorId == habboId);
+        packet.WriteBoolean(_group.IsAdmin(habboId)); // admin
         packet.WriteString(PlusEnvironment.GetUsernameById(_group.CreatorId));
         packet.WriteBoolean(_newWindow); // Show group info
         packet.WriteBoolean(_group.AdminOnlyDeco == 0); // Any user can place furni in home room
-        packet.WriteInteger(_group.CreatorId == _session.GetHabbo().Id ? _group.RequestCount :
-            _group.IsAdmin(_session.GetHabbo().Id) ? _group.RequestCount :
-            _group.IsMember(_session.GetHabbo().Id) ? 0 : 0); // Pending users
+        packet.WriteInteger(_group.CreatorId == habboId ? _group.RequestCount :
+            _group.IsAdmin(habboId) ? _group.RequestCount :
+            _group.IsMember(habboId) ? 0 : 0); // Pending users
         //base.WriteInteger(0);//what the fuck
         packet.WriteBoolean(_group?.ForumEnabled ?? true); //HabboTalk.
     }

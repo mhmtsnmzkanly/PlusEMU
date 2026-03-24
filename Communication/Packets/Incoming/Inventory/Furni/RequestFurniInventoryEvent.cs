@@ -8,7 +8,14 @@ internal class RequestFurniInventoryEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var items = session.GetHabbo().Inventory.Furniture.AllItems.ToList();
+        var furniture = session.GetHabbo().Inventory?.Furniture;
+        if (furniture == null)
+        {
+            session.Send(new FurniListComposer(new List<InventoryItem>(), 1, 1));
+            return Task.CompletedTask;
+        }
+
+        var items = furniture.AllItems.ToList();
         var page = 0;
         var pages = (items.Count - 1) / 700 + 1;
         if (!items.Any())

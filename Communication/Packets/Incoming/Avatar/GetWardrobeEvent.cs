@@ -15,7 +15,11 @@ internal class GetWardrobeEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var wardrobe = await _wardrobeLoader.LoadUserWardrobe(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        var wardrobe = await _wardrobeLoader.LoadUserWardrobe(habbo.Id);
         if (wardrobe == null) return;
         session.Send(new WardrobeComposer(wardrobe));
     }

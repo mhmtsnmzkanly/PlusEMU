@@ -13,9 +13,10 @@ public class InteractorLoveLock : IFurniInteractor
 
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
+        var habbo = session?.GetHabbo();
         RoomUser user = null;
-        if (session != null)
-            user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        if (habbo != null)
+            user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         if (Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y))
@@ -47,10 +48,17 @@ public class InteractorLoveLock : IFurniInteractor
                     session.SendNotification("You can only use this item with the item owner.");
                 else
                 {
+                    var userOneHabbo = userOne.GetClient()?.GetHabbo();
+                    var userTwoHabbo = userTwo.GetClient()?.GetHabbo();
+                    if (userOneHabbo == null || userTwoHabbo == null)
+                    {
+                        session.SendNotification("We couldn't find a valid user to lock this love lock with.");
+                        return;
+                    }
                     userOne.CanWalk = false;
                     userTwo.CanWalk = false;
-                    item.InteractingUser = userOne.GetClient().GetHabbo().Id;
-                    item.InteractingUser2 = userTwo.GetClient().GetHabbo().Id;
+                    item.InteractingUser = userOneHabbo.Id;
+                    item.InteractingUser2 = userTwoHabbo.Id;
                     userOne.GetClient().Send(new LoveLockDialogueComposer(item.Id));
                     userTwo.GetClient().Send(new LoveLockDialogueComposer(item.Id));
                 }

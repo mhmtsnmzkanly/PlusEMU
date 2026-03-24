@@ -40,6 +40,9 @@ internal class AddActorToTeamBox : IWiredItem
         var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
         if (user == null)
             return false;
+        var effects = user.GetClient()?.GetHabbo()?.Effects;
+        if (effects == null)
+            return false;
         var toJoin = int.Parse(StringData) == 1 ? Team.Red : int.Parse(StringData) == 2 ? Team.Green : int.Parse(StringData) == 3 ? Team.Blue : int.Parse(StringData) == 4 ? Team.Yellow : Team.None;
         var team = Instance.GetTeamManagerForFreeze();
         if (team != null)
@@ -50,8 +53,8 @@ internal class AddActorToTeamBox : IWiredItem
                     team.OnUserLeave(user);
                 user.Team = toJoin;
                 team.AddUser(user);
-                if (user.GetClient().GetHabbo().Effects.CurrentEffect != Convert.ToInt32(toJoin + 39))
-                    user.GetClient().GetHabbo().Effects.ApplyEffect(Convert.ToInt32(toJoin + 39));
+                if (effects.CurrentEffect != Convert.ToInt32(toJoin + 39))
+                    effects.ApplyEffect(Convert.ToInt32(toJoin + 39));
             }
         }
         return true;

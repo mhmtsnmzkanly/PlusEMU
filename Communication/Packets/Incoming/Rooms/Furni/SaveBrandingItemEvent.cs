@@ -7,12 +7,14 @@ internal class SaveBrandingItemEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
+        if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
-        if (!room.CheckRights(session, true) || !session.GetHabbo().Permissions.HasRight("room_item_save_branding_items"))
+        if (!room.CheckRights(session, true) || !(permissions?.HasRight("room_item_save_branding_items") ?? false))
             return Task.CompletedTask;
         var itemId = packet.ReadUInt();
         var item = room.GetRoomItemHandler().GetItem(itemId);

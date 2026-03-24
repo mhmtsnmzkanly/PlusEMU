@@ -19,7 +19,11 @@ internal class CarryCommand : IChatCommand
             session.SendWhisper("Please enter a valid integer.");
             return;
         }
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         user.CarryItem(itemId);

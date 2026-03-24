@@ -56,9 +56,10 @@ internal class GameEndsBox : IWiredItem
             {
                 foreach (var user in Instance.GetRoomUserManager().GetRoomUsers().ToList())
                 {
-                    if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+                    var habbo = user?.GetClient()?.GetHabbo();
+                    if (habbo == null)
                         continue;
-                    effect.Execute(user.GetClient().GetHabbo());
+                    effect.Execute(habbo);
                 }
                 Instance.GetWired().OnEvent(effect.Item);
             }

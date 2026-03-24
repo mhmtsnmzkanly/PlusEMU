@@ -10,14 +10,14 @@ public class TalentTrackLevel
     {
         Type = type;
         Level = level;
+        Actions = new();
+        Gifts = new();
         foreach (var str in dataActions.Split('|'))
         {
-            if (Actions == null) Actions = new();
             Actions.Add(str);
         }
         foreach (var str in dataGifts.Split('|'))
         {
-            if (Gifts == null) Gifts = new();
             Gifts.Add(str);
         }
         _subLevels = new();
@@ -33,7 +33,7 @@ public class TalentTrackLevel
 
     public void Init()
     {
-        DataTable getTable = null;
+        DataTable? getTable = null;
         using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT `sub_level`,`badge_code`,`required_progress` FROM `talents_sub_levels` WHERE `talent_level` = @TalentLevel");
@@ -45,7 +45,7 @@ public class TalentTrackLevel
             foreach (DataRow row in getTable.Rows)
             {
                 _subLevels.Add(Convert.ToInt32(row["sub_level"]),
-                    new(Convert.ToInt32(row["sub_level"]), Convert.ToString(row["badge_code"]), Convert.ToInt32(row["required_progress"])));
+                    new(Convert.ToInt32(row["sub_level"]), Convert.ToString(row["badge_code"]) ?? string.Empty, Convert.ToInt32(row["required_progress"])));
             }
         }
     }

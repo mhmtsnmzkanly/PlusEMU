@@ -39,10 +39,15 @@ public class InteractorOneWayGate : IFurniInteractor
     {
         if (session == null)
             return;
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+        if (user == null)
+            return;
         if (item.InteractingUser2 != user.UserId)
             item.InteractingUser2 = user.UserId;
-        if (user == null) return;
         if (item.Definition.InteractionType == InteractionType.OneWayGate)
         {
             if (user.Coordinate != item.SquareInFront && user.CanWalk)

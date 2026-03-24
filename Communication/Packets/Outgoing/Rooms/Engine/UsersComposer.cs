@@ -33,7 +33,7 @@ public class UsersComposer : IServerPacket
         if (!user.IsPet && !user.IsBot)
         {
             var habbo = user.GetClient().GetHabbo();
-            Group group = null;
+            Group? group = null;
             if (habbo != null)
             {
                 if (habbo.HabboStats != null)
@@ -48,21 +48,21 @@ public class UsersComposer : IServerPacket
             //if (habbo.PetId == 0)
             //{
                 packet.WriteInteger(habbo.Id);
-                packet.WriteString(habbo.Username);
-                packet.WriteString(habbo.Motto);
-                packet.WriteString(habbo.Look);
+                packet.WriteString(habbo.Username ?? string.Empty);
+                packet.WriteString(habbo.Motto ?? string.Empty);
+                packet.WriteString(habbo.Look ?? string.Empty);
                 packet.WriteInteger(user.VirtualId);
                 packet.WriteInteger(user.X);
                 packet.WriteInteger(user.Y);
                 packet.WriteString(user.Z.ToString(CultureInfo.InvariantCulture));
                 packet.WriteInteger(user.RotBody); //2 for user, 4 for bot.
                 packet.WriteInteger(1); //1 for user, 2 for pet, 3 for bot.
-                packet.WriteString(habbo.Gender.ToLower());
+                packet.WriteString((habbo.Gender ?? string.Empty).ToLower());
                 if (group != null)
                 {
                     packet.WriteInteger(group.Id);
                     packet.WriteInteger(0);
-                    packet.WriteString(group.Name);
+                    packet.WriteString(group.Name ?? string.Empty);
                 }
                 else
                 {
@@ -117,11 +117,11 @@ public class UsersComposer : IServerPacket
         else if (user.IsPet)
         {
             packet.WriteInteger(user.BotAi.BaseId);
-            packet.WriteString(user.BotData.Name);
-            packet.WriteString(user.BotData.Motto);
+            packet.WriteString(user.BotData.Name ?? string.Empty);
+            packet.WriteString(user.BotData.Motto ?? string.Empty);
 
             //base.WriteString("26 30 ffffff 5 3 302 4 2 201 11 1 102 12 0 -1 28 4 401 24");
-            packet.WriteString(user.BotData.Look.ToLower() + (user.PetData.Saddle > 0
+            packet.WriteString((user.BotData.Look ?? string.Empty).ToLower() + (user.PetData.Saddle > 0
                 ? $" 3 2 {user.PetData.PetHair} {user.PetData.HairDye} 3 {user.PetData.PetHair} {user.PetData.HairDye} 4 {user.PetData.Saddle} 0"
                 : $" 2 2 {user.PetData.PetHair} {user.PetData.HairDye} 3 {user.PetData.PetHair} {user.PetData.HairDye}"));
             packet.WriteInteger(user.VirtualId);
@@ -132,7 +132,7 @@ public class UsersComposer : IServerPacket
             packet.WriteInteger(user.BotData.AiType == BotAiType.Pet ? 2 : 4);
             packet.WriteInteger(user.PetData.Type);
             packet.WriteInteger(user.PetData.OwnerId); // userid
-            packet.WriteString(user.PetData.OwnerName); // username
+            packet.WriteString(user.PetData.OwnerName ?? string.Empty); // username
             packet.WriteInteger(1);
             packet.WriteBoolean(user.PetData.Saddle > 0);
             packet.WriteBoolean(user.RidingHorse);
@@ -143,16 +143,16 @@ public class UsersComposer : IServerPacket
         else if (user.IsBot)
         {
             packet.WriteInteger(user.BotAi.BaseId);
-            packet.WriteString(user.BotData.Name);
-            packet.WriteString(user.BotData.Motto);
-            packet.WriteString(user.BotData.Look.ToLower());
+            packet.WriteString(user.BotData.Name ?? string.Empty);
+            packet.WriteString(user.BotData.Motto ?? string.Empty);
+            packet.WriteString((user.BotData.Look ?? string.Empty).ToLower());
             packet.WriteInteger(user.VirtualId);
             packet.WriteInteger(user.X);
             packet.WriteInteger(user.Y);
             packet.WriteString(user.Z.ToString(CultureInfo.InvariantCulture));
             packet.WriteInteger(0);
             packet.WriteInteger(user.BotData.AiType == BotAiType.Pet ? 2 : 4);
-            packet.WriteString(user.BotData.Gender.ToLower()); // ?
+            packet.WriteString((user.BotData.Gender ?? string.Empty).ToLower()); // ?
             packet.WriteInteger(user.BotData.OwnerId); //Owner Id
             packet.WriteString(PlusEnvironment.GetUsernameById(user.BotData.OwnerId)); // Owner name
             packet.WriteInteger(5); //Action Count

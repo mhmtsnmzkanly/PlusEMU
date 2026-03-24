@@ -34,7 +34,7 @@ public static class ItemLoader
                         Rotation = Convert.ToInt32(row["rot"]),
                         UniqueNumber = Convert.ToUInt32(row["limited_number"]),
                         UniqueSeries = Convert.ToUInt32(row["limited_stack"]),
-                        WallCoordinates = Convert.ToString(row["wall_pos"]),
+                        WallCoordinates = Convert.ToString(row["wall_pos"]) ?? string.Empty,
                         RoomId = roomId
                     });
                 }
@@ -45,7 +45,7 @@ public static class ItemLoader
 
     public static List<InventoryItem> GetItemsForUser(uint userId)
     {
-        DataTable items = null;
+        DataTable? items = null;
         var I = new List<InventoryItem>();
         using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
         dbClient.SetQuery(

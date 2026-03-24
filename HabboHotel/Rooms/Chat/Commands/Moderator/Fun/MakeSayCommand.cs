@@ -21,13 +21,18 @@ internal class MakeSayCommand : ITargetChatCommand
             session.SendWhisper("You must enter a username and the message you wish to force them to say.");
         else
         {
+            var currentRoom = session.GetHabbo()?.CurrentRoom;
+            if (currentRoom == null)
+                return Task.CompletedTask;
+
             var message = CommandManager.MergeParams(parameters);
-            var targetUser = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
+            var targetUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
             if (targetUser != null)
             {
-                if (targetUser.GetClient() != null && targetUser.GetClient().GetHabbo() != null)
+                var targetHabbo = targetUser.GetClient()?.GetHabbo();
+                if (targetHabbo != null)
                 {
-                    if (!targetUser.GetClient().GetHabbo().Permissions.HasRight("mod_make_say_any"))
+                    if (!(targetHabbo.Permissions?.HasRight("mod_make_say_any") ?? false))
                         room.SendPacket(new ChatComposer(targetUser.VirtualId, message, 0, targetUser.LastBubble));
                     else
                         session.SendWhisper("You cannot use makesay on this user.");

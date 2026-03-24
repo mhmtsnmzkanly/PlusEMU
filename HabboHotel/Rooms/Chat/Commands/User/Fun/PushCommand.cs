@@ -16,13 +16,14 @@ internal class PushCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        if (!room.PushEnabled && !session.GetHabbo().Permissions.HasRight("room_override_custom_config"))
+        var habbo = session.GetHabbo();
+        if (!room.PushEnabled && !(habbo?.Permissions?.HasRight("room_override_custom_config") ?? false))
         {
             session.SendWhisper("Oops, it appears that the room owner has disabled the ability to use the push command in here.");
             return Task.CompletedTask;
         }
 
-        if (target == session.GetHabbo())
+        if (target == habbo)
         {
             session.SendWhisper("Come on, surely you don't want to push yourself!");
             return Task.CompletedTask;
@@ -40,7 +41,7 @@ internal class PushCommand : ITargetChatCommand
             session.SendWhisper("Oops, you cannot push a user whilst they have their teleport mode enabled.");
             return Task.CompletedTask;
         }
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var thisUser = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (thisUser == null)
             return Task.CompletedTask;
 

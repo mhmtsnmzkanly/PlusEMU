@@ -22,12 +22,16 @@ internal class UpdateGroupIdentityEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         var name = _wordFilterManager.CheckMessage(packet.ReadString());
         var description = _wordFilterManager.CheckMessage(packet.ReadString());
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        if (group.CreatorId != session.GetHabbo().Id)
+        if (group.CreatorId != habbo.Id)
             return Task.CompletedTask;
         using (var connection = _database.Connection())
         {

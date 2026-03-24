@@ -8,9 +8,11 @@ internal abstract class SaveWiredConfigEvent : IPacketEvent
 {
     public virtual Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
+        if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null || !room.CheckRights(session, false, true))
             return Task.CompletedTask;
         var itemId = packet.ReadUInt();
@@ -18,15 +20,15 @@ internal abstract class SaveWiredConfigEvent : IPacketEvent
         var selectedItem = room.GetRoomItemHandler().GetItem(itemId);
         if (selectedItem == null)
             return Task.CompletedTask;
-        if (!session.GetHabbo().CurrentRoom.GetWired().TryGet(itemId, out var box))
+        if (!room.GetWired().TryGet(itemId, out var box))
             return Task.CompletedTask;
-        if (box.Type == WiredBoxType.EffectGiveUserBadge && !session.GetHabbo().Permissions.HasRight("room_item_wired_rewards"))
+        if (box.Type == WiredBoxType.EffectGiveUserBadge && !(permissions?.HasRight("room_item_wired_rewards") ?? false))
         {
             session.SendNotification("You don't have the correct permissions to do this.");
             return Task.CompletedTask;
         }
         box.HandleSave(packet);
-        session.GetHabbo().CurrentRoom.GetWired().SaveBox(box);
+        room.GetWired().SaveBox(box);
         return Task.CompletedTask;
     }
 }

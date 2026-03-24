@@ -4,18 +4,16 @@ namespace Plus.HabboHotel.Rooms.Instance;
 
 public class FilterComponent
 {
-    private Room _instance;
+    private Room? _instance;
 
     public FilterComponent(Room instance)
     {
-        if (instance == null)
-            return;
         _instance = instance;
     }
 
     public bool AddFilter(string word)
     {
-        if (_instance.WordFilterList.Contains(word))
+        if (_instance == null || _instance.WordFilterList.Contains(word))
             return false;
         using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
         {
@@ -30,7 +28,7 @@ public class FilterComponent
 
     public bool RemoveFilter(string word)
     {
-        if (!_instance.WordFilterList.Contains(word))
+        if (_instance == null || !_instance.WordFilterList.Contains(word))
             return false;
         using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
         {
@@ -45,6 +43,9 @@ public class FilterComponent
 
     public string CheckMessage(string message)
     {
+        if (_instance == null)
+            return message.TrimEnd(' ');
+
         foreach (var filter in _instance.WordFilterList)
         {
             if (message.ToLower().Contains(filter) || message == filter)

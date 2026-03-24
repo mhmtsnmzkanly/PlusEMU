@@ -14,9 +14,12 @@ internal class CoordsCommand : IChatCommand
     public void Execute(GameClient session, Room room, string[] parameters)
     {
         var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var currentRoom = session.GetHabbo().CurrentRoom;
         if (thisUser == null)
             return;
+        if (currentRoom == null)
+            return;
         session.SendNotification(
-            $"X: {thisUser.X}\n - Y: {thisUser.Y}\n - Z: {thisUser.Z}\n - Rot: {thisUser.RotBody}, sqState: {room.GetGameMap().GameMap[thisUser.X, thisUser.Y]}\n\n - RoomID: {session.GetHabbo().CurrentRoom.RoomId}");
+            $"X: {thisUser.X}\n - Y: {thisUser.Y}\n - Z: {thisUser.Z}\n - Rot: {thisUser.RotBody}, sqState: {room.GetGameMap().GameMap[thisUser.X, thisUser.Y]}\n\n - RoomID: {currentRoom.RoomId}");
     }
 }

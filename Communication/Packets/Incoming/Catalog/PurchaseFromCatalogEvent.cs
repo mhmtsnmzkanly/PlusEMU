@@ -48,6 +48,16 @@ public class PurchaseFromCatalogEvent : IPacketEvent
     }
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var inventory = habbo?.Inventory;
+        var badges = inventory?.Badges;
+        var furniture = inventory?.Furniture;
+        var bots = inventory?.Bots;
+        var pets = inventory?.Pets;
+        var effects = habbo?.Effects;
+        if (habbo?.Permissions == null || inventory == null || badges == null || furniture == null || bots == null || pets == null || effects == null)
+            return;
+
         if (_settingsManager.TryGetValue("catalog.enabled") != "1")
         {
             session.SendNotification("The hotel managers have disabled the catalogue");
@@ -59,7 +69,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
         var amount = packet.ReadInt();
         if (!_catalogManager.TryGetPage(pageId, out var page))
             return;
-        if (!page.Enabled || !page.Visible || page.MinimumRank > session.GetHabbo().Rank || page.MinimumVip > session.GetHabbo().VipRank && session.GetHabbo().Rank == 1)
+        if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || page.MinimumVip > habbo.VipRank && habbo.Rank == 1)
             return;
         if (!page.Items.TryGetValue(itemId, out var item))
         {
@@ -78,7 +88,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
         var totalCreditsCost = amount > 1 ? item.CostCredits * amount - (int)Math.Floor((double)amount / 6) * item.CostCredits : item.CostCredits;
         var totalPixelCost = amount > 1 ? item.CostPixels * amount - (int)Math.Floor((double)amount / 6) * item.CostPixels : item.CostPixels;
         var totalDiamondCost = amount > 1 ? item.CostDiamonds * amount - (int)Math.Floor((double)amount / 6) * item.CostDiamonds : item.CostDiamonds;
-        if (session.GetHabbo().Credits < totalCreditsCost || session.GetHabbo().Duckets < totalPixelCost || session.GetHabbo().Diamonds < totalDiamondCost)
+        if (habbo.Credits < totalCreditsCost || habbo.Duckets < totalPixelCost || habbo.Diamonds < totalDiamondCost)
             return;
         var limitedEditionSells = 0u;
         var limitedEditionStack = 0u;
@@ -132,22 +142,22 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                 extraData = "1,1,1,#000000,255";
                 break;
             case InteractionType.Trophy:
-                extraData = $"{session.GetHabbo().Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}{Convert.ToChar(9)}{extraData}";
+                extraData = $"{habbo.Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}{Convert.ToChar(9)}{extraData}";
                 break;
             case InteractionType.Mannequin:
                 extraData = $"m{Convert.ToChar(5)}.ch-210-1321.lg-285-92{Convert.ToChar(5)}Default Mannequin";
                 break;
             case InteractionType.BadgeDisplay:
-                if (!session.GetHabbo().Inventory.Badges.HasBadge(extraData))
+                if (!badges.HasBadge(extraData))
                 {
                     session.Send(new BroadcastMessageAlertComposer("Oops, it appears that you do not own this badge."));
                     return;
                 }
-                extraData = $"{extraData}{Convert.ToChar(9)}{session.GetHabbo().Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}";
+                extraData = $"{extraData}{Convert.ToChar(9)}{habbo.Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}";
                 break;
             case InteractionType.Badge:
             {
-                if (session.GetHabbo().Inventory.Badges.HasBadge(item.Definition.ItemName))
+                if (badges.HasBadge(item.Definition.ItemName))
                 {
                     session.Send(new PurchaseErrorComposer(1));
                     return;
@@ -177,18 +187,18 @@ public class PurchaseFromCatalogEvent : IPacketEvent
         }
         if (item.CostCredits > 0)
         {
-            session.GetHabbo().Credits -= totalCreditsCost;
-            session.Send(new CreditBalanceComposer(session.GetHabbo().Credits));
+            habbo.Credits -= totalCreditsCost;
+            session.Send(new CreditBalanceComposer(habbo.Credits));
         }
         if (item.CostPixels > 0)
         {
-            session.GetHabbo().Duckets -= totalPixelCost;
-            session.Send(new HabboActivityPointNotificationComposer(session.GetHabbo().Duckets, session.GetHabbo().Duckets)); //Love you, Tom.
+            habbo.Duckets -= totalPixelCost;
+            session.Send(new HabboActivityPointNotificationComposer(habbo.Duckets, habbo.Duckets)); //Love you, Tom.
         }
         if (item.CostDiamonds > 0)
         {
-            session.GetHabbo().Diamonds -= totalDiamondCost;
-            session.Send(new HabboActivityPointNotificationComposer(session.GetHabbo().Diamonds, 0, 5));
+            habbo.Diamonds -= totalDiamondCost;
+            session.Send(new HabboActivityPointNotificationComposer(habbo.Diamonds, 0, 5));
         }
         switch (item.Definition.Type.ToString().ToLower())
         {
@@ -200,12 +210,12 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                     default:
                         if (amountPurchase > 1)
                         {
-                            var items = _itemFactory.CreateMultipleItems(item.Definition, session.GetHabbo(), extraData, amountPurchase);
+                            var items = _itemFactory.CreateMultipleItems(item.Definition, habbo, extraData, amountPurchase);
                             if (items != null) generatedGenericItems.AddRange(items);
                         }
                         else
                         {
-                            newItem = _itemFactory.CreateSingleItemNullable(item.Definition, session.GetHabbo(), extraData, extraData, 0, limitedEditionSells, limitedEditionStack);
+                            newItem = _itemFactory.CreateSingleItemNullable(item.Definition, habbo, extraData, extraData, 0, limitedEditionSells, limitedEditionStack);
                             if (newItem != null) generatedGenericItems.Add(newItem);
                         }
                         break;
@@ -214,12 +224,12 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                     case InteractionType.GuildForum:
                         if (amountPurchase > 1)
                         {
-                            var items = _itemFactory.CreateMultipleItems(item.Definition, session.GetHabbo(), extraData, amountPurchase, Convert.ToInt32(extraData));
+                            var items = _itemFactory.CreateMultipleItems(item.Definition, habbo, extraData, amountPurchase, Convert.ToInt32(extraData));
                             if (items != null) generatedGenericItems.AddRange(items);
                         }
                         else
                         {
-                            newItem = _itemFactory.CreateSingleItemNullable(item.Definition, session.GetHabbo(), extraData, extraData, Convert.ToInt32(extraData));
+                            newItem = _itemFactory.CreateSingleItemNullable(item.Definition, habbo, extraData, extraData, Convert.ToInt32(extraData));
                             if (newItem != null) generatedGenericItems.Add(newItem);
                         }
                         break;
@@ -227,7 +237,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                     case InteractionType.Teleport:
                         for (var i = 0; i < amountPurchase; i++)
                         {
-                            var teleItems = _itemFactory.CreateTeleporterItems(item.Definition, session.GetHabbo());
+                            var teleItems = _itemFactory.CreateTeleporterItems(item.Definition, habbo);
                             if (teleItems != null) generatedGenericItems.AddRange(teleItems);
                         }
                         break;
@@ -235,7 +245,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                     {
                         if (amountPurchase > 1)
                         {
-                            var items = _itemFactory.CreateMultipleItems(item.Definition, session.GetHabbo(), extraData, amountPurchase);
+                            var items = _itemFactory.CreateMultipleItems(item.Definition, habbo, extraData, amountPurchase);
                             if (items != null)
                             {
                                 generatedGenericItems.AddRange(items);
@@ -244,7 +254,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                         }
                         else
                         {
-                            newItem = _itemFactory.CreateSingleItemNullable(item.Definition, session.GetHabbo(), extraData, extraData);
+                            newItem = _itemFactory.CreateSingleItemNullable(item.Definition, habbo, extraData, extraData);
                             if (newItem != null)
                             {
                                 generatedGenericItems.Add(newItem);
@@ -257,7 +267,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                     {
                         if (amountPurchase > 1)
                         {
-                            var items = _itemFactory.CreateMultipleItems(item.Definition, session.GetHabbo(), extraData, amountPurchase);
+                            var items = _itemFactory.CreateMultipleItems(item.Definition, habbo, extraData, amountPurchase);
                             if (items != null)
                             {
                                 generatedGenericItems.AddRange(items);
@@ -266,7 +276,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                         }
                         else
                         {
-                            newItem = _itemFactory.CreateSingleItemNullable(item.Definition, session.GetHabbo(), extraData, extraData);
+                            newItem = _itemFactory.CreateSingleItemNullable(item.Definition, habbo, extraData, extraData);
                             if (newItem != null)
                             {
                                 generatedGenericItems.Add(newItem);
@@ -281,7 +291,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                         {
                             foreach (var catalogItem in deal.ItemDataList.ToList())
                             {
-                                var items = _itemFactory.CreateMultipleItems(catalogItem.Definition, session.GetHabbo(), "", amountPurchase);
+                                var items = _itemFactory.CreateMultipleItems(catalogItem.Definition, habbo, "", amountPurchase);
                                 if (items != null) generatedGenericItems.AddRange(items);
                             }
                         }
@@ -290,7 +300,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                 }
                 foreach (var purchasedItem in generatedGenericItems)
                 {
-                    if (session.GetHabbo().Inventory.Furniture.AddItem(purchasedItem.ToInventoryItem()))
+                    if (furniture.AddItem(purchasedItem.ToInventoryItem()))
                     {
                         //Session.SendMessage(new FurniListAddComposer(PurchasedItem));
                         session.Send(new FurniListNotificationComposer(purchasedItem.Id, 1));
@@ -299,22 +309,22 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                 break;
             case "e":
                 AvatarEffect effect;
-                if (session.GetHabbo().Effects.HasEffect(item.Definition.SpriteId))
+                if (effects.HasEffect(item.Definition.SpriteId))
                 {
-                    effect = session.GetHabbo().Effects.GetEffectNullable(item.Definition.SpriteId);
+                    effect = effects.GetEffectNullable(item.Definition.SpriteId);
                     if (effect != null) effect.AddToQuantity();
                 }
                 else
-                    effect = AvatarEffectFactory.CreateNullable(session.GetHabbo(), item.Definition.SpriteId, 3600);
+                    effect = AvatarEffectFactory.CreateNullable(habbo, item.Definition.SpriteId, 3600);
                 if (effect != null) // && Session.GetHabbo().Effects().TryAdd(Effect))
                     session.Send(new AvatarEffectAddedComposer(item.Definition.SpriteId, 3600));
                 break;
             case "r":
-                var bot = BotUtility.CreateBot(item.Definition, session.GetHabbo().Id);
+                var bot = BotUtility.CreateBot(item.Definition, habbo.Id);
                 if (bot != null)
                 {
-                    session.GetHabbo().Inventory.Bots.AddBot(bot);
-                    session.Send(new BotInventoryComposer(session.GetHabbo().Inventory.Bots.Bots.Values.ToList()));
+                    bots.AddBot(bot);
+                    session.Send(new BotInventoryComposer(bots.Bots.Values.ToList()));
                     session.Send(new FurniListNotificationComposer((uint)bot.Id, 5));
                 }
                 else
@@ -322,28 +332,29 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                 break;
             case "b":
             {
-                await _badgeManager.GiveBadge(session.GetHabbo(), item.Definition.ItemName);
+                await _badgeManager.GiveBadge(habbo, item.Definition.ItemName);
                 session.Send(new FurniListNotificationComposer(0, 4));
                 break;
             }
             case "p":
             {
                 var petData = extraData.Split('\n');
-                var pet = PetUtility.CreatePet(session.GetHabbo().Id, petData[0], item.Definition.BehaviourData, petData[1], petData[2]);
+                var pet = PetUtility.CreatePet(habbo.Id, petData[0], item.Definition.BehaviourData, petData[1], petData[2]);
                 if (pet != null)
                 {
-                    if (session.GetHabbo().Inventory.Pets.AddPet(pet))
+                    if (pets.AddPet(pet))
                     {
                         pet.RoomId = 0;
                         pet.PlacedInRoom = false;
                         session.Send(new FurniListNotificationComposer((uint)pet.PetId, 3));
-                        session.Send(new PetInventoryComposer(session.GetHabbo().Inventory.Pets.Pets.Values.ToList()));
+                        session.Send(new PetInventoryComposer(pets.Pets.Values.ToList()));
                         if (_itemManager.Items.TryGetValue(320, out var petFood))
                         {
-                            var food = _itemFactory.CreateSingleItemNullable(petFood, session.GetHabbo(), "", "").ToInventoryItem();
+                            var foodItem = _itemFactory.CreateSingleItemNullable(petFood, habbo, "", "");
+                            var food = foodItem?.ToInventoryItem();
                             if (food != null)
                             {
-                                session.GetHabbo().Inventory.Furniture.AddItem(food);
+                                furniture.AddItem(food);
                                 session.Send(new FurniListNotificationComposer(food.Id, 1));
                             }
                         }
@@ -354,8 +365,8 @@ public class PurchaseFromCatalogEvent : IPacketEvent
         }
         if (!string.IsNullOrEmpty(item.Badge) &&
             _badgeManager.Badges.TryGetValue(item.Badge, out var badge) &&
-            (string.IsNullOrEmpty(badge.RequiredRight) || session.GetHabbo().Permissions.HasRight(badge.RequiredRight)))
-            await _badgeManager.GiveBadge(session.GetHabbo(), badge.Code);
+            (string.IsNullOrEmpty(badge.RequiredRight) || habbo.Permissions.HasRight(badge.RequiredRight)))
+            await _badgeManager.GiveBadge(habbo, badge.Code);
         session.Send(new PurchaseOkComposer(item, item.Definition));
         session.Send(new FurniListUpdateComposer());
     }

@@ -27,16 +27,17 @@ internal class ReloadUserRankCommand : IRconCommand
         if (!int.TryParse(parameters[0], out var userId))
             return Task.FromResult(false);
         var client = _gameClientManager.GetClientByUserId(userId);
-        if (client == null || client.GetHabbo() == null)
+        var habbo = client?.GetHabbo();
+        if (habbo == null)
             return Task.FromResult(false);
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT `rank` FROM `users` WHERE `id` = @userId LIMIT 1");
             dbClient.AddParameter("userId", userId);
-            client.GetHabbo().Rank = dbClient.GetInteger();
+            habbo.Rank = dbClient.GetInteger();
         }
-        client.GetHabbo().Permissions.Init(client.GetHabbo());
-        if (client.GetHabbo().Permissions.HasRight("mod_tickets"))
+        habbo.Permissions?.Init(habbo);
+        if (habbo.Permissions?.HasRight("mod_tickets") == true)
         {
             client.Send(new ModeratorInitComposer(
                 _moderationManager.UserMessagePresets,

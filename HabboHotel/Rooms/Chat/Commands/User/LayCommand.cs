@@ -13,7 +13,11 @@ internal class LayCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo?.Effects == null)
+            return;
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         if (!room.GetGameMap().ValidTile(user.X + 2, user.Y + 2) && !room.GetGameMap().ValidTile(user.X + 1, user.Y + 1))
@@ -23,8 +27,8 @@ internal class LayCommand : IChatCommand
         }
         if (user.Statusses.ContainsKey("sit") || user.IsSitting || user.RidingHorse || user.IsWalking)
             return;
-        if (session.GetHabbo().Effects.CurrentEffect > 0)
-            session.GetHabbo().Effects.ApplyEffect(0);
+        if (habbo.Effects.CurrentEffect > 0)
+            habbo.Effects.ApplyEffect(0);
         if (!user.Statusses.ContainsKey("lay"))
         {
             if (user.RotBody % 2 == 0)

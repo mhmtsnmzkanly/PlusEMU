@@ -250,6 +250,10 @@ public class RoomManager : IRoomManager
     public RoomData CreateRoom(GameClient session, string name, string description, int category, int maxVisitors, int tradeSettings, RoomModel model, string wallpaper = "0.0", string floor = "0.0",
         string landscape = "0.0", int wallthick = 0, int floorthick = 0)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return null;
+
         if (name.Length < 3)
         {
             session.SendNotification(_languageManager.TryGetValue("room.creation.name.too_short"));
@@ -262,14 +266,14 @@ public class RoomManager : IRoomManager
                 "INSERT INTO `rooms` (`roomtype`,`caption`,`description`,`owner`,`model_name`,`category`,`users_max`,`trade_settings`) VALUES ('private',@caption,@description,@UserId,@model,@category,@usersmax,@tradesettings)");
             dbClient.AddParameter("caption", name);
             dbClient.AddParameter("description", description);
-            dbClient.AddParameter("UserId", session.GetHabbo().Id);
+            dbClient.AddParameter("UserId", habbo.Id);
             dbClient.AddParameter("model", model.Id);
             dbClient.AddParameter("category", category);
             dbClient.AddParameter("usersmax", maxVisitors);
             dbClient.AddParameter("tradesettings", tradeSettings);
             roomId = Convert.ToUInt32(dbClient.InsertQuery());
         }
-        var data = new RoomData(roomId, name, model.Id, session.GetHabbo().Username, session.GetHabbo().Id, "", 0, "public", "open", 0, maxVisitors, category, description, string.Empty,
+        var data = new RoomData(roomId, name, model.Id, habbo.Username, habbo.Id, "", 0, "public", "open", 0, maxVisitors, category, description, string.Empty,
             floor, landscape, true, true, false, false, wallthick, floorthick, wallpaper, 1, 1, 1, 1, 1, 1, 1, 8, tradeSettings, true, true, true, true, true, true, true, 0, 0, true, model);
         return data;
     }

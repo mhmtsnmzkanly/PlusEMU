@@ -41,11 +41,12 @@ public class QuestListComposer : IServerPacket
 
     private void SerializeQuest(IOutgoingPacket message, GameClient session, Quest quest, string category)
     {
-        if (message == null || session == null)
+        var habbo = session?.GetHabbo();
+        if (message == null || session == null || habbo?.HabboStats == null)
             return;
         var amountInCat = PlusEnvironment.Game.QuestManager.GetAmountOfQuestsInCategory(category);
         var number = quest == null ? amountInCat : quest.Number - 1;
-        var userProgress = quest == null ? 0 : session.GetHabbo().GetQuestProgress(quest.Id);
+        var userProgress = quest == null ? 0 : habbo.GetQuestProgress(quest.Id);
         if (quest != null && quest.IsCompleted(userProgress))
             number++;
         message.WriteString(category);
@@ -53,7 +54,7 @@ public class QuestListComposer : IServerPacket
         message.WriteInteger(quest == null ? 0 : quest.Category.Contains("xmas2012") ? 0 : amountInCat); // Total quests in this cat
         message.WriteInteger(quest?.RewardType ?? 3); // Reward type (1 = Snowflakes, 2 = Love hearts, 3 = Pixels, 4 = Seashells, everything else is pixels
         message.WriteInteger(quest?.Id ?? 0); // Quest id
-        message.WriteBoolean(quest != null && session.GetHabbo().HabboStats.QuestId == quest.Id); // Quest started
+        message.WriteBoolean(quest != null && habbo.HabboStats.QuestId == quest.Id); // Quest started
         message.WriteString(quest == null ? string.Empty : quest.ActionName);
         message.WriteString(quest == null ? string.Empty : quest.DataBit);
         message.WriteInteger(quest?.Reward ?? 0);

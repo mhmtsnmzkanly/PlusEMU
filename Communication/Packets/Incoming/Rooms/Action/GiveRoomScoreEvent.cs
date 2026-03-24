@@ -15,7 +15,10 @@ internal class GiveRoomScoreEvent : RoomPacketEvent
     }
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        if (session.GetHabbo().RatedRooms.Contains(room.RoomId) || room.CheckRights(session, true))
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+        if (habbo.RatedRooms.Contains(room.RoomId) || room.CheckRights(session, true))
             return Task.CompletedTask;
         var rating = packet.ReadInt();
         switch (rating)
@@ -33,8 +36,8 @@ internal class GiveRoomScoreEvent : RoomPacketEvent
         {
             dbClient.RunQuery($"UPDATE rooms SET score = '{room.Score}' WHERE id = '{room.RoomId}' LIMIT 1");
         }
-        session.GetHabbo().RatedRooms.Add(room.RoomId);
-        session.Send(new RoomRatingComposer(room.Score, !(session.GetHabbo().RatedRooms.Contains(room.RoomId) || room.CheckRights(session, true))));
+        habbo.RatedRooms.Add(room.RoomId);
+        session.Send(new RoomRatingComposer(room.Score, !(habbo.RatedRooms.Contains(room.RoomId) || room.CheckRights(session, true))));
         return Task.CompletedTask;
     }
 }

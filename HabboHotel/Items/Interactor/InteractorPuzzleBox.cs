@@ -15,7 +15,11 @@ public class InteractorPuzzleBox : IFurniInteractor
     {
         if (session == null)
             return;
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null) return;
         if (!(Math.Abs(user.X - item.GetX) >= 2 || Math.Abs(user.Y - item.GetY) >= 2))
         {

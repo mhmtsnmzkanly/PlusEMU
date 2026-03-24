@@ -14,7 +14,7 @@ internal class BanUserEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var room = session.GetHabbo().CurrentRoom;
+        var room = session.GetHabbo()?.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         if (room.WhoCanBan == 0 && !room.CheckRights(session, true) && room.Group == null || room.WhoCanBan == 1 && !room.CheckRights(session) && room.Group == null ||
@@ -28,7 +28,8 @@ internal class BanUserEvent : IPacketEvent
             return Task.CompletedTask;
         if (room.OwnerId == userId)
             return Task.CompletedTask;
-        if (user.GetClient().GetHabbo().Permissions.HasRight("mod_tool"))
+        var targetHabbo = user.GetClient()?.GetHabbo();
+        if (targetHabbo == null || (targetHabbo.Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
         long time = 0;
         if (r.ToLower().Contains("hour"))

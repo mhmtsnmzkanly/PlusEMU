@@ -13,7 +13,11 @@ internal class StandCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Username);
+        var username = session.GetHabbo()?.Username;
+        if (string.IsNullOrEmpty(username))
+            return;
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(username);
         if (user == null)
             return;
         if (user.IsSitting)

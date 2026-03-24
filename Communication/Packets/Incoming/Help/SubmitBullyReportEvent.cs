@@ -16,10 +16,11 @@ internal class SubmitBullyReportEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         //0 = sent, 1 = blocked, 2 = no chat, 3 = already reported.
+        var habbo = session.GetHabbo();
         var userId = packet.ReadInt();
-        if (userId == session.GetHabbo().Id) //Hax
+        if (userId == habbo.Id) //Hax
             return Task.CompletedTask;
-        if (session.GetHabbo().AdvertisingReportedBlocked)
+        if (habbo.AdvertisingReportedBlocked)
         {
             session.Send(new SubmitBullyReportComposer(1)); //This user is blocked from reporting.
             return Task.CompletedTask;
@@ -30,35 +31,38 @@ internal class SubmitBullyReportEvent : IPacketEvent
             session.Send(new SubmitBullyReportComposer(0)); //Just say it's sent, the user isn't found.
             return Task.CompletedTask;
         }
-        if (session.GetHabbo().LastAdvertiseReport > UnixTimestamp.GetNow())
+        if (habbo.LastAdvertiseReport > UnixTimestamp.GetNow())
         {
             session.SendNotification("Reports can only be sent per 5 minutes!");
             return Task.CompletedTask;
         }
-        if (client.GetHabbo().Permissions.HasRight("mod_tool")) //Reporting staff, nope!
+        var targetHabbo = client.GetHabbo();
+        if (targetHabbo == null)
+            return Task.CompletedTask;
+        if (targetHabbo.Permissions?.HasRight("mod_tool") == true) //Reporting staff, nope!
         {
             session.SendNotification("Sorry, you cannot report staff members via this tool.");
             return Task.CompletedTask;
         }
 
         //This user hasn't even said a word, nope!
-        if (!client.GetHabbo().HasSpoken)
+        if (!targetHabbo.HasSpoken)
         {
             session.Send(new SubmitBullyReportComposer(2));
             return Task.CompletedTask;
         }
 
         //Already reported, nope.
-        if (client.GetHabbo().AdvertisingReported && session.GetHabbo().Rank < 2)
+        if (targetHabbo.AdvertisingReported && habbo.Rank < 2)
         {
             session.Send(new SubmitBullyReportComposer(3));
             return Task.CompletedTask;
         }
-        if (session.GetHabbo().Rank <= 1)
-            session.GetHabbo().LastAdvertiseReport = UnixTimestamp.GetNow() + 300;
+        if (habbo.Rank <= 1)
+            habbo.LastAdvertiseReport = UnixTimestamp.GetNow() + 300;
         else
-            session.GetHabbo().LastAdvertiseReport = UnixTimestamp.GetNow();
-        client.GetHabbo().AdvertisingReported = true;
+            habbo.LastAdvertiseReport = UnixTimestamp.GetNow();
+        targetHabbo.AdvertisingReported = true;
         session.Send(new SubmitBullyReportComposer(0));
         //_clientManager.ModAlert("New advertising report! " + Client.GetHabbo().Username + " has been reported for advertising by " + Session.GetHabbo().Username +".");
         _clientManager.DoAdvertisingReport(session, client);

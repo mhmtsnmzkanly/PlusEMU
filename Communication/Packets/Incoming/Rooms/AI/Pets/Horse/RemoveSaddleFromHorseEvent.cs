@@ -27,13 +27,15 @@ internal class RemoveSaddleFromHorseEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (!habbo.InRoom)
             return Task.CompletedTask;
-        if (!_roomManager.TryGetRoom(session.GetHabbo( ).CurrentRoom!.Id, out var room))
+        var currentRoom = habbo.CurrentRoom;
+        if (currentRoom == null || !_roomManager.TryGetRoom(currentRoom.Id, out var room))
             return Task.CompletedTask;
         if (!room.GetRoomUserManager().TryGetPet(packet.ReadInt(), out var petUser))
             return Task.CompletedTask;
-        if (petUser.PetData == null || petUser.PetData.OwnerId != session.GetHabbo().Id)
+        if (petUser.PetData == null || petUser.PetData.OwnerId != habbo.Id)
             return Task.CompletedTask;
 
         //Fetch the furniture Id for the pets current saddle.
@@ -49,10 +51,10 @@ internal class RemoveSaddleFromHorseEvent : IPacketEvent
         //Give the saddle back to the user.
         if (!_itemDataManager.Items.TryGetValue(saddleId, out var itemData))
             return Task.CompletedTask;
-        var item = _itemFactory.CreateSingleItemNullable(itemData, session.GetHabbo(), "", "").ToInventoryItem();
+        var item = _itemFactory.CreateSingleItemNullable(itemData, habbo, "", "").ToInventoryItem();
         if (item != null)
         {
-            session.GetHabbo().Inventory.Furniture.AddItem(item);
+            habbo.Inventory?.Furniture?.AddItem(item);
             session.Send(new FurniListNotificationComposer(item.Id, 1));
             session.Send(new PurchaseOkComposer());
             session.Send(new FurniListAddComposer(item));

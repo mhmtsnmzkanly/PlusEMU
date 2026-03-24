@@ -23,14 +23,15 @@ internal class MuteCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        if (target.Permissions.HasRight("mod_tool") && !session.GetHabbo().Permissions.HasRight("mod_mute_any"))
+        var permissions = session.GetHabbo()?.Permissions;
+        if (target.Permissions.HasRight("mod_tool") && !(permissions?.HasRight("mod_mute_any") ?? false))
         {
             session.SendWhisper("Oops, you cannot mute that user.");
             return Task.CompletedTask;
         }
         if (double.TryParse(parameters[0], out var time))
         {
-            if (time > 600 && !session.GetHabbo().Permissions.HasRight("mod_mute_limit_override"))
+            if (time > 600 && !(permissions?.HasRight("mod_mute_limit_override") ?? false))
                 time = 600;
             using (var dbClient = _database.GetQueryReactor())
             {

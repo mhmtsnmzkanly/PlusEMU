@@ -20,7 +20,8 @@ internal class ModerationBanEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_soft_ban"))
+        var sessionHabbo = session.GetHabbo();
+        if (!(sessionHabbo.Permissions?.HasRight("mod_soft_ban") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         var message = packet.ReadString();
@@ -37,7 +38,7 @@ internal class ModerationBanEvent : IPacketEvent
             session.SendWhisper("An error occoured whilst finding that user in the database.");
             return Task.CompletedTask;
         }
-        if (habbo.Permissions.HasRight("mod_tool") && !session.GetHabbo().Permissions.HasRight("mod_ban_any"))
+        if ((habbo.Permissions?.HasRight("mod_tool") ?? false) && !(sessionHabbo.Permissions?.HasRight("mod_ban_any") ?? false))
         {
             session.SendWhisper("Oops, you cannot ban that user.");
             return Task.CompletedTask;
@@ -48,14 +49,14 @@ internal class ModerationBanEvent : IPacketEvent
             dbClient.RunQuery($"UPDATE `user_info` SET `bans` = `bans` + '1' WHERE `user_id` = '{habbo.Id}' LIMIT 1");
         }
         if (ipBan == false && machineBan == false)
-            _moderationManager.BanUser(session.GetHabbo().Username, ModerationBanType.Username, habbo.Username, message, length);
+            _moderationManager.BanUser(sessionHabbo.Username, ModerationBanType.Username, habbo.Username, message, length);
         else if (ipBan)
-            _moderationManager.BanUser(session.GetHabbo().Username, ModerationBanType.Ip, habbo.Username, message, length);
+            _moderationManager.BanUser(sessionHabbo.Username, ModerationBanType.Ip, habbo.Username, message, length);
         else
         {
-            _moderationManager.BanUser(session.GetHabbo().Username, ModerationBanType.Ip, habbo.Username, message, length);
-            _moderationManager.BanUser(session.GetHabbo().Username, ModerationBanType.Username, habbo.Username, message, length);
-            _moderationManager.BanUser(session.GetHabbo().Username, ModerationBanType.Machine, habbo.Username, message, length);
+            _moderationManager.BanUser(sessionHabbo.Username, ModerationBanType.Ip, habbo.Username, message, length);
+            _moderationManager.BanUser(sessionHabbo.Username, ModerationBanType.Username, habbo.Username, message, length);
+            _moderationManager.BanUser(sessionHabbo.Username, ModerationBanType.Machine, habbo.Username, message, length);
         }
         var targetClient = _clientManager.GetClientByUsername(habbo.Username);
         if (targetClient != null)

@@ -22,15 +22,19 @@ public class CommandManager : ICommandManager
     /// <returns>True if parsed or false if not.</returns>
     public bool Parse(string data)
     {
-        if (data.Length == 0 || string.IsNullOrEmpty(data))
+        if (string.IsNullOrEmpty(data))
             return false;
-        var cmd = data.Split(Convert.ToChar(1))[0];
+        var segments = data.Split(Convert.ToChar(1));
+        if (segments.Length == 0)
+            return false;
+
+        var cmd = segments[0];
         if (_commands.TryGetValue(cmd.ToLower(), out var command))
         {
-            string[] parameters = null;
-            if (data.Split(Convert.ToChar(1))[1] != null)
+            string[] parameters = Array.Empty<string>();
+            if (segments.Length > 1 && !string.IsNullOrEmpty(segments[1]))
             {
-                var param = data.Split(Convert.ToChar(1))[1];
+                var param = segments[1];
                 parameters = param.Split(':');
             }
             return command.TryExecute(parameters).Result;

@@ -15,7 +15,7 @@ internal class GetYouTubeTelevisionEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        if (!(session.GetHabbo()?.InRoom ?? false))
             return Task.CompletedTask;
         var itemId = packet.ReadInt();
         var videos = _televisionManager.TelevisionList;

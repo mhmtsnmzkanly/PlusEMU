@@ -15,6 +15,11 @@ internal class EmptyItems : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
+        if (habbo == null || furniture == null)
+            return;
+
         if (!parameters.Any())
         {
             session.SendNotification("Are you sure you want to clear your inventory? You will lose all the furniture!\n" +
@@ -24,8 +29,8 @@ internal class EmptyItems : IChatCommand
         }
         if (parameters.Length == 1 && parameters[0] == "yes")
         {
-            ItemLoader.DeleteAllInventoryItemsForUser(session.GetHabbo().Id);
-            session.GetHabbo().Inventory.Furniture.ClearItems();
+            ItemLoader.DeleteAllInventoryItemsForUser(habbo.Id);
+            furniture.ClearItems();
             session.Send(new FurniListUpdateComposer());
             session.SendNotification("Your inventory has been cleared!");
             return;

@@ -31,7 +31,7 @@ public class SubscriptionManager : ISubscriptionManager
                     if (!_subscriptions.ContainsKey(Convert.ToInt32(row["id"])))
                     {
                         _subscriptions.Add(Convert.ToInt32(row["id"]),
-                            new(Convert.ToInt32(row["id"]), Convert.ToString(row["name"]), Convert.ToString(row["badge_code"]), Convert.ToInt32(row["credits"]),
+                            new(Convert.ToInt32(row["id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToString(row["badge_code"]) ?? string.Empty, Convert.ToInt32(row["credits"]),
                                 Convert.ToInt32(row["duckets"]), Convert.ToInt32(row["respects"])));
                     }
                 }

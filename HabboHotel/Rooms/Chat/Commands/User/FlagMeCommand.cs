@@ -16,14 +16,18 @@ internal class FlagMeCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        if (!CanChangeName(session.GetHabbo()))
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        if (!CanChangeName(habbo))
         {
             session.SendWhisper("Sorry, it seems you currently do not have the option to change your username!");
             return;
         }
-        session.GetHabbo().ChangingName = true;
+        habbo.ChangingName = true;
         session.SendNotification("Please be aware that if your username is deemed as inappropriate, you will be banned without question.\r\rAlso note that Staff will NOT change your username again should you have an issue with what you have chosen.\r\rClose this window and click yourself to begin choosing a new username!");
-        session.Send(new UserObjectComposer(session.GetHabbo()));
+        session.Send(new UserObjectComposer(habbo));
     }
 
     private static bool CanChangeName(Habbo habbo)

@@ -37,9 +37,10 @@ internal class RepeaterBox : IWiredItem, IWiredCycle
         {
             foreach (var avatar in avatars.ToList())
             {
-                if (avatar == null || avatar.GetClient() == null || avatar.GetClient().GetHabbo() == null)
+                var habbo = avatar?.GetClient()?.GetHabbo();
+                if (habbo == null)
                     continue;
-                if (!condition.Execute(avatar.GetClient().GetHabbo()))
+                if (!condition.Execute(habbo))
                     continue;
                 success = true;
             }

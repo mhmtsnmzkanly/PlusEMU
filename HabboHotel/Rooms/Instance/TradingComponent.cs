@@ -27,7 +27,7 @@ public class TradingComponent
 
     public bool RemoveTrade(int id)
     {
-        Trade trade = null;
+        Trade? trade = null;
         return _activeTrades.TryRemove(id, out trade);
     }
 

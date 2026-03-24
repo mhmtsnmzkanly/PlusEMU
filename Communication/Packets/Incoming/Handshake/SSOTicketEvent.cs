@@ -69,46 +69,50 @@ public class SsoTicketEvent : IPacketEvent
         var error = await _authenticate.AuthenticateUsingSSO(session, sso);
         if (error == null)
         {
+            var habbo = session.GetHabbo();
+            var effects = habbo.Effects;
+            var clothing = habbo.Clothing;
+            var inventory = habbo.Inventory;
             session.Send(new AuthenticationOkComposer());
 
             // TODO @80O: Move to individual incoming message handlers.
-            session.Send(new AvatarEffectsComposer(session.GetHabbo().Effects.GetAllEffects));
-            session.Send(new NavigatorSettingsComposer(session.GetHabbo().HomeRoom));
-            session.Send(new FavouritesComposer(session.GetHabbo().FavoriteRooms));
-            session.Send(new FigureSetIdsComposer(session.GetHabbo().Clothing.GetClothingParts));
-            session.Send(new UserRightsComposer(session.GetHabbo().Rank, session.GetHabbo().IsAmbassador));
+            session.Send(new AvatarEffectsComposer(effects?.GetAllEffects ?? new List<Plus.HabboHotel.Users.Effects.AvatarEffect>()));
+            session.Send(new NavigatorSettingsComposer(habbo.HomeRoom));
+            session.Send(new FavouritesComposer(habbo.FavoriteRooms));
+            session.Send(new FigureSetIdsComposer(clothing?.GetClothingParts ?? Array.Empty<Plus.HabboHotel.Users.Clothing.Parts.ClothingParts>()));
+            session.Send(new UserRightsComposer(habbo.Rank, habbo.IsAmbassador));
             session.Send(new AvailabilityStatusComposer());
-            session.Send(new AchievementScoreComposer(session.GetHabbo().HabboStats.AchievementPoints));
+            session.Send(new AchievementScoreComposer(habbo.HabboStats.AchievementPoints));
             session.Send(new BuildersClubMembershipComposer());
             session.Send(new CfhTopicsInitComposer(_moderationManager.UserActionPresets));
             session.Send(new BadgeDefinitionsComposer(_achievementManager.Achievements));
-            session.Send(new SoundSettingsComposer(session.GetHabbo().ClientVolume, session.GetHabbo().ChatPreference, session.GetHabbo().AllowMessengerInvites,
-                session.GetHabbo().FocusPreference,
-                FriendBarStateUtility.GetInt(session.GetHabbo().FriendbarState)));
+            session.Send(new SoundSettingsComposer(habbo.ClientVolume, habbo.ChatPreference, habbo.AllowMessengerInvites,
+                habbo.FocusPreference,
+                FriendBarStateUtility.GetInt(habbo.FriendbarState)));
             //SendMessage(new TalentTrackLevelComposer());
 
 
-            if (_permissionManager.TryGetGroup(session.GetHabbo().Rank, out var group))
+            if (_permissionManager.TryGetGroup(habbo.Rank, out var group))
             {
                 if (!string.IsNullOrEmpty(group.Badge))
                 {
-                    if (!session.GetHabbo().Inventory.Badges.HasBadge(group.Badge))
-                        await _badgeManager.GiveBadge(session.GetHabbo(), group.Badge);
+                    if (inventory?.Badges != null && !inventory.Badges.HasBadge(group.Badge))
+                        await _badgeManager.GiveBadge(habbo, group.Badge);
                 }
             }
-            if (_subscriptionManager.TryGetSubscriptionData(session.GetHabbo().VipRank, out var subData))
+            if (_subscriptionManager.TryGetSubscriptionData(habbo.VipRank, out var subData))
             {
                 if (!string.IsNullOrEmpty(subData.Badge))
                 {
-                    if (!session.GetHabbo().Inventory.Badges.HasBadge(subData.Badge))
-                        await _badgeManager.GiveBadge(session.GetHabbo(), subData.Badge);
+                    if (inventory?.Badges != null && !inventory.Badges.HasBadge(subData.Badge))
+                        await _badgeManager.GiveBadge(habbo, subData.Badge);
                 }
             }
-            if (!_cacheManager.ContainsUser(session.GetHabbo().Id))
-                _cacheManager.GenerateUser(session.GetHabbo().Id);
-            session.GetHabbo().Look = _figureManager.ProcessFigure(session.GetHabbo().Look, session.GetHabbo().Gender, session.GetHabbo().Clothing.GetClothingParts, true);
-            session.GetHabbo().InitProcess();
-            if (session.GetHabbo().Permissions.HasRight("mod_tickets"))
+            if (!_cacheManager.ContainsUser(habbo.Id))
+                _cacheManager.GenerateUser(habbo.Id);
+            habbo.Look = _figureManager.ProcessFigure(habbo.Look, habbo.Gender, clothing?.GetClothingParts ?? Array.Empty<Plus.HabboHotel.Users.Clothing.Parts.ClothingParts>(), true);
+            habbo.InitProcess();
+            if (habbo.Permissions?.HasRight("mod_tickets") == true)
             {
                 session.Send(new ModeratorInitComposer(
                     _moderationManager.UserMessagePresets,

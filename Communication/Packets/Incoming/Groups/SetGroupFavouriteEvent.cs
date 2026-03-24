@@ -20,28 +20,33 @@ internal class SetGroupFavouriteEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo?.HabboStats == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         if (groupId == 0)
             return Task.CompletedTask;
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        session.GetHabbo().HabboStats.FavouriteGroupId = group.Id;
+        habbo.HabboStats.FavouriteGroupId = group.Id;
         using (var connection = _database.Connection())
         {
             connection.Execute("UPDATE `user_statistics` SET `groupid` = @groupId WHERE `id` = @userId LIMIT 1",
-                new { groupId = session.GetHabbo().HabboStats.FavouriteGroupId, userId = session.GetHabbo().Id });
+                new { groupId = habbo.HabboStats.FavouriteGroupId, userId = habbo.Id });
         }
-        if (session.GetHabbo().InRoom && session.GetHabbo().CurrentRoom != null)
+        var currentRoom = habbo.CurrentRoom;
+        if (habbo.InRoom && currentRoom != null)
         {
-            session.GetHabbo().CurrentRoom.SendPacket(new RefreshFavouriteGroupComposer(session.GetHabbo().Id));
-            session.GetHabbo().CurrentRoom.SendPacket(new HabboGroupBadgesComposer(group));
-            var user = session.GetHabbo().CurrentRoom.GetRoomUserManager()
-                .GetRoomUserByHabbo(session.GetHabbo().Id);
+            currentRoom.SendPacket(new RefreshFavouriteGroupComposer(habbo.Id));
+            currentRoom.SendPacket(new HabboGroupBadgesComposer(group));
+            var user = currentRoom.GetRoomUserManager()
+                .GetRoomUserByHabbo(habbo.Id);
             if (user != null)
-                session.GetHabbo().CurrentRoom.SendPacket(new UpdateFavouriteGroupComposer(group, user.VirtualId));
+                currentRoom.SendPacket(new UpdateFavouriteGroupComposer(group, user.VirtualId));
         }
         else
-            session.Send(new RefreshFavouriteGroupComposer(session.GetHabbo().Id));
+            session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
         return Task.CompletedTask;
     }
 }

@@ -14,17 +14,22 @@ internal class PetCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var roomUser = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
+        if (habbo == null || currentRoom == null)
+            return;
+
+        var roomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (roomUser == null)
             return;
         if (!room.PetMorphsAllowed)
         {
             session.SendWhisper("The room owner has disabled the ability to use a pet morph in this room.");
-            if (session.GetHabbo().PetId > 0)
+            if (habbo.PetId > 0)
             {
                 session.SendWhisper("Oops, you still have a morph, un-morphing you.");
                 //Change the users Pet Id.
-                session.GetHabbo().PetId = 0;
+                habbo.PetId = 0;
 
                 //Quickly remove the old user instance.
                 room.SendPacket(new UserRemoveComposer(roomUser.VirtualId));
@@ -52,7 +57,7 @@ internal class PetCommand : IChatCommand
         }
 
         //Change the users Pet Id.
-        session.GetHabbo().PetId = targetPetId == -1 ? 0 : targetPetId;
+        habbo.PetId = targetPetId == -1 ? 0 : targetPetId;
 
         //Quickly remove the old user instance.
         room.SendPacket(new UserRemoveComposer(roomUser.VirtualId));
@@ -61,7 +66,7 @@ internal class PetCommand : IChatCommand
         room.SendPacket(new UsersComposer(roomUser));
 
         //Tell them a quick message.
-        if (session.GetHabbo().PetId > 0)
+        if (habbo.PetId > 0)
             session.SendWhisper("Use ':pet habbo' to turn back into a Habbo!");
     }
 

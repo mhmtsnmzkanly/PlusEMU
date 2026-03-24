@@ -20,7 +20,7 @@ public class CatalogPage
 
     public bool Visible { get; set; }
 
-    public string Layout { get; set; }
+    public string Layout { get; set; } = string.Empty;
 
     public string? PageStrings1 { get; set; }
 

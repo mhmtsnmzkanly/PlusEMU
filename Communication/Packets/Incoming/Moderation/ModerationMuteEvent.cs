@@ -14,7 +14,8 @@ internal class ModerationMuteEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_mute"))
+        var sessionHabbo = session.GetHabbo();
+        if (!(sessionHabbo.Permissions?.HasRight("mod_mute") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         packet.ReadString(); //message
@@ -27,7 +28,7 @@ internal class ModerationMuteEvent : IPacketEvent
             session.SendWhisper("An error occoured whilst finding that user in the database.");
             return Task.CompletedTask;
         }
-        if (habbo.Permissions.HasRight("mod_mute") && !session.GetHabbo().Permissions.HasRight("mod_mute_any"))
+        if ((habbo.Permissions?.HasRight("mod_mute") ?? false) && !(sessionHabbo.Permissions?.HasRight("mod_mute_any") ?? false))
         {
             session.SendWhisper("Oops, you cannot mute that user.");
             return Task.CompletedTask;

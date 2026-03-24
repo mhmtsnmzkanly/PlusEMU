@@ -38,6 +38,9 @@ internal class RemoveActorFromTeamBox : IWiredItem
         var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
         if (user == null)
             return false;
+        var effects = user.GetClient()?.GetHabbo()?.Effects;
+        if (effects == null)
+            return false;
         if (user.Team != Team.None)
         {
             var team = Instance.GetTeamManagerForFreeze();
@@ -45,8 +48,8 @@ internal class RemoveActorFromTeamBox : IWiredItem
             {
                 team.OnUserLeave(user);
                 user.Team = Team.None;
-                if (user.GetClient().GetHabbo().Effects.CurrentEffect != 0)
-                    user.GetClient().GetHabbo().Effects.ApplyEffect(0);
+                if (effects.CurrentEffect != 0)
+                    effects.ApplyEffect(0);
             }
         }
         return true;

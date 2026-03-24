@@ -7,8 +7,8 @@ namespace Plus.Communication.RCON;
 public class RconConnection
 {
     private static readonly ILogger Log = LogManager.GetLogger("Plus.Communication.Rcon.RconConnection");
-    private byte[] _buffer = new byte[1024];
-    private Socket _socket;
+    private byte[]? _buffer = new byte[1024];
+    private Socket? _socket;
 
     public RconConnection(Socket socket)
     {
@@ -27,6 +27,9 @@ public class RconConnection
     {
         try
         {
+            if (_socket == null || _buffer == null)
+                return;
+
             if (!int.TryParse(_socket.EndReceive(iAr).ToString(), out var bytes))
             {
                 Dispose();
@@ -46,7 +49,8 @@ public class RconConnection
     {
         if (_socket != null)
         {
-            _socket.Shutdown(SocketShutdown.Both);
+            if (_socket.Connected)
+                _socket.Shutdown(SocketShutdown.Both);
             _socket.Close();
             _socket.Dispose();
         }

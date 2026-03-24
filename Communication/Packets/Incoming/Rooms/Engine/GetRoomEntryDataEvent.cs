@@ -18,7 +18,8 @@ internal class GetRoomEntryDataEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var room = session.GetHabbo().CurrentRoom;
+        var habbo = session.GetHabbo();
+        var room = habbo?.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         if (!room.GetRoomUserManager().AddAvatarToRoom(session))
@@ -27,19 +28,17 @@ internal class GetRoomEntryDataEvent : IPacketEvent
             return Task.CompletedTask; //TODO: Remove?
         }
         room.SendObjects(session);
-        if (session.GetHabbo().Messenger != null)
-            session.GetHabbo().Messenger.NotifyChangesToFriends();
-        if (session.GetHabbo().HabboStats.QuestId > 0)
-            _questManager.QuestReminder(session, session.GetHabbo().HabboStats.QuestId);
+        habbo?.Messenger?.NotifyChangesToFriends();
+        if (habbo?.HabboStats != null && habbo.HabboStats.QuestId > 0)
+            _questManager.QuestReminder(session, habbo.HabboStats.QuestId);
         session.Send(new RoomEntryInfoComposer(room.RoomId, room.CheckRights(session, true)));
         session.Send(new RoomVisualizationSettingsComposer(room.WallThickness, room.FloorThickness, Convert.ToBoolean(room.Hidewall)));
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Username);
-        if (user != null && session.GetHabbo().PetId == 0) room.SendPacket(new UserChangeComposer(user, false));
+        var user = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
+        if (user != null && habbo?.PetId == 0) room.SendPacket(new UserChangeComposer(user, false));
         session.Send(new RoomEventComposer(room, room.Promotion));
-        if (room.GetWired() != null)
-            room.GetWired().TriggerEvent(WiredBoxType.TriggerRoomEnter, session.GetHabbo());
-        if (UnixTimestamp.GetNow() < session.GetHabbo().FloodTime && session.GetHabbo().FloodTime != 0)
-            session.Send(new FloodControlComposer((int)session.GetHabbo().FloodTime - (int)UnixTimestamp.GetNow()));
+        room.GetWired()?.TriggerEvent(WiredBoxType.TriggerRoomEnter, habbo);
+        if (habbo != null && UnixTimestamp.GetNow() < habbo.FloodTime && habbo.FloodTime != 0)
+            session.Send(new FloodControlComposer((int)habbo.FloodTime - (int)UnixTimestamp.GetNow()));
         return Task.CompletedTask;
     }
 }

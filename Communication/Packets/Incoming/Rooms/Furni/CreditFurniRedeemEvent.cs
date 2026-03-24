@@ -21,6 +21,11 @@ internal class CreditFurniRedeemEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
+        if (habbo == null || furniture == null)
+            return Task.CompletedTask;
+
         if (!room.CheckRights(session, true))
             return Task.CompletedTask;
         if (_settingsManager.TryGetValue("room.item.exchangeables.enabled") != "1")
@@ -36,8 +41,8 @@ internal class CreditFurniRedeemEvent : RoomPacketEvent
         var value = exchange.Definition.BehaviourData;
         if (value > 0)
         {
-            session.GetHabbo().Credits += value;
-            session.Send(new CreditBalanceComposer(session.GetHabbo().Credits));
+            habbo.Credits += value;
+            session.Send(new CreditBalanceComposer(habbo.Credits));
         }
         using (var dbClient = _database.GetQueryReactor())
         {
@@ -47,7 +52,7 @@ internal class CreditFurniRedeemEvent : RoomPacketEvent
         }
         session.Send(new FurniListUpdateComposer());
         room.GetRoomItemHandler().RemoveFurniture(null, exchange.Id);
-        session.GetHabbo().Inventory.Furniture.RemoveItem(exchange.Id);
+        furniture.RemoveItem(exchange.Id);
         session.Send(new FurniListRemoveComposer(exchange.Id));
         return Task.CompletedTask;
     }

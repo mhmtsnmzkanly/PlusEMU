@@ -21,6 +21,7 @@ public class GetGuestRoomResultComposer : IServerPacket
 
     public void Compose(IOutgoingPacket packet)
     {
+        var habbo = _session.GetHabbo();
         packet.WriteBoolean(_isLoading);
         packet.WriteUInteger(_data.Id);
         packet.WriteString(_data.Name);
@@ -69,7 +70,7 @@ public class GetGuestRoomResultComposer : IServerPacket
         packet.WriteInteger(_data.WhoCanMute);
         packet.WriteInteger(_data.WhoCanKick);
         packet.WriteInteger(_data.WhoCanBan);
-        packet.WriteBoolean(_session.GetHabbo().Permissions.HasRight("mod_tool") || _data.OwnerName == _session.GetHabbo().Username);
+        packet.WriteBoolean((habbo?.Permissions?.HasRight("mod_tool") ?? false) || _data.OwnerName == habbo?.Username);
         packet.WriteInteger(_data.ChatMode);
         packet.WriteInteger(_data.ChatSize);
         packet.WriteInteger(_data.ChatSpeed);

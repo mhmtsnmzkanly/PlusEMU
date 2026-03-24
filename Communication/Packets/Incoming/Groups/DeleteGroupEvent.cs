@@ -23,18 +23,22 @@ internal class DeleteGroupEvent : IPacketEvent
     }
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo?.Permissions == null)
+            return Task.CompletedTask;
+
         if (!_groupManager.TryGetGroup(packet.ReadInt(), out var group))
         {
             session.SendNotification("Oops, we couldn't find that group!");
             return Task.CompletedTask;
         }
-        if (group.CreatorId != session.GetHabbo().Id && !session.GetHabbo().Permissions.HasRight("group_delete_override")) //Maybe a FUSE check for staff override?
+        if (group.CreatorId != habbo.Id && !habbo.Permissions.HasRight("group_delete_override")) //Maybe a FUSE check for staff override?
         {
             session.SendNotification("Oops, only the group owner can delete a group!");
             return Task.CompletedTask;
         }
         if (group.MemberCount >= Convert.ToInt32(_settingsManager.TryGetValue("group.delete.member.limit")) &&
-            !session.GetHabbo().Permissions.HasRight("group_delete_limit_override"))
+            !habbo.Permissions.HasRight("group_delete_limit_override"))
         {
             session.SendNotification(
                 $"Oops, your group exceeds the maximum amount of members ({Convert.ToInt32(_settingsManager.TryGetValue("group.delete.member.limit"))}) a group can exceed before being eligible for deletion. Seek assistance from a staff member.");

@@ -2,7 +2,7 @@
 
 public static class PathFinder
 {
-    public static Vector2D[] DiagMovePoints =
+    public static readonly Vector2D[] DiagMovePoints =
     {
         new(-1, -1),
         new(0, -1),
@@ -14,7 +14,7 @@ public static class PathFinder
         new(-1, 0)
     };
 
-    public static Vector2D[] NoDiagMovePoints =
+    public static readonly Vector2D[] NoDiagMovePoints =
     {
         new(0, -1),
         new(1, 0),
@@ -38,7 +38,7 @@ public static class PathFinder
         return path;
     }
 
-    public static PathFinderNode FindPathReversed(RoomUser user, bool diag, Gamemap map, Vector2D start,
+    public static PathFinderNode? FindPathReversed(RoomUser user, bool diag, Gamemap map, Vector2D start,
         Vector2D end)
     {
         var openList = new MinHeap<PathFinderNode>(256);

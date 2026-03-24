@@ -82,10 +82,11 @@ public class QuestManager : IQuestManager
 
     public void ProgressUserQuest(GameClient session, QuestType type, int data = 0)
     {
-        if (session == null || session.GetHabbo() == null || session.GetHabbo().HabboStats.QuestId <= 0) return;
-        var quest = GetQuest(session.GetHabbo().HabboStats.QuestId);
+        var habbo = session?.GetHabbo();
+        if (habbo?.HabboStats == null || habbo.Quests == null || habbo.HabboStats.QuestId <= 0) return;
+        var quest = GetQuest(habbo.HabboStats.QuestId);
         if (quest == null || quest.GoalType != type) return;
-        var currentProgress = session.GetHabbo().GetQuestProgress(quest.Id);
+        var currentProgress = habbo.GetQuestProgress(quest.Id);
         var totalProgress = currentProgress;
         var completeQuest = false;
         switch (type)
@@ -120,20 +121,20 @@ public class QuestManager : IQuestManager
         }
         using (var dbClient = _database.GetQueryReactor())
         {
-            dbClient.RunQuery($"UPDATE `user_quests` SET `progress` = '{totalProgress}' WHERE `user_id` = '{session.GetHabbo().Id}' AND `quest_id` = '{quest.Id}' LIMIT 1");
+            dbClient.RunQuery($"UPDATE `user_quests` SET `progress` = '{totalProgress}' WHERE `user_id` = '{habbo.Id}' AND `quest_id` = '{quest.Id}' LIMIT 1");
             if (completeQuest)
-                dbClient.RunQuery($"UPDATE `user_statistics` SET `quest_id` = '0' WHERE `id` = '{session.GetHabbo().Id}' LIMIT 1");
+                dbClient.RunQuery($"UPDATE `user_statistics` SET `quest_id` = '0' WHERE `id` = '{habbo.Id}' LIMIT 1");
         }
-        session.GetHabbo().Quests[session.GetHabbo().HabboStats.QuestId] = totalProgress;
+        habbo.Quests[habbo.HabboStats.QuestId] = totalProgress;
         session.Send(new QuestStartedComposer(session, quest));
         if (completeQuest)
         {
-            _messengerDataLoader.BroadcastStatusUpdate(session.GetHabbo(), MessengerEventTypes.QuestCompleted, $"{quest.Category}.{quest.Name}");
-            session.GetHabbo().HabboStats.QuestId = 0;
-            session.GetHabbo().QuestLastCompleted = quest.Id;
+            _messengerDataLoader.BroadcastStatusUpdate(habbo, MessengerEventTypes.QuestCompleted, $"{quest.Category}.{quest.Name}");
+            habbo.HabboStats.QuestId = 0;
+            habbo.QuestLastCompleted = quest.Id;
             session.Send(new QuestCompletedComposer(session, quest));
-            session.GetHabbo().Duckets += quest.Reward;
-            session.Send(new HabboActivityPointNotificationComposer(session.GetHabbo().Duckets, quest.Reward));
+            habbo.Duckets += quest.Reward;
+            session.Send(new HabboActivityPointNotificationComposer(habbo.Duckets, quest.Reward));
             GetList(session, null);
         }
     }
@@ -148,6 +149,10 @@ public class QuestManager : IQuestManager
 
     public void GetList(GameClient session, ClientPacket message)
     {
+        var habbo = session.GetHabbo();
+        if (habbo?.HabboStats == null)
+            return;
+
         var userQuestGoals = new Dictionary<string, int>();
         var userQuests = new Dictionary<string, Quest>();
         foreach (var quest in _quests.Values.ToList())
@@ -161,8 +166,8 @@ public class QuestManager : IQuestManager
             }
             if (quest.Number >= userQuestGoals[quest.Category])
             {
-                var userProgress = session.GetHabbo().GetQuestProgress(quest.Id);
-                if (session.GetHabbo().HabboStats.QuestId != quest.Id && userProgress >= quest.GoalData) userQuestGoals[quest.Category] = quest.Number + 1;
+                var userProgress = habbo.GetQuestProgress(quest.Id);
+                if (habbo.HabboStats.QuestId != quest.Id && userProgress >= quest.GoalData) userQuestGoals[quest.Category] = quest.Number + 1;
             }
         }
         foreach (var quest in _quests.Values.ToList())

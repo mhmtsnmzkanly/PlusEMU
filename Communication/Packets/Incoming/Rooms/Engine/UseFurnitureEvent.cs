@@ -22,6 +22,7 @@ internal class UseFurnitureEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
         var itemId = packet.ReadUInt();
         var item = room.GetRoomItemHandler().GetItem(itemId);
         if (item == null)
@@ -40,11 +41,12 @@ internal class UseFurnitureEvent : RoomPacketEvent
             dbClient.RunQuery($"UPDATE `room_items_toner` SET `enabled` = '{room.TonerData.Enabled}' LIMIT 1");
             return Task.CompletedTask;
         }
-        if (item.Definition.InteractionType == InteractionType.GnomeBox && item.UserId == session.GetHabbo().Id) session.Send(new GnomeBoxComposer(item.Id));
+        if (item.Definition.InteractionType == InteractionType.GnomeBox && item.UserId == habbo?.Id)
+            session.Send(new GnomeBoxComposer(item.Id));
         var toggle = true;
         if (item.Definition.InteractionType == InteractionType.WfFloorSwitch1 || item.Definition.InteractionType == InteractionType.WfFloorSwitch2)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+            var user = habbo == null ? null : item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user == null)
                 return Task.CompletedTask;
             if (!Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y)) toggle = false;
@@ -52,7 +54,7 @@ internal class UseFurnitureEvent : RoomPacketEvent
         var request = packet.ReadInt();
         item.Interactor.OnTrigger(session, item, request, hasRights);
         if (toggle)
-            item.GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerStateChanges, session.GetHabbo(), item);
+            item.GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerStateChanges, habbo, item);
         _questManager.ProgressUserQuest(session, QuestType.ExploreFindItem, (int)item.Definition.Id); 
         return Task.CompletedTask;
     }

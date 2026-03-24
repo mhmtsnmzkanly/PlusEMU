@@ -18,6 +18,10 @@ internal class ApplyHorseEffectEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var itemId = packet.ReadUInt();
         var item = room.GetRoomItemHandler().GetItem(itemId);
         if (item == null)
@@ -25,7 +29,7 @@ internal class ApplyHorseEffectEvent : RoomPacketEvent
         var petId = packet.ReadInt();
         if (!room.GetRoomUserManager().TryGetPet(petId, out var petUser))
             return Task.CompletedTask;
-        if (petUser.PetData == null || petUser.PetData.OwnerId != session.GetHabbo().Id)
+        if (petUser.PetData == null || petUser.PetData.OwnerId != habbo.Id)
             return Task.CompletedTask;
         if (item.Definition.InteractionType == InteractionType.HorseSaddle1)
         {

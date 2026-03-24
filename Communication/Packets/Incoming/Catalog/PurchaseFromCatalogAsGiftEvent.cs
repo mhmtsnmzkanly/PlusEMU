@@ -48,6 +48,11 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var sender = session.GetHabbo();
+        var senderBadges = sender?.Inventory?.Badges;
+        if (sender == null || senderBadges == null)
+            return Task.CompletedTask;
+
         var pageId = packet.ReadInt();
         var itemId = packet.ReadInt();
         var data = packet.ReadString();
@@ -64,7 +69,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         }
         if (!_catalogManager.TryGetPage(pageId, out var page))
             return Task.CompletedTask;
-        if (!page.Enabled || !page.Visible || page.MinimumRank > session.GetHabbo().Rank || page.MinimumVip > session.GetHabbo().VipRank && session.GetHabbo().Rank == 1)
+        if (!page.Enabled || !page.Visible || page.MinimumRank > sender.Rank || page.MinimumVip > sender.VipRank && sender.Rank == 1)
             return Task.CompletedTask;
         if (!page.Items.TryGetValue(itemId, out var item))
         {
@@ -81,12 +86,12 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
             return Task.CompletedTask;
         if (!_itemManager.Gifts.TryGetValue(spriteId, out var presentId) || !_itemManager.Items.TryGetValue(presentId, out var presentData) || presentData.InteractionType != InteractionType.Gift)
             return Task.CompletedTask;
-        if (session.GetHabbo().Credits < item.CostCredits)
+        if (sender.Credits < item.CostCredits)
         {
             session.Send(new PresentDeliverErrorComposer(true, false));
             return Task.CompletedTask;
         }
-        if (session.GetHabbo().Duckets < item.CostPixels)
+        if (sender.Duckets < item.CostPixels)
         {
             session.Send(new PresentDeliverErrorComposer(false, true));
             return Task.CompletedTask;
@@ -102,17 +107,17 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
             session.SendNotification("Oops, this user doesn't allow gifts to be sent to them!");
             return Task.CompletedTask;
         }
-        if ((DateTime.Now - session.GetHabbo().LastGiftPurchaseTime).TotalSeconds <= 15.0)
+        if ((DateTime.Now - sender.LastGiftPurchaseTime).TotalSeconds <= 15.0)
         {
             session.SendNotification("You're purchasing gifts too fast! Please wait 15 seconds!");
-            session.GetHabbo().GiftPurchasingWarnings += 1;
-            if (session.GetHabbo().GiftPurchasingWarnings >= 25)
-                session.GetHabbo().SessionGiftBlocked = true;
+            sender.GiftPurchasingWarnings += 1;
+            if (sender.GiftPurchasingWarnings >= 25)
+                sender.SessionGiftBlocked = true;
             return Task.CompletedTask;
         }
-        if (session.GetHabbo().SessionGiftBlocked)
+        if (sender.SessionGiftBlocked)
             return Task.CompletedTask;
-        var extra_data = giftUser + Convert.ToChar(5) + giftMessage + Convert.ToChar(5) + session.GetHabbo().Id + Convert.ToChar(5) + item.Definition.Id + Convert.ToChar(5) + spriteId + Convert.ToChar(5) + ribbon +
+        var extra_data = giftUser + Convert.ToChar(5) + giftMessage + Convert.ToChar(5) + sender.Id + Convert.ToChar(5) + item.Definition.Id + Convert.ToChar(5) + spriteId + Convert.ToChar(5) + ribbon +
                  Convert.ToChar(5) + colour;
         int newItemId;
         using (var connection = _database.Connection())
@@ -168,18 +173,18 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                     itemExtraData = "1,1,1,#000000,255";
                     break;
                 case InteractionType.Trophy:
-                    itemExtraData = $"{session.GetHabbo().Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}{Convert.ToChar(9)}{data}";
+                    itemExtraData = $"{sender.Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}{Convert.ToChar(9)}{data}";
                     break;
                 case InteractionType.Mannequin:
                     itemExtraData = $"m{Convert.ToChar(5)}.ch-210-1321.lg-285-92{Convert.ToChar(5)}Default Mannequin";
                     break;
                 case InteractionType.BadgeDisplay:
-                    if (!session.GetHabbo().Inventory.Badges.HasBadge(data))
+                    if (!senderBadges.HasBadge(data))
                     {
                         session.Send(new BroadcastMessageAlertComposer("Oops, it appears that you do not own this badge."));
                         return Task.CompletedTask;
                     }
-                    itemExtraData = $"{data}{Convert.ToChar(9)}{session.GetHabbo().Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}";
+                    itemExtraData = $"{data}{Convert.ToChar(9)}{sender.Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}";
                     break;
                 default:
                     itemExtraData = data;
@@ -197,16 +202,19 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         if (giveItem != null)
         {
             var receiver = _gameClientManager.GetClientByUserId(habbo.Id);
+            var receiverFurniture = receiver?.GetHabbo()?.Inventory?.Furniture;
             if (receiver != null)
             {
-                receiver.GetHabbo().Inventory.Furniture.AddItem(giveItem);
+                if (receiverFurniture == null)
+                    return Task.CompletedTask;
+                receiverFurniture.AddItem(giveItem);
                 receiver.Send(new FurniListNotificationComposer(giveItem.Id, 1));
                 receiver.Send(new PurchaseOkComposer());
                 receiver.Send(new FurniListAddComposer(giveItem));
                 receiver.Send(new FurniListUpdateComposer());
             }
 
-            if (habbo.Id != session.GetHabbo().Id)
+            if (habbo.Id != sender.Id)
             {
                 _achievementManager.ProgressAchievement(session, "ACH_GiftGiver", 1);
                 if (receiver != null)
@@ -217,15 +225,15 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         session.Send(new PurchaseOkComposer(item, presentData));
         if (item.CostCredits > 0)
         {
-            session.GetHabbo().Credits -= item.CostCredits;
-            session.Send(new CreditBalanceComposer(session.GetHabbo().Credits));
+            sender.Credits -= item.CostCredits;
+            session.Send(new CreditBalanceComposer(sender.Credits));
         }
         if (item.CostPixels > 0)
         {
-            session.GetHabbo().Duckets -= item.CostPixels;
-            session.Send(new HabboActivityPointNotificationComposer(session.GetHabbo().Duckets, session.GetHabbo().Duckets));
+            sender.Duckets -= item.CostPixels;
+            session.Send(new HabboActivityPointNotificationComposer(sender.Duckets, sender.Duckets));
         }
-        session.GetHabbo().LastGiftPurchaseTime = DateTime.Now;
+        sender.LastGiftPurchaseTime = DateTime.Now;
         return Task.CompletedTask;
     }
 }

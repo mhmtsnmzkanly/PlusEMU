@@ -51,9 +51,9 @@ public sealed class NavigatorManager : INavigatorManager
                         if (!_searchResultLists.ContainsKey(Convert.ToInt32(row["id"])))
                         {
                             _searchResultLists.Add(Convert.ToInt32(row["id"]),
-                                new(Convert.ToInt32(row["id"]), Convert.ToString(row["category"]), Convert.ToString(row["category_identifier"]), Convert.ToString(row["public_name"]),
-                                    true, -1, Convert.ToInt32(row["required_rank"]), NavigatorViewModeUtility.GetViewModeByString(Convert.ToString(row["view_mode"])),
-                                    Convert.ToString(row["category_type"]), Convert.ToString(row["search_allowance"]), Convert.ToInt32(row["order_id"])));
+                                new(Convert.ToInt32(row["id"]), Convert.ToString(row["category"]) ?? string.Empty, Convert.ToString(row["category_identifier"]) ?? string.Empty, Convert.ToString(row["public_name"]) ?? string.Empty,
+                                    true, -1, Convert.ToInt32(row["required_rank"]), NavigatorViewModeUtility.GetViewModeByString(Convert.ToString(row["view_mode"]) ?? string.Empty),
+                                    Convert.ToString(row["category_type"]) ?? string.Empty, Convert.ToString(row["search_allowance"]) ?? string.Empty, Convert.ToInt32(row["order_id"])));
                         }
                     }
                 }
@@ -69,7 +69,7 @@ public sealed class NavigatorManager : INavigatorManager
                         if (!_featuredRooms.ContainsKey(Convert.ToUInt32(row["room_id"])))
                         {
                             _featuredRooms.Add(Convert.ToUInt32(row["room_id"]),
-                                new(Convert.ToInt32(row["room_id"]), Convert.ToString(row["caption"]), Convert.ToString(row["description"]), Convert.ToString(row["image_url"])));
+                                new(Convert.ToInt32(row["room_id"]), Convert.ToString(row["caption"]) ?? string.Empty, Convert.ToString(row["description"]) ?? string.Empty, Convert.ToString(row["image_url"]) ?? string.Empty));
                         }
                     }
                 }

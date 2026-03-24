@@ -4,9 +4,9 @@ internal sealed class MinHeap<T> where T : IComparable<T>
 {
     private T[] _array;
     private int _capacity;
-    private T _mheap;
-    private T _temp;
-    private T[] _tempArray;
+    private T _mheap = default!;
+    private T _temp = default!;
+    private T[] _tempArray = Array.Empty<T>();
 
     public MinHeap() : this(16) { }
 

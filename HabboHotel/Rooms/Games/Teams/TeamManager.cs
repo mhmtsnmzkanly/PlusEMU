@@ -48,7 +48,7 @@ public class TeamManager
         {
             case "banzai":
             {
-                var room = user.GetClient().GetHabbo().CurrentRoom;
+                var room = user.GetClient()?.GetHabbo()?.CurrentRoom;
                 if (room == null)
                     return;
                 foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
@@ -102,7 +102,7 @@ public class TeamManager
             }
             case "freeze":
             {
-                var room = user.GetClient().GetHabbo().CurrentRoom;
+                var room = user.GetClient()?.GetHabbo()?.CurrentRoom;
                 if (room == null)
                     return;
                 foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
@@ -150,7 +150,7 @@ public class TeamManager
         {
             case "banzai":
             {
-                var room = user.GetClient().GetHabbo().CurrentRoom;
+                var room = user.GetClient()?.GetHabbo()?.CurrentRoom;
                 if (room == null)
                     return;
                 foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
@@ -206,7 +206,7 @@ public class TeamManager
             }
             case "freeze":
             {
-                var room = user.GetClient().GetHabbo().CurrentRoom;
+                var room = user.GetClient()?.GetHabbo()?.CurrentRoom;
                 if (room == null)
                     return;
                 foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())

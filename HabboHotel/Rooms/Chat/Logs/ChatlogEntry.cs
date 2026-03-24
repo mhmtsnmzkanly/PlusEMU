@@ -4,10 +4,10 @@ namespace Plus.HabboHotel.Rooms.Chat.Logs;
 
 public sealed class ChatlogEntry
 {
-    private readonly WeakReference _playerReference;
-    private readonly WeakReference _roomReference;
+    private readonly WeakReference<Habbo>? _playerReference;
+    private readonly WeakReference<Room>? _roomReference;
 
-    public ChatlogEntry(int playerId, uint roomId, string message, double timestamp, Habbo player = null, RoomData instance = null)
+    public ChatlogEntry(int playerId, uint roomId, string message, double timestamp, Habbo? player = null, Room? instance = null)
     {
         PlayerId = playerId;
         RoomId = roomId;
@@ -27,25 +27,17 @@ public sealed class ChatlogEntry
 
     public double Timestamp { get; }
 
-    public Habbo PlayerNullable()
+    public Habbo? PlayerNullable()
     {
-        if (_playerReference.IsAlive)
-        {
-            var playerObj = (Habbo)_playerReference.Target;
-            return playerObj;
-        }
+        if (_playerReference != null && _playerReference.TryGetTarget(out var player))
+            return player;
         return null;
     }
 
-    public Room RoomNullable()
+    public Room? RoomNullable()
     {
-        if (_roomReference.IsAlive)
-        {
-            var roomObj = (Room)_roomReference.Target;
-            if (roomObj.MDisposed)
-                return null;
-            return roomObj;
-        }
+        if (_roomReference != null && _roomReference.TryGetTarget(out var room) && !room.MDisposed)
+            return room;
         return null;
     }
 }

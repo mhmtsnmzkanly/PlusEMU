@@ -7,9 +7,10 @@ internal class ToggleMuteToolEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null || !room.CheckRights(session, true))
             return Task.CompletedTask;
         room.RoomMuted = !room.RoomMuted;

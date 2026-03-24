@@ -19,6 +19,10 @@ internal class PickUpPetEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var petId = packet.ReadInt();
         if (!room.GetRoomUserManager().TryGetPet(petId, out var pet))
         {
@@ -27,16 +31,20 @@ internal class PickUpPetEvent : RoomPacketEvent
                 return Task.CompletedTask;
 
             //Okay so, we've established we have no pets in this room by this virtual Id, let us check out users, maybe they're creeping as a pet?!
-            var targetUser = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(petId);
+            var currentRoom = habbo.CurrentRoom;
+            if (currentRoom == null)
+                return Task.CompletedTask;
+            var targetUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(petId);
             if (targetUser == null)
                 return Task.CompletedTask;
 
             //Check some values first, please!
-            if (targetUser.GetClient() == null || targetUser.GetClient().GetHabbo() == null)
+            var targetHabbo = targetUser.GetClient()?.GetHabbo();
+            if (targetHabbo == null)
                 return Task.CompletedTask;
 
             //Update the targets PetId.
-            targetUser.GetClient().GetHabbo().PetId = 0;
+            targetHabbo.PetId = 0;
 
             //Quickly remove the old user instance.
             room.SendPacket(new UserRemoveComposer(targetUser.VirtualId));
@@ -45,7 +53,7 @@ internal class PickUpPetEvent : RoomPacketEvent
             room.SendPacket(new UsersComposer(targetUser));
             return Task.CompletedTask;
         }
-        if (session.GetHabbo().Id != pet.PetData.OwnerId && !room.CheckRights(session, true))
+        if (habbo.Id != pet.PetData.OwnerId && !room.CheckRights(session, true))
         {
             session.SendWhisper("You can only pickup your own pets, to kick a pet you must have room rights.");
             return Task.CompletedTask;
@@ -70,17 +78,18 @@ internal class PickUpPetEvent : RoomPacketEvent
             dbClient.RunQuery(
                 $"UPDATE `bots_petdata` SET `experience` = '{data.Experience}', `energy` = '{data.Energy}', `nutrition` = '{data.Nutrition}', `respect` = '{data.Respect}' WHERE `id` = '{data.PetId}' LIMIT 1");
         }
-        if (data.OwnerId != session.GetHabbo().Id)
+        if (data.OwnerId != habbo.Id)
         {
             var target = _clientManager.GetClientByUserId(data.OwnerId);
-            if (target != null)
+            var targetPets = target?.GetHabbo()?.Inventory?.Pets;
+            if (target != null && targetPets != null)
             {
-                if (target.GetHabbo().Inventory.Pets.AddPet(pet.PetData))
+                if (targetPets.AddPet(pet.PetData))
                 {
                     pet.PetData.RoomId = 0;
                     pet.PetData.PlacedInRoom = false;
                     room.GetRoomUserManager().RemoveBot(pet.VirtualId, false);
-                    target.Send(new PetInventoryComposer(target.GetHabbo().Inventory.Pets.Pets.Values.ToList()));
+                    target.Send(new PetInventoryComposer(targetPets.Pets.Values.ToList()));
                     return Task.CompletedTask;
                 }
             }

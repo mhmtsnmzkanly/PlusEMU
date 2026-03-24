@@ -21,6 +21,10 @@ internal class PickAllCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
         if (!room.CheckRights(session, true))
             return;
         room.GetRoomItemHandler().RemoveItems(session);
@@ -29,7 +33,7 @@ internal class PickAllCommand : IChatCommand
         {
             dbClient.SetQuery("UPDATE `items` SET `room_id` = '0' WHERE `room_id` = @RoomId AND `user_id` = @UserId");
             dbClient.AddParameter("RoomId", room.Id);
-            dbClient.AddParameter("UserId", session.GetHabbo().Id);
+            dbClient.AddParameter("UserId", habbo.Id);
             dbClient.RunQuery();
         }
         var items = room.GetRoomItemHandler().GetWallAndFloor.ToList();

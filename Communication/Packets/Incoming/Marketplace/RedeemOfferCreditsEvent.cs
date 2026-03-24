@@ -16,11 +16,15 @@ internal class RedeemOfferCreditsEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var creditsOwed = 0;
         DataTable table;
         using (var dbClient = _database.GetQueryReactor())
         {
-            dbClient.SetQuery($"SELECT `asking_price` FROM `catalog_marketplace_offers` WHERE `user_id` = '{session.GetHabbo().Id}' AND `state` = '2'");
+            dbClient.SetQuery($"SELECT `asking_price` FROM `catalog_marketplace_offers` WHERE `user_id` = '{habbo.Id}' AND `state` = '2'");
             table = dbClient.GetTable();
         }
         if (table != null)
@@ -28,11 +32,11 @@ internal class RedeemOfferCreditsEvent : IPacketEvent
             foreach (DataRow row in table.Rows) creditsOwed += Convert.ToInt32(row["asking_price"]);
             if (creditsOwed >= 1)
             {
-                session.GetHabbo().Credits += creditsOwed;
-                session.Send(new CreditBalanceComposer(session.GetHabbo().Credits));
+                habbo.Credits += creditsOwed;
+                session.Send(new CreditBalanceComposer(habbo.Credits));
             }
             using var dbClient = _database.GetQueryReactor();
-            dbClient.RunQuery($"DELETE FROM `catalog_marketplace_offers` WHERE `user_id` = '{session.GetHabbo().Id}' AND `state` = '2'");
+            dbClient.RunQuery($"DELETE FROM `catalog_marketplace_offers` WHERE `user_id` = '{habbo.Id}' AND `state` = '2'");
         }
         return Task.CompletedTask;
     }

@@ -146,16 +146,18 @@ internal class RoomCommand : IChatCommand
                 {
                     foreach (var user in room.GetRoomUserManager().GetRoomUsers())
                     {
-                        if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+                        var targetClient = user?.GetClient();
+                        var targetHabbo = targetClient?.GetHabbo();
+                        if (targetHabbo == null)
                             continue;
-                        user.GetClient().SendWhisper("The room owner has disabled the ability to use a pet morph in this room.");
-                        if (user.GetClient().GetHabbo().PetId > 0)
+                        targetClient.SendWhisper("The room owner has disabled the ability to use a pet morph in this room.");
+                        if (targetHabbo.PetId > 0)
                         {
                             //Tell the user what is going on.
-                            user.GetClient().SendWhisper("Oops, the room owner has just disabled pet-morphs, un-morphing you.");
+                            targetClient.SendWhisper("Oops, the room owner has just disabled pet-morphs, un-morphing you.");
 
                             //Change the users Pet Id.
-                            user.GetClient().GetHabbo().PetId = 0;
+                            targetHabbo.PetId = 0;
 
                             //Quickly remove the old user instance.
                             room.SendPacket(new UserRemoveComposer(user.VirtualId));

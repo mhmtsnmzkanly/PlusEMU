@@ -20,14 +20,15 @@ internal class TakeUserBadgeCommand : IRconCommand
         if (!int.TryParse(parameters[0], out var userId))
             return Task.FromResult(false);
         var client = _gameClientManager.GetClientByUserId(userId);
-        if (client?.GetHabbo() == null)
+        var habbo = client?.GetHabbo();
+        if (habbo == null)
             return Task.FromResult(false);
 
         // Validate the badge
-        if (string.IsNullOrEmpty(Convert.ToString(parameters[1])))
-            return Task.FromResult(false);
         var badge = Convert.ToString(parameters[1]);
-        if (client.GetHabbo().Inventory.Badges.HasBadge(badge)) client.GetHabbo().Inventory.Badges.RemoveBadge(badge);
+        if (string.IsNullOrEmpty(badge))
+            return Task.FromResult(false);
+        if (habbo.Inventory.Badges.HasBadge(badge)) habbo.Inventory.Badges.RemoveBadge(badge);
         return Task.FromResult(true);
     }
 }

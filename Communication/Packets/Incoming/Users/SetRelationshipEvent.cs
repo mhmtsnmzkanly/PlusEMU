@@ -20,9 +20,14 @@ internal class SetRelationshipEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var messenger = habbo?.Messenger;
+        if (habbo == null || messenger == null)
+            return;
+
         var user = packet.ReadInt();
         var type = packet.ReadInt();
-        var friend = session.GetHabbo().Messenger.GetFriend(user);
+        var friend = messenger.GetFriend(user);
         if (friend == null)
         {
             session.Send(new BroadcastMessageAlertComposer("Oops, you can only set a relationship where a friendship exists."));
@@ -35,8 +40,8 @@ internal class SetRelationshipEvent : IPacketEvent
         }
 
         friend.Relationship = type;
-        await _messengerDataLoader.SetRelationship(session.GetHabbo().Id, friend.Id, friend.Relationship);
-        session.GetHabbo().Messenger.UpdateFriend(friend);
+        await _messengerDataLoader.SetRelationship(habbo.Id, friend.Id, friend.Relationship);
+        messenger.UpdateFriend(friend);
         return;
     }
 }

@@ -24,7 +24,7 @@ internal class GetOffersEvent : IPacketEvent
         var maxCost = packet.ReadInt();
         var searchQuery = packet.ReadString();
         var filterMode = packet.ReadInt();
-        DataTable table;
+        DataTable? table;
         var builder = new StringBuilder();
         string str;
         builder.Append($"WHERE `state` = '1' AND `timestamp` >= {_marketplaceManager.FormatTimestampString()}");
@@ -58,7 +58,7 @@ internal class GetOffersEvent : IPacketEvent
                 {
                     _marketplaceManager.MarketItemKeys.Add(Convert.ToInt32(row["offer_id"]));
                     _marketplaceManager.MarketItems.Add(new(Convert.ToUInt32(row["offer_id"]), Convert.ToUInt32(row["sprite_id"]),
-                        Convert.ToInt32(row["total_price"]), int.Parse(row["item_type"].ToString()), Convert.ToUInt32(row["limited_number"]), Convert.ToUInt32(row["limited_stack"])));
+                        Convert.ToInt32(row["total_price"]), int.Parse(row["item_type"].ToString() ?? "0"), Convert.ToUInt32(row["limited_number"]), Convert.ToUInt32(row["limited_stack"])));
                 }
             }
         }

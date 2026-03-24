@@ -13,6 +13,8 @@ internal class ActorIsInTeamBox : IWiredItem
         Instance = instance;
         Item = item;
         SetItems = new();
+        StringData = string.Empty;
+        ItemsData = string.Empty;
     }
 
     public Room Instance { get; set; }

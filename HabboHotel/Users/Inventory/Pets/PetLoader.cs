@@ -15,7 +15,7 @@ internal class PetLoader : IPetLoader
     public List<Pet> GetPetsForUser(int userId)
     {
         var pets = new List<Pet>();
-        DataTable data = null;
+        DataTable? data = null;
         using var dbClient = _database.GetQueryReactor();
         dbClient.SetQuery($"SELECT `id`,`user_id`,`room_id`,`name`,`x`,`y`,`z` FROM `bots` WHERE `user_id` = '{userId}' AND `room_id` = '0' AND `ai_type` = 'pet'");
         data = dbClient.GetTable();
@@ -28,12 +28,12 @@ internal class PetLoader : IPetLoader
                 var mRow = dbClient.GetRow();
                 if (mRow != null)
                 {
-                    pets.Add(new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["user_id"]), Convert.ToUInt32(row["room_id"]), Convert.ToString(row["name"]), Convert.ToInt32(mRow["type"]),
-                        Convert.ToString(mRow["race"]), Convert.ToString(mRow["color"]),
+                    pets.Add(new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["user_id"]), Convert.ToUInt32(row["room_id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToInt32(mRow["type"]),
+                        Convert.ToString(mRow["race"]) ?? string.Empty, Convert.ToString(mRow["color"]) ?? string.Empty,
                         Convert.ToInt32(mRow["experience"]), Convert.ToInt32(mRow["energy"]), Convert.ToInt32(mRow["nutrition"]), Convert.ToInt32(mRow["respect"]),
                         Convert.ToDouble(mRow["createstamp"]), Convert.ToInt32(row["x"]), Convert.ToInt32(row["y"]),
                         Convert.ToDouble(row["z"]), Convert.ToInt32(mRow["have_saddle"]), Convert.ToInt32(mRow["anyone_ride"]), Convert.ToInt32(mRow["hairdye"]), Convert.ToInt32(mRow["pethair"]),
-                        Convert.ToString(mRow["gnome_clothing"])));
+                        Convert.ToString(mRow["gnome_clothing"]) ?? string.Empty));
                 }
             }
         }

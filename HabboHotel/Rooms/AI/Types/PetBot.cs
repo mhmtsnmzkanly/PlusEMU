@@ -45,12 +45,13 @@ public class PetBot : BotAi
 
     public override void OnUserEnterRoom(RoomUser user)
     {
-        if (user.GetClient() != null && user.GetClient().GetHabbo() != null)
+        var habbo = user.GetClient()?.GetHabbo();
+        if (habbo != null)
         {
             var pet = GetRoomUser();
             if (pet != null)
             {
-                if (user.GetClient().GetHabbo().Username == pet.PetData.OwnerName)
+                if (habbo.Username == pet.PetData.OwnerName)
                 {
                     var speech = PlusEnvironment.Game.ChatManager.GetPetLocale().GetValue($"welcome.speech.pet{pet.PetData.Type}");
                     var rSpeech = speech[Random.Shared.Next(0, speech.Length)];
@@ -136,7 +137,7 @@ public class PetBot : BotAi
 
         //if (!Pet.Statusses.ContainsKey("gst thr"))
         //    Pet.Statusses.Add("gst thr", TextHandling.GetString(Pet.Z));
-        if (message.ToLower().StartsWith($"{pet.PetData.Name.ToLower()} ") && user.GetClient().GetHabbo().Username.ToLower() == pet.PetData.OwnerName.ToLower() ||
+        if (message.ToLower().StartsWith($"{pet.PetData.Name.ToLower()} ") && (user.GetClient()?.GetHabbo()?.Username?.ToLower() == pet.PetData.OwnerName.ToLower()) ||
             message.ToLower().StartsWith($"{pet.PetData.Name.ToLower()} ") &&
             PlusEnvironment.Game.ChatManager.GetPetCommands().TryInvoke(message.Substring(pet.PetData.Name.ToLower().Length + 1)) == 8)
         {

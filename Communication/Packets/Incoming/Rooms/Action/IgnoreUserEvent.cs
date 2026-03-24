@@ -16,18 +16,19 @@ internal class IgnoreUserEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (!habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         var username = packet.ReadString();
         var player = _gameClientManager.GetClientByUsername(username)?.GetHabbo();
-        if (player == null || player.Permissions.HasRight("mod_tool"))
+        if (player == null || (player.Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
-        if (session.GetHabbo().IgnoresComponent.IsIgnored(player.Id))
+        if (habbo.IgnoresComponent?.IsIgnored(player.Id) == true)
             return Task.CompletedTask;
-        session.GetHabbo().IgnoresComponent.Ignore(player.Id);
+        habbo.IgnoresComponent?.Ignore(player.Id);
         _achievementManager.ProgressAchievement(session, "ACH_SelfModIgnoreSeen", 1);
         return Task.CompletedTask;
     }

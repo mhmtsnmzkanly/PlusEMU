@@ -26,16 +26,18 @@ internal class OpenGiftEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
+        if (habbo == null || furniture == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         var presentId = packet.ReadUInt();
         var present = room.GetRoomItemHandler().GetItem(presentId);
         if (present == null)
             return Task.CompletedTask;
-        if (present.UserId != session.GetHabbo().Id)
+        if (present.UserId != habbo.Id)
             return Task.CompletedTask;
         DataRow data;
         using (var dbClient = _database.GetQueryReactor())
@@ -53,7 +55,7 @@ internal class OpenGiftEvent : IPacketEvent
                 dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
                 dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
             }
-            session.GetHabbo().Inventory.Furniture.RemoveItem(present.Id);
+            furniture.RemoveItem(present.Id);
             session.Send(new FurniListRemoveComposer(present.Id));
             return Task.CompletedTask;
         }
@@ -66,7 +68,7 @@ internal class OpenGiftEvent : IPacketEvent
                 dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
                 dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
             }
-            session.GetHabbo().Inventory.Furniture.RemoveItem(present.Id);
+            furniture.RemoveItem(present.Id);
             session.Send(new FurniListRemoveComposer(present.Id));
             return Task.CompletedTask;
         }
@@ -80,7 +82,7 @@ internal class OpenGiftEvent : IPacketEvent
                 dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
                 dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
             }
-            session.GetHabbo().Inventory.Furniture.RemoveItem(present.Id);
+            furniture.RemoveItem(present.Id);
             session.Send(new FurniListRemoveComposer(present.Id));
             return Task.CompletedTask;
         }
@@ -93,7 +95,7 @@ internal class OpenGiftEvent : IPacketEvent
                 dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
                 dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
             }
-            session.GetHabbo().Inventory.Furniture.RemoveItem(present.Id);
+            furniture.RemoveItem(present.Id);
             session.Send(new FurniListRemoveComposer(present.Id));
             return Task.CompletedTask;
         }

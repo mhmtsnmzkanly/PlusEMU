@@ -42,12 +42,13 @@ public class ChatEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (habbo?.Permissions == null || habbo.HabboStats == null || !habbo.InRoom)
             return;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return;
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         var message = StringCharFilter.Escape(packet.ReadString());
@@ -55,25 +56,25 @@ public class ChatEvent : IPacketEvent
             message = message.Substring(0, 100);
         var colour = packet.ReadInt();
         if (!_chatStyleManager.TryGetStyle(colour, out var style) ||
-            style.RequiredRight.Length > 0 && !session.GetHabbo().Permissions.HasRight(style.RequiredRight))
+            style.RequiredRight.Length > 0 && !habbo.Permissions.HasRight(style.RequiredRight))
             colour = 0;
         user.UnIdle();
-        if (UnixTimestamp.GetNow() < session.GetHabbo().FloodTime && session.GetHabbo().FloodTime != 0)
+        if (UnixTimestamp.GetNow() < habbo.FloodTime && habbo.FloodTime != 0)
             return;
-        if (session.GetHabbo().TimeMuted > 0)
+        if (habbo.TimeMuted > 0)
         {
-            session.Send(new MutedComposer(session.GetHabbo().TimeMuted));
+            session.Send(new MutedComposer(habbo.TimeMuted));
             return;
         }
-        if (!session.GetHabbo().Permissions.HasRight("room_ignore_mute") && room.CheckMute(session))
+        if (!habbo.Permissions.HasRight("room_ignore_mute") && room.CheckMute(session))
         {
             session.SendWhisper("Oops, you're currently muted.");
             return;
         }
 
-        user.LastBubble = session.GetHabbo().CustomBubbleId == 0 ? colour : session.GetHabbo().CustomBubbleId;
+        user.LastBubble = habbo.CustomBubbleId == 0 ? colour : habbo.CustomBubbleId;
 
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool"))
+        if (!habbo.Permissions.HasRight("mod_tool"))
         {
             if (user.IncrementAndCheckFlood(out var muteTime))
             {
@@ -82,16 +83,16 @@ public class ChatEvent : IPacketEvent
             }
         }
         
-        _chatlogManager.StoreChatlog(new(session.GetHabbo().Id, room.Id, message, UnixTimestamp.GetNow(), session.GetHabbo(), room));
+        _chatlogManager.StoreChatlog(new(habbo.Id, room.Id, message, UnixTimestamp.GetNow(), habbo, room));
         
         if (message.StartsWith(":", StringComparison.CurrentCulture) && await _commandManager.Parse(session, message))
             return;
         if (_wordFilterManager.CheckBannedWords(message))
         {
-            session.GetHabbo().BannedPhraseCount++;
-            if (session.GetHabbo().BannedPhraseCount >= Convert.ToInt32(_settingsManager.TryGetValue("room.chat.filter.banned_phrases.chances")))
+            habbo.BannedPhraseCount++;
+            if (habbo.BannedPhraseCount >= Convert.ToInt32(_settingsManager.TryGetValue("room.chat.filter.banned_phrases.chances")))
             {
-                _moderationManager.BanUser("System", ModerationBanType.Username, session.GetHabbo().Username, $"Spamming banned phrases ({message})",
+                _moderationManager.BanUser("System", ModerationBanType.Username, habbo.Username, $"Spamming banned phrases ({message})",
                     UnixTimestamp.GetNow() + 78892200);
                 session.Disconnect();
                 return;
@@ -99,7 +100,7 @@ public class ChatEvent : IPacketEvent
             session.Send(new ChatComposer(user.VirtualId, message, 0, colour));
             return;
         }
-        if (!session.GetHabbo().Permissions.HasRight("word_filter_override"))
+        if (!habbo.Permissions.HasRight("word_filter_override"))
             message = _wordFilterManager.CheckMessage(message);
         _questManager.ProgressUserQuest(session, QuestType.SocialChat);
         user.OnChat(user.LastBubble, message, false);

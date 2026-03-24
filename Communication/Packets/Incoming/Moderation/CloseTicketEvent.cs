@@ -21,14 +21,15 @@ internal class CloseTicketEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool"))
+        var sessionHabbo = session.GetHabbo();
+        if (!(sessionHabbo.Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
         var result = packet.ReadInt(); // 1 = useless, 2 = abusive, 3 = resolved
         packet.ReadInt(); //junk
         var ticketId = packet.ReadInt();
         if (!_moderationManager.TryGetTicket(ticketId, out var ticket))
             return Task.CompletedTask;
-        if (ticket.Moderator.Id != session.GetHabbo().Id)
+        if (ticket.Moderator?.Id != sessionHabbo.Id)
             return Task.CompletedTask;
         var client = _clientManager.GetClientByUserId(ticket.Sender.Id);
         if (client != null) client.Send(new ModeratorSupportTicketResponseComposer(result));
@@ -39,7 +40,7 @@ internal class CloseTicketEvent : IPacketEvent
                 new { senderId = ticket.Sender.Id });
         }
         ticket.Answered = true;
-        _clientManager.SendPacket(new ModeratorSupportTicketComposer(session.GetHabbo().Id, ticket), "mod_tool");
+        _clientManager.SendPacket(new ModeratorSupportTicketComposer(sessionHabbo.Id, ticket), "mod_tool");
         return Task.CompletedTask;
     }
 }

@@ -8,7 +8,11 @@ internal class LookToEvent : RoomPacketEvent
 {
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
+        if (habbo == null || currentRoom == null)
+            return Task.CompletedTask;
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return Task.CompletedTask;
         if (user.IsAsleep)
@@ -23,7 +27,7 @@ internal class LookToEvent : RoomPacketEvent
         user.UpdateNeeded = true;
         if (user.RidingHorse)
         {
-            var horse = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByVirtualId(user.HorseId);
+            var horse = currentRoom.GetRoomUserManager().GetRoomUserByVirtualId(user.HorseId);
             if (horse != null)
             {
                 horse.SetRot(rot, false);

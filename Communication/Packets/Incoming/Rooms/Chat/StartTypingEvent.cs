@@ -7,15 +7,16 @@ public class StartTypingEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Username);
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
         if (user == null)
             return Task.CompletedTask;
-        session.GetHabbo().CurrentRoom.SendPacket(new UserTypingComposer(user.VirtualId, true));
+        room.SendPacket(new UserTypingComposer(user.VirtualId, true));
         return Task.CompletedTask;
     }
 }

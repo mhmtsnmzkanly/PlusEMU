@@ -19,23 +19,35 @@ internal class IgnoresEventSynchronizer : IAuthenticationTask
 
     public Task UserLoggedIn(Habbo habbo)
     {
-        habbo.IgnoresComponent.UserIgnored += async (_, args) => await RegisterIgnore(habbo, args.UserId);
-        habbo.IgnoresComponent.UserUnignored += async (_, args) => await UnregisterIgnore(habbo, args.UserId);
+        var ignoresComponent = habbo.IgnoresComponent;
+        if (ignoresComponent == null)
+            return Task.CompletedTask;
+
+        ignoresComponent.UserIgnored += async (_, args) => await RegisterIgnore(habbo, args.UserId);
+        ignoresComponent.UserUnignored += async (_, args) => await UnregisterIgnore(habbo, args.UserId);
         return Task.CompletedTask;
     }
 
     public async Task RegisterIgnore(Habbo habbo, int targetId)
     {
+        var client = habbo.Client;
+        if (client == null)
+            return;
+
         using var connection = _database.Connection();
         await connection.ExecuteAsync("INSERT INTO user_ignores (user_id, ignore_id) VALUES (@userId, @targetId)", new { userId = habbo.Id, targetId });
         var name = await _gameClientManager.GetNameById(targetId);
-        habbo.Client.Send(new IgnoreStatusComposer(1, name));
+        client.Send(new IgnoreStatusComposer(1, name));
     }
     public async Task UnregisterIgnore(Habbo habbo, int targetId)
     {
+        var client = habbo.Client;
+        if (client == null)
+            return;
+
         using var connection = _database.Connection();
         await connection.ExecuteAsync("DELETE FROM user_ignores WHERE user_id = @userId AND ignore_id = @targetId", new { userId = habbo.Id, targetId });
         var name = await _gameClientManager.GetNameById(targetId);
-        habbo.Client.Send(new IgnoreStatusComposer(3, name));
+        client.Send(new IgnoreStatusComposer(3, name));
     }
 }

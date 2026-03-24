@@ -6,7 +6,7 @@ namespace Plus.HabboHotel.Rooms;
 
 public class RoomData
 {
-    private Group _group;
+    private Group? _group;
 
     public List<string> Tags;
 
@@ -158,9 +158,9 @@ public class RoomData
 
     public RoomModel Model { get; set; }
 
-    public RoomPromotion Promotion { get; set; }
+    public RoomPromotion? Promotion { get; set; }
 
-    public Group Group
+    public Group? Group
     {
         get => _group;
         set => _group = value;
@@ -170,7 +170,7 @@ public class RoomData
 
     public void LoadPromotions()
     {
-        DataRow getPromotion = null;
+        DataRow? getPromotion = null;
         using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
         dbClient.SetQuery($"SELECT * FROM `room_promotions` WHERE `room_id` = {Id} LIMIT 1;");
         getPromotion = dbClient.GetRow();
@@ -178,7 +178,7 @@ public class RoomData
         {
             if (Convert.ToDouble(getPromotion["timestamp_expire"]) > UnixTimestamp.GetNow())
             {
-                Promotion = new(Convert.ToString(getPromotion["title"]), Convert.ToString(getPromotion["description"]), Convert.ToDouble(getPromotion["timestamp_start"]),
+                Promotion = new(Convert.ToString(getPromotion["title"]) ?? string.Empty, Convert.ToString(getPromotion["description"]) ?? string.Empty, Convert.ToDouble(getPromotion["timestamp_start"]),
                     Convert.ToDouble(getPromotion["timestamp_expire"]), Convert.ToInt32(getPromotion["category_id"]));
             }
         }

@@ -23,15 +23,16 @@ internal class ReloadUserVipRankCommand : IRconCommand
         if (!int.TryParse(parameters[0], out var userId))
             return Task.FromResult(false);
         var client = _gameClientManager.GetClientByUserId(userId);
-        if (client == null || client.GetHabbo() == null)
+        var habbo = client?.GetHabbo();
+        if (habbo == null)
             return Task.FromResult(false);
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT `rank_vip` FROM `users` WHERE `id` = @userId LIMIT 1");
             dbClient.AddParameter("userId", userId);
-            client.GetHabbo().VipRank = dbClient.GetInteger();
+            habbo.VipRank = dbClient.GetInteger();
         }
-        client.GetHabbo().Permissions.Init(client.GetHabbo());
+        habbo.Permissions?.Init(habbo);
         return Task.FromResult(true);
     }
 }

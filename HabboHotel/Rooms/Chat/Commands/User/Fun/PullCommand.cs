@@ -16,12 +16,14 @@ internal class PullCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        if (!room.PullEnabled && !session.GetHabbo().Permissions.HasRight("room_override_custom_config"))
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
+        if (!room.PullEnabled && !(habbo?.Permissions?.HasRight("room_override_custom_config") ?? false))
         {
             session.SendWhisper("Oops, it appears that the room owner has disabled the ability to use the pull command in here.");
             return Task.CompletedTask;
         }
-        if (target == session.GetHabbo())
+        if (target == habbo)
         {
             session.SendWhisper("Come on, surely you don't want to pull yourself!");
             return Task.CompletedTask;
@@ -37,7 +39,7 @@ internal class PullCommand : ITargetChatCommand
             session.SendWhisper("Oops, you cannot pull a user whilst they have their teleport mode enabled.");
             return Task.CompletedTask;
         }
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var thisUser = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (thisUser == null)
             return Task.CompletedTask;
         if (thisUser.SetX - 1 == room.GetGameMap().Model.DoorX)
@@ -45,7 +47,7 @@ internal class PullCommand : ITargetChatCommand
             session.SendWhisper("Please don't pull that user out of the room :(!");
             return Task.CompletedTask; ;
         }
-        if (target.CurrentRoom!.Id == session.GetHabbo().CurrentRoom!.Id && Math.Abs(thisUser.X - targetUser.X) < 3 && Math.Abs(thisUser.Y - targetUser.Y) < 3)
+        if (target.CurrentRoom?.Id == currentRoom?.Id && Math.Abs(thisUser.X - targetUser.X) < 3 && Math.Abs(thisUser.Y - targetUser.Y) < 3)
         {
             room.SendPacket(new ChatComposer(thisUser.VirtualId, $"*pulls {parameters[1]} to them*", 0, thisUser.LastBubble));
             if (thisUser.RotBody % 2 != 0) 

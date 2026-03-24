@@ -16,26 +16,30 @@ internal class RemoveMyRightsEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         if (!room.CheckRights(session, false))
             return Task.CompletedTask;
-        if (room.UsersWithRights.Contains(session.GetHabbo().Id))
+        if (room.UsersWithRights.Contains(habbo.Id))
         {
-            var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+            var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user != null && !user.IsBot)
             {
                 user.RemoveStatus("flatctrl 1");
                 user.UpdateNeeded = true;
-                user.GetClient().Send(new YouAreNotControllerComposer());
+                user.GetClient()?.Send(new YouAreNotControllerComposer());
             }
             using (var dbClient = _database.GetQueryReactor())
             {
                 dbClient.SetQuery("DELETE FROM `room_rights` WHERE `user_id` = @uid AND `room_id` = @rid LIMIT 1");
-                dbClient.AddParameter("uid", session.GetHabbo().Id);
+                dbClient.AddParameter("uid", habbo.Id);
                 dbClient.AddParameter("rid", room.Id);
                 dbClient.RunQuery();
             }
-            if (room.UsersWithRights.Contains(session.GetHabbo().Id))
-                room.UsersWithRights.Remove(session.GetHabbo().Id);
+            if (room.UsersWithRights.Contains(habbo.Id))
+                room.UsersWithRights.Remove(habbo.Id);
         }
         return Task.CompletedTask;
     }

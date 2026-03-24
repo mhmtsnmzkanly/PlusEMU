@@ -17,13 +17,17 @@ internal class CallForHelpPendingCallsDeletedEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (_moderationManager.UserHasTickets(session.GetHabbo().Id))
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        if (_moderationManager.UserHasTickets(habbo.Id))
         {
-            var pendingTicket = _moderationManager.GetTicketBySenderId(session.GetHabbo().Id);
+            var pendingTicket = _moderationManager.GetTicketBySenderId(habbo.Id);
             if (pendingTicket != null)
             {
                 pendingTicket.Answered = true;
-                _clientManager.SendPacket(new ModeratorSupportTicketComposer(session.GetHabbo().Id, pendingTicket), "mod_tool");
+                _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, pendingTicket), "mod_tool");
             }
         }
         return Task.CompletedTask;

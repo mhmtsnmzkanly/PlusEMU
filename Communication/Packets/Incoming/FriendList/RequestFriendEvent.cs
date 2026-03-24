@@ -17,11 +17,15 @@ internal class RequestFriendEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var messenger = session.GetHabbo()?.Messenger;
+        if (messenger == null)
+            return;
+
         var (userId, blocked) = await _messengerDataLoader.CanReceiveFriendRequests(packet.ReadString());
         if (userId == 0 || blocked)
             return;
 
-        session.GetHabbo().Messenger.SendFriendRequest(userId);
+        messenger.SendFriendRequest(userId);
         _questManager.ProgressUserQuest(session, QuestType.SocialFriend);
         return;
     }

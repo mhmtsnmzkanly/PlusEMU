@@ -23,11 +23,10 @@ public class Vector2D
         return dx * dx + dy * dy;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
-        if (obj is Vector2D)
+        if (obj is Vector2D v2d)
         {
-            var v2d = (Vector2D)obj;
             return v2d.X == X && v2d.Y == Y;
         }
         return false;

@@ -26,7 +26,7 @@ public class GameDataManager : IGameDataManager
             _games.Clear();
         using (var dbClient = _database.GetQueryReactor())
         {
-            DataTable data = null;
+            DataTable? data = null;
             dbClient.SetQuery(
                 "SELECT `id`,`name`,`colour_one`,`colour_two`,`resource_path`,`string_three`,`game_swf`,`game_assets`,`game_server_host`,`game_server_port`,`socket_policy_port`,`game_enabled` FROM `games_config`");
             data = dbClient.GetTable();
@@ -34,11 +34,12 @@ public class GameDataManager : IGameDataManager
             {
                 foreach (DataRow row in data.Rows)
                 {
+                    var enabled = row["game_enabled"].ToString() ?? "0";
                     _games.Add(Convert.ToInt32(row["id"]),
-                        new(Convert.ToInt32(row["id"]), Convert.ToString(row["name"]), Convert.ToString(row["colour_one"]), Convert.ToString(row["colour_two"]),
-                            Convert.ToString(row["resource_path"]), Convert.ToString(row["string_three"]), Convert.ToString(row["game_swf"]), Convert.ToString(row["game_assets"]),
-                            Convert.ToString(row["game_server_host"]), Convert.ToString(row["game_server_port"]), Convert.ToString(row["socket_policy_port"]),
-                           PlusEnvironment.EnumToBool(row["game_enabled"].ToString())));
+                        new(Convert.ToInt32(row["id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToString(row["colour_one"]) ?? string.Empty, Convert.ToString(row["colour_two"]) ?? string.Empty,
+                            Convert.ToString(row["resource_path"]) ?? string.Empty, Convert.ToString(row["string_three"]) ?? string.Empty, Convert.ToString(row["game_swf"]) ?? string.Empty, Convert.ToString(row["game_assets"]) ?? string.Empty,
+                            Convert.ToString(row["game_server_host"]) ?? string.Empty, Convert.ToString(row["game_server_port"]) ?? string.Empty, Convert.ToString(row["socket_policy_port"]) ?? string.Empty,
+                           PlusEnvironment.EnumToBool(enabled)));
                 }
             }
         }

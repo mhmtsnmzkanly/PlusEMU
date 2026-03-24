@@ -51,7 +51,7 @@ public class Game : IGame
     private bool _cycleActive;
 
     private bool _cycleEnded;
-    private Task _gameCycle;
+    private Task? _gameCycle;
 
     public Game(
         IGameClientManager gameClientManager,

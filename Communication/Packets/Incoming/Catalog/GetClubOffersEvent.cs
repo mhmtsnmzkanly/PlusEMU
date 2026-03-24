@@ -15,13 +15,17 @@ internal class GetClubOffersEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var offerId = packet.ReadInt();
         if (!_catalogManager.ItemOffers.ContainsKey(offerId))
             return Task.CompletedTask;
         var pageId = _catalogManager.ItemOffers[offerId];
         if (!_catalogManager.TryGetPage(pageId, out var page))
             return Task.CompletedTask;
-        if (!page.Enabled || !page.Visible || page.MinimumRank > session.GetHabbo().Rank || page.MinimumVip > session.GetHabbo().VipRank && session.GetHabbo().Rank == 1)
+        if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || page.MinimumVip > habbo.VipRank && habbo.Rank == 1)
             return Task.CompletedTask;
         if (!page.ItemOffers.ContainsKey(offerId))
             return Task.CompletedTask;

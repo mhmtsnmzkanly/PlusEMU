@@ -6,6 +6,10 @@ internal class RemoveFriendEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var messenger = session.GetHabbo()?.Messenger;
+        if (messenger == null)
+            return Task.CompletedTask;
+
         var amount = packet.ReadInt();
         if (amount > 100)
             amount = 100;
@@ -14,9 +18,9 @@ internal class RemoveFriendEvent : IPacketEvent
         for (var i = 0; i < amount; i++)
         {
             var id = packet.ReadInt();
-            var friend = session.GetHabbo().Messenger.GetFriend(id);
+            var friend = messenger.GetFriend(id);
             if (friend == null) continue;
-            session.GetHabbo().Messenger.RemoveFriend(friend);
+            messenger.RemoveFriend(friend);
         }
         return Task.CompletedTask;
     }

@@ -14,7 +14,7 @@ internal class KickUserEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var room = session.GetHabbo().CurrentRoom;
+        var room = session.GetHabbo()?.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         if (!room.CheckRights(session) && room.WhoCanKick != 2 && room.Group == null)
@@ -27,9 +27,13 @@ internal class KickUserEvent : IPacketEvent
             return Task.CompletedTask;
 
         //Cannot kick owner or moderators.
-        if (room.CheckRights(user.GetClient(), true) || user.GetClient().GetHabbo().Permissions.HasRight("mod_tool"))
+        var targetClient = user.GetClient();
+        var targetHabbo = targetClient?.GetHabbo();
+        if (targetClient == null || targetHabbo == null)
             return Task.CompletedTask;
-        room.GetRoomUserManager().RemoveUserFromRoom(user.GetClient(), true, true);
+        if (room.CheckRights(targetClient, true) || (targetHabbo.Permissions?.HasRight("mod_tool") ?? false))
+            return Task.CompletedTask;
+        room.GetRoomUserManager().RemoveUserFromRoom(targetClient, true, true);
         _achievementManager.ProgressAchievement(session, "ACH_SelfModKickSeen", 1);
         return Task.CompletedTask;
     }

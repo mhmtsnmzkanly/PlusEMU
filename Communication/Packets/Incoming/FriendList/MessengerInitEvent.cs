@@ -16,7 +16,12 @@ internal class MessengerInitEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var friends = session.GetHabbo().Messenger.Friends.Values.ToList();
+        var habbo = session.GetHabbo();
+        var messenger = habbo?.Messenger;
+        if (habbo == null || messenger == null)
+            return;
+
+        var friends = messenger.Friends.Values.ToList();
         session.Send(new MessengerInitComposer());
         var page = 0;
         if (!friends.Any())
@@ -31,7 +36,7 @@ internal class MessengerInitEvent : IPacketEvent
             }
         }
 
-        var messages = await _messengerDataLoader.GetAndDeleteOfflineMessages(session.GetHabbo().Id);
+        var messages = await _messengerDataLoader.GetAndDeleteOfflineMessages(habbo.Id);
         foreach (var (userId, report) in messages)
             foreach (var (message, secondsAgo) in report)
                 session.Send(new NewConsoleMessageComposer(userId, message, secondsAgo));

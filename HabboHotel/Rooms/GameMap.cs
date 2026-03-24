@@ -795,11 +795,12 @@ public class Gamemap
                 {
                     if (!PlusEnvironment.Game.GroupManager.TryGetGroup(I.GroupId, out var group))
                         return false;
-                    if (user.GetClient() == null || user.GetClient().GetHabbo() == null)
+                    var habbo = user.GetClient()?.GetHabbo();
+                    if (habbo == null)
                         return false;
-                    if (group.IsMember(user.GetClient().GetHabbo().Id))
+                    if (group.IsMember(habbo.Id))
                     {
-                        I.InteractingUser = user.GetClient().GetHabbo().Id;
+                        I.InteractingUser = habbo.Id;
                         I.LegacyDataString = "1";
                         I.UpdateState(false, true);
                         I.RequestUpdate(4, true);

@@ -7,9 +7,9 @@ namespace Plus.HabboHotel.Catalog.Utilities;
 
 public static class BotUtility
 {
-    public static Bot CreateBot(ItemDefinition itemDefinition, int ownerId)
+    public static Bot? CreateBot(ItemDefinition itemDefinition, int ownerId)
     {
-        DataRow bot = null;
+        DataRow? bot = null;
         if (!PlusEnvironment.Game.Catalog.TryGetBot(itemDefinition.Id, out var cataBot))
             return null;
         using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
@@ -20,8 +20,10 @@ public static class BotUtility
             dbClient.SetQuery($"SELECT `id`,`user_id`,`name`,`motto`,`look`,`gender` FROM `bots` WHERE `user_id` = '{ownerId}' AND `id` = '{id}' LIMIT 1");
             bot = dbClient.GetRow();
         }
-        return new(Convert.ToInt32(bot["id"]), Convert.ToInt32(bot["user_id"]), Convert.ToString(bot["name"]), Convert.ToString(bot["motto"]), Convert.ToString(bot["look"]),
-            Convert.ToString(bot["gender"]));
+        if (bot == null)
+            return null;
+        return new(Convert.ToInt32(bot["id"]), Convert.ToInt32(bot["user_id"]), Convert.ToString(bot["name"]) ?? string.Empty, Convert.ToString(bot["motto"]) ?? string.Empty, Convert.ToString(bot["look"]) ?? string.Empty,
+            Convert.ToString(bot["gender"]) ?? string.Empty);
     }
 
 

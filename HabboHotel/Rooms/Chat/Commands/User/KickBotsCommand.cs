@@ -21,6 +21,11 @@ internal class KickBotsCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        var inventory = habbo?.Inventory?.Bots;
+        if (habbo == null || inventory == null)
+            return;
+
         if (!room.CheckRights(session, true))
         {
             session.SendWhisper("Oops, only the room owner can run this command!");
@@ -39,9 +44,9 @@ internal class KickBotsCommand : IChatCommand
                 dbClient.AddParameter("id", user.BotData.Id);
                 dbClient.RunQuery();
             }
-            session.GetHabbo().Inventory.Bots.AddBot(new(Convert.ToInt32(botUser.BotData.Id), Convert.ToInt32(botUser.BotData.OwnerId), botUser.BotData.Name, botUser.BotData.Motto,
+            inventory.AddBot(new(Convert.ToInt32(botUser.BotData.Id), Convert.ToInt32(botUser.BotData.OwnerId), botUser.BotData.Name, botUser.BotData.Motto,
                 botUser.BotData.Look, botUser.BotData.Gender));
-            session.Send(new BotInventoryComposer(session.GetHabbo().Inventory.Bots.Bots.Values.ToList()));
+            session.Send(new BotInventoryComposer(inventory.Bots.Values.ToList()));
             room.GetRoomUserManager().RemoveBot(botUser.VirtualId, false);
         }
         session.SendWhisper("Success, removed all bots.");

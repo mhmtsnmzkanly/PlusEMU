@@ -58,7 +58,7 @@ public class GameClientManager : IGameClientManager
     {
         if (client == null || !_usernameRegister.ContainsKey(oldUsername.ToLower()))
             return false;
-        _usernameRegister.TryRemove(oldUsername.ToLower(), out client);
+        _usernameRegister.TryRemove(oldUsername.ToLower(), out _);
         _usernameRegister.TryAdd(newUsername.ToLower(), client);
         return true;
     }
@@ -66,10 +66,11 @@ public class GameClientManager : IGameClientManager
     public async Task<string> GetNameById(int id)
     {
         var client = GetClientByUserId(id);
-        if (client != null)
-            return client.GetHabbo().Username;
+        var habbo = client?.GetHabbo();
+        if (habbo != null)
+            return habbo.Username;
         using var connection = _database.Connection();
-        return await connection.QuerySingleOrDefaultAsync<string>("SELECT username FROM users WHERE id = @id LIMIT 1", new { id });
+        return await connection.QuerySingleOrDefaultAsync<string>("SELECT username FROM users WHERE id = @id LIMIT 1", new { id }) ?? string.Empty;
     }
 
     public IEnumerable<GameClient> GetClientsById(Dictionary<int, MessengerBuddy>.KeyCollection users)
@@ -98,9 +99,11 @@ public class GameClientManager : IGameClientManager
     {
         foreach (var client in GetClients.ToList())
         {
-            if (client == null || client.GetHabbo() == null)
+            var habbo = client?.GetHabbo();
+            var permissions = habbo?.Permissions;
+            if (habbo == null || permissions == null)
                 continue;
-            if (client.GetHabbo().Permissions.HasRight("mod_tool") && !client.GetHabbo().Permissions.HasRight("staff_ignore_mod_alert"))
+            if (permissions.HasRight("mod_tool") && !permissions.HasRight("staff_ignore_mod_alert"))
             {
                 try
                 {
@@ -136,9 +139,11 @@ public class GameClientManager : IGameClientManager
         }
         foreach (var client in GetClients.ToList())
         {
-            if (client == null || client.GetHabbo() == null)
+            var habbo = client?.GetHabbo();
+            var permissions = habbo?.Permissions;
+            if (habbo == null || permissions == null)
                 continue;
-            if (client.GetHabbo().Permissions.HasRight("mod_tool") && !client.GetHabbo().Permissions.HasRight("staff_ignore_advertisement_reports"))
+            if (permissions.HasRight("mod_tool") && !permissions.HasRight("staff_ignore_advertisement_reports"))
                 client.Send(new MotdNotificationComposer(builder.ToString()));
         }
     }
@@ -148,11 +153,12 @@ public class GameClientManager : IGameClientManager
     {
         foreach (var client in _clients.Values.ToList())
         {
-            if (client == null || client.GetHabbo() == null)
+            var habbo = client?.GetHabbo();
+            if (habbo == null)
                 continue;
             if (!string.IsNullOrEmpty(fuse))
             {
-                if (!client.GetHabbo().Permissions.HasRight(fuse))
+                if (!(habbo.Permissions?.HasRight(fuse) ?? false))
                     continue;
             }
             client.Send(packet);
@@ -188,13 +194,14 @@ public class GameClientManager : IGameClientManager
     {
         foreach (var client in GetClients.ToList())
         {
-            if (client.GetHabbo() != null)
+            var habbo = client.GetHabbo();
+            if (habbo != null)
             {
                 try
                 {
                     using (var dbClient = _database.GetQueryReactor())
                     {
-                        dbClient.RunQuery(client.GetHabbo().GetQueryString);
+                        dbClient!.RunQuery(habbo.GetQueryString);
                     }
                     Console.Clear();
                     _logger.LogInformation("<<- SERVER SHUTDOWN ->> IVNENTORY IS SAVING");
@@ -280,7 +287,7 @@ public class GameClientManager : IGameClientManager
             {
                 while (_timedOutConnections.Count > 0)
                 {
-                    GameClient client = null;
+                    GameClient? client = null;
                     if (_timedOutConnections.Count > 0)
                         client = (GameClient)_timedOutConnections.Dequeue();
                     if (client != null)

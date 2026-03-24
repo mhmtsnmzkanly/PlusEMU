@@ -17,7 +17,7 @@ namespace Plus;
 
 public static class Program
 {
-    private static Dictionary<ServiceLifetime, IEnumerable<Type>> _defaultTypes = new();
+    private static readonly Dictionary<ServiceLifetime, IEnumerable<Type>> _defaultTypes = new();
 
     public static async Task Main(string[] args)
     {
@@ -82,7 +82,7 @@ public static class Program
             {
                 Console.Write("plus> ");
                 var input = Console.ReadLine();
-                if (input.Length > 0)
+                if (!string.IsNullOrWhiteSpace(input))
                 {
                     var s = input.Split(' ')[0];
                     ConsoleCommands.InvokeCommand(s);

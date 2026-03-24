@@ -21,12 +21,17 @@ internal class DeleteRoomEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var roomId = packet.ReadUInt();
         if (roomId == 0)
             return Task.CompletedTask;
         if (!_roomManager.TryGetRoom(roomId, out var room))
             return Task.CompletedTask;
-        if (room.OwnerId != session.GetHabbo().Id && !session.GetHabbo().Permissions.HasRight("room_delete_any"))
+        if (room.OwnerId != habbo.Id && !(permissions?.HasRight("room_delete_any") ?? false))
             return Task.CompletedTask;
         var itemsToRemove = new List<Item>();
         foreach (var item in room.GetRoomItemHandler().GetWallAndFloor.ToList())
@@ -48,7 +53,7 @@ internal class DeleteRoomEvent : IPacketEvent
             if (targetClient != null && targetClient.GetHabbo() != null) //Again, do we have an active client?
             {
                 room.GetRoomItemHandler().RemoveFurniture(targetClient, item.Id);
-                targetClient.GetHabbo().Inventory.Furniture.AddItem(item.ToInventoryItem());
+                targetClient.GetHabbo().Inventory?.Furniture.AddItem(item.ToInventoryItem());
                 targetClient.Send(new FurniListUpdateComposer());
             }
             else //No, query time.

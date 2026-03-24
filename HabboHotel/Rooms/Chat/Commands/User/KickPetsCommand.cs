@@ -23,6 +23,11 @@ internal class KickPetsCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        var inventory = habbo?.Inventory?.Pets;
+        if (habbo == null || inventory == null)
+            return;
+
         if (!room.CheckRights(session, true))
         {
             session.SendWhisper("Oops, only the room owner can run this command!");
@@ -46,18 +51,20 @@ internal class KickPetsCommand : IChatCommand
                     bot.RidingHorse = false;
             }
             var pet = bot.PetData;
-            if (pet != null) return;
+            if (pet == null)
+                continue;
             pet.RoomId = 0;
             pet.PlacedInRoom = false;
             room.GetRoomUserManager().RemoveBot(bot.VirtualId, false);
-            if (pet.OwnerId != session.GetHabbo().Id)
+            if (pet.OwnerId != habbo.Id)
             {
                 var targetClient = _gameClientManager.GetClientByUserId(pet.OwnerId);
-                if (targetClient != null)
-                    if (targetClient.GetHabbo().Inventory.Pets.AddPet(pet))
-                        targetClient.Send(new PetInventoryComposer(targetClient.GetHabbo().Inventory.Pets.Pets.Values.ToList()));
+                var targetPets = targetClient?.GetHabbo()?.Inventory?.Pets;
+                if (targetClient != null && targetPets != null && targetPets.AddPet(pet))
+                    targetClient.Send(new PetInventoryComposer(targetPets.Pets.Values.ToList()));
             }
-            if (session.GetHabbo().Inventory.Pets.AddPet(pet)) session.Send(new PetInventoryComposer(session.GetHabbo().Inventory.Pets.Pets.Values.ToList()));
+            if (inventory.AddPet(pet))
+                session.Send(new PetInventoryComposer(inventory.Pets.Values.ToList()));
             using var dbClient = _database.GetQueryReactor();
             dbClient.RunQuery($"UPDATE `bots` SET `room_id` = '0', `x` = '0', `Y` = '0', `Z` = '0' WHERE `id` = '{pet.PetId}' LIMIT 1");
             dbClient.RunQuery(

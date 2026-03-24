@@ -7,26 +7,27 @@ internal class TradingOfferItemEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (!habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
-        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (roomUser == null)
             return Task.CompletedTask;
         var itemId = packet.ReadUInt();
         if (!roomUser.IsTrading)
         {
-            session.Send(new TradingClosedComposer(session.GetHabbo().Id));
+            session.Send(new TradingClosedComposer(habbo.Id));
             return Task.CompletedTask;
         }
         if (!room.GetTrading().TryGetTrade(roomUser.TradeId, out var trade))
         {
-            session.Send(new TradingClosedComposer(session.GetHabbo().Id));
+            session.Send(new TradingClosedComposer(habbo.Id));
             return Task.CompletedTask;
         }
-        var item = session.GetHabbo().Inventory.Furniture.GetItem(itemId);
+        var item = habbo.Inventory?.Furniture?.GetItem(itemId);
         if (item == null)
             return Task.CompletedTask;
         if (!trade.CanChange)

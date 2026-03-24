@@ -8,9 +8,13 @@ internal class SetUIFlagsEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        session.GetHabbo().FriendbarState = FriendBarStateUtility.GetEnum(packet.ReadInt());
-        session.Send(new SoundSettingsComposer(session.GetHabbo().ClientVolume, session.GetHabbo().ChatPreference, session.GetHabbo().AllowMessengerInvites, session.GetHabbo().FocusPreference,
-            FriendBarStateUtility.GetInt(session.GetHabbo().FriendbarState)));
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        habbo.FriendbarState = FriendBarStateUtility.GetEnum(packet.ReadInt());
+        session.Send(new SoundSettingsComposer(habbo.ClientVolume, habbo.ChatPreference, habbo.AllowMessengerInvites, habbo.FocusPreference,
+            FriendBarStateUtility.GetInt(habbo.FriendbarState)));
         return Task.CompletedTask;
     }
 }

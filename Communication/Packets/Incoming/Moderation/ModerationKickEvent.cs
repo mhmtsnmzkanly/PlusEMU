@@ -16,19 +16,21 @@ internal class ModerationKickEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_kick"))
+        var sessionHabbo = session.GetHabbo();
+        if (!(sessionHabbo.Permissions?.HasRight("mod_kick") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         packet.ReadString(); //message
         var client = _clientManager.GetClientByUserId(userId);
-        if (client == null || client.GetHabbo() == null || client.GetHabbo().CurrentRoom == null || client.GetHabbo().Id == session.GetHabbo().Id)
+        var targetHabbo = client?.GetHabbo();
+        if (targetHabbo == null || targetHabbo.CurrentRoom == null || targetHabbo.Id == sessionHabbo.Id)
             return Task.CompletedTask;
-        if (client.GetHabbo().Rank >= session.GetHabbo().Rank)
+        if (targetHabbo.Rank >= sessionHabbo.Rank)
         {
             session.SendNotification(_languageManager.TryGetValue("moderation.kick.disallowed"));
             return Task.CompletedTask;
         }
-        session.GetHabbo().CurrentRoom?.GetRoomUserManager().RemoveUserFromRoom(client, true);
+        sessionHabbo.CurrentRoom?.GetRoomUserManager().RemoveUserFromRoom(client, true);
         return Task.CompletedTask;
     }
 }

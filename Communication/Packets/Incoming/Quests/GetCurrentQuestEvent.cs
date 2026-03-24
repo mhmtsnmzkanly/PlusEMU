@@ -18,18 +18,21 @@ internal class GetCurrentQuestEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (habbo?.HabboStats == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var userQuest = _questManager.GetQuest(session.GetHabbo().QuestLastCompleted);
+        var userQuest = _questManager.GetQuest(habbo.QuestLastCompleted);
+        if (userQuest == null)
+            return Task.CompletedTask;
         var nextQuest = _questManager.GetNextQuestInSeries(userQuest.Category, userQuest.Number + 1);
         if (nextQuest == null)
             return Task.CompletedTask;
         using (var dbClient = _database.GetQueryReactor())
         {
-            dbClient.RunQuery($"REPLACE INTO `user_quests`(`user_id`,`quest_id`) VALUES ({session.GetHabbo().Id}, {nextQuest.Id})");
-            dbClient.RunQuery($"UPDATE `user_statistics` SET `quest_id` = '{nextQuest.Id}' WHERE `id` = '{session.GetHabbo().Id}' LIMIT 1");
+            dbClient.RunQuery($"REPLACE INTO `user_quests`(`user_id`,`quest_id`) VALUES ({habbo.Id}, {nextQuest.Id})");
+            dbClient.RunQuery($"UPDATE `user_statistics` SET `quest_id` = '{nextQuest.Id}' WHERE `id` = '{habbo.Id}' LIMIT 1");
         }
-        session.GetHabbo().HabboStats.QuestId = nextQuest.Id;
+        habbo.HabboStats.QuestId = nextQuest.Id;
         _questManager.GetList(session, null);
         session.Send(new QuestStartedComposer(session, nextQuest));
         return Task.CompletedTask;

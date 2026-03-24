@@ -14,12 +14,12 @@ internal class SetMannequinNameEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var room = session.GetHabbo().CurrentRoom;
+        var room = session.GetHabbo()?.CurrentRoom;
         if (room == null || !room.CheckRights(session, true))
             return Task.CompletedTask;
         var itemId = packet.ReadUInt();
         var name = packet.ReadString();
-        var item = session.GetHabbo().CurrentRoom.GetRoomItemHandler().GetItem(itemId);
+        var item = room.GetRoomItemHandler().GetItem(itemId);
         if (item == null)
             return Task.CompletedTask;
         if (item.LegacyDataString.Contains(Convert.ToChar(5)))

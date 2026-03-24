@@ -46,9 +46,10 @@ public class InteractorHopper : IFurniInteractor
 
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
-        if (item == null || item.GetRoom() == null || session == null || session.GetHabbo() == null)
+        var habbo = session?.GetHabbo();
+        if (item == null || item.GetRoom() == null || habbo == null)
             return;
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null) return;
 
         // Alright. But is this user in the right position?
@@ -57,7 +58,7 @@ public class InteractorHopper : IFurniInteractor
             // Fine. But is this tele even free?
             if (item.InteractingUser != 0) return;
             user.TeleDelay = 2;
-            item.InteractingUser = user.GetClient().GetHabbo().Id;
+            item.InteractingUser = habbo.Id;
         }
         else if (user.CanWalk) user.MoveTo(item.SquareInFront);
     }

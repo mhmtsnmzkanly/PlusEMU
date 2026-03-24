@@ -24,6 +24,11 @@ internal class PlacePetEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var petInventory = habbo?.Inventory?.Pets;
+        if (petInventory == null)
+            return Task.CompletedTask;
+
         if (room.AllowPets == false && !room.CheckRights(session, true) || !room.CheckRights(session, true))
         {
             session.Send(new RoomErrorNotifComposer(1));
@@ -34,7 +39,7 @@ internal class PlacePetEvent : RoomPacketEvent
             session.Send(new RoomErrorNotifComposer(2)); //5 = I have too many.
             return Task.CompletedTask;
         }
-        if (!session.GetHabbo().Inventory.Pets.Pets.TryGetValue(packet.ReadInt(), out var pet))
+        if (!petInventory.Pets.TryGetValue(packet.ReadInt(), out var pet))
             return Task.CompletedTask;
         if (pet.PlacedInRoom)
         {
@@ -58,8 +63,8 @@ internal class PlacePetEvent : RoomPacketEvent
         room.GetRoomUserManager().DeployBot(roomBot, pet);
         pet.DbState = PetDatabaseUpdateState.NeedsUpdate;
         room.GetRoomUserManager().UpdatePets();
-        session.GetHabbo().Inventory.Pets.RemovePet(pet.PetId);
-        session.Send(new PetInventoryComposer(session.GetHabbo().Inventory.Pets.Pets.Values.ToList()));
+        petInventory.RemovePet(pet.PetId);
+        session.Send(new PetInventoryComposer(petInventory.Pets.Values.ToList()));
         return Task.CompletedTask;
     }
 }

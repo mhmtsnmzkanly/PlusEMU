@@ -14,7 +14,9 @@ public class HabboMessenger
     public IReadOnlyCollection<int> OutstandingFriendRequests => _outstandingFriendRequests;
 
     public event EventHandler<MessengerBuddyModifiedEventArgs>? FriendUpdated;
+#pragma warning disable CS0067
     public event EventHandler<MessengerBuddiesModifiedEventArgs>? FriendsUpdated;
+#pragma warning restore CS0067
 
     public event EventHandler<FriendRequestModifiedEventArgs>? FriendRequestUpdated;
     public event EventHandler<MessengerMessageEventArgs>? RoomInviteReceived;
@@ -155,7 +157,11 @@ public class HabboMessenger
 
         if (client != null)
         {
-            var concurrentFriends = new ConcurrentDictionary<int, MessengerBuddy>(client.GetHabbo().Messenger.Friends);
+            var messenger = client.GetHabbo().Messenger;
+            if (messenger == null)
+                return new Dictionary<int, (MessengerBuddy buddy, int count)>();
+
+            var concurrentFriends = new ConcurrentDictionary<int, MessengerBuddy>(messenger.Friends);
             return GetRelationships(concurrentFriends);
         }
         else

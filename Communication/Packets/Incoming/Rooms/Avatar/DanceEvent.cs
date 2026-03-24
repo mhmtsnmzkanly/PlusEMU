@@ -16,7 +16,10 @@ internal class DanceEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo?.Effects == null)
+            return Task.CompletedTask;
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return Task.CompletedTask;
         user.UnIdle();
@@ -25,7 +28,7 @@ internal class DanceEvent : RoomPacketEvent
             danceId = 0;
         if (danceId > 0 && user.CarryItemId > 0)
             user.CarryItem(0);
-        if (session.GetHabbo().Effects.CurrentEffect > 0)
+        if (habbo.Effects.CurrentEffect > 0)
             room.SendPacket(new AvatarEffectComposer(user.VirtualId, 0));
         user.DanceId = danceId;
         room.SendPacket(new DanceComposer(user, danceId));

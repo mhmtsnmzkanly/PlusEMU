@@ -95,6 +95,8 @@ internal class UpdateCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
         if (parameters.Length == 0)
         {
             session.SendWhisper("You must inculde a thing to update, e.g. :update catalog");
@@ -107,7 +109,7 @@ internal class UpdateCommand : IChatCommand
             case "catalog":
             case "catalogue":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_catalog"))
+                if (!(permissions?.HasCommand("command_update_catalog") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_catalog' permission.");
                     break;
@@ -121,7 +123,7 @@ internal class UpdateCommand : IChatCommand
             case "furni":
             case "furniture":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_furni"))
+                if (!(permissions?.HasCommand("command_update_furni") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_furni' permission.");
                     break;
@@ -132,7 +134,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "models":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_models"))
+                if (!(permissions?.HasCommand("command_update_models") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_models' permission.");
                     break;
@@ -143,7 +145,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "promotions":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_promotions"))
+                if (!(permissions?.HasCommand("command_update_promotions") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_promotions' permission.");
                     break;
@@ -154,7 +156,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "youtube":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_youtube"))
+                if (!(permissions?.HasCommand("command_update_youtube") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_youtube' permission.");
                     break;
@@ -165,7 +167,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "filter":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_filter"))
+                if (!(permissions?.HasCommand("command_update_filter") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_filter' permission.");
                     break;
@@ -176,7 +178,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "navigator":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_navigator"))
+                if (!(permissions?.HasCommand("command_update_navigator") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_navigator' permission.");
                     break;
@@ -189,7 +191,7 @@ internal class UpdateCommand : IChatCommand
             case "rights":
             case "permissions":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_rights"))
+                if (!(permissions?.HasCommand("command_update_rights") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_rights' permission.");
                     break;
@@ -207,7 +209,7 @@ internal class UpdateCommand : IChatCommand
             case "config":
             case "settings":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_configuration"))
+                if (!(permissions?.HasCommand("command_update_configuration") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_configuration' permission.");
                     break;
@@ -218,7 +220,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "bans":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_bans"))
+                if (!(permissions?.HasCommand("command_update_bans") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_bans' permission.");
                     break;
@@ -229,7 +231,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "quests":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_quests"))
+                if (!(permissions?.HasCommand("command_update_quests") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_quests' permission.");
                     break;
@@ -240,7 +242,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "achievements":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_achievements"))
+                if (!(permissions?.HasCommand("command_update_achievements") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_achievements' permission.");
                     break;
@@ -251,7 +253,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "moderation":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_moderation"))
+                if (!(permissions?.HasCommand("command_update_moderation") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_moderation' permission.");
                     break;
@@ -263,7 +265,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "vouchers":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_vouchers"))
+                if (!(permissions?.HasCommand("command_update_vouchers") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_vouchers' permission.");
                     break;
@@ -276,7 +278,7 @@ internal class UpdateCommand : IChatCommand
             case "games":
             case "gamecenter":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_game_center"))
+                if (!(permissions?.HasCommand("command_update_game_center") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_game_center' permission.");
                     break;
@@ -287,7 +289,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "pet_locale":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_pet_locale"))
+                if (!(permissions?.HasCommand("command_update_pet_locale") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_pet_locale' permission.");
                     break;
@@ -298,7 +300,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "locale":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_locale"))
+                if (!(permissions?.HasCommand("command_update_locale") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_locale' permission.");
                     break;
@@ -309,7 +311,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "mutant":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_anti_mutant"))
+                if (!(permissions?.HasCommand("command_update_anti_mutant") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_anti_mutant' permission.");
                     break;
@@ -320,7 +322,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "bots":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_bots"))
+                if (!(permissions?.HasCommand("command_update_bots") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_bots' permission.");
                     break;
@@ -331,7 +333,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "rewards":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_rewards"))
+                if (!(permissions?.HasCommand("command_update_rewards") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_rewards' permission.");
                     break;
@@ -342,7 +344,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "chat_styles":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_chat_styles"))
+                if (!(permissions?.HasCommand("command_update_chat_styles") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_chat_styles' permission.");
                     break;
@@ -353,7 +355,7 @@ internal class UpdateCommand : IChatCommand
             }
             case "badge_definitions":
             {
-                if (!session.GetHabbo().Permissions.HasCommand("command_update_badge_definitions"))
+                if (!(permissions?.HasCommand("command_update_badge_definitions") ?? false))
                 {
                     session.SendWhisper("Oops, you do not have the 'command_update_badge_definitions' permission.");
                     break;

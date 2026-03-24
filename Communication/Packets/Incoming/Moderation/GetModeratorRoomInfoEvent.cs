@@ -15,7 +15,7 @@ internal class GetModeratorRoomInfoEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool"))
+        if (!(session.GetHabbo().Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
         var roomId = packet.ReadUInt();
         if (!RoomFactory.TryGetData(roomId, out var data))

@@ -19,14 +19,18 @@ internal class TakeAdminRightsEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         var userId = packet.ReadInt();
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        if (session.GetHabbo().Id != group.CreatorId || !group.IsMember(userId))
+        if (habbo.Id != group.CreatorId || !group.IsMember(userId))
             return Task.CompletedTask;
-        var habbo = PlusEnvironment.GetHabboById(userId);
-        if (habbo == null)
+        var targetHabbo = PlusEnvironment.GetHabboById(userId);
+        if (targetHabbo == null)
         {
             session.SendNotification("Oops, an error occurred whilst finding this user.");
             return Task.CompletedTask;
@@ -44,7 +48,7 @@ internal class TakeAdminRightsEvent : IPacketEvent
                     user.GetClient().Send(new YouAreControllerComposer(0));
             }
         }
-        session.Send(new GroupMemberUpdatedComposer(groupId, habbo, 2));
+        session.Send(new GroupMemberUpdatedComposer(groupId, targetHabbo, 2));
         return Task.CompletedTask;
     }
 }

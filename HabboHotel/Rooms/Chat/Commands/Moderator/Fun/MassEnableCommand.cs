@@ -25,7 +25,7 @@ internal class MassEnableCommand : IChatCommand
                 session.Disconnect();
                 return;
             }
-            if (!session.GetHabbo().Permissions.HasCommand("command_override_massenable") && room.OwnerId != session.GetHabbo().Id)
+            if (!(session.GetHabbo().Permissions?.HasCommand("command_override_massenable") ?? false) && room.OwnerId != session.GetHabbo().Id)
             {
                 session.SendWhisper("You can only use this command in your own room.");
                 return;

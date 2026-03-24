@@ -41,9 +41,12 @@ internal class AssignRightsEvent : RoomPacketEvent
         {
             roomUser.SetStatus("flatctrl 1");
             roomUser.UpdateNeeded = true;
-            if (roomUser.GetClient() != null)
-                roomUser.GetClient().Send(new YouAreControllerComposer(1));
-            session.Send(new FlatControllerAddedComposer(room.RoomId, roomUser.GetClient().GetHabbo().Id, roomUser.GetClient().GetHabbo().Username));
+            var targetClient = roomUser.GetClient();
+            var targetHabbo = targetClient?.GetHabbo();
+            if (targetClient != null)
+                targetClient.Send(new YouAreControllerComposer(1));
+            if (targetHabbo != null)
+                session.Send(new FlatControllerAddedComposer(room.RoomId, targetHabbo.Id, targetHabbo.Username));
         }
         else
         {

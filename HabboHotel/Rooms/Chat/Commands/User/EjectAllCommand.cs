@@ -24,20 +24,25 @@ internal class EjectAllCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        if (session.GetHabbo().Id == room.OwnerId)
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        if (habbo.Id == room.OwnerId)
         {
             //Let us check anyway.
             if (!room.CheckRights(session, true))
                 return;
             foreach (var item in room.GetRoomItemHandler().GetWallAndFloor.ToList())
             {
-                if (item == null || item.UserId == session.GetHabbo().Id)
+                if (item == null || item.UserId == habbo.Id)
                     continue;
                 var targetClient = _gameClientManager.GetClientByUserId(item.UserId);
-                if (targetClient != null && targetClient.GetHabbo() != null)
+                var targetHabbo = targetClient?.GetHabbo();
+                if (targetHabbo != null)
                 {
                     room.GetRoomItemHandler().RemoveFurniture(targetClient, item.Id);
-                    targetClient.GetHabbo().Inventory.Furniture.AddItem(item.ToInventoryItem());
+                    targetHabbo.Inventory.Furniture.AddItem(item.ToInventoryItem());
                     targetClient.Send(new FurniListUpdateComposer());
                 }
                 else
@@ -52,13 +57,14 @@ internal class EjectAllCommand : IChatCommand
         {
             foreach (var item in room.GetRoomItemHandler().GetWallAndFloor.ToList())
             {
-                if (item == null || item.UserId != session.GetHabbo().Id)
+                if (item == null || item.UserId != habbo.Id)
                     continue;
                 var targetClient = _gameClientManager.GetClientByUserId(item.UserId);
-                if (targetClient != null && targetClient.GetHabbo() != null)
+                var targetHabbo = targetClient?.GetHabbo();
+                if (targetHabbo != null)
                 {
                     room.GetRoomItemHandler().RemoveFurniture(targetClient, item.Id);
-                    targetClient.GetHabbo().Inventory.Furniture.AddItem(item.ToInventoryItem());
+                    targetHabbo.Inventory.Furniture.AddItem(item.ToInventoryItem());
                     targetClient.Send(new FurniListUpdateComposer());
                 }
                 else

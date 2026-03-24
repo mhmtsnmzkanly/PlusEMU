@@ -17,14 +17,15 @@ internal class PickTicketEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().Permissions.HasRight("mod_tool"))
+        var habbo = session.GetHabbo();
+        if (habbo?.Permissions == null || !habbo.Permissions.HasRight("mod_tool"))
             return Task.CompletedTask;
         packet.ReadInt(); //Junk
         var ticketId = packet.ReadInt();
         if (!_moderationManager.TryGetTicket(ticketId, out var ticket))
             return Task.CompletedTask;
-        ticket.Moderator = session.GetHabbo();
-        _clientManager.SendPacket(new ModeratorSupportTicketComposer(session.GetHabbo().Id, ticket), "mod_tool");
+        ticket.Moderator = habbo;
+        _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
         return Task.CompletedTask;
     }
 }

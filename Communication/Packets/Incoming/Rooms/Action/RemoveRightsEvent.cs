@@ -30,7 +30,7 @@ internal class RemoveRightsEvent : RoomPacketEvent
                 {
                     user.RemoveStatus("flatctrl 1");
                     user.UpdateNeeded = true;
-                    user.GetClient().Send(new YouAreControllerComposer(0));
+                    user.GetClient()?.Send(new YouAreControllerComposer(0));
                 }
                 using (var dbClient = _database.GetQueryReactor())
                 {

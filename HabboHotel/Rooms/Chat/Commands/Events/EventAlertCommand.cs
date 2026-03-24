@@ -22,9 +22,13 @@ internal class EventAlertCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var username = session.GetHabbo()?.Username;
+        if (string.IsNullOrEmpty(username))
+            return;
+
         if (_lastEvent == null || DateTime.Now - _lastEvent > TimeSpan.FromHours(1))
         {
-            _gameClientManager.SendPacket(new BroadcastMessageAlertComposer($":follow {session.GetHabbo().Username} for events! win prizes!\r\n- {session.GetHabbo().Username}"));
+            _gameClientManager.SendPacket(new BroadcastMessageAlertComposer($":follow {username} for events! win prizes!\r\n- {username}"));
             _lastEvent = DateTime.Now;
         }
         else

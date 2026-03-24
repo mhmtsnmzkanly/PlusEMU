@@ -44,12 +44,14 @@ public class FigureDataManager : IFigureDataManager
         {
             foreach (XmlNode child in node.ChildNodes)
             {
-                _palettes.Add(Convert.ToInt32(child.Attributes["id"].Value), new(Convert.ToInt32(child.Attributes["id"].Value)));
+                var paletteId = GetRequiredIntAttribute(child, "id");
+                _palettes.Add(paletteId, new(paletteId));
                 foreach (XmlNode sub in child.ChildNodes)
                 {
-                    _palettes[Convert.ToInt32(child.Attributes["id"].Value)].Colors.Add(Convert.ToInt32(sub.Attributes["id"].Value),
-                        new(Convert.ToInt32(sub.Attributes["id"].Value), Convert.ToInt32(sub.Attributes["index"].Value), Convert.ToInt32(sub.Attributes["club"].Value),
-                            Convert.ToInt32(sub.Attributes["selectable"].Value) == 1, Convert.ToString(sub.InnerText)));
+                    var colorId = GetRequiredIntAttribute(sub, "id");
+                    _palettes[paletteId].Colors.Add(colorId,
+                        new(colorId, GetRequiredIntAttribute(sub, "index"), GetRequiredIntAttribute(sub, "club"),
+                            GetRequiredIntAttribute(sub, "selectable") == 1, sub.InnerText ?? string.Empty));
                 }
             }
         }
@@ -58,21 +60,25 @@ public class FigureDataManager : IFigureDataManager
         {
             foreach (XmlNode child in node.ChildNodes)
             {
-                _setTypes.Add(child.Attributes["type"].Value, new(SetTypeUtility.GetSetType(child.Attributes["type"].Value), Convert.ToInt32(child.Attributes["paletteid"].Value)));
+                var type = GetRequiredStringAttribute(child, "type");
+                _setTypes.Add(type, new(SetTypeUtility.GetSetType(type), GetRequiredIntAttribute(child, "paletteid")));
                 foreach (XmlNode sub in child.ChildNodes)
                 {
-                    _setTypes[child.Attributes["type"].Value].Sets.Add(Convert.ToInt32(sub.Attributes["id"].Value),
-                        new(Convert.ToInt32(sub.Attributes["id"].Value), Convert.ToString(sub.Attributes["gender"].Value), Convert.ToInt32(sub.Attributes["club"].Value),
-                            Convert.ToInt32(sub.Attributes["colorable"].Value) == 1, Convert.ToInt32(sub.Attributes["selectable"].Value) == 1,
-                            Convert.ToInt32(sub.Attributes["preselectable"].Value) == 1));
+                    var setId = GetRequiredIntAttribute(sub, "id");
+                    _setTypes[type].Sets.Add(setId,
+                        new(setId, GetRequiredStringAttribute(sub, "gender"), GetRequiredIntAttribute(sub, "club"),
+                            GetRequiredIntAttribute(sub, "colorable") == 1, GetRequiredIntAttribute(sub, "selectable") == 1,
+                            GetRequiredIntAttribute(sub, "preselectable") == 1));
                     foreach (XmlNode subb in sub.ChildNodes)
                     {
-                        if (subb.Attributes["type"] != null)
+                        if (subb.Attributes?["type"] != null)
                         {
-                            _setTypes[child.Attributes["type"].Value].Sets[Convert.ToInt32(sub.Attributes["id"].Value)].Parts.Add(
-                                $"{Convert.ToInt32(subb.Attributes["id"].Value)}-{subb.Attributes["type"].Value}",
-                                new(Convert.ToInt32(subb.Attributes["id"].Value), SetTypeUtility.GetSetType(child.Attributes["type"].Value),
-                                    Convert.ToInt32(subb.Attributes["colorable"].Value) == 1, Convert.ToInt32(subb.Attributes["index"].Value), Convert.ToInt32(subb.Attributes["colorindex"].Value)));
+                            var partId = GetRequiredIntAttribute(subb, "id");
+                            var partType = GetRequiredStringAttribute(subb, "type");
+                            _setTypes[type].Sets[setId].Parts.Add(
+                                $"{partId}-{partType}",
+                                new(partId, SetTypeUtility.GetSetType(type),
+                                    GetRequiredIntAttribute(subb, "colorable") == 1, GetRequiredIntAttribute(subb, "index"), GetRequiredIntAttribute(subb, "colorindex")));
                         }
                     }
                 }
@@ -237,4 +243,9 @@ public class FigureDataManager : IFigureDataManager
     {
         return StringCharFilter.IsValid(figure) ? figure : IFigureDataManager.DefaultFigure;
     }
+
+    private static int GetRequiredIntAttribute(XmlNode node, string attributeName) => Convert.ToInt32(GetRequiredStringAttribute(node, attributeName));
+
+    private static string GetRequiredStringAttribute(XmlNode node, string attributeName) =>
+        node.Attributes?[attributeName]?.Value ?? throw new XmlException($"Missing attribute '{attributeName}' on node '{node.Name}'.");
 }

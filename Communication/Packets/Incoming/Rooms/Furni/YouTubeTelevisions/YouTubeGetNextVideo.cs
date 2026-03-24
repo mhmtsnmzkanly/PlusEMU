@@ -15,7 +15,7 @@ internal class YouTubeGetNextVideo : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        if (!(session.GetHabbo()?.InRoom ?? false))
             return Task.CompletedTask;
         var videos = _televisionManager.TelevisionList;
         if (videos.Count == 0)
@@ -25,7 +25,7 @@ internal class YouTubeGetNextVideo : IPacketEvent
         }
         var itemId = packet.ReadInt();
         packet.ReadInt(); //next
-        TelevisionItem item = null;
+        TelevisionItem? item = null;
         var dict = _televisionManager.Televisions;
         foreach (var value in RandomValues(dict).Take(1)) item = value;
         if (item == null)

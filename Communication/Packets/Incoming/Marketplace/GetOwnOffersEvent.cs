@@ -7,7 +7,11 @@ internal class GetOwnOffersEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        session.Send(new MarketPlaceOwnOffersComposer(session.GetHabbo().Id));
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        session.Send(new MarketPlaceOwnOffersComposer(habbo.Id));
         return Task.CompletedTask;
     }
 }

@@ -8,8 +8,8 @@ namespace Plus.Communication.Revisions;
 
 public class RevisionsCache : IRevisionsCache, IStartable
 {
-    public IReadOnlyDictionary<string, Revision> Revisions { get; set; }
-    public Revision InternalRevision { get; private set; }
+    public IReadOnlyDictionary<string, Revision> Revisions { get; set; } = new Dictionary<string, Revision>();
+    public Revision InternalRevision { get; private set; } = new();
 
     private string? _directory;
     public string Location => _directory ??= Path.Join(Directory.GetCurrentDirectory(), "revisions");
@@ -29,8 +29,8 @@ public class RevisionsCache : IRevisionsCache, IStartable
 
     private void LoadInternalRevision()
     {
-        var incomingHeaders = typeof(ClientPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).ToDictionary(field => field.Name, field => (uint)field.GetRawConstantValue());
-        var outgoingHeaders = typeof(ServerPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).ToDictionary(field => field.Name, field => (uint)field.GetRawConstantValue());
+        var incomingHeaders = typeof(ClientPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).ToDictionary(field => field.Name, field => (uint)field.GetRawConstantValue()!);
+        var outgoingHeaders = typeof(ServerPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).ToDictionary(field => field.Name, field => (uint)field.GetRawConstantValue()!);
         InternalRevision = new()
         {
             Name = "PRODUCTION-201701242205-837386173",
@@ -52,6 +52,8 @@ public class RevisionsCache : IRevisionsCache, IStartable
         foreach (var file in Directory.GetFiles(Location).Where(f => f.EndsWith(".json")))
         {
             var revision = JsonSerializer.Deserialize<Revision>(await File.ReadAllTextAsync(file), SerializerOptions);
+            if (revision == null)
+                continue;
             if (revision.Name.Equals(InternalRevision.Name)) continue;
             revisions[revision.Name] = revision;
         }

@@ -15,6 +15,10 @@ internal class SetSoundSettingsEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var volume = "";
         for (var i = 0; i < 3; i++)
         {
@@ -26,7 +30,7 @@ internal class SetSoundSettingsEvent : IPacketEvent
                 volume += vol;
         }
         using var connection = _database.Connection();
-        connection.Execute("UPDATE users SET volume = @volume WHERE id = @id LIMIT 1", new { volume = volume, id = session.GetHabbo().Id });
+        connection.Execute("UPDATE users SET volume = @volume WHERE id = @id LIMIT 1", new { volume = volume, id = habbo.Id });
         return Task.CompletedTask;
     }
 }

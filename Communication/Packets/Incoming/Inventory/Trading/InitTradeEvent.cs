@@ -17,39 +17,40 @@ internal class InitTradeEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
         var userId = packet.ReadInt();
-        if (!session.GetHabbo().InRoom)
+        if (!habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         
-        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (roomUser == null)
             return Task.CompletedTask;
         var targetUser = room.GetRoomUserManager().GetRoomUserByVirtualId(userId);
         if (targetUser == null)
             return Task.CompletedTask;
-        if (session.GetHabbo().TradingLockExpiry > 0)
+        if (habbo.TradingLockExpiry > 0)
         {
-            if (session.GetHabbo().TradingLockExpiry > UnixTimestamp.GetNow())
+            if (habbo.TradingLockExpiry > UnixTimestamp.GetNow())
             {
                 session.SendNotification("You're currently banned from trading.");
                 return Task.CompletedTask;
             }
-            session.GetHabbo().TradingLockExpiry = 0;
+            habbo.TradingLockExpiry = 0;
             session.SendNotification("Your trading ban has now expired.");
             using var connection = _database.Connection();
-            connection.Execute("UPDATE `user_info` SET `trading_locked` = '0' WHERE `id` = @userId LIMIT 1", new { userId = session.GetHabbo().Id });
+            connection.Execute("UPDATE `user_info` SET `trading_locked` = '0' WHERE `id` = @userId LIMIT 1", new { userId = habbo.Id });
         }
-        if (!session.GetHabbo().Permissions.HasRight("room_trade_override"))
+        if (!(habbo.Permissions?.HasRight("room_trade_override") ?? false))
         {
             if (room.TradeSettings == 0)
             {
                 session.Send(new TradingErrorComposer(6, targetUser.GetUsername()));
                 return Task.CompletedTask;
             }
-            if (room.TradeSettings == 1 && room.OwnerId != session.GetHabbo().Id)
+            if (room.TradeSettings == 1 && room.OwnerId != habbo.Id)
             {
                 session.Send(new TradingErrorComposer(6, targetUser.GetUsername()));
                 return Task.CompletedTask;
@@ -65,12 +66,19 @@ internal class InitTradeEvent : IPacketEvent
             session.Send(new TradingErrorComposer(8, targetUser.GetUsername()));
             return Task.CompletedTask;
         }
-        if (!targetUser.GetClient().GetHabbo().AllowTradingRequests)
+        var targetClient = targetUser.GetClient();
+        var targetHabbo = targetClient?.GetHabbo();
+        if (targetHabbo == null)
         {
             session.Send(new TradingErrorComposer(4, targetUser.GetUsername()));
             return Task.CompletedTask;
         }
-        if (targetUser.GetClient().GetHabbo().TradingLockExpiry > 0)
+        if (!targetHabbo.AllowTradingRequests)
+        {
+            session.Send(new TradingErrorComposer(4, targetUser.GetUsername()));
+            return Task.CompletedTask;
+        }
+        if (targetHabbo.TradingLockExpiry > 0)
         {
             session.Send(new TradingErrorComposer(4, targetUser.GetUsername()));
             return Task.CompletedTask;

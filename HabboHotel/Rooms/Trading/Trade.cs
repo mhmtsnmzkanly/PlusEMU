@@ -107,15 +107,21 @@ public sealed class Trade
         var userTwo = Users[1].OfferedItems.Values.ToList();
         var roomUserOne = Users[0].RoomUser;
         var roomUserTwo = Users[1].RoomUser;
+        var clientOne = roomUserOne?.GetClient();
+        var clientTwo = roomUserTwo?.GetClient();
+        var habboOne = clientOne?.GetHabbo();
+        var habboTwo = clientTwo?.GetHabbo();
+        var inventoryOne = habboOne?.Inventory?.Furniture;
+        var inventoryTwo = habboTwo?.Inventory?.Furniture;
         var logUserOne = "";
         var logUserTwo = "";
-        if (roomUserOne == null || roomUserOne.GetClient() == null || roomUserOne.GetClient().GetHabbo() == null || roomUserOne.GetClient().GetHabbo().Inventory == null)
+        if (roomUserOne == null || clientOne == null || habboOne == null || inventoryOne == null)
             return;
-        if (roomUserTwo == null || roomUserTwo.GetClient() == null || roomUserTwo.GetClient().GetHabbo() == null || roomUserTwo.GetClient().GetHabbo().Inventory == null)
+        if (roomUserTwo == null || clientTwo == null || habboTwo == null || inventoryTwo == null)
             return;
         foreach (var item in userOne)
         {
-            var I = roomUserOne.GetClient().GetHabbo().Inventory.Furniture.GetItem(item.Id);
+            var I = inventoryOne.GetItem(item.Id);
             if (I == null)
             {
                 SendPacket(new BroadcastMessageAlertComposer("Error! Trading Failed!"));
@@ -124,7 +130,7 @@ public sealed class Trade
         }
         foreach (var item in userTwo)
         {
-            var I = roomUserTwo.GetClient().GetHabbo().Inventory.Furniture.GetItem(item.Id);
+            var I = inventoryTwo.GetItem(item.Id);
             if (I == null)
             {
                 SendPacket(new BroadcastMessageAlertComposer("Error! Trading Failed!"));
@@ -135,22 +141,22 @@ public sealed class Trade
         foreach (var item in userOne)
         {
             logUserOne += $"{item.Id};";
-            roomUserOne.GetClient().GetHabbo().Inventory.Furniture.RemoveItem(item.Id);
-            roomUserOne.GetClient().Send(new FurniListRemoveComposer(item.Id));
+            inventoryOne.RemoveItem(item.Id);
+            clientOne.Send(new FurniListRemoveComposer(item.Id));
             if (item.Definition.InteractionType == InteractionType.Exchange && PlusEnvironment.SettingsManager.TryGetValue("trading.auto_exchange_redeemables") == "1")
             {
-                roomUserTwo.GetClient().GetHabbo().Credits += item.Definition.BehaviourData;
-                roomUserTwo.GetClient().Send(new CreditBalanceComposer(roomUserTwo.GetClient().GetHabbo().Credits));
+                habboTwo.Credits += item.Definition.BehaviourData;
+                clientTwo.Send(new CreditBalanceComposer(habboTwo.Credits));
                 dbClient.SetQuery("DELETE FROM `items` WHERE `id` = @id LIMIT 1");
                 dbClient.AddParameter("id", item.Id);
                 dbClient.RunQuery();
             }
             else
             {
-                if (roomUserTwo.GetClient().GetHabbo().Inventory.Furniture.AddItem(item))
+                if (inventoryTwo.AddItem(item))
                 {
-                    roomUserTwo.GetClient().Send(new FurniListAddComposer(item));
-                    roomUserTwo.GetClient().Send(new FurniListNotificationComposer(item.Id, 1));
+                    clientTwo.Send(new FurniListAddComposer(item));
+                    clientTwo.Send(new FurniListNotificationComposer(item.Id, 1));
                     dbClient.SetQuery("UPDATE `items` SET `user_id` = @user WHERE id=@id LIMIT 1");
                     dbClient.AddParameter("user", roomUserTwo.UserId);
                     dbClient.AddParameter("id", item.Id);
@@ -161,22 +167,22 @@ public sealed class Trade
         foreach (var item in userTwo)
         {
             logUserTwo += $"{item.Id};";
-            roomUserTwo.GetClient().GetHabbo().Inventory.Furniture.RemoveItem(item.Id);
-            roomUserTwo.GetClient().Send(new FurniListRemoveComposer(item.Id));
+            inventoryTwo.RemoveItem(item.Id);
+            clientTwo.Send(new FurniListRemoveComposer(item.Id));
             if (item.Definition.InteractionType == InteractionType.Exchange && PlusEnvironment.SettingsManager.TryGetValue("trading.auto_exchange_redeemables") == "1")
             {
-                roomUserOne.GetClient().GetHabbo().Credits += item.Definition.BehaviourData;
-                roomUserOne.GetClient().Send(new CreditBalanceComposer(roomUserOne.GetClient().GetHabbo().Credits));
+                habboOne.Credits += item.Definition.BehaviourData;
+                clientOne.Send(new CreditBalanceComposer(habboOne.Credits));
                 dbClient.SetQuery("DELETE FROM `items` WHERE `id` = @id LIMIT 1");
                 dbClient.AddParameter("id", item.Id);
                 dbClient.RunQuery();
             }
             else
             {
-                if (roomUserOne.GetClient().GetHabbo().Inventory.Furniture.AddItem(item))
+                if (inventoryOne.AddItem(item))
                 {
-                    roomUserOne.GetClient().Send(new FurniListAddComposer(item));
-                    roomUserOne.GetClient().Send(new FurniListNotificationComposer(item.Id, 1));
+                    clientOne.Send(new FurniListAddComposer(item));
+                    clientOne.Send(new FurniListNotificationComposer(item.Id, 1));
                     dbClient.SetQuery("UPDATE `items` SET `user_id` = @user WHERE id=@id LIMIT 1");
                     dbClient.AddParameter("user", roomUserOne.UserId);
                     dbClient.AddParameter("id", item.Id);

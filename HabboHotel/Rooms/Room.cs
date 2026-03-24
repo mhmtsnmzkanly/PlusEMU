@@ -29,34 +29,34 @@ public class Room : RoomData
     private readonly Dictionary<uint, List<RoomUser>> _tents;
     private readonly TradingComponent _tradingComponent;
     private readonly WiredComponent _wiredComponent;
-    private BattleBanzai _banzai;
-    private Freeze _freeze;
-    private GameItemHandler _gameItemHandler;
-    private GameManager _gameManager;
+    private BattleBanzai? _banzai;
+    private Freeze? _freeze;
+    private GameItemHandler? _gameItemHandler;
+    private GameManager? _gameManager;
 
-    private Gamemap _gamemap;
-    private RoomItemHandling _roomItemHandling;
+    private Gamemap? _gamemap;
+    private RoomItemHandling? _roomItemHandling;
 
-    private RoomUserManager _roomUserManager;
-    private Soccer _soccer;
+    private RoomUserManager? _roomUserManager;
+    private Soccer? _soccer;
 
     public bool IsCrashed;
     public DateTime LastRegeneration;
     public DateTime LastTimerReset;
     public bool MDisposed;
-    public MoodlightData MoodlightData;
+    public MoodlightData? MoodlightData;
 
     public Dictionary<int, double> MutedUsers;
 
-    public Task ProcessTask;
+    public Task? ProcessTask;
     public bool RoomMuted;
 
-    public TeamManager Teambanzai;
-    public TeamManager Teamfreeze;
+    public TeamManager? Teambanzai;
+    public TeamManager? Teamfreeze;
 
-    public TonerData TonerData;
+    public TonerData? TonerData;
 
-    public List<int> UsersWithRights;
+    public List<int> UsersWithRights = new();
 
     public Room(RoomData data)
         : base(data)
@@ -88,15 +88,15 @@ public class Room : RoomData
     public bool Unloaded { get; set; }
     public int IdleTime { get; set; }
 
-    public List<string> WordFilterList { get; set; }
+    public List<string> WordFilterList { get; set; } = new();
 
-    public int UserCount => _roomUserManager.GetRoomUsers().Count;
+    public int UserCount => GetRoomUserManager().GetRoomUsers().Count;
 
     public uint RoomId => Id;
 
     public bool CanTradeInRoom => true;
 
-    public Gamemap GetGameMap() => _gamemap;
+    public Gamemap GetGameMap() => _gamemap!;
 
     public RoomItemHandling GetRoomItemHandler()
     {
@@ -104,7 +104,7 @@ public class Room : RoomData
         return _roomItemHandling;
     }
 
-    public RoomUserManager GetRoomUserManager() => _roomUserManager;
+    public RoomUserManager GetRoomUserManager() => _roomUserManager!;
 
     public Soccer GetSoccer()
     {
@@ -173,6 +173,10 @@ public class Room : RoomData
 
     public void InitBots()
     {
+        var roomUserManager = _roomUserManager;
+        if (roomUserManager == null)
+            return;
+
         using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
         dbClient.SetQuery(
             $"SELECT `id`,`room_id`,`name`,`motto`,`look`,`x`,`y`,`z`,`rotation`,`gender`,`user_id`,`ai_type`,`walk_mode`,`automatic_chat`,`speaking_interval`,`mix_sentences`,`chat_bubble` FROM `bots` WHERE `room_id` = '{RoomId}' AND `ai_type` != 'pet'");
@@ -184,17 +188,23 @@ public class Room : RoomData
             dbClient.SetQuery($"SELECT `text` FROM `bots_speech` WHERE `bot_id` = '{Convert.ToInt32(bot["id"])}'");
             var botSpeech = dbClient.GetTable();
             var speeches = new List<RandomSpeech>();
-            foreach (DataRow speech in botSpeech.Rows) speeches.Add(new(Convert.ToString(speech["text"]), Convert.ToInt32(bot["id"])));
-            _roomUserManager.DeployBot(
-                new(Convert.ToInt32(bot["id"]), Convert.ToUInt32(bot["room_id"]), Convert.ToString(bot["ai_type"]), Convert.ToString(bot["walk_mode"]), Convert.ToString(bot["name"]),
-                    Convert.ToString(bot["motto"]), Convert.ToString(bot["look"]), int.Parse(bot["x"].ToString()), int.Parse(bot["y"].ToString()), int.Parse(bot["z"].ToString()),
-                    int.Parse(bot["rotation"].ToString()), 0, 0, 0, 0, ref speeches, "M", 0, Convert.ToInt32(bot["user_id"].ToString()), Convert.ToBoolean(bot["automatic_chat"]),
-                    Convert.ToInt32(bot["speaking_interval"]), ConvertExtensions.EnumToBool(bot["mix_sentences"].ToString()), Convert.ToInt32(bot["chat_bubble"])), null);
+            if (botSpeech != null)
+                foreach (DataRow speech in botSpeech.Rows)
+                    speeches.Add(new(Convert.ToString(speech["text"]) ?? string.Empty, Convert.ToInt32(bot["id"])));
+            roomUserManager.DeployBot(
+                new(Convert.ToInt32(bot["id"]), Convert.ToUInt32(bot["room_id"]), Convert.ToString(bot["ai_type"]) ?? string.Empty, Convert.ToString(bot["walk_mode"]) ?? string.Empty, Convert.ToString(bot["name"]) ?? string.Empty,
+                    Convert.ToString(bot["motto"]) ?? string.Empty, Convert.ToString(bot["look"]) ?? string.Empty, int.Parse(bot["x"].ToString() ?? "0"), int.Parse(bot["y"].ToString() ?? "0"), int.Parse(bot["z"].ToString() ?? "0"),
+                    int.Parse(bot["rotation"].ToString() ?? "0"), 0, 0, 0, 0, ref speeches, "M", 0, Convert.ToInt32(bot["user_id"].ToString()), Convert.ToBoolean(bot["automatic_chat"]),
+                    Convert.ToInt32(bot["speaking_interval"]), ConvertExtensions.EnumToBool(bot["mix_sentences"].ToString() ?? "0"), Convert.ToInt32(bot["chat_bubble"])), null);
         }
     }
 
     public void InitPets()
     {
+        var roomUserManager = _roomUserManager;
+        if (roomUserManager == null)
+            return;
+
         using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
         dbClient.SetQuery($"SELECT `id`,`user_id`,`room_id`,`name`,`x`,`y`,`z` FROM `bots` WHERE `room_id` = '{RoomId}' AND `ai_type` = 'pet'");
         var data = dbClient.GetTable();
@@ -207,14 +217,14 @@ public class Room : RoomData
             var mRow = dbClient.GetRow();
             if (mRow == null)
                 continue;
-            var pet = new Pet(Convert.ToInt32(row["id"]), Convert.ToInt32(row["user_id"]), Convert.ToUInt32(row["room_id"]), Convert.ToString(row["name"]), Convert.ToInt32(mRow["type"]),
-                Convert.ToString(mRow["race"]),
-                Convert.ToString(mRow["color"]), Convert.ToInt32(mRow["experience"]), Convert.ToInt32(mRow["energy"]), Convert.ToInt32(mRow["nutrition"]), Convert.ToInt32(mRow["respect"]),
+            var pet = new Pet(Convert.ToInt32(row["id"]), Convert.ToInt32(row["user_id"]), Convert.ToUInt32(row["room_id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToInt32(mRow["type"]),
+                Convert.ToString(mRow["race"]) ?? string.Empty,
+                Convert.ToString(mRow["color"]) ?? string.Empty, Convert.ToInt32(mRow["experience"]), Convert.ToInt32(mRow["energy"]), Convert.ToInt32(mRow["nutrition"]), Convert.ToInt32(mRow["respect"]),
                 Convert.ToDouble(mRow["createstamp"]), Convert.ToInt32(row["x"]), Convert.ToInt32(row["y"]),
                 Convert.ToDouble(row["z"]), Convert.ToInt32(mRow["have_saddle"]), Convert.ToInt32(mRow["anyone_ride"]), Convert.ToInt32(mRow["hairdye"]), Convert.ToInt32(mRow["pethair"]),
-                Convert.ToString(mRow["gnome_clothing"]));
+                Convert.ToString(mRow["gnome_clothing"]) ?? string.Empty);
             var rndSpeechList = new List<RandomSpeech>();
-            _roomUserManager.DeployBot(
+            roomUserManager.DeployBot(
                 new(pet.PetId, RoomId, "pet", "freeroam", pet.Name, "", pet.Look, pet.X, pet.Y, Convert.ToInt32(pet.Z), 0, 0, 0, 0, 0, ref rndSpeechList, "", 0, pet.OwnerId, false, 0, false,
                     0), pet);
         }
@@ -233,7 +243,7 @@ public class Room : RoomData
         UsersWithRights = new();
         if (Group != null)
             return;
-        DataTable data = null;
+        DataTable? data = null;
         using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT room_rights.user_id FROM room_rights WHERE room_id = @roomid");
@@ -248,7 +258,7 @@ public class Room : RoomData
     private void LoadFilter()
     {
         WordFilterList = new();
-        DataTable data = null;
+        DataTable? data = null;
         using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT * FROM `room_filter` WHERE `room_id` = @roomid;");
@@ -257,7 +267,7 @@ public class Room : RoomData
         }
         if (data == null)
             return;
-        foreach (DataRow row in data.Rows) WordFilterList.Add(Convert.ToString(row["word"]));
+        foreach (DataRow row in data.Rows) WordFilterList.Add(Convert.ToString(row["word"]) ?? string.Empty);
     }
 
     public bool CheckRights(GameClient session) => CheckRights(session, false);
@@ -266,28 +276,29 @@ public class Room : RoomData
     {
         try
         {
-            if (session == null || session.GetHabbo() == null)
+            var habbo = session?.GetHabbo();
+            if (habbo == null)
                 return false;
-            if (session.GetHabbo().Username == OwnerName && Type == "private")
+            if (habbo.Username == OwnerName && Type == "private")
                 return true;
-            if (session.GetHabbo().Permissions.HasRight("room_any_owner"))
+            if (habbo.Permissions?.HasRight("room_any_owner") == true)
                 return true;
             if (!requireOwnership && Type == "private")
             {
-                if (session.GetHabbo().Permissions.HasRight("room_any_rights"))
+                if (habbo.Permissions?.HasRight("room_any_rights") == true)
                     return true;
-                if (UsersWithRights.Contains(session.GetHabbo().Id))
+                if (UsersWithRights.Contains(habbo.Id))
                     return true;
             }
             if (checkForGroups && Type == "private")
             {
                 if (Group == null)
                     return false;
-                if (Group.IsAdmin(session.GetHabbo().Id))
+                if (Group.IsAdmin(habbo.Id))
                     return true;
                 if (Group.AdminOnlyDeco == 0)
                 {
-                    if (Group.IsAdmin(session.GetHabbo().Id))
+                    if (Group.IsAdmin(habbo.Id))
                         return true;
                 }
             }
@@ -301,8 +312,8 @@ public class Room : RoomData
 
     public void OnUserShoot(RoomUser user, Item ball)
     {
-        Func<Item, bool> predicate = null;
-        string key = null;
+        Func<Item, bool>? predicate = null;
+        string? key = null;
         foreach (var item in GetRoomItemHandler().GetFurniObjects(ball.GetX, ball.GetY).ToList())
         {
             if (item.Definition.ItemName.StartsWith("fball_goal_"))
@@ -400,7 +411,11 @@ public class Room : RoomData
     {
         try
         {
-            foreach (var user in _roomUserManager.GetRoomUsers().ToList())
+            var roomUserManager = _roomUserManager;
+            if (roomUserManager == null)
+                return;
+
+            foreach (var user in roomUserManager.GetRoomUsers().ToList())
             {
                 if (user == null || user.GetClient() == null)
                     continue;
@@ -426,23 +441,31 @@ public class Room : RoomData
 
     public bool CheckMute(GameClient session)
     {
-        if (MutedUsers.ContainsKey(session.GetHabbo().Id))
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return false;
+
+        if (MutedUsers.ContainsKey(habbo.Id))
         {
-            if (MutedUsers[session.GetHabbo().Id] < UnixTimestamp.GetNow())
-                MutedUsers.Remove(session.GetHabbo().Id);
+            if (MutedUsers[habbo.Id] < UnixTimestamp.GetNow())
+                MutedUsers.Remove(habbo.Id);
             else
                 return true;
         }
-        if (session.GetHabbo().TimeMuted > 0 || RoomMuted && session.GetHabbo().Username != OwnerName)
+        if (habbo.TimeMuted > 0 || RoomMuted && habbo.Username != OwnerName)
             return true;
         return false;
     }
 
     public void SendObjects(GameClient session)
     {
+        var roomUserManager = _roomUserManager;
+        if (roomUserManager == null)
+            return;
+
         session.Send(new HeightMapComposer(GetGameMap().Model.Heightmap));
         session.Send(new FloorHeightMapComposer(GetGameMap().Model.GetRelativeHeightmap(), GetGameMap().StaticModel.WallHeight));
-        foreach (var user in _roomUserManager.GetUserList().ToList())
+        foreach (var user in roomUserManager.GetUserList().ToList())
         {
             if (user == null)
                 continue;
@@ -477,9 +500,10 @@ public class Room : RoomData
         var users = _tents[tentId];
         foreach (var user in users.ToList())
         {
-            if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null)
+            var habbo = user?.GetClient()?.GetHabbo();
+            if (habbo == null)
                 continue;
-            user.GetClient().GetHabbo().TentId = 0;
+            habbo.TentId = 0;
         }
         if (_tents.ContainsKey(tentId))
             _tents.Remove(tentId);
@@ -487,25 +511,27 @@ public class Room : RoomData
 
     public void AddUserToTent(uint tentId, RoomUser user)
     {
-        if (user != null && user.GetClient() != null && user.GetClient().GetHabbo() != null)
+        var habbo = user?.GetClient()?.GetHabbo();
+        if (habbo != null)
         {
             if (!_tents.ContainsKey(tentId))
                 _tents.Add(tentId, new());
             if (!_tents[tentId].Contains(user))
                 _tents[tentId].Add(user);
-            user.GetClient().GetHabbo().TentId = tentId;
+            habbo.TentId = tentId;
         }
     }
 
     public void RemoveUserFromTent(uint tentId, RoomUser user)
     {
-        if (user != null && user.GetClient() != null && user.GetClient().GetHabbo() != null)
+        var habbo = user?.GetClient()?.GetHabbo();
+        if (habbo != null)
         {
             if (!_tents.ContainsKey(tentId))
                 _tents.Add(tentId, new());
             if (_tents[tentId].Contains(user))
                 _tents[tentId].Remove(user);
-            user.GetClient().GetHabbo().TentId = 0;
+            habbo.TentId = 0;
         }
     }
 
@@ -515,8 +541,8 @@ public class Room : RoomData
             return;
         foreach (var user in _tents[tentId].ToList())
         {
-            if (user == null || user.GetClient() == null || user.GetClient().GetHabbo() == null || user.GetClient().GetHabbo().IgnoresComponent.IsIgnored(id) ||
-                user.GetClient().GetHabbo().TentId != tentId)
+            var habbo = user?.GetClient()?.GetHabbo();
+            if (habbo == null || habbo.IgnoresComponent?.IsIgnored(id) == true || habbo.TentId != tentId)
                 continue;
             user.GetClient().Send(packet);
         }
@@ -528,9 +554,11 @@ public class Room : RoomData
             return;
         try
         {
-            var users = _roomUserManager.GetUserList().ToList();
-            if (_roomUserManager == null || users == null)
+            var roomUserManager = _roomUserManager;
+            if (roomUserManager == null)
                 return;
+
+            var users = roomUserManager.GetUserList().ToList();
             foreach (var user in users)
             {
                 if (user?.GetClient() == null || user.IsBot)

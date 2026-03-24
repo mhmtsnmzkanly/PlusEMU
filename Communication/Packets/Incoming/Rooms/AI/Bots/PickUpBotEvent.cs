@@ -15,17 +15,20 @@ internal class PickUpBotEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (!habbo.InRoom)
             return Task.CompletedTask;
         var botId = packet.ReadInt();
         if (botId == 0)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         if (!room.GetRoomUserManager().TryGetBot(botId, out var botUser))
             return Task.CompletedTask;
-        if (session.GetHabbo().Id != botUser.BotData.OwnerId && !session.GetHabbo().Permissions.HasRight("bot_place_any_override"))
+        if (botUser.BotData == null)
+            return Task.CompletedTask;
+        if (habbo.Id != botUser.BotData.OwnerId && !(habbo.Permissions?.HasRight("bot_place_any_override") ?? false))
         {
             session.SendWhisper("You can only pick up your own bots!");
             return Task.CompletedTask;
@@ -37,9 +40,11 @@ internal class PickUpBotEvent : IPacketEvent
             dbClient.RunQuery();
         }
         room.GetGameMap().RemoveUserFromMap(botUser, new(botUser.X, botUser.Y));
-        session.GetHabbo().Inventory.Bots.AddBot(new(Convert.ToInt32(botUser.BotData.Id), Convert.ToInt32(botUser.BotData.OwnerId), botUser.BotData.Name, botUser.BotData.Motto,
+        if (habbo.Inventory?.Bots == null)
+            return Task.CompletedTask;
+        habbo.Inventory.Bots.AddBot(new(Convert.ToInt32(botUser.BotData.Id), Convert.ToInt32(botUser.BotData.OwnerId), botUser.BotData.Name, botUser.BotData.Motto,
             botUser.BotData.Look, botUser.BotData.Gender));
-        session.Send(new BotInventoryComposer(session.GetHabbo().Inventory.Bots.Bots.Values.ToList()));
+        session.Send(new BotInventoryComposer(habbo.Inventory.Bots.Bots.Values.ToList()));
         room.GetRoomUserManager().RemoveBot(botUser.VirtualId, false);
         return Task.CompletedTask;
     }

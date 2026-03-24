@@ -13,7 +13,11 @@ internal class DisableWhispersCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        session.GetHabbo().ReceiveWhispers = !session.GetHabbo().ReceiveWhispers;
-        session.SendWhisper($"You're {(session.GetHabbo().ReceiveWhispers ? "now" : "no longer")} receiving whispers!");
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        habbo.ReceiveWhispers = !habbo.ReceiveWhispers;
+        session.SendWhisper($"You're {(habbo.ReceiveWhispers ? "now" : "no longer")} receiving whispers!");
     }
 }

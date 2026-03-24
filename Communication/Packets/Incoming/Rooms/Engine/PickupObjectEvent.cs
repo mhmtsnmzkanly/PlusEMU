@@ -22,9 +22,11 @@ internal class PickupObjectEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
+        if (habbo?.Permissions == null || furniture == null || !habbo.InRoom)
             return;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return;
         packet.ReadInt(); //unknown
@@ -35,11 +37,11 @@ internal class PickupObjectEvent : IPacketEvent
         if (item.Definition.InteractionType == InteractionType.Postit)
             return;
         var itemRights = false;
-        if (item.UserId == session.GetHabbo().Id || room.CheckRights(session, false))
+        if (item.UserId == habbo.Id || room.CheckRights(session, false))
             itemRights = true;
         else if (room.Group != null && room.CheckRights(session, false, true)) //Room has a group, this user has group rights.
             itemRights = true;
-        else if (session.GetHabbo().Permissions.HasRight("room_item_take"))
+        else if (habbo.Permissions.HasRight("room_item_take"))
             itemRights = true;
         if (itemRights)
         {
@@ -54,19 +56,20 @@ internal class PickupObjectEvent : IPacketEvent
             {
                 await connection.ExecuteAsync("DELETE FROM `room_items_toner` WHERE `id` = @id LIMIT 1", new { id = item.Id });
             }
-            if (item.UserId == session.GetHabbo().Id || session.GetHabbo().Permissions.HasRight("room_item_take"))
+            if (item.UserId == habbo.Id || habbo.Permissions.HasRight("room_item_take"))
             {
                 room.GetRoomItemHandler().RemoveFurniture(session, item.Id);
-                session.GetHabbo().Inventory.Furniture.AddItem(item.ToInventoryItem());
+                furniture.AddItem(item.ToInventoryItem());
                 session.Send(new FurniListUpdateComposer());
             }
             else //Item is being ejected.
             {
                 var targetClient = _clientManager.GetClientByUserId(item.UserId);
-                if (targetClient != null && targetClient.GetHabbo() != null) //Again, do we have an active client?
+                var targetFurniture = targetClient?.GetHabbo()?.Inventory?.Furniture;
+                if (targetClient != null && targetFurniture != null) //Again, do we have an active client?
                 {
                     room.GetRoomItemHandler().RemoveFurniture(targetClient, item.Id);
-                    targetClient.GetHabbo().Inventory.Furniture.AddItem(item.ToInventoryItem());
+                    targetFurniture.AddItem(item.ToInventoryItem());
                     targetClient.Send(new FurniListUpdateComposer());
                 }
                 else //No, query time.

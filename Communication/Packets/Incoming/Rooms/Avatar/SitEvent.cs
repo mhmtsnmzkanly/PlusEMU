@@ -6,9 +6,11 @@ internal class SitEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
+        if (habbo == null || !habbo.InRoom || currentRoom == null)
             return Task.CompletedTask;
-        var user = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return Task.CompletedTask;
         if (user.Statusses.ContainsKey("lie") || user.IsLying || user.RidingHorse || user.IsWalking) return Task.CompletedTask;

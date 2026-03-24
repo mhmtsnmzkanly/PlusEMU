@@ -24,13 +24,21 @@ internal class ConvertCreditsCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        var inventory = habbo?.Inventory?.Furniture;
+        if (habbo == null || inventory == null)
+        {
+            session.SendNotification("Oops, an error occoured whilst converting your credits!");
+            return;
+        }
+
         var totalValue = 0;
         try
         {
             DataTable table = null;
             using (var dbClient = _database.GetQueryReactor())
             {
-                dbClient.SetQuery($"SELECT `id` FROM `items` WHERE `user_id` = '{session.GetHabbo().Id}' AND (`room_id`=  '0' OR `room_id` = '')");
+                dbClient.SetQuery($"SELECT `id` FROM `items` WHERE `user_id` = '{habbo.Id}' AND (`room_id`=  '0' OR `room_id` = '')");
                 table = dbClient.GetTable();
             }
             if (table == null)
@@ -43,18 +51,18 @@ internal class ConvertCreditsCommand : IChatCommand
                 using var dbClient = _database.GetQueryReactor();
                 foreach (DataRow row in table.Rows)
                 {
-                    var item = session.GetHabbo().Inventory.Furniture.GetItem(Convert.ToUInt32(row[0]));
+                    var item = inventory.GetItem(Convert.ToUInt32(row[0]));
                     if (item == null || item.Definition.InteractionType != InteractionType.Exchange)
                         continue;
                     var value = item.Definition.BehaviourData;
                     dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{item.Id}' LIMIT 1");
-                    session.GetHabbo().Inventory.Furniture.RemoveItem(item.Id);
+                    inventory.RemoveItem(item.Id);
                     session.Send(new FurniListRemoveComposer(item.Id));
                     totalValue += value;
                     if (value > 0)
                     {
-                        session.GetHabbo().Credits += value;
-                        session.Send(new CreditBalanceComposer(session.GetHabbo().Credits));
+                        habbo.Credits += value;
+                        session.Send(new CreditBalanceComposer(habbo.Credits));
                     }
                 }
             }

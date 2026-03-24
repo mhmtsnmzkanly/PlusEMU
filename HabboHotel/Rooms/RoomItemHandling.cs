@@ -348,17 +348,18 @@ public class RoomItemHandling
         pUser.Y = pNextCoord.Y;
         pUser.Z = nextZ;
         _room.GetGameMap().GameMap[pUser.X, pUser.Y] = 0;
-        if (pUser != null && pUser.GetClient() != null && pUser.GetClient().GetHabbo() != null)
+        var habbo = pUser?.GetClient()?.GetHabbo();
+        if (habbo != null)
         {
             var items = _room.GetGameMap().GetRoomItemForSquare(pNextCoord.X, pNextCoord.Y);
             foreach (var item in items.ToList())
             {
                 if (item == null)
                     continue;
-                _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOnFurni, pUser.GetClient().GetHabbo(), item);
+                _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOnFurni, habbo, item);
             }
             var roller = _room.GetRoomItemHandler().GetItem(pRollerId);
-            if (roller != null) _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOffFurni, pUser.GetClient().GetHabbo(), roller);
+            if (roller != null) _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOffFurni, habbo, roller);
         }
         return mMessage;
     }
@@ -675,22 +676,29 @@ public class RoomItemHandling
     public List<Item> RemoveItems(GameClient session)
     {
         var items = new List<Item>();
+        var habbo = session.GetHabbo();
+        var inventory = habbo?.Inventory?.Furniture;
+        if (habbo == null || inventory == null)
+            return items;
+
         foreach (var item in GetWallAndFloor.ToList())
         {
-            if (item == null || item.UserId != session.GetHabbo().Id)
+            if (item == null || item.UserId != habbo.Id)
                 continue;
             if (item.IsFloorItem)
             {
                 _floorItems.TryRemove(item.Id, out var I);
                 // TODO @80O: Items refactor
-                session.GetHabbo().Inventory.Furniture.AddItem(I.ToInventoryItem());
+                if (I != null)
+                    inventory.AddItem(I.ToInventoryItem());
                 _room.SendPacket(new ObjectRemoveComposer(item, item.UserId));
             }
             else if (item.IsWallItem)
             {
                 _wallItems.TryRemove(item.Id, out var I);
                 // TODO @80O: Items refactor
-                session.GetHabbo().Inventory.Furniture.AddItem(I.ToInventoryItem());
+                if (I != null)
+                    inventory.AddItem(I.ToInventoryItem());
                 _room.SendPacket(new ItemRemoveComposer(item, item.UserId));
             }
             session.Send(new FurniListAddComposer(item.ToInventoryItem()));

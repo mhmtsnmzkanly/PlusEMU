@@ -24,31 +24,39 @@ internal class MimicCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
+        if (habbo == null || currentRoom == null)
+            return Task.CompletedTask;
+
         if (!target.AllowMimic)
         {
             session.SendWhisper("Oops, you cannot mimic this user - sorry!");
             return Task.CompletedTask;
         }
-        var targetUser = session.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
+        var targetUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
         if (targetUser == null)
         {
             session.SendWhisper("An error occoured whilst finding that user, maybe they're not online or in this room.");
             return Task.CompletedTask;
         }
-        session.GetHabbo().Gender = targetUser.GetClient().GetHabbo().Gender;
-        session.GetHabbo().Look = targetUser.GetClient().GetHabbo().Look;
+        var targetHabbo = targetUser.GetClient()?.GetHabbo();
+        if (targetHabbo == null)
+            return Task.CompletedTask;
+        habbo.Gender = targetHabbo.Gender;
+        habbo.Look = targetHabbo.Look;
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("UPDATE `users` SET `gender` = @gender, `look` = @look WHERE `id` = @id LIMIT 1");
-            dbClient.AddParameter("gender", session.GetHabbo().Gender);
-            dbClient.AddParameter("look", session.GetHabbo().Look);
-            dbClient.AddParameter("id", session.GetHabbo().Id);
+            dbClient.AddParameter("gender", habbo.Gender);
+            dbClient.AddParameter("look", habbo.Look);
+            dbClient.AddParameter("id", habbo.Id);
             dbClient.RunQuery();
         }
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user != null)
         {
-            session.Send(new AvatarAspectUpdateComposer(session.GetHabbo().Look, session.GetHabbo().Gender));
+            session.Send(new AvatarAspectUpdateComposer(habbo.Look, habbo.Gender));
             session.Send(new UserChangeComposer(user, true));
             room.SendPacket(new UserChangeComposer(user, false));
         }

@@ -18,7 +18,7 @@ public class VoucherManager : IVoucherManager
     {
         if (_vouchers.Count > 0)
             _vouchers.Clear();
-        DataTable data = null;
+        DataTable? data = null;
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT `voucher`,`type`,`value`,`current_uses`,`max_uses` FROM `catalog_vouchers` WHERE `enabled` = '1'");
@@ -28,8 +28,9 @@ public class VoucherManager : IVoucherManager
         {
             foreach (DataRow row in data.Rows)
             {
-                _vouchers.Add(Convert.ToString(row["voucher"]),
-                    new(Convert.ToString(row["voucher"]), Convert.ToString(row["type"]), Convert.ToInt32(row["value"]), Convert.ToInt32(row["current_uses"]),
+                var code = Convert.ToString(row["voucher"]) ?? string.Empty;
+                _vouchers.Add(code,
+                    new(code, Convert.ToString(row["type"]) ?? string.Empty, Convert.ToInt32(row["value"]), Convert.ToInt32(row["current_uses"]),
                         Convert.ToInt32(row["max_uses"])));
             }
         }

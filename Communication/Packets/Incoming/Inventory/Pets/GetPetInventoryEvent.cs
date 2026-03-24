@@ -7,9 +7,10 @@ internal class GetPetInventoryEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (session.GetHabbo().Inventory == null)
+        var inventory = session.GetHabbo().Inventory;
+        if (inventory?.Pets == null)
             return Task.CompletedTask;
-        var pets = session.GetHabbo().Inventory.Pets.Pets.Values.ToList();
+        var pets = inventory.Pets.Pets.Values.ToList();
         session.Send(new PetInventoryComposer(pets));
         return Task.CompletedTask;
     }

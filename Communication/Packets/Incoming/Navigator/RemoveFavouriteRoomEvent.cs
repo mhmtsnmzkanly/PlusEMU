@@ -15,11 +15,15 @@ public class RemoveFavouriteRoomEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var id = packet.ReadUInt();
-        session.GetHabbo().FavoriteRooms.Remove(id);
+        habbo.FavoriteRooms.Remove(id);
         session.Send(new UpdateFavouriteRoomComposer(id, false));
         using var dbClient = _database.GetQueryReactor();
-        dbClient.RunQuery($"DELETE FROM user_favorites WHERE user_id = {session.GetHabbo().Id} AND room_id = {id} LIMIT 1");
+        dbClient.RunQuery($"DELETE FROM user_favorites WHERE user_id = {habbo.Id} AND room_id = {id} LIMIT 1");
         return Task.CompletedTask;
     }
 }

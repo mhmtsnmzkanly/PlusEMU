@@ -16,20 +16,28 @@ internal class SendMsgEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var messenger = habbo?.Messenger;
+        if (habbo == null || messenger == null)
+            return Task.CompletedTask;
+
         var userId = packet.ReadInt();
-        var friend = session.GetHabbo().Messenger.GetFriend(userId);
+        var friend = messenger.GetFriend(userId);
         if (friend == null)
+        {
             session.Send(new InstantMessageErrorComposer(MessengerMessageErrors.NotFriends, userId));
+            return Task.CompletedTask;
+        }
         var message = _wordFilterManager.CheckMessage(packet.ReadString());
         if (string.IsNullOrWhiteSpace(message))
             return Task.CompletedTask;
-        if (session.GetHabbo().TimeMuted > 0)
+        if (habbo.TimeMuted > 0)
         {
             session.SendNotification("Oops, you're currently muted - you cannot send messages.");
             return Task.CompletedTask;
         }
 
-        var error = session.GetHabbo().Messenger.SendMessage(friend, message);
+        var error = messenger.SendMessage(friend, message);
         if (error == MessageError.Flooding)
             session.SendNotification("You cannot send a message, you have flooded the console.\n\nYou can send a message in 60 seconds.");
 

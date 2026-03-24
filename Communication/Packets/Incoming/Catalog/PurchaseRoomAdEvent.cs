@@ -28,6 +28,11 @@ public class PurchaseRoomAdEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var badges = habbo?.Inventory?.Badges;
+        if (habbo == null || badges == null)
+            return;
+
         packet.ReadInt(); //pageId
         packet.ReadInt(); //itemId
         var roomId = packet.ReadUInt();
@@ -37,7 +42,7 @@ public class PurchaseRoomAdEvent : IPacketEvent
         var categoryId = packet.ReadInt();
         if (!RoomFactory.TryGetData(roomId, out var data))
             return;
-        if (data.OwnerId != session.GetHabbo().Id)
+        if (data.OwnerId != habbo.Id)
             return;
         if (data.Promotion == null)
             data.Promotion = new(name, desc, categoryId);
@@ -53,11 +58,11 @@ public class PurchaseRoomAdEvent : IPacketEvent
                 "REPLACE INTO `room_promotions` (`room_id`,`title`,`description`,`timestamp_start`,`timestamp_expire`,`category_id`) VALUES (@roomId, @title, @description, @start, @expires, @categoryId)",
                 new { roomId = roomId, title = name, description = desc, start = data.Promotion.TimestampStarted, expires = data.Promotion.TimestampExpires, categoryId = categoryId });
         }
-        if (!session.GetHabbo().Inventory.Badges.HasBadge("RADZZ"))
-            await _badgeManager.GiveBadge(session.GetHabbo(), "RADZZ");
+        if (!badges.HasBadge("RADZZ"))
+            await _badgeManager.GiveBadge(habbo, "RADZZ");
         session.Send(new PurchaseOkComposer());
-        if (session.GetHabbo().InRoom && session.GetHabbo().CurrentRoom.Id == roomId)
-            session.GetHabbo().CurrentRoom?.SendPacket(new RoomEventComposer(data, data.Promotion));
-        _messengerDataLoader.BroadcastStatusUpdate(session.GetHabbo(), MessengerEventTypes.EventStarted, name);
+        if (habbo.InRoom && habbo.CurrentRoom?.Id == roomId)
+            habbo.CurrentRoom.SendPacket(new RoomEventComposer(data, data.Promotion));
+        _messengerDataLoader.BroadcastStatusUpdate(habbo, MessengerEventTypes.EventStarted, name);
     }
 }

@@ -22,9 +22,10 @@ internal class ReloadRanksCommand : IRconCommand
         _permissionManager.Init();
         foreach (var client in _gameClientManager.GetClients.ToList())
         {
-            if (client?.GetHabbo() == null || client.GetHabbo().Permissions == null)
+            var habbo = client?.GetHabbo();
+            if (habbo?.Permissions == null)
                 continue;
-            client.GetHabbo().Permissions.Init(client.GetHabbo());
+            habbo.Permissions.Init(habbo);
         }
         return Task.FromResult(true);
     }

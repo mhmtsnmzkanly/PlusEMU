@@ -17,10 +17,11 @@ public class UserChangeComposer : IServerPacket
     public UserChangeComposer(RoomUser user, bool self)
     {
         _virtualId = self ? -1 : user.VirtualId;
-        _look = user.GetClient().GetHabbo().Look;
-        _gender = user.GetClient().GetHabbo().Gender;
-        _motto = user.GetClient().GetHabbo().Motto;
-        _achievementScore = user.GetClient().GetHabbo().HabboStats.AchievementPoints;
+        var habbo = user.GetClient()?.GetHabbo();
+        _look = habbo?.Look ?? string.Empty;
+        _gender = habbo?.Gender ?? string.Empty;
+        _motto = habbo?.Motto ?? string.Empty;
+        _achievementScore = habbo?.HabboStats?.AchievementPoints ?? 0;
     }
     public UserChangeComposer(RoomBot user)
     {
