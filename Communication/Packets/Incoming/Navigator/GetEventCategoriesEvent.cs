@@ -6,17 +6,12 @@ namespace Plus.Communication.Packets.Incoming.Navigator;
 
 internal class GetEventCategoriesEvent : IPacketEvent
 {
-    private readonly INavigatorManager _navigatorManager;
+    private readonly INavigatorService _navigatorService;
 
-    public GetEventCategoriesEvent(INavigatorManager navigatorManager)
+    public GetEventCategoriesEvent(INavigatorService navigatorService)
     {
-        _navigatorManager = navigatorManager;
+        _navigatorService = navigatorService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var categories = _navigatorManager.EventCategories;
-        session.Send(new NavigatorFlatCatsComposer(categories));
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _navigatorService.GetEventCategories(session);
 }

@@ -6,21 +6,12 @@ namespace Plus.Communication.Packets.Incoming.Navigator;
 
 public class GetUserFlatCatsEvent : IPacketEvent
 {
-    private readonly INavigatorManager _navigatorManager;
+    private readonly INavigatorService _navigatorService;
 
-    public GetUserFlatCatsEvent(INavigatorManager navigatorManager)
+    public GetUserFlatCatsEvent(INavigatorService navigatorService)
     {
-        _navigatorManager = navigatorManager;
+        _navigatorService = navigatorService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
-            return Task.CompletedTask;
-
-        var categories = _navigatorManager.FlatCategories;
-        session.Send(new UserFlatCatsComposer(categories, habbo.Rank));
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _navigatorService.GetUserFlatCategories(session);
 }

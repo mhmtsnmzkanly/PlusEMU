@@ -1,29 +1,17 @@
 ﻿using Plus.Communication.Packets.Outgoing.Navigator;
-using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Navigator;
 
 namespace Plus.Communication.Packets.Incoming.Navigator;
 
 public class RemoveFavouriteRoomEvent : IPacketEvent
 {
-    private readonly IDatabase _database;
+    private readonly INavigatorService _navigatorService;
 
-    public RemoveFavouriteRoomEvent(IDatabase database)
+    public RemoveFavouriteRoomEvent(INavigatorService navigatorService)
     {
-        _database = database;
+        _navigatorService = navigatorService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
-            return Task.CompletedTask;
-
-        var id = packet.ReadUInt();
-        habbo.FavoriteRooms.Remove(id);
-        session.Send(new UpdateFavouriteRoomComposer(id, false));
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.RunQuery($"DELETE FROM user_favorites WHERE user_id = {habbo.Id} AND room_id = {id} LIMIT 1");
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _navigatorService.RemoveFavouriteRoom(session, packet.ReadUInt());
 }

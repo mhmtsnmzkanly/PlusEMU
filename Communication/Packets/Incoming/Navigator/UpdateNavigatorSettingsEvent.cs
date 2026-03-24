@@ -6,17 +6,12 @@ namespace Plus.Communication.Packets.Incoming.Navigator;
 
 internal class UpdateNavigatorSettingsEvent : IPacketEvent
 {
-    private readonly INavigatorManager _navigatorManager;
+    private readonly INavigatorService _navigatorService;
 
-    public UpdateNavigatorSettingsEvent(NavigatorManager navigatorManager)
+    public UpdateNavigatorSettingsEvent(INavigatorService navigatorService)
     {
-        _navigatorManager = navigatorManager;
+        _navigatorService = navigatorService;
     }
 
-    public async Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var roomId = packet.ReadUInt();
-        await _navigatorManager.SaveHomeRoom(session.GetHabbo(), roomId);
-        session.Send(new NavigatorSettingsComposer(roomId));
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _navigatorService.UpdateSettings(session, packet.ReadUInt());
 }

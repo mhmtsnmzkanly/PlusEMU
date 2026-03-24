@@ -6,20 +6,12 @@ namespace Plus.Communication.Packets.Incoming.Navigator;
 
 internal class InitializeNewNavigatorEvent : IPacketEvent
 {
-    private readonly INavigatorManager _navigatorManager;
+    private readonly INavigatorService _navigatorService;
 
-    public InitializeNewNavigatorEvent(INavigatorManager navigatorManager)
+    public InitializeNewNavigatorEvent(INavigatorService navigatorService)
     {
-        _navigatorManager = navigatorManager;
+        _navigatorService = navigatorService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var topLevelItems = _navigatorManager.TopLevelItems;
-        session.Send(new NavigatorMetaDataParserComposer(topLevelItems));
-        session.Send(new NavigatorLiftedRoomsComposer());
-        session.Send(new NavigatorCollapsedCategoriesComposer());
-        session.Send(new NavigatorPreferencesComposer());
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _navigatorService.Initialize(session);
 }
