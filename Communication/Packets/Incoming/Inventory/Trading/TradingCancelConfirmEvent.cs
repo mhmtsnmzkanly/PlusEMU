@@ -15,7 +15,7 @@ internal class TradingCancelConfirmEvent : IPacketEvent
         var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (roomUser == null)
             return Task.CompletedTask;
-        if (!room.GetTrading().TryGetTrade(roomUser.TradeId, out var trade))
+        if (!room.GetTrading().TryGetTrade(roomUser.TradeId, out var trade) || trade == null)
             return Task.CompletedTask;
         trade.EndTrade(habbo.Id);
         return Task.CompletedTask;

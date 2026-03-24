@@ -67,7 +67,7 @@ public sealed class ClothingComponent
         }
     }
 
-    public bool TryGet(int partId, out ClothingParts clothingPart) => _allClothing.TryGetValue(partId, out clothingPart);
+    public bool TryGet(int partId, out ClothingParts? clothingPart) => _allClothing.TryGetValue(partId, out clothingPart);
 
     /// <summary>
     /// Disposes the ClothingComponent.

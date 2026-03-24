@@ -152,7 +152,7 @@ public sealed class ModerationManager : IModerationManager
                 {
                     var value = Convert.ToString(dRow["value"]) ?? string.Empty;
                     var reason = Convert.ToString(dRow["reason"]) ?? string.Empty;
-                    var expires = (double)dRow["expire"];
+                    var expires = Convert.ToDouble(dRow["expire"]);
                     var type = Convert.ToString(dRow["bantype"]) ?? string.Empty;
                     var ban = new ModerationBan(BanTypeUtility.GetModerationBanType(type), value, reason, expires);
                     if (ban != null)
@@ -251,7 +251,7 @@ public sealed class ModerationManager : IModerationManager
     /// <param name="key"></param>
     /// <param name="ban"></param>
     /// <returns></returns>
-    public bool IsBanned(string key, out ModerationBan ban)
+    public bool IsBanned(string key, out ModerationBan? ban)
     {
         if (_bans.TryGetValue(key, out ban))
         {

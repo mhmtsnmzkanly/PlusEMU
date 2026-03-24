@@ -299,7 +299,7 @@ public class Habbo
                 var creditUpdate = Convert.ToInt32(PlusEnvironment.SettingsManager.TryGetValue("user.currency_scheduler.credit_reward"));
                 var ducketUpdate = Convert.ToInt32(PlusEnvironment.SettingsManager.TryGetValue("user.currency_scheduler.ducket_reward"));
                 SubscriptionData? subData = null;
-                if (PlusEnvironment.Game.SubscriptionManager.TryGetSubscriptionData(VipRank, out subData))
+                if (PlusEnvironment.Game.SubscriptionManager.TryGetSubscriptionData(VipRank, out subData) && subData != null)
                 {
                     creditUpdate += subData.Credits;
                     ducketUpdate += subData.Duckets;

@@ -3,5 +3,5 @@
 public interface ISubscriptionManager
 {
     void Init();
-    bool TryGetSubscriptionData(int id, out SubscriptionData data);
+    bool TryGetSubscriptionData(int id, out SubscriptionData? data);
 }

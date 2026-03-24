@@ -35,7 +35,7 @@ internal class ConvertCreditsCommand : IChatCommand
         var totalValue = 0;
         try
         {
-            DataTable table = null;
+            DataTable? table;
             using (var dbClient = _database.GetQueryReactor())
             {
                 dbClient.SetQuery($"SELECT `id` FROM `items` WHERE `user_id` = '{habbo.Id}' AND (`room_id`=  '0' OR `room_id` = '')");

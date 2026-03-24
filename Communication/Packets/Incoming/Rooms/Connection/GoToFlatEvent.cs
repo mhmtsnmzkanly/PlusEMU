@@ -8,9 +8,10 @@ internal class GoToFlatEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
+        var currentRoom = habbo?.CurrentRoom;
+        if (habbo == null || currentRoom == null || !habbo.InRoom)
             return Task.CompletedTask;
-        if (!habbo.EnterRoom(habbo.CurrentRoom))
+        if (!habbo.EnterRoom(currentRoom))
             session.Send(new CloseConnectionComposer());
         return Task.CompletedTask;
     }

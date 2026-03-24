@@ -36,5 +36,5 @@ public class VoucherManager : IVoucherManager
         }
     }
 
-    public bool TryGetVoucher(string code, out Voucher voucher) => _vouchers.TryGetValue(code, out voucher);
+    public bool TryGetVoucher(string code, out Voucher? voucher) => _vouchers.TryGetValue(code, out voucher);
 }

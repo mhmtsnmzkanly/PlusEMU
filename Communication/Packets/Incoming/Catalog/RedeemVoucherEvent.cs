@@ -25,7 +25,7 @@ public class RedeemVoucherEvent : IPacketEvent
             return Task.CompletedTask;
 
         var code = packet.ReadString().Replace("\r", "");
-        if (!_voucherManager.TryGetVoucher(code, out var voucher))
+        if (!_voucherManager.TryGetVoucher(code, out var voucher) || voucher == null)
         {
             session.Send(new VoucherRedeemErrorComposer(0));
             return Task.CompletedTask;

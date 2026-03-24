@@ -23,7 +23,7 @@ internal class TradingOfferItemsEvent : IPacketEvent
             session.Send(new TradingClosedComposer(habbo.Id));
             return Task.CompletedTask;
         }
-        if (!room.GetTrading().TryGetTrade(roomUser.TradeId, out var trade))
+        if (!room.GetTrading().TryGetTrade(roomUser.TradeId, out var trade) || trade == null)
         {
             session.Send(new TradingClosedComposer(habbo.Id));
             return Task.CompletedTask;

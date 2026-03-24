@@ -34,7 +34,8 @@ internal class RespectUserEvent : RoomPacketEvent
             return Task.CompletedTask;
         _questManager.ProgressUserQuest(session, QuestType.SocialRespect);
         _achievementManager.ProgressAchievement(session, "ACH_RespectGiven", 1);
-        _achievementManager.ProgressAchievement(targetClient, "ACH_RespectEarned", 1);
+        if (targetClient != null)
+            _achievementManager.ProgressAchievement(targetClient, "ACH_RespectEarned", 1);
         habbo.HabboStats.DailyRespectPoints -= 1;
         habbo.HabboStats.RespectGiven += 1;
         targetHabbo.HabboStats.Respect += 1;

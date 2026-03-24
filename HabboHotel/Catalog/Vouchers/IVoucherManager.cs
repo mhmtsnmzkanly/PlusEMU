@@ -3,5 +3,5 @@
 public interface IVoucherManager
 {
     void Init();
-    bool TryGetVoucher(string code, out Voucher voucher);
+    bool TryGetVoucher(string code, out Voucher? voucher);
 }

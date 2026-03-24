@@ -308,7 +308,7 @@ public class PurchaseFromCatalogEvent : IPacketEvent
                 }
                 break;
             case "e":
-                AvatarEffect effect;
+                AvatarEffect? effect;
                 if (effects.HasEffect(item.Definition.SpriteId))
                 {
                     effect = effects.GetEffectNullable(item.Definition.SpriteId);

@@ -63,7 +63,7 @@ public class RoomBot
         MaxX = maxX;
         MaxY = maxY;
         VirtualId = -1;
-        RoomUser = null;
+        RoomUser = null!;
         DanceId = dance;
         LoadRandomSpeech(speeches);
         OwnerId = ownerId;

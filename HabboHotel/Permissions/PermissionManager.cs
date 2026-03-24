@@ -123,7 +123,7 @@ public sealed class PermissionManager : IPermissionManager
         _logger.LogInformation("Loaded " + _permissionSubscriptionRights.Count + " permissions subscription rights.");
     }
 
-    public bool TryGetGroup(int id, out PermissionGroup group) => _permissionGroups.TryGetValue(id, out group);
+    public bool TryGetGroup(int id, out PermissionGroup? group) => _permissionGroups.TryGetValue(id, out group);
 
     public List<string> GetPermissionsForPlayer(Habbo player)
     {

@@ -25,5 +25,5 @@ public class ClothingManager : IClothingManager
             _clothing.Add(row.Id, new(row.Id, row.ClothingName ?? string.Empty, row.PartIds ?? string.Empty));
     }
 
-    public bool TryGetClothing(int itemId, out ClothingItem clothing) => _clothing.TryGetValue(itemId, out clothing);
+    public bool TryGetClothing(int itemId, out ClothingItem? clothing) => _clothing.TryGetValue(itemId, out clothing);
 }

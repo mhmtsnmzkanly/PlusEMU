@@ -38,7 +38,8 @@ internal class KickUserBox : IWiredItem, IWiredCycle
         {
             while (_toKick.Count > 0)
             {
-                var player = (Habbo)_toKick.Dequeue();
+                if (_toKick.Dequeue() is not Habbo player)
+                    continue;
                 if (player == null || !player.InRoom || player.CurrentRoom != Instance || player.Client == null)
                     continue;
                 Instance.GetRoomUserManager().RemoveUserFromRoom(player.Client, true);

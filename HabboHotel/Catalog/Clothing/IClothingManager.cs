@@ -4,5 +4,5 @@ public interface IClothingManager
 {
     ICollection<ClothingItem> GetClothingAllParts { get; }
     void Init();
-    bool TryGetClothing(int itemId, out ClothingItem clothing);
+    bool TryGetClothing(int itemId, out ClothingItem? clothing);
 }

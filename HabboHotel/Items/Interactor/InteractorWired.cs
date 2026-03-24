@@ -20,8 +20,7 @@ public class InteractorWired : IFurniInteractor
             return;
         if (!hasRights)
             return;
-        IWiredItem box = null;
-        if (!item.GetRoom().GetWired().TryGet(item.Id, out box))
+        if (!item.GetRoom().GetWired().TryGet(item.Id, out var box) || box == null)
             return;
         item.LegacyDataString = "1";
         item.UpdateState(false, true);

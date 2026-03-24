@@ -213,7 +213,7 @@ public class RoomItemHandling
         return null!;
     }
 
-    public void RemoveFurniture(GameClient session, uint id)
+    public void RemoveFurniture(GameClient? session, uint id)
     {
         var item = GetItem(id);
         if (item == null)
@@ -221,7 +221,7 @@ public class RoomItemHandling
         if (item.Definition.InteractionType == InteractionType.FootballGate)
             _room.GetSoccer().UnRegisterGate(item);
         if (item.Definition.InteractionType != InteractionType.Gift)
-            item.Interactor.OnRemove(session, item);
+            item.Interactor.OnRemove(session!, item);
         if (item.Definition.InteractionType == InteractionType.GuildGate)
         {
             item.UpdateCounter = 0;

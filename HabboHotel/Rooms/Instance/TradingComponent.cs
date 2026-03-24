@@ -23,7 +23,7 @@ public class TradingComponent
         return _activeTrades.TryAdd(_currentId, trade);
     }
 
-    public bool TryGetTrade(int tradeId, out Trade trade) => _activeTrades.TryGetValue(tradeId, out trade);
+    public bool TryGetTrade(int tradeId, out Trade? trade) => _activeTrades.TryGetValue(tradeId, out trade);
 
     public bool RemoveTrade(int id)
     {

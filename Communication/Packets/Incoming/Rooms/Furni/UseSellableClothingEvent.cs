@@ -45,7 +45,7 @@ internal class UseSellableClothingEvent : IPacketEvent
             session.SendNotification("Oops, this item doesn't have a linking clothing configuration, please report it!");
             return Task.CompletedTask;
         }
-        if (!_clothingManager.TryGetClothing(item.Definition.BehaviourData, out var clothing))
+        if (!_clothingManager.TryGetClothing(item.Definition.BehaviourData, out var clothing) || clothing == null)
         {
             session.SendNotification("Oops, we couldn't find this clothing part!");
             return Task.CompletedTask;

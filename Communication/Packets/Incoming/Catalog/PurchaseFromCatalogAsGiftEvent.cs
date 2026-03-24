@@ -126,7 +126,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
             var InsertQuery = connection.Execute("INSERT INTO `items` (`base_item`,`user_id`,`extra_data`) VALUES (@baseId, @habboId, @extra_data)",
                 new { baseId = presentData.Id, habboId = habbo.Id, extra_data = extra_data });
             newItemId = Convert.ToInt32(InsertQuery);
-            string itemExtraData = null;
+            string? itemExtraData = null;
             switch (item.Definition.InteractionType)
             {
                 case InteractionType.None:

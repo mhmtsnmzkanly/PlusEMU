@@ -36,7 +36,8 @@ internal class GetRoomEntryDataEvent : IPacketEvent
         var user = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
         if (user != null && habbo?.PetId == 0) room.SendPacket(new UserChangeComposer(user, false));
         session.Send(new RoomEventComposer(room, room.Promotion));
-        room.GetWired()?.TriggerEvent(WiredBoxType.TriggerRoomEnter, habbo);
+        if (habbo != null)
+            room.GetWired()?.TriggerEvent(WiredBoxType.TriggerRoomEnter, habbo);
         if (habbo != null && UnixTimestamp.GetNow() < habbo.FloodTime && habbo.FloodTime != 0)
             session.Send(new FloodControlComposer((int)habbo.FloodTime - (int)UnixTimestamp.GetNow()));
         return Task.CompletedTask;

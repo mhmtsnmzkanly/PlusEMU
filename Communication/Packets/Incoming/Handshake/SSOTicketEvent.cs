@@ -92,7 +92,7 @@ public class SsoTicketEvent : IPacketEvent
             //SendMessage(new TalentTrackLevelComposer());
 
 
-            if (_permissionManager.TryGetGroup(habbo.Rank, out var group))
+            if (_permissionManager.TryGetGroup(habbo.Rank, out var group) && group != null)
             {
                 if (!string.IsNullOrEmpty(group.Badge))
                 {
@@ -100,7 +100,7 @@ public class SsoTicketEvent : IPacketEvent
                         await _badgeManager.GiveBadge(habbo, group.Badge);
                 }
             }
-            if (_subscriptionManager.TryGetSubscriptionData(habbo.VipRank, out var subData))
+            if (_subscriptionManager.TryGetSubscriptionData(habbo.VipRank, out var subData) && subData != null)
             {
                 if (!string.IsNullOrEmpty(subData.Badge))
                 {

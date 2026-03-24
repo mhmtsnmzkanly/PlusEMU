@@ -17,6 +17,10 @@ public class FavouritesComposer : IServerPacket
     {
         packet.WriteInteger(50);
         packet.WriteInteger(_favouriteIds.Count);
-        foreach (int id in _favouriteIds.ToArray()) packet.WriteInteger(id);
+        foreach (var favouriteId in _favouriteIds.ToArray())
+        {
+            if (favouriteId is int id)
+                packet.WriteInteger(id);
+        }
     }
 }

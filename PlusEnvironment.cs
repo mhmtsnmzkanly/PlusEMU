@@ -338,5 +338,5 @@ public class PlusEnvironment : IPlusEnvironment
 
     public static ICollection<Habbo> CachedUsers => _usersCached.Values;
 
-    public static bool RemoveFromCache(int id, out Habbo data) => _usersCached.TryRemove(id, out data);
+    public static bool RemoveFromCache(int id, out Habbo? data) => _usersCached.TryRemove(id, out data);
 }

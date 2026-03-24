@@ -40,5 +40,5 @@ public class SubscriptionManager : ISubscriptionManager
         _logger.LogInformation("Loaded " + _subscriptions.Count + " subscriptions.");
     }
 
-    public bool TryGetSubscriptionData(int id, out SubscriptionData data) => _subscriptions.TryGetValue(id, out data);
+    public bool TryGetSubscriptionData(int id, out SubscriptionData? data) => _subscriptions.TryGetValue(id, out data);
 }

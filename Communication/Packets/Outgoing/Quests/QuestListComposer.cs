@@ -34,7 +34,7 @@ public class QuestListComposer : IServerPacket
         {
             if (userQuest.Value != null)
                 continue;
-            SerializeQuest(packet, _session, userQuest.Value, userQuest.Key);
+            SerializeQuest(packet, _session, null!, userQuest.Key);
         }
         packet.WriteBoolean(_send);
     }
