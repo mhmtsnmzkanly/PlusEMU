@@ -32,9 +32,9 @@ public class Gamemap
 
     public RoomModel StaticModel { get; private set; }
 
-    public byte[,] EffectMap { get; private set; }
+    public byte[,] EffectMap { get; private set; } = new byte[0, 0];
 
-    public byte[,] GameMap { get; private set; }
+    public byte[,] GameMap { get; private set; } = new byte[0, 0];
 
     public void AddUserToMap(RoomUser user, Point coord)
     {

@@ -15,8 +15,8 @@ namespace Plus.HabboHotel.Rooms.Games.Banzai;
 public class BattleBanzai
 {
     private ConcurrentDictionary<uint, Item> _banzaiTiles;
-    private GameField _field;
-    private byte[,] _floorMap;
+    private GameField _field = null!;
+    private byte[,] _floorMap = new byte[0, 0];
     private ConcurrentDictionary<uint, Item> _pucks;
     private Room _room;
     private double _timestarted;

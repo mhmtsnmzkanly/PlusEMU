@@ -16,14 +16,14 @@ namespace Plus.HabboHotel.Rooms;
 
 public class RoomUser
 {
-    private GameClient _mClient;
-    private Room _mRoom;
+    private GameClient _mClient = null!;
+    private Room _mRoom = null!;
 
     public bool AllowOverride;
 
     public FreezePowerUp BanzaiPowerUp;
-    public BotAi BotAi;
-    public RoomBot BotData;
+    public BotAi BotAi = null!;
+    public RoomBot BotData = null!;
     public bool CanWalk;
     public int CarryItemId; //byte
     public int CarryTimer; //byte
@@ -64,7 +64,7 @@ public class RoomUser
     public List<Vector2D> Path = new();
     public bool PathRecalcNeeded;
     public int PathStep = 1;
-    public Pet PetData;
+    public Pet PetData = null!;
 
     public int PrevTime;
     public bool RidingHorse = false;

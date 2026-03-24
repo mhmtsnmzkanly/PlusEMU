@@ -26,10 +26,10 @@ public class RoomBot
     public string Name;
 
     public int OwnerId;
-    public List<RandomSpeech> RandomSpeech;
+    public List<RandomSpeech> RandomSpeech = [];
     public uint RoomId;
 
-    public RoomUser RoomUser;
+    public RoomUser RoomUser = null!;
     public int Rot;
     public int SpeakingInterval;
     public int VirtualId;

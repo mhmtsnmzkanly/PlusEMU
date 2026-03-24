@@ -19,7 +19,7 @@ public class Item
     public uint Id { get; set; }
     public uint OwnerId { get; set; }
     public uint RoomId { get; set; }
-    public ItemDefinition Definition { get; set; }
+    public ItemDefinition Definition { get; set; } = null!;
     public IFurniObjectData ExtraData { get; set; } = FurniObjectData.Empty;
     public uint UniqueNumber { get; set; }
     public uint UniqueSeries { get; set; }
@@ -48,7 +48,7 @@ public class Item
     public int BaseItem;
     public string Figure = string.Empty;
     public FreezePowerUp FreezePowerUp;
-    public string Gender;
+    public string Gender = string.Empty;
     public int GroupId;
     public int InteractingBallUser;
     public int InteractingUser;
