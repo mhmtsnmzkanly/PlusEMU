@@ -75,7 +75,7 @@ public class RewardManager : IRewardManager
 
     public async Task CheckRewards(GameClient session)
     {
-        var habbo = session?.GetHabbo();
+        var habbo = session.GetHabbo();
         if (habbo?.Inventory?.Badges == null)
             return;
         foreach (var entry in _rewards)
@@ -117,7 +117,7 @@ public class RewardManager : IRewardManager
                     }
                 }
                 if (!string.IsNullOrEmpty(reward.Message))
-                    session?.SendNotification(reward.Message);
+                    session.SendNotification(reward.Message);
                 LogReward(habbo.Id, id);
             }
             else
