@@ -14,6 +14,7 @@ public interface IMessengerDataLoader
     void BroadcastStatusUpdate(Habbo habbo, MessengerEventTypes eventType, string value);
     Task LogPrivateMessage(int fromId, int toId, string message);
     Task LogPrivateOfflineMessage(int fromId, int toId, string message);
+    Task LogRoomInvitation(int userId, string message);
     Task DeleteFriendship(int userOneId, int userTwoId);
     Task SetRelationship(int userOneId, int userTwoId, int relationship);
     Task DeleteFriendRequest(int fromUserId, int toUserId);
@@ -21,4 +22,5 @@ public interface IMessengerDataLoader
     Task<(int userId, bool blockFriendRequests)> CanReceiveFriendRequests(string name);
     Task<Dictionary<int, List<(string Message, int SecondsAgo)>>> GetAndDeleteOfflineMessages(int userId);
     Task<int> GetFriendCount(int userId);
+    Task<Dictionary<int, (MessengerBuddy buddy, int count)>> GetRelationshipsForUserAsync(int userId);
 }

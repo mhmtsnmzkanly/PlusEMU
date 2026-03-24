@@ -1,33 +1,16 @@
 ﻿using Plus.HabboHotel.Friends;
 using Plus.HabboHotel.GameClients;
-using Plus.HabboHotel.Quests;
 
 namespace Plus.Communication.Packets.Incoming.FriendList;
 
 internal class RequestFriendEvent : IPacketEvent
 {
-    private readonly IQuestManager _questManager;
-    private readonly IMessengerDataLoader _messengerDataLoader;
+    private readonly IMessengerService _messengerService;
 
-    public RequestFriendEvent(IQuestManager questManager, IMessengerDataLoader messengerDataLoader)
+    public RequestFriendEvent(IMessengerService messengerService)
     {
-        _questManager = questManager;
-        _messengerDataLoader = messengerDataLoader;
+        _messengerService = messengerService;
     }
 
-    public async Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        var messenger = habbo?.Messenger;
-        if (messenger == null)
-            return;
-
-        var (userId, blocked) = await _messengerDataLoader.CanReceiveFriendRequests(packet.ReadString());
-        if (userId == 0 || blocked)
-            return;
-
-        messenger.SendFriendRequest(userId);
-        _questManager.ProgressUserQuest(session, QuestType.SocialFriend);
-        return;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _messengerService.SendFriendRequest(session, packet.ReadString());
 }

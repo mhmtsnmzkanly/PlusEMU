@@ -1,20 +1,16 @@
-﻿using Plus.Communication.Packets.Outgoing.FriendList;
+﻿using Plus.HabboHotel.Friends;
 using Plus.HabboHotel.GameClients;
-using Plus.HabboHotel.Users.Messenger;
 
 namespace Plus.Communication.Packets.Incoming.FriendList;
 
 internal class GetFriendRequestsEvent : IPacketEvent
 {
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        var messenger = habbo?.Messenger;
-        if (messenger == null)
-            return Task.CompletedTask;
+    private readonly IMessengerService _messengerService;
 
-        ICollection<MessengerRequest> requests = messenger.Requests.Values.ToList();
-        session.Send(new BuddyRequestsComposer(requests));
-        return Task.CompletedTask;
+    public GetFriendRequestsEvent(IMessengerService messengerService)
+    {
+        _messengerService = messengerService;
     }
+
+    public Task Parse(GameClient session, IIncomingPacket packet) => _messengerService.GetFriendRequests(session);
 }

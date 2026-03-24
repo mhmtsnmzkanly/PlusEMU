@@ -1,28 +1,25 @@
 ﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Friends;
 
 namespace Plus.Communication.Packets.Incoming.FriendList;
 
 internal class DeclineFriendEvent : IPacketEvent
 {
+    private readonly IMessengerService _messengerService;
+
+    public DeclineFriendEvent(IMessengerService messengerService)
+    {
+        _messengerService = messengerService;
+    }
+
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var messenger = habbo?.Messenger;
-        if (messenger == null)
-            return Task.CompletedTask;
-
         var declineAll = packet.ReadBool();
-        packet.ReadInt(); //amount
-        if (!declineAll)
-        {
-            var requestId = packet.ReadInt();
-            messenger.DeclineFriendRequest(requestId);
-        }
-        else
-        {
-            foreach (var request in messenger.Requests.Values)
-                messenger.DeclineFriendRequest(request.FromId);
-        }
-        return Task.CompletedTask;
+        var amount = packet.ReadInt();
+        var requestIds = new List<int>(Math.Max(amount, 0));
+        for (var i = 0; i < amount; i++)
+            requestIds.Add(packet.ReadInt());
+
+        return _messengerService.DeclineFriendRequests(session, declineAll, requestIds);
     }
 }

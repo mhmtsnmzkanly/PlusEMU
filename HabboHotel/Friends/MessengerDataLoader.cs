@@ -96,6 +96,14 @@ internal class MessengerDataLoader : IMessengerDataLoader
         await connection.ExecuteAsync("INSERT INTO `messenger_offline_messages` (`to_id`, `from_id`, `message`, `timestamp`) VALUES (@toId, @fromId, @message, UNIX_TIMESTAMP())", new { toId, fromId, message });
     }
 
+    public async Task LogRoomInvitation(int userId, string message)
+    {
+        using var connection = _database.Connection();
+        await connection.ExecuteAsync(
+            "INSERT INTO `chatlogs_console_invitations` (`user_id`,`message`,`timestamp`) VALUES (@userId, @message, UNIX_TIMESTAMP())",
+            new { userId, message });
+    }
+
     public async Task<Dictionary<int, List<(string Message, int SecondsAgo)>>> GetAndDeleteOfflineMessages(int userId)
     {
         using var connection = _database.Connection();

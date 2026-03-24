@@ -1,29 +1,18 @@
 ﻿using Plus.Communication.Packets.Outgoing.FriendList;
 using Plus.Communication.Packets.Outgoing.Rooms.Session;
+using Plus.HabboHotel.Friends;
 using Plus.HabboHotel.GameClients;
-using Plus.HabboHotel.Rooms;
 
 namespace Plus.Communication.Packets.Incoming.FriendList;
 
 internal class FindNewFriendsEvent : IPacketEvent
 {
-    private readonly IRoomManager _roomManager;
+    private readonly IMessengerService _messengerService;
 
-    public FindNewFriendsEvent(IRoomManager roomManager)
+    public FindNewFriendsEvent(IMessengerService messengerService)
     {
-        _roomManager = roomManager;
+        _messengerService = messengerService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var instance = _roomManager.TryGetRandomLoadedRoom();
-        if (instance != null)
-        {
-            session.Send(new FindFriendsProcessResultComposer(true));
-            session.Send(new RoomForwardComposer(instance.Id));
-        }
-        else
-            session.Send(new FindFriendsProcessResultComposer(false));
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _messengerService.FindNewFriends(session);
 }
