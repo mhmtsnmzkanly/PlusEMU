@@ -86,11 +86,14 @@ public class RewardManager : IRewardManager
                 continue;
             if (reward.Active)
             {
+                var inventory = habbo.Inventory;
+                if (inventory == null)
+                    continue;
                 switch (reward.Type)
                 {
                     case RewardType.Badge:
                     {
-                        if (!habbo.Inventory.Badges.HasBadge(reward.RewardData))
+                        if (!inventory.Badges.HasBadge(reward.RewardData))
                             await _badgeManager.GiveBadge(habbo, reward.RewardData);
                         break;
                     }
@@ -114,7 +117,7 @@ public class RewardManager : IRewardManager
                     }
                 }
                 if (!string.IsNullOrEmpty(reward.Message))
-                    session.SendNotification(reward.Message);
+                    session?.SendNotification(reward.Message);
                 LogReward(habbo.Id, id);
             }
             else
