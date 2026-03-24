@@ -416,7 +416,8 @@ public class Item
                                     {
                                         var roomHopId = ItemHopperFinder.GetAHopper(user.RoomId); // TODO @80O: Remove cast
                                         var nextHopperId = ItemHopperFinder.GetHopperId(roomHopId);
-                                        var habbo = user.GetClient()?.GetHabbo();
+                                        var client = user.GetClient();
+                                        var habbo = client?.GetHabbo();
                                         if (!user.IsBot && habbo != null)
                                         {
                                             habbo.IsHopping = true;
@@ -565,7 +566,8 @@ public class Item
                                                 if (user.TeleDelay == 0)
                                                 {
                                                     // Let's run the teleport delegate to take futher care of this.. WHY DARIO?!
-                                                    var habbo = user?.GetClient()?.GetHabbo();
+                                                    var client = user?.GetClient();
+                                                    var habbo = client?.GetHabbo();
                                                     if (!user.IsBot && habbo != null)
                                                     {
                                                         habbo.IsTeleporting = true;
@@ -1103,7 +1105,8 @@ public class Item
 
     public void UserFurniCollision(RoomUser user)
     {
-        var habbo = user?.GetClient()?.GetHabbo();
+        var client = user?.GetClient();
+        var habbo = client?.GetHabbo();
         if (habbo == null)
             return;
         GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerUserFurniCollision, habbo, this);
@@ -1111,7 +1114,8 @@ public class Item
 
     public void UserWalksOnFurni(RoomUser user)
     {
-        var habbo = user?.GetClient()?.GetHabbo();
+        var client = user?.GetClient();
+        var habbo = client?.GetHabbo();
         if (habbo == null)
             return;
         if (Definition.InteractionType == InteractionType.Tent || Definition.InteractionType == InteractionType.TentSmall) GetRoom().AddUserToTent(Id, user);
@@ -1121,7 +1125,8 @@ public class Item
 
     public void UserWalksOffFurni(RoomUser user)
     {
-        var habbo = user?.GetClient()?.GetHabbo();
+        var client = user?.GetClient();
+        var habbo = client?.GetHabbo();
         if (habbo == null)
             return;
         if (Definition.InteractionType == InteractionType.Tent || Definition.InteractionType == InteractionType.TentSmall)
