@@ -39,7 +39,7 @@ internal class ReloadUserRankCommand : IRconCommand
         habbo.Permissions?.Init(habbo);
         if (habbo.Permissions?.HasRight("mod_tickets") == true)
         {
-            client.Send(new ModeratorInitComposer(
+            client?.Send(new ModeratorInitComposer(
                 _moderationManager.UserMessagePresets,
                 _moderationManager.RoomMessagePresets,
                 _moderationManager.GetTickets));

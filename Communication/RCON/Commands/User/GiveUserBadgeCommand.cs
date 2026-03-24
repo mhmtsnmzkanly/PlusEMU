@@ -32,10 +32,11 @@ internal class GiveUserBadgeCommand : IRconCommand
         var badge = Convert.ToString(parameters[1]);
         if (string.IsNullOrEmpty(badge))
             return false;
-        if (!habbo.Inventory.Badges.HasBadge(badge))
+        var badges = habbo.Inventory?.Badges;
+        if (badges != null && !badges.HasBadge(badge))
         {
             await _badgeManager.GiveBadge(habbo, badge);
-            client.Send(new BroadcastMessageAlertComposer("You have been given a new badge!"));
+            client?.Send(new BroadcastMessageAlertComposer("You have been given a new badge!"));
         }
         return true;
     }

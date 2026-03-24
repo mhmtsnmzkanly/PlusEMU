@@ -28,7 +28,9 @@ internal class TakeUserBadgeCommand : IRconCommand
         var badge = Convert.ToString(parameters[1]);
         if (string.IsNullOrEmpty(badge))
             return Task.FromResult(false);
-        if (habbo.Inventory.Badges.HasBadge(badge)) habbo.Inventory.Badges.RemoveBadge(badge);
+        var badges = habbo.Inventory?.Badges;
+        if (badges?.HasBadge(badge) == true)
+            badges.RemoveBadge(badge);
         return Task.FromResult(true);
     }
 }

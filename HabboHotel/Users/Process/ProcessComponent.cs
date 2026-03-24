@@ -108,7 +108,7 @@ internal sealed class ProcessComponent
             if (_player.Client != null)
                 PlusEnvironment.Game.AchievementManager.ProgressAchievement(_player.Client, "ACH_AllTimeHotelPresence", 1);
             _player.CheckCreditsTimer();
-            _player.Effects.CheckEffectExpiry(_player);
+            _player.Effects?.CheckEffectExpiry(_player);
 
             // END CODE
 
