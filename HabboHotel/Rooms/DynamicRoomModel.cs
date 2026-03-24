@@ -140,10 +140,10 @@ public class DynamicRoomModel
         Array.Clear(SqState, 0, SqState.Length);
         Array.Clear(SqFloorHeight, 0, SqFloorHeight.Length);
         Array.Clear(SqSeatRot, 0, SqSeatRot.Length);
-        _staticModel = null;
-        Heightmap = null;
-        SqState = null;
-        SqFloorHeight = null;
-        SqSeatRot = null;
+        _staticModel = null!;
+        Heightmap = null!;
+        SqState = null!;
+        SqFloorHeight = null!;
+        SqSeatRot = null!;
     }
 }
