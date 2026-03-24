@@ -111,7 +111,10 @@ public class WhisperEvent : IPacketEvent
         }
         _questManager.ProgressUserQuest(session, QuestType.SocialChat);
         user.UnIdle();
-        user.GetClient().Send(new WhisperComposer(user.VirtualId, message, 0, user.LastBubble));
+        var userClient = user.GetClient();
+        if (userClient == null)
+            return Task.CompletedTask;
+        userClient.Send(new WhisperComposer(user.VirtualId, message, 0, user.LastBubble));
         if (!user2.IsBot && user2.UserId != user.UserId)
         {
             if (targetHabbo.IgnoresComponent == null || !targetHabbo.IgnoresComponent.IsIgnored(habbo.Id))
@@ -126,7 +129,7 @@ public class WhisperEvent : IPacketEvent
                 {
                     var notifiableClient = notifiable.GetClient();
                     var notifiableHabbo = notifiableClient?.GetHabbo();
-                    if (notifiableHabbo != null && !notifiableHabbo.IgnorePublicWhispers)
+                    if (notifiableClient != null && notifiableHabbo != null && !notifiableHabbo.IgnorePublicWhispers)
                         notifiableClient.Send(new WhisperComposer(user.VirtualId, $"[Whisper to {toUser}] {message}", 0, user.LastBubble));
                 }
             }
