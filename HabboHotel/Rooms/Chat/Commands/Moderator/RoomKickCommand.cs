@@ -27,8 +27,8 @@ internal class RoomKickCommand : IChatCommand
         {
             var targetClient = roomUser?.GetClient();
             var targetHabbo = targetClient?.GetHabbo();
-            if (roomUser == null || roomUser.IsBot || targetHabbo == null ||
-                targetHabbo.Permissions.HasRight("mod_tool") || targetHabbo.Id == habbo.Id)
+            if (roomUser == null || roomUser.IsBot || targetHabbo == null || targetClient == null ||
+                (targetHabbo.Permissions?.HasRight("mod_tool") ?? false) || targetHabbo.Id == habbo.Id)
                 continue;
             targetClient.SendNotification($"You have been kicked by a moderator: {message}");
             room.GetRoomUserManager().RemoveUserFromRoom(targetClient, true);

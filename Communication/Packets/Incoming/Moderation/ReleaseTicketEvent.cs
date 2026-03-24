@@ -23,7 +23,7 @@ internal class ReleaseTicketEvent : IPacketEvent
         var amount = packet.ReadInt();
         for (var i = 0; i < amount; i++)
         {
-            if (!_moderationManager.TryGetTicket(packet.ReadInt(), out var ticket))
+            if (!_moderationManager.TryGetTicket(packet.ReadInt(), out var ticket) || ticket == null)
                 continue;
             ticket.Moderator = null;
             _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");

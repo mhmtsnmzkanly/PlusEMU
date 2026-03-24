@@ -39,8 +39,9 @@ public class CommandManager : ICommandManager
     public async Task<bool> Parse(GameClient session, string message)
     {
         var habbo = session?.GetHabbo();
+        var permissions = habbo?.Permissions;
         var currentRoom = habbo?.CurrentRoom;
-        if (habbo?.Permissions == null || currentRoom == null)
+        if (permissions == null || currentRoom == null || habbo == null)
             return false;
         if (!message.StartsWith(_prefix))
             return false;
@@ -52,7 +53,7 @@ public class CommandManager : ICommandManager
             {
                 if (!string.IsNullOrEmpty(cmdList.Value.PermissionRequired))
                 {
-                    if (!habbo.Permissions.HasCommand(cmdList.Value.PermissionRequired))
+                    if (!permissions.HasCommand(cmdList.Value.PermissionRequired))
                         continue;
                 }
                 list.Append($":{cmdList.Key} {cmdList.Value.Parameters} - {cmdList.Value.Description}\n");
@@ -69,11 +70,11 @@ public class CommandManager : ICommandManager
         var parameters = split.Length > 1 ? split[1..] : Array.Empty<string>();
         if (_commands.TryGetValue(key.ToLower(), out var command))
         {
-            if (habbo.Permissions.HasRight("mod_tool"))
+            if (permissions.HasRight("mod_tool"))
                 LogCommand(habbo.Id, message, habbo.MachineId);
             if (!string.IsNullOrEmpty(command.PermissionRequired))
             {
-                if (!habbo.Permissions.HasCommand(command.PermissionRequired))
+                if (!permissions.HasCommand(command.PermissionRequired))
                     return false;
             }
             habbo.ChatCommand = command;
@@ -150,5 +151,14 @@ public class CommandManager : ICommandManager
         dbClient.RunQuery();
     }
 
-    public bool TryGetCommand(string command, out ICommandBase chatCommand) => _commands.TryGetValue(command, out chatCommand);
+    public bool TryGetCommand(string command, out ICommandBase chatCommand)
+    {
+        if (_commands.TryGetValue(command, out var foundCommand))
+        {
+            chatCommand = foundCommand;
+            return true;
+        }
+        chatCommand = null!;
+        return false;
+    }
 }

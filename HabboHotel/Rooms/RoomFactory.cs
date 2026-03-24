@@ -19,7 +19,8 @@ public static class RoomFactory
                     data.Add(room);
                 else
                 {
-                    if (!PlusEnvironment.Game.RoomManager.TryGetModel(Convert.ToString(row["model_name"]), out var model)) continue;
+                    var modelName = Convert.ToString(row["model_name"]);
+                    if (string.IsNullOrEmpty(modelName) || !PlusEnvironment.Game.RoomManager.TryGetModel(modelName, out var model)) continue;
                     data.Add(new(Convert.ToUInt32(row["id"]), Convert.ToString(row["caption"]) ?? string.Empty, Convert.ToString(row["model_name"]) ?? string.Empty, Convert.ToString(row["username"]) ?? "Habboon",
                         Convert.ToInt32(row["owner"]),
                         Convert.ToString(row["password"]) ?? string.Empty, Convert.ToInt32(row["score"]), Convert.ToString(row["roomtype"]) ?? string.Empty, Convert.ToString(row["state"]) ?? string.Empty, Convert.ToInt32(row["users_now"]),
@@ -56,7 +57,8 @@ public static class RoomFactory
             if (row != null)
             {
                 RoomModel? model = null;
-                if (!PlusEnvironment.Game.RoomManager.TryGetModel(Convert.ToString(row["model_name"]), out model))
+                var modelName = Convert.ToString(row["model_name"]);
+                if (string.IsNullOrEmpty(modelName) || !PlusEnvironment.Game.RoomManager.TryGetModel(modelName, out model))
                 {
                     data = null!;
                     return false;

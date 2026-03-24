@@ -20,7 +20,7 @@ public sealed class WordFilterManager : IWordFilterManager
     {
         if (_filteredWords.Count > 0)
             _filteredWords.Clear();
-        DataTable data = null;
+        DataTable? data = null;
         using var dbClient = _database.GetQueryReactor();
         dbClient.SetQuery("SELECT * FROM `wordfilter`");
         data = dbClient.GetTable();
@@ -28,11 +28,15 @@ public sealed class WordFilterManager : IWordFilterManager
         {
             foreach (DataRow row in data.Rows)
             {
-                var isStrict = ConvertExtensions.EnumToBool(row["strict"].ToString());
-                var isBannable = ConvertExtensions.EnumToBool(row["bannable"].ToString());
+                var strictValue = row["strict"].ToString() ?? "0";
+                var bannableValue = row["bannable"].ToString() ?? "0";
+                var word = row["word"].ToString() ?? string.Empty;
+                var replacement = row["replacement"].ToString() ?? string.Empty;
+                var isStrict = ConvertExtensions.EnumToBool(strictValue);
+                var isBannable = ConvertExtensions.EnumToBool(bannableValue);
                 _filteredWords.Add(new(
-                    row["word"].ToString(), 
-                    row["replacement"].ToString(), 
+                    word,
+                    replacement,
                     isStrict,
                     isBannable)
                 );

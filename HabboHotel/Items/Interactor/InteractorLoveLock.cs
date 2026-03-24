@@ -14,7 +14,7 @@ public class InteractorLoveLock : IFurniInteractor
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
         var habbo = session?.GetHabbo();
-        RoomUser user = null;
+        RoomUser? user = null;
         if (habbo != null)
             user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
@@ -61,8 +61,8 @@ public class InteractorLoveLock : IFurniInteractor
                     userTwo.CanWalk = false;
                     item.InteractingUser = userOneHabbo.Id;
                     item.InteractingUser2 = userTwoHabbo.Id;
-                    userOneClient.Send(new LoveLockDialogueComposer(item.Id));
-                    userTwoClient.Send(new LoveLockDialogueComposer(item.Id));
+                    userOneClient?.Send(new LoveLockDialogueComposer(item.Id));
+                    userTwoClient?.Send(new LoveLockDialogueComposer(item.Id));
                 }
             }
             else

@@ -114,8 +114,8 @@ public class GameItemHandler
             _banzaiTeleports.Clear();
         if (_banzaiPyramids != null)
             _banzaiPyramids.Clear();
-        _banzaiPyramids = null;
-        _banzaiTeleports = null;
-        _room = null;
+        _banzaiPyramids = null!;
+        _banzaiTeleports = null!;
+        _room = null!;
     }
 }

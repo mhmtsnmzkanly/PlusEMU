@@ -77,7 +77,7 @@ internal class PlaceBotEvent : RoomPacketEvent
         var botUser = room.GetRoomUserManager().DeployBot(
             new(bot.Id, room.RoomId, Convert.ToString(getData["ai_type"]) ?? string.Empty, Convert.ToString(getData["walk_mode"]) ?? string.Empty, bot.Name, "", bot.Figure, x, y, 0, 4, 0, 0, 0, 0,
                 ref botSpeechList, "", 0, bot.OwnerId, ConvertExtensions.EnumToBool(getData["automatic_chat"].ToString() ?? "0"), Convert.ToInt32(getData["speaking_interval"]),
-                ConvertExtensions.EnumToBool(getData["mix_sentences"].ToString() ?? "0"), Convert.ToInt32(getData["chat_bubble"])), null);
+                ConvertExtensions.EnumToBool(getData["mix_sentences"].ToString() ?? "0"), Convert.ToInt32(getData["chat_bubble"])), null!);
         botUser.Chat("Hello!");
         room.GetGameMap().UpdateUserMovement(new(x, y), new(x, y), botUser);
         if (!inventory.Bots.RemoveBot(botId))

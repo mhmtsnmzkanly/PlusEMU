@@ -22,7 +22,7 @@ internal class LetUserInEvent : RoomPacketEvent
         var accepted = packet.ReadBool();
         var client = _clientManager.GetClientByUsername(name);
         var habbo = client?.GetHabbo();
-        if (habbo == null)
+        if (habbo == null || client == null)
             return Task.CompletedTask;
         if (accepted)
         {

@@ -32,7 +32,7 @@ internal class CancelQuestEvent : IPacketEvent
         }
         habbo.HabboStats.QuestId = 0;
         session.Send(new QuestAbortedComposer());
-        _questManager.GetList(session, null);
+        _questManager.GetList(session, null!);
         return Task.CompletedTask;
     }
 }

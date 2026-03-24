@@ -41,21 +41,23 @@ internal class ShowMessageBox : IWiredItem
         if (@params == null || @params.Length == 0)
             return false;
         var player = (Habbo)@params[0];
-        if (player == null || player.Client == null || string.IsNullOrWhiteSpace(StringData))
+        var playerClient = player?.Client;
+        var currentRoom = player?.CurrentRoom;
+        if (player == null || playerClient == null || currentRoom == null || string.IsNullOrWhiteSpace(StringData))
             return false;
-        var user = player.CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
+        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)
             return false;
         var message = StringData;
         if (StringData.Contains("%USERNAME%"))
             message = message.Replace("%USERNAME%", player.Username);
         if (StringData.Contains("%ROOMNAME%"))
-            message = message.Replace("%ROOMNAME%", player.CurrentRoom.Name);
+            message = message.Replace("%ROOMNAME%", currentRoom.Name);
         if (StringData.Contains("%USERCOUNT%"))
-            message = message.Replace("%USERCOUNT%", player.CurrentRoom.UserCount.ToString());
+            message = message.Replace("%USERCOUNT%", currentRoom.UserCount.ToString());
         if (StringData.Contains("%USERSONLINE%"))
             message = message.Replace("%USERSONLINE%", PlusEnvironment.Game.ClientManager.Count.ToString());
-        player.Client.Send(new WhisperComposer(user.VirtualId, message, 0, 34));
+        playerClient.Send(new WhisperComposer(user.VirtualId, message, 0, 34));
         return true;
     }
 }

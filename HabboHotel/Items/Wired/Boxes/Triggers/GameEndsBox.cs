@@ -35,7 +35,7 @@ internal class GameEndsBox : IWiredItem
         {
             //Okay, so we have a random addon effect, now lets get the IWiredItem and attempt to execute it.
             var randomBox = effects.FirstOrDefault(x => x.Type == WiredBoxType.AddonRandomEffect);
-            if (!randomBox.Execute())
+            if (randomBox == null || !randomBox.Execute())
                 return false;
 
             //Success! Let's get our selected box and continue.

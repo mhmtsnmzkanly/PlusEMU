@@ -29,8 +29,8 @@ internal class UserInfoCommand : IChatCommand
             session.SendWhisper("Please enter the username of the user you wish to view.");
             return;
         }
-        DataRow userData = null;
-        DataRow userInfo = null;
+        DataRow? userData = null;
+        DataRow? userInfo = null;
         var username = parameters[1];
         using (var dbClient = _database.GetQueryReactor())
         {
@@ -56,6 +56,7 @@ internal class UserInfoCommand : IChatCommand
             }
         }
         var targetClient = _gameClientManager.GetClientByUsername(username);
+        var targetHabbo = targetClient?.GetHabbo();
         var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(Convert.ToDouble(userInfo["trading_locked"]));
         var habboInfo = new StringBuilder();
         habboInfo.Append($"{Convert.ToString(userData["username"])}'s account:\r\r");
@@ -76,16 +77,17 @@ internal class UserInfoCommand : IChatCommand
         habboInfo.Append($"Abusive CFHs: {Convert.ToInt32(userInfo["cfhs_abusive"])}\r");
         habboInfo.Append($"Trading Locked: {(Convert.ToInt32(userInfo["trading_locked"]) == 0 ? "No outstanding lock" : $"Expiry: {origin:dd/MM/yyyy}")}\r");
         habboInfo.Append($"Amount of trading locks: {Convert.ToInt32(userInfo["trading_locks_count"])}\r\r");
-        if (targetClient != null)
+        if (targetHabbo != null)
         {
             habboInfo.Append("Current Session:\r");
-            if (!targetClient.GetHabbo().InRoom)
+            if (!targetHabbo.InRoom || targetHabbo.CurrentRoom == null)
                 habboInfo.Append("Currently not in a room.\r");
             else
             {
-                habboInfo.Append($"Room: {targetClient.GetHabbo().CurrentRoom.Name} ({targetClient.GetHabbo().CurrentRoom.RoomId})\r");
-                habboInfo.Append($"Room Owner: {targetClient.GetHabbo().CurrentRoom.OwnerName}\r");
-                habboInfo.Append($"Current Visitors: {targetClient.GetHabbo().CurrentRoom.UserCount}/{targetClient.GetHabbo().CurrentRoom.UsersMax}");
+                var currentRoom = targetHabbo.CurrentRoom;
+                habboInfo.Append($"Room: {currentRoom.Name} ({currentRoom.RoomId})\r");
+                habboInfo.Append($"Room Owner: {currentRoom.OwnerName}\r");
+                habboInfo.Append($"Current Visitors: {currentRoom.UserCount}/{currentRoom.UsersMax}");
             }
         }
         session.SendNotification(habboInfo.ToString());

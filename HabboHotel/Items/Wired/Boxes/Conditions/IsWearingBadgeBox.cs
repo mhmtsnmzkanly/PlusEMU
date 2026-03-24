@@ -38,6 +38,6 @@ internal class IsWearingBadgeBox : IWiredItem
         var player = (Habbo)@params[0];
         if (player == null)
             return false;
-        return player.Inventory.Badges.EquippedBadges.Any(badge => badge.Code.Equals(StringData));
+        return player.Inventory.Badges.EquippedBadges.Any(badge => string.Equals(badge.Code, StringData, StringComparison.Ordinal));
     }
 }

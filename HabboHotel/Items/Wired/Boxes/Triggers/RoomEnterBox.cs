@@ -33,6 +33,8 @@ internal class RoomEnterBox : IWiredItem
     {
         Instance.GetWired().OnEvent(Item);
         var player = (Habbo)@params[0];
+        if (player == null)
+            return false;
         if (!string.IsNullOrWhiteSpace(StringData) && player.Username != StringData)
             return false;
         var effects = Instance.GetWired().GetEffects(this);
@@ -50,7 +52,7 @@ internal class RoomEnterBox : IWiredItem
         {
             //Okay, so we have a random addon effect, now lets get the IWiredItem and attempt to execute it.
             var randomBox = effects.FirstOrDefault(x => x.Type == WiredBoxType.AddonRandomEffect);
-            if (!randomBox.Execute())
+            if (randomBox == null || !randomBox.Execute())
                 return false;
 
             //Success! Let's get our selected box and continue.

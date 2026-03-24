@@ -27,7 +27,7 @@ internal class CloseTicketEvent : IPacketEvent
         var result = packet.ReadInt(); // 1 = useless, 2 = abusive, 3 = resolved
         packet.ReadInt(); //junk
         var ticketId = packet.ReadInt();
-        if (!_moderationManager.TryGetTicket(ticketId, out var ticket))
+        if (!_moderationManager.TryGetTicket(ticketId, out var ticket) || ticket == null)
             return Task.CompletedTask;
         if (ticket.Moderator?.Id != sessionHabbo.Id)
             return Task.CompletedTask;

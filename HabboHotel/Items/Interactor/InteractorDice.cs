@@ -21,7 +21,7 @@ public class InteractorDice : IFurniInteractor
 
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
-        RoomUser user = null;
+        RoomUser? user = null;
         var habbo = session?.GetHabbo();
         if (habbo != null)
             user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);

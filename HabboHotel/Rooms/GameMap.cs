@@ -676,7 +676,7 @@ public class Gamemap
     public bool GetHighestItemForSquare(Point square, out Item item)
     {
         var items = GetAllRoomItemForSquare(square.X, square.Y);
-        item = null;
+        item = null!;
         double highestZ = -1;
         if (items != null && items.Count > 0)
         {
@@ -1100,13 +1100,13 @@ public class Gamemap
         Array.Clear(GameMap, 0, GameMap.Length);
         Array.Clear(EffectMap, 0, EffectMap.Length);
         Array.Clear(_itemHeightMap, 0, _itemHeightMap.Length);
-        _userMap = null;
-        GameMap = null;
-        EffectMap = null;
-        _itemHeightMap = null;
-        _coordinatedItems = null;
-        Model = null;
-        _room = null;
-        StaticModel = null;
+        _userMap = null!;
+        GameMap = null!;
+        EffectMap = null!;
+        _itemHeightMap = null!;
+        _coordinatedItems = null!;
+        Model = null!;
+        _room = null!;
+        StaticModel = null!;
     }
 }

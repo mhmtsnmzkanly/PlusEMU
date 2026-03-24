@@ -45,9 +45,8 @@ internal class MoveFurniToUserBox : IWiredItem, IWiredCycle
                     continue;
                 if (!Instance.GetRoomItemHandler().GetFloor.Contains(item))
                     continue;
-                Item toRemove = null;
                 if (Instance.GetWired().OtherBoxHasItem(this, item.Id))
-                    SetItems.TryRemove(item.Id, out toRemove);
+                    SetItems.TryRemove(item.Id, out _);
                 var point = Instance.GetGameMap().GetChaseMovement(item);
                 Instance.GetWired().OnUserFurniCollision(Instance, item);
                 if (!Instance.GetGameMap().ItemCanMove(item, point))

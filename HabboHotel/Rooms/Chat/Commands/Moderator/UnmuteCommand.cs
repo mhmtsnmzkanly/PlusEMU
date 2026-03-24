@@ -31,7 +31,7 @@ internal class UnmuteCommand : ITargetChatCommand
             dbClient.RunQuery($"UPDATE `users` SET `time_muted` = '0' WHERE `id` = '{target.Id}' LIMIT 1");
         }
         target.TimeMuted = 0;
-        targetClient.SendNotification($"You have been un-muted by {username}!");
+        targetClient?.SendNotification($"You have been un-muted by {username}!");
         session.SendWhisper($"You have successfully un-muted {target.Username}!");
         return Task.CompletedTask;
     }

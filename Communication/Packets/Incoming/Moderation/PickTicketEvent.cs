@@ -22,7 +22,7 @@ internal class PickTicketEvent : IPacketEvent
             return Task.CompletedTask;
         packet.ReadInt(); //Junk
         var ticketId = packet.ReadInt();
-        if (!_moderationManager.TryGetTicket(ticketId, out var ticket))
+        if (!_moderationManager.TryGetTicket(ticketId, out var ticket) || ticket == null)
             return Task.CompletedTask;
         ticket.Moderator = habbo;
         _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");

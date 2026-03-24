@@ -24,8 +24,9 @@ internal class MuteCommand : ITargetChatCommand
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
+        var targetClient = target.Client;
         var permissions = habbo?.Permissions;
-        if (target.Permissions.HasRight("mod_tool") && !(permissions?.HasRight("mod_mute_any") ?? false))
+        if ((target.Permissions?.HasRight("mod_tool") ?? false) && !(permissions?.HasRight("mod_mute_any") ?? false))
         {
             session.SendWhisper("Oops, you cannot mute that user.");
             return Task.CompletedTask;
@@ -38,10 +39,10 @@ internal class MuteCommand : ITargetChatCommand
             {
                 dbClient.RunQuery($"UPDATE `users` SET `time_muted` = '{time}' WHERE `id` = '{target.Id}' LIMIT 1");
             }
-            if (target.Client != null)
+            if (targetClient != null)
             {
                 target.TimeMuted = time;
-                target.Client.SendNotification($"You have been muted by a moderator for {time} seconds!");
+                targetClient.SendNotification($"You have been muted by a moderator for {time} seconds!");
             }
             session.SendWhisper($"You have successfully muted {target.Username} for {time} seconds.");
         }

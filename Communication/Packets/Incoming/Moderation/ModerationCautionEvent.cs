@@ -29,6 +29,8 @@ internal class ModerationCautionEvent : IPacketEvent
         {
             dbClient.RunQuery($"UPDATE `user_info` SET `cautions` = `cautions` + '1' WHERE `user_id` = '{targetHabbo.Id}' LIMIT 1");
         }
+        if (client == null)
+            return Task.CompletedTask;
         client.SendNotification(message);
         return Task.CompletedTask;
     }

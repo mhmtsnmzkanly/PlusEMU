@@ -36,9 +36,10 @@ internal class MassBadgeCommand : IChatCommand
         foreach (var client in _gameClientManager.GetClients.ToList())
         {
             var targetHabbo = client?.GetHabbo();
-            if (targetHabbo == null || targetHabbo.Username == username)
+            var targetBadges = targetHabbo?.Inventory?.Badges;
+            if (targetHabbo == null || client == null || targetBadges == null || targetHabbo.Username == username)
                 continue;
-            if (!targetHabbo.Inventory.Badges.HasBadge(badgeCode))
+            if (!targetBadges.HasBadge(badgeCode))
             {
                 _badgeManager.GiveBadge(targetHabbo, badgeCode).Wait();
                 client.SendNotification("You have just been given a badge!");

@@ -155,7 +155,7 @@ public class RoomItemHandling
                     var wallParts = item.WallCoordinates.Split(':');
                     if (wallParts.Length < 2)
                         throw new FormatException("Invalid wall position");
-                    item.WallCoordinates = WallPositionCheck($":{wallParts[1]}");
+                    item.WallCoordinates = WallPositionCheck($":{wallParts[1]}") ?? ":w=0,2 l=11,53 l";
                 }
                 catch
                 {
@@ -177,12 +177,12 @@ public class RoomItemHandling
                 GotRollers = true;
             else if (item.Definition.InteractionType == InteractionType.Moodlight)
             {
-                if (_room.MoodlightData == null)
+                if (_room != null && _room.MoodlightData == null)
                     _room.MoodlightData = new(item.Id);
             }
             else if (item.Definition.InteractionType == InteractionType.Toner)
             {
-                if (_room.TonerData == null)
+                if (_room != null && _room.TonerData == null)
                     _room.TonerData = new(item.Id);
             }
             else if (item.IsWired)
@@ -799,6 +799,6 @@ public class RoomItemHandling
         _rollerItemsMoved.Clear();
         _rollerUsersMoved.Clear();
         _rollerMessages.Clear();
-        _roomItemUpdateQueue = null;
+        _roomItemUpdateQueue = null!;
     }
 }

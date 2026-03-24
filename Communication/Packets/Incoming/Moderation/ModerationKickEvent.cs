@@ -17,7 +17,7 @@ internal class ModerationKickEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var sessionHabbo = session.GetHabbo();
-        if (!(sessionHabbo.Permissions?.HasRight("mod_kick") ?? false))
+        if (!(sessionHabbo?.Permissions?.HasRight("mod_kick") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         packet.ReadString(); //message
@@ -30,6 +30,8 @@ internal class ModerationKickEvent : IPacketEvent
             session.SendNotification(_languageManager.TryGetValue("moderation.kick.disallowed"));
             return Task.CompletedTask;
         }
+        if (client == null)
+            return Task.CompletedTask;
         sessionHabbo.CurrentRoom?.GetRoomUserManager().RemoveUserFromRoom(client, true);
         return Task.CompletedTask;
     }

@@ -54,7 +54,7 @@ internal class BotMovesToFurniBox : IWiredItem
         if (!Instance.GetRoomItemHandler().GetFloor.Contains(item))
         {
             SetItems.TryRemove(item.Id, out item);
-            if (items.Contains(item))
+            if (item != null && items.Contains(item))
                 items.Remove(item);
             if (SetItems.Count == 0 || items.Count == 0)
                 return false;

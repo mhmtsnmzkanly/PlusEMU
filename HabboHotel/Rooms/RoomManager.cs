@@ -219,13 +219,13 @@ public class RoomManager : IRoomManager
 
     public List<Room> GetOnGoingRoomPromotions(int mode, int amount = 50)
     {
-        if (mode == 17) return _rooms.Values.Where(x => x.HasActivePromotion && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.Promotion.TimestampStarted).Take(amount).ToList();
+        if (mode == 17) return _rooms.Values.Where(x => x.HasActivePromotion && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.Promotion!.TimestampStarted).Take(amount).ToList();
         return _rooms.Values.Where(x => x.HasActivePromotion && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.UsersNow).Take(amount).ToList();
     }
 
     public List<Room> GetPromotedRooms(int categoryId, int amount = 50)
     {
-        return _rooms.Values.Where(x => x.HasActivePromotion && x.Promotion.CategoryId == categoryId && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.Promotion.TimestampStarted)
+        return _rooms.Values.Where(x => x.HasActivePromotion && x.Promotion!.CategoryId == categoryId && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.Promotion!.TimestampStarted)
             .Take(amount).ToList();
     }
 
@@ -245,7 +245,16 @@ public class RoomManager : IRoomManager
     }
 
 
-    public bool TryGetRoom(uint roomId, out Room room) => _rooms.TryGetValue(roomId, out room);
+    public bool TryGetRoom(uint roomId, out Room room)
+    {
+        if (_rooms.TryGetValue(roomId, out var foundRoom))
+        {
+            room = foundRoom;
+            return true;
+        }
+        room = null!;
+        return false;
+    }
 
     public RoomData CreateRoom(GameClient session, string name, string description, int category, int maxVisitors, int tradeSettings, RoomModel model, string wallpaper = "0.0", string floor = "0.0",
         string landscape = "0.0", int wallthick = 0, int floorthick = 0)

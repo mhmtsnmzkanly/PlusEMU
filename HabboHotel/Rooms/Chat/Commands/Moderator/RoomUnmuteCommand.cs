@@ -28,7 +28,7 @@ internal class RoomUnmuteCommand : IChatCommand
             {
                 var targetClient = user?.GetClient();
                 var targetHabbo = targetClient?.GetHabbo();
-                if (targetHabbo == null || targetHabbo.Username == username)
+                if (targetHabbo == null || targetClient == null || targetHabbo.Username == username)
                     continue;
                 targetClient.SendWhisper("This room has been un-muted .");
             }

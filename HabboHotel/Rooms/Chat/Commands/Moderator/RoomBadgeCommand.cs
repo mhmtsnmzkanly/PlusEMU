@@ -35,7 +35,7 @@ internal class RoomBadgeCommand : IChatCommand
             var targetClient = user?.GetClient();
             var targetHabbo = targetClient?.GetHabbo();
             var targetBadges = targetHabbo?.Inventory?.Badges;
-            if (targetHabbo == null || targetBadges == null)
+            if (targetHabbo == null || targetBadges == null || targetClient == null)
                 continue;
             if (!targetBadges.HasBadge(badgeCode))
             {

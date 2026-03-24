@@ -24,6 +24,8 @@ internal class GiveBadgeCommand : ITargetChatCommand
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
+        var targetClient = target.Client;
+        var targetBadges = target.Inventory?.Badges;
         if (habbo == null)
             return Task.CompletedTask;
 
@@ -33,11 +35,13 @@ internal class GiveBadgeCommand : ITargetChatCommand
             session.SendWhisper("Please enter the code of the badge you'd like to give!");
             return Task.CompletedTask;
         }
-        if (!target.Inventory.Badges.HasBadge(badgeCode))
+        if (targetBadges == null)
+            return Task.CompletedTask;
+        if (!targetBadges.HasBadge(badgeCode))
         {
             _badgeManager.GiveBadge(target, badgeCode).Wait();
             if (target.Id != habbo.Id)
-                target.Client.SendNotification("You have just been given a badge!");
+                targetClient?.SendNotification("You have just been given a badge!");
             else
                 session.SendWhisper($"You have successfully given yourself the badge {badgeCode}!");
         }

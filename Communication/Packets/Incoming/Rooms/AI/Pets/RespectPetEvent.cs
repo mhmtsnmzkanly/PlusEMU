@@ -51,6 +51,8 @@ internal class RespectPetEvent : RoomPacketEvent
             //And boom! Let us send some respect points.
             _questManager.ProgressUserQuest(session, QuestType.SocialRespect);
             _achievementManager.ProgressAchievement(session, "ACH_RespectGiven", 1);
+            if (targetClient == null)
+                return Task.CompletedTask;
             _achievementManager.ProgressAchievement(targetClient, "ACH_RespectEarned", 1);
 
             //Take away from pet respect points, just in-case users abuse this..

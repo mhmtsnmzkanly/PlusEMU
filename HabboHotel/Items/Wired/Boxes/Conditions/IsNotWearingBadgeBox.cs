@@ -40,9 +40,10 @@ internal class IsNotWearingBadgeBox : IWiredItem
             return false;
         if (!player.Inventory.Badges.HasBadge(StringData))
             return true;
-        if (!player.Inventory.Badges.EquippedBadges.Any())
+        var equippedBadges = player.Inventory.Badges.EquippedBadges;
+        if (!equippedBadges.Any())
             return true;
 
-        return player.Inventory.Badges.EquippedBadges.All(badge => !badge.Code.Equals(StringData));
+        return equippedBadges.All(badge => !string.Equals(badge.Code, StringData, StringComparison.Ordinal));
     }
 }

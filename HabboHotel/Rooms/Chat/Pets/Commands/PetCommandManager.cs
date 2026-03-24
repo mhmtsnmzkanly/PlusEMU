@@ -23,7 +23,7 @@ public class PetCommandManager : IPetCommandManager
         _petCommands.Clear();
         _commandRegister.Clear();
         _commandDatabase.Clear();
-        DataTable table = null;
+        DataTable? table = null;
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT * FROM `bots_pet_commands`");
@@ -32,8 +32,12 @@ public class PetCommandManager : IPetCommandManager
             {
                 foreach (DataRow row in table.Rows)
                 {
-                    _commandRegister.Add(Convert.ToInt32(row[0]), row[1].ToString());
-                    _commandDatabase.Add($"{row[1]}.input", row[2].ToString());
+                    var commandKey = row[1].ToString();
+                    var commandInput = row[2].ToString();
+                    if (string.IsNullOrEmpty(commandKey) || string.IsNullOrEmpty(commandInput))
+                        continue;
+                    _commandRegister.Add(Convert.ToInt32(row[0]), commandKey);
+                    _commandDatabase.Add($"{commandKey}.input", commandInput);
                 }
             }
         }

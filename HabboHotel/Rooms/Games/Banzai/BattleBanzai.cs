@@ -183,7 +183,7 @@ public class BattleBanzai
         }
         ResetTiles();
         IsBanzaiActive = true;
-        _room.GetWired().TriggerEvent(WiredBoxType.TriggerGameStarts, null);
+        _room.GetWired().TriggerEvent(WiredBoxType.TriggerGameStarts, null!);
         foreach (var user in _room.GetRoomUserManager().GetRoomUsers()) user.LockedTilesCount = 0;
     }
 
@@ -211,9 +211,9 @@ public class BattleBanzai
     {
         IsBanzaiActive = false;
         _room.GetGameManager().StopGame();
-        _floorMap = null;
+        _floorMap = null!;
         if (!triggeredByUser)
-            _room.GetWired().TriggerEvent(WiredBoxType.TriggerGameEnds, null);
+            _room.GetWired().TriggerEvent(WiredBoxType.TriggerGameEnds, null!);
         var winners = _room.GetGameManager().GetWinningTeam();
         _room.GetGameManager().UnlockGates();
         foreach (var tile in _banzaiTiles.Values)
@@ -299,7 +299,11 @@ public class BattleBanzai
         _room.GetRoomItemHandler().SetFloorItem(mover, item, newX, newY, item.Rotation, false, false, false);
         if (mover == null || mover.GetHabbo() == null)
             return;
-        var user = mover.GetHabbo().CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(mover.GetHabbo().Id);
+        var moverHabbo = mover.GetHabbo();
+        var currentRoom = moverHabbo?.CurrentRoom;
+        if (moverHabbo == null || currentRoom == null)
+            return;
+        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(moverHabbo.Id);
         if (IsBanzaiActive) HandleBanzaiTiles(new(newX, newY), team, user);
     }
 
@@ -413,10 +417,10 @@ public class BattleBanzai
             Array.Clear(_floorMap, 0, _floorMap.Length);
         if (_field != null)
             _field.Dispose();
-        _room = null;
-        _banzaiTiles = null;
-        _pucks = null;
-        _floorMap = null;
-        _field = null;
+        _room = null!;
+        _banzaiTiles = null!;
+        _pucks = null!;
+        _floorMap = null!;
+        _field = null!;
     }
 }

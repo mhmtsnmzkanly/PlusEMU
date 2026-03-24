@@ -146,9 +146,11 @@ internal class RoomCommand : IChatCommand
                 {
                     foreach (var user in room.GetRoomUserManager().GetRoomUsers())
                     {
+                        if (user == null)
+                            continue;
                         var targetClient = user?.GetClient();
                         var targetHabbo = targetClient?.GetHabbo();
-                        if (targetHabbo == null)
+                        if (targetHabbo == null || targetClient == null)
                             continue;
                         targetClient.SendWhisper("The room owner has disabled the ability to use a pet morph in this room.");
                         if (targetHabbo.PetId > 0)

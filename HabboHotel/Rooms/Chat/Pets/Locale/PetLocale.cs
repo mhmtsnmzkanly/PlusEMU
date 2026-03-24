@@ -19,7 +19,13 @@ public class PetLocale : IPetLocale
         var pets = dbClient.GetTable();
         if (pets != null)
             foreach (DataRow row in pets.Rows)
-                _values.Add(row[0].ToString(), row[1].ToString().Split(';'));
+            {
+                var key = row[0].ToString();
+                var value = row[1].ToString();
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+                    continue;
+                _values.Add(key, value.Split(';'));
+            }
     }
 
     public string[] GetValue(string key)

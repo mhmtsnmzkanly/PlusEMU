@@ -36,12 +36,14 @@ internal class UserSaysBox : IWiredItem
     public bool Execute(params object[] @params)
     {
         var player = (Habbo)@params[0];
-        if (player == null || player.CurrentRoom == null || !player.InRoom)
+        var playerClient = player?.Client;
+        var currentRoom = player?.CurrentRoom;
+        if (player == null || playerClient == null || currentRoom == null || !player.InRoom)
             return false;
-        var user = player.CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
+        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)
             return false;
-        var message = Convert.ToString(@params[1]);
+        var message = Convert.ToString(@params[1]) ?? string.Empty;
         if (BoolData && Instance.OwnerId != player.Id || player == null || string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(StringData))
             return false;
         if (message.Contains($" {StringData}") || message.Contains($"{StringData} ") || message == StringData)
@@ -55,14 +57,14 @@ internal class UserSaysBox : IWiredItem
                     return false;
                 Instance.GetWired().OnEvent(condition.Item);
             }
-            player.Client.Send(new WhisperComposer(user.VirtualId, message, 0, 0));
+            playerClient.Send(new WhisperComposer(user.VirtualId, message, 0, 0));
             //Check the ICollection to find the random addon effect.
             var hasRandomEffectAddon = effects.Count(x => x.Type == WiredBoxType.AddonRandomEffect) > 0;
             if (hasRandomEffectAddon)
             {
                 //Okay, so we have a random addon effect, now lets get the IWiredItem and attempt to execute it.
                 var randomBox = effects.FirstOrDefault(x => x.Type == WiredBoxType.AddonRandomEffect);
-                if (!randomBox.Execute())
+                if (randomBox == null || !randomBox.Execute())
                     return false;
 
                 //Success! Let's get our selected box and continue.

@@ -281,8 +281,8 @@ public class RoomUser
     public void Dispose()
     {
         Statusses.Clear();
-        _mRoom = null;
-        _mClient = null;
+        _mRoom = null!;
+        _mClient = null!;
     }
 
     public void Chat(string message, int colour = 0)
@@ -370,7 +370,7 @@ public class RoomUser
             return;
         habbo.HasSpoken = true;
         if (room.WordFilterList.Count > 0 && habbo.Permissions != null && !habbo.Permissions.HasRight("word_filter_override")) message = room.GetFilter().CheckMessage(message);
-        IServerPacket packet = null;
+        IServerPacket packet = null!;
         if (shout)
             packet = new ShoutComposer(VirtualId, message, PlusEnvironment.Game.ChatManager.GetEmotions().GetEmotionsForText(message), colour);
         else
@@ -388,7 +388,7 @@ public class RoomUser
                     var notifyHabbo = notifyClient?.GetHabbo();
                     if (notifyHabbo == null || notifyHabbo.TentId == habbo.TentId)
                         continue;
-                    notifyClient.Send(packet);
+                    notifyClient?.Send(packet);
                 }
             }
         }
@@ -400,9 +400,9 @@ public class RoomUser
                 var targetHabbo = targetClient?.GetHabbo();
                 if (targetHabbo == null || targetHabbo.IgnoresComponent?.IsIgnored(habbo.Id) == true)
                     continue;
-                if (room.ChatDistance > 0 && Gamemap.TileDistance(X, Y, user.X, user.Y) > room.ChatDistance)
+                if (room.ChatDistance > 0 && user != null && Gamemap.TileDistance(X, Y, user.X, user.Y) > room.ChatDistance)
                     continue;
-                targetClient.Send((IServerPacket)packet);
+                targetClient?.Send((IServerPacket)packet);
             }
         }
         if (shout)
@@ -562,14 +562,14 @@ public class RoomUser
     {
         if (IsBot) return null!;
         if (_mClient == null)
-            _mClient = PlusEnvironment.Game.ClientManager.GetClientByUserId(HabboId);
+            _mClient = PlusEnvironment.Game.ClientManager.GetClientByUserId(HabboId) ?? null!;
         return _mClient;
     }
 
     private Habbo GetHabbo()
     {
         var client = GetClient();
-        return client?.GetHabbo()!;
+        return client?.GetHabbo() ?? null!;
     }
 
     private Room GetRoom()

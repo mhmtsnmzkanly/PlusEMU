@@ -18,6 +18,7 @@ internal class GiveCommand : ITargetChatCommand
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
+        var targetClient = target.Client;
         if (habbo?.Permissions == null)
             return Task.CompletedTask;
 
@@ -43,9 +44,9 @@ internal class GiveCommand : ITargetChatCommand
                 if (int.TryParse(parameters[2], out var amount))
                 {
                     target.Credits = target.Credits += amount;
-                    target.Client.Send(new CreditBalanceComposer(target.Credits));
+                    targetClient?.Send(new CreditBalanceComposer(target.Credits));
                     if (target.Id != habbo.Id)
-                        target.Client.SendNotification($"{moderatorName} has given you {amount} Credit(s)!");
+                        targetClient?.SendNotification($"{moderatorName} has given you {amount} Credit(s)!");
                     session.SendWhisper($"Successfully given {amount} Credit(s) to {target.Username}!");
                     break;
                 }
@@ -63,9 +64,9 @@ internal class GiveCommand : ITargetChatCommand
                 if (int.TryParse(parameters[2], out var amount))
                 {
                     target.Duckets += amount;
-                    target.Client.Send(new HabboActivityPointNotificationComposer(target.Duckets, amount));
+                    targetClient?.Send(new HabboActivityPointNotificationComposer(target.Duckets, amount));
                     if (target.Id != habbo.Id)
-                        target.Client.SendNotification($"{moderatorName} has given you {amount} Ducket(s)!");
+                        targetClient?.SendNotification($"{moderatorName} has given you {amount} Ducket(s)!");
                     session.SendWhisper($"Successfully given {amount} Ducket(s) to {target.Username}!");
                     break;
                 }
@@ -82,9 +83,9 @@ internal class GiveCommand : ITargetChatCommand
                 if (int.TryParse(parameters[2], out var amount))
                 {
                     target.Diamonds += amount;
-                    target.Client.Send(new HabboActivityPointNotificationComposer(target.Diamonds, amount, 5));
+                    targetClient?.Send(new HabboActivityPointNotificationComposer(target.Diamonds, amount, 5));
                     if (target.Id != habbo.Id)
-                        target.Client.SendNotification($"{moderatorName} has given you {amount} Diamond(s)!");
+                        targetClient?.SendNotification($"{moderatorName} has given you {amount} Diamond(s)!");
                     session.SendWhisper($"Successfully given {amount} Diamond(s) to {target.Username}!");
                     break;
                 }
@@ -102,9 +103,9 @@ internal class GiveCommand : ITargetChatCommand
                 if (int.TryParse(parameters[2], out var amount))
                 {
                     target.GotwPoints = target.GotwPoints + amount;
-                    target.Client.Send(new HabboActivityPointNotificationComposer(target.GotwPoints, amount, 103));
+                    targetClient?.Send(new HabboActivityPointNotificationComposer(target.GotwPoints, amount, 103));
                     if (target.Id != habbo.Id)
-                        target.Client.SendNotification($"{moderatorName} has given you {amount} GOTW Point(s)!");
+                        targetClient?.SendNotification($"{moderatorName} has given you {amount} GOTW Point(s)!");
                     session.SendWhisper($"Successfully given {amount} GOTW point(s) to {target.Username}!");
                     break;
                 }

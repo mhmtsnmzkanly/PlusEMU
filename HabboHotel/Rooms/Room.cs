@@ -196,7 +196,7 @@ public class Room : RoomData
                 new(Convert.ToInt32(bot["id"]), Convert.ToUInt32(bot["room_id"]), Convert.ToString(bot["ai_type"]) ?? string.Empty, Convert.ToString(bot["walk_mode"]) ?? string.Empty, Convert.ToString(bot["name"]) ?? string.Empty,
                     Convert.ToString(bot["motto"]) ?? string.Empty, Convert.ToString(bot["look"]) ?? string.Empty, int.Parse(bot["x"].ToString() ?? "0"), int.Parse(bot["y"].ToString() ?? "0"), int.Parse(bot["z"].ToString() ?? "0"),
                     int.Parse(bot["rotation"].ToString() ?? "0"), 0, 0, 0, 0, ref speeches, "M", 0, Convert.ToInt32(bot["user_id"].ToString()), Convert.ToBoolean(bot["automatic_chat"]),
-                    Convert.ToInt32(bot["speaking_interval"]), ConvertExtensions.EnumToBool(bot["mix_sentences"].ToString() ?? "0"), Convert.ToInt32(bot["chat_bubble"])), null);
+                    Convert.ToInt32(bot["speaking_interval"]), ConvertExtensions.EnumToBool(bot["mix_sentences"].ToString() ?? "0"), Convert.ToInt32(bot["chat_bubble"])), null!);
         }
     }
 
@@ -356,7 +356,7 @@ public class Room : RoomData
                 IdleTime++;
             else if (IdleTime > 0)
                 IdleTime = 0;
-            if (HasActivePromotion && Promotion.HasExpired) EndPromotion();
+            if (HasActivePromotion && Promotion?.HasExpired == true) EndPromotion();
             if (IdleTime >= 60 && !HasActivePromotion)
             {
                 PlusEnvironment.Game.RoomManager.UnloadRoom(Id);

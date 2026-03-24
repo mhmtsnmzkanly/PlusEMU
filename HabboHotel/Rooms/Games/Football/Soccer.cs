@@ -27,7 +27,7 @@ public class Soccer
     {
         GameIsStarted = false;
         if (!triggeredByUser)
-            _room.GetWired().TriggerEvent(WiredBoxType.TriggerGameEnds, null);
+            _room.GetWired().TriggerEvent(WiredBoxType.TriggerGameEnds, null!);
     }
 
     public void StartGame()
@@ -185,22 +185,22 @@ public class Soccer
         {
             case Team.Blue:
             {
-                _gates[0] = null;
+                _gates[0] = null!;
                 break;
             }
             case Team.Red:
             {
-                _gates[1] = null;
+                _gates[1] = null!;
                 break;
             }
             case Team.Green:
             {
-                _gates[2] = null;
+                _gates[2] = null!;
                 break;
             }
             case Team.Yellow:
             {
-                _gates[3] = null;
+                _gates[3] = null!;
                 break;
             }
         }
@@ -250,16 +250,16 @@ public class Soccer
         _room.SendPacket(new SlideObjectBundleComposer(item.Coordinate.X, item.Coordinate.Y, item.GetZ, newX, newY, newZ, item.Id, (int)item.Id, item.Id));
         item.LegacyDataString = "11";
         item.UpdateNeeded = true;
-        _room.GetRoomItemHandler().SetFloorItem(null, item, newX, newY, item.Rotation, false, false, false);
+        _room.GetRoomItemHandler().SetFloorItem(null!, item, newX, newY, item.Rotation, false, false, false);
         _room.OnUserShoot(user, item);
     }
 
     public void Dispose()
     {
         Array.Clear(_gates, 0, _gates.Length);
-        _gates = null;
-        _room = null;
+        _gates = null!;
+        _room = null!;
         _balls.Clear();
-        _balls = null;
+        _balls = null!;
     }
 }

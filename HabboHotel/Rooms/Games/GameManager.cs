@@ -132,16 +132,16 @@ public class GameManager
         switch (team)
         {
             case Team.Blue:
-                _blueTeamItems.TryRemove(item.Id, out item);
+                _blueTeamItems.TryRemove(item.Id, out _);
                 break;
             case Team.Green:
-                _greenTeamItems.TryRemove(item.Id, out item);
+                _greenTeamItems.TryRemove(item.Id, out _);
                 break;
             case Team.Red:
-                _redTeamItems.TryRemove(item.Id, out item);
+                _redTeamItems.TryRemove(item.Id, out _);
                 break;
             case Team.Yellow:
-                _yellowTeamItems.TryRemove(item.Id, out item);
+                _yellowTeamItems.TryRemove(item.Id, out _);
                 break;
         }
     }

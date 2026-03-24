@@ -25,6 +25,7 @@ internal class SummonCommand : ITargetChatCommand
     {
         var habbo = session.GetHabbo();
         var currentRoom = habbo?.CurrentRoom;
+        var targetClient = target.Client;
         if (currentRoom == null)
             return Task.CompletedTask;
 
@@ -36,9 +37,11 @@ internal class SummonCommand : ITargetChatCommand
             session.SendWhisper("Get a life.");
             return Task.CompletedTask;
         }
-        target.Client.SendNotification($"You have been summoned to {habbo.Username}!");
+        if (targetClient == null)
+            return Task.CompletedTask;
+        targetClient.SendNotification($"You have been summoned to {habbo.Username}!");
         if (!target.InRoom)
-            target.Client.Send(new RoomForwardComposer(currentRoom.Id));
+            targetClient.Send(new RoomForwardComposer(currentRoom.Id));
         else
             target.PrepareRoom(currentRoom.Id, "");
         return Task.CompletedTask;

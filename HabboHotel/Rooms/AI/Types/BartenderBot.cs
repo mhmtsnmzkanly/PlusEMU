@@ -28,6 +28,8 @@ internal class BartenderBot : BotAi
 
     public override void OnUserSay(RoomUser user, string message)
     {
+        if (user == null)
+            return;
         var client = user?.GetClient();
         var habbo = client?.GetHabbo();
         if (habbo == null)
@@ -54,6 +56,8 @@ internal class BartenderBot : BotAi
 
     public override void OnUserShout(RoomUser user, string message)
     {
+        if (user == null)
+            return;
         var client = user?.GetClient();
         var habbo = client?.GetHabbo();
         if (habbo == null)

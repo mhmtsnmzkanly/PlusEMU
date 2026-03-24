@@ -35,9 +35,11 @@ internal class KickBotsCommand : IChatCommand
         {
             if (user == null || user.IsPet || !user.IsBot)
                 continue;
-            RoomUser botUser = null;
+            RoomUser? botUser = null;
             if (!room.GetRoomUserManager().TryGetBot(user.BotData.Id, out botUser))
                 return;
+            if (botUser == null)
+                continue;
             using (var dbClient = _database.GetQueryReactor())
             {
                 dbClient.SetQuery("UPDATE `bots` SET `room_id` = '0' WHERE `id` = @id LIMIT 1");

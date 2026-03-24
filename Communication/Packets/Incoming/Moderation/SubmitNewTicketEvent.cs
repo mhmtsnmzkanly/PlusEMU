@@ -2,6 +2,7 @@
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Moderation;
+using Plus.HabboHotel.Rooms;
 using Plus.Utilities;
 
 namespace Plus.Communication.Packets.Incoming.Moderation;
@@ -52,7 +53,10 @@ internal class SubmitNewTicketEvent : IPacketEvent
             packet.ReadInt();
             chats.Add(packet.ReadString());
         }
-        var ticket = new ModerationTicket(1, type, category, UnixTimestamp.GetNow(), 1, habbo, reportedUser, message, habbo.CurrentRoom, chats);
+        var currentRoom = habbo.CurrentRoom;
+        if (currentRoom == null)
+            return Task.CompletedTask;
+        var ticket = new ModerationTicket(1, type, category, UnixTimestamp.GetNow(), 1, habbo, reportedUser, message, currentRoom, chats);
         if (!_moderationManager.TryAddTicket(ticket))
             return Task.CompletedTask;
         using (var dbClient = _database.GetQueryReactor())

@@ -14,7 +14,7 @@ public class GetQuestListEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        _questManager.GetList(session, null);
+        _questManager.GetList(session, null!);
         return Task.CompletedTask;
     }
 }

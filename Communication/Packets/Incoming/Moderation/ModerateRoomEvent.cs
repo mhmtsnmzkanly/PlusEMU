@@ -22,7 +22,7 @@ internal class ModerateRoomEvent : IPacketEvent
         var moderator = session.GetHabbo();
         if (moderator?.Permissions == null || !moderator.Permissions.HasRight("mod_tool"))
             return Task.CompletedTask;
-        if (!_roomManager.TryGetRoom(packet.ReadUInt(), out var room))
+        if (!_roomManager.TryGetRoom(packet.ReadUInt(), out var room) || room == null)
             return Task.CompletedTask;
         var setLock = packet.ReadInt() == 1;
         var setName = packet.ReadInt() == 1;
@@ -63,7 +63,7 @@ internal class ModerateRoomEvent : IPacketEvent
                     continue;
                 var client = roomUser.GetClient();
                 var targetHabbo = client?.GetHabbo();
-                if (targetHabbo == null)
+                if (targetHabbo == null || client == null)
                     continue;
                 if (targetHabbo.Rank >= moderator.Rank || targetHabbo.Id == moderator.Id)
                     continue;

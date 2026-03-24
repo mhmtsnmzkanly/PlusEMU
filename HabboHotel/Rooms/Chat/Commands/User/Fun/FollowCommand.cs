@@ -42,12 +42,15 @@ internal class FollowCommand : ITargetChatCommand
             session.SendWhisper("That user currently isn't in a room!");
             return Task.CompletedTask;
         }
-        if (target.CurrentRoom.Access != RoomAccess.Open && !(permissions?.HasRight("mod_tool") ?? false))
+        var targetRoom = target.CurrentRoom;
+        if (targetRoom == null)
+            return Task.CompletedTask;
+        if (targetRoom.Access != RoomAccess.Open && !(permissions?.HasRight("mod_tool") ?? false))
         {
             session.SendWhisper("Oops, the room that user is either locked, passworded or invisible. You cannot follow!");
             return Task.CompletedTask;
         }
-        habbo.PrepareRoom(target.CurrentRoom.RoomId, "");
+        habbo.PrepareRoom(targetRoom.RoomId, "");
         return Task.CompletedTask;
     }
 }

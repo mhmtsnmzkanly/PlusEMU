@@ -43,8 +43,7 @@ internal class ToggleFurniBox : IWiredItem, IWiredCycle
                     continue;
                 if (!Instance.GetRoomItemHandler().GetFloor.Contains(item))
                 {
-                    Item n = null;
-                    SetItems.TryRemove(item.Id, out n);
+                    SetItems.TryRemove(item.Id, out _);
                     continue;
                 }
                 item.Interactor.OnWiredTrigger(item);
