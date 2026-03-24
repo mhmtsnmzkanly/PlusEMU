@@ -36,7 +36,7 @@ internal class BartenderBot : BotAi
         var client = user.GetClient();
         if (client == null)
             return;
-        var habbo = client?.GetHabbo();
+        var habbo = client.GetHabbo();
         if (habbo == null)
             return;
         if (Gamemap.TileDistance(roomUser.X, roomUser.Y, user.X, user.Y) > 8)
@@ -47,7 +47,7 @@ internal class BartenderBot : BotAi
         switch (response.ResponseType.ToLower())
         {
             case "say":
-                GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
+                roomUser.Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "shout":
                 roomUser.Chat(response.ResponseText.Replace("{username}", habbo.Username));
@@ -69,7 +69,7 @@ internal class BartenderBot : BotAi
         var client = user.GetClient();
         if (client == null)
             return;
-        var habbo = client?.GetHabbo();
+        var habbo = client.GetHabbo();
         if (habbo == null)
             return;
         if (Gamemap.TileDistance(roomUser.X, roomUser.Y, user.X, user.Y) > 8)
@@ -80,7 +80,7 @@ internal class BartenderBot : BotAi
         switch (response.ResponseType.ToLower())
         {
             case "say":
-                GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
+                roomUser.Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "shout":
                 roomUser.Chat(response.ResponseText.Replace("{username}", habbo.Username));
