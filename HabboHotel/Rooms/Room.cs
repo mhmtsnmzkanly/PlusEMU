@@ -279,6 +279,8 @@ public class Room : RoomData
             var habbo = session?.GetHabbo();
             if (habbo == null)
                 return false;
+
+            var group = Group;
             if (habbo.Username == OwnerName && Type == "private")
                 return true;
             if (habbo.Permissions?.HasRight("room_any_owner") == true)
@@ -292,13 +294,13 @@ public class Room : RoomData
             }
             if (checkForGroups && Type == "private")
             {
-                if (Group == null)
+                if (group == null)
                     return false;
-                if (Group.IsAdmin(habbo.Id))
+                if (group.IsAdmin(habbo.Id))
                     return true;
-                if (Group.AdminOnlyDeco == 0)
+                if (group.AdminOnlyDeco == 0)
                 {
-                    if (Group.IsAdmin(habbo.Id))
+                    if (group.IsAdmin(habbo.Id))
                         return true;
                 }
             }
@@ -514,28 +516,26 @@ public class Room : RoomData
     {
         var client = user?.GetClient();
         var habbo = client?.GetHabbo();
-        if (habbo != null)
-        {
-            if (!_tents.ContainsKey(tentId))
-                _tents.Add(tentId, new());
-            if (!_tents[tentId].Contains(user))
-                _tents[tentId].Add(user);
-            habbo.TentId = tentId;
-        }
+        if (habbo == null)
+            return;
+        if (!_tents.ContainsKey(tentId))
+            _tents.Add(tentId, new());
+        if (!_tents[tentId].Contains(user))
+            _tents[tentId].Add(user);
+        habbo.TentId = tentId;
     }
 
     public void RemoveUserFromTent(uint tentId, RoomUser user)
     {
         var client = user?.GetClient();
         var habbo = client?.GetHabbo();
-        if (habbo != null)
-        {
-            if (!_tents.ContainsKey(tentId))
-                _tents.Add(tentId, new());
-            if (_tents[tentId].Contains(user))
-                _tents[tentId].Remove(user);
-            habbo.TentId = 0;
-        }
+        if (habbo == null)
+            return;
+        if (!_tents.ContainsKey(tentId))
+            _tents.Add(tentId, new());
+        if (_tents[tentId].Contains(user))
+            _tents[tentId].Remove(user);
+        habbo.TentId = 0;
     }
 
     public void SendToTent(int id, uint tentId, IServerPacket packet)
@@ -565,11 +565,12 @@ public class Room : RoomData
             var users = roomUserManager.GetUserList().ToList();
             foreach (var user in users)
             {
-                if (user?.GetClient() == null || user.IsBot)
+                var client = user?.GetClient();
+                if (client == null || user.IsBot)
                     continue;
-                if (withRightsOnly && !CheckRights(user.GetClient()))
+                if (withRightsOnly && !CheckRights(client))
                     continue;
-                user.GetClient().Send(packet);
+                client.Send(packet);
             }
         }
         catch (Exception e)
