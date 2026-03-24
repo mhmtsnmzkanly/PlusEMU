@@ -49,7 +49,7 @@ internal class MessengerEventSynchronizer : IAuthenticationTask
             var friendHabbo = friend.Habbo;
             var me = friendHabbo?.Messenger?.GetFriend(habbo.Id);
             if (me == null) continue;
-            friendHabbo.Messenger?.UpdateFriend(me);
+            friendHabbo?.Messenger?.UpdateFriend(me);
         }
     }
 

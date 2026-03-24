@@ -46,7 +46,7 @@ public class GameDataManager : IGameDataManager
         _logger.LogInformation("Game Data Manager -> LOADED");
     }
 
-    public bool TryGetGame(int gameId, out GameData data) => _games.TryGetValue(gameId, out data);
+    public bool TryGetGame(int gameId, out GameData? data) => _games.TryGetValue(gameId, out data);
 
     public int GetCount()
     {

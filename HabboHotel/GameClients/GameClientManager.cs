@@ -52,7 +52,7 @@ public class GameClientManager : IGameClientManager
 
     public GameClient? GetClientByUsername(string username) => _usernameRegister.ContainsKey(username.ToLower()) ? _usernameRegister[username.ToLower()] : null;
 
-    public bool TryGetClient(int clientId, out GameClient client) => _clients.TryGetValue(clientId, out client);
+    public bool TryGetClient(int clientId, out GameClient? client) => _clients.TryGetValue(clientId, out client);
 
     public bool UpdateClientUsername(GameClient client, string oldUsername, string newUsername)
     {
@@ -99,6 +99,8 @@ public class GameClientManager : IGameClientManager
     {
         foreach (var client in GetClients.ToList())
         {
+            if (client == null)
+                continue;
             var habbo = client?.GetHabbo();
             var permissions = habbo?.Permissions;
             if (habbo == null || permissions == null)
@@ -153,6 +155,8 @@ public class GameClientManager : IGameClientManager
     {
         foreach (var client in _clients.Values.ToList())
         {
+            if (client == null)
+                continue;
             var habbo = client?.GetHabbo();
             if (habbo == null)
                 continue;
