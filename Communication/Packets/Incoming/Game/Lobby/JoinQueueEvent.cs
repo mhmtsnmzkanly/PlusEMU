@@ -20,7 +20,7 @@ internal class JoinQueueEvent : IPacketEvent
             return Task.CompletedTask;
 
         var gameId = packet.ReadInt();
-        if (_gameDataManager.TryGetGame(gameId, out var gameData))
+        if (_gameDataManager.TryGetGame(gameId, out var gameData) && gameData != null)
         {
             var ssoTicket = $"HABBOON-Fastfood-{GenerateSso(32)}-{habbo.Id}";
             session.Send(new JoinQueueComposer(gameData.Id));
