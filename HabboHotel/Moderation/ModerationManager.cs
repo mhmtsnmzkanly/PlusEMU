@@ -280,10 +280,9 @@ public sealed class ModerationManager : IModerationManager
     /// <returns></returns>
     public bool HasMachineBanCheck(string machineId)
     {
-        ModerationBan machineBanRecord = null;
-        if (IsBanned(machineId, out machineBanRecord))
+        if (IsBanned(machineId, out var machineBanRecord))
         {
-            DataRow banRow = null;
+            DataRow? banRow = null;
             using var dbClient = _database.GetQueryReactor();
             dbClient.SetQuery("SELECT * FROM `bans` WHERE `bantype` = 'machine' AND `value` = @value LIMIT 1");
             dbClient.AddParameter("value", machineId);
@@ -307,10 +306,9 @@ public sealed class ModerationManager : IModerationManager
     /// <returns></returns>
     public bool UsernameBanCheck(string username)
     {
-        ModerationBan usernameBanRecord = null;
-        if (IsBanned(username, out usernameBanRecord))
+        if (IsBanned(username, out var usernameBanRecord))
         {
-            DataRow banRow = null;
+            DataRow? banRow = null;
             using var dbClient = _database.GetQueryReactor();
             dbClient.SetQuery("SELECT * FROM `bans` WHERE `bantype` = 'user' AND `value` = @value LIMIT 1");
             dbClient.AddParameter("value", username);
