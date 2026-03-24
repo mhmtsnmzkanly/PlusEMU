@@ -349,8 +349,7 @@ public class RoomUserManager
             {
                 if (toRemove == null)
                     continue;
-                var userClient = user.GetClient();
-                var userHabbo = userClient?.GetHabbo();
+                var userHabbo = GetHabbo(user);
                 var pets = userHabbo?.Inventory?.Pets;
                 if (pets == null)
                     continue;
@@ -562,8 +561,9 @@ public class RoomUserManager
                     continue;
                 if (!IsValid(user))
                 {
-                    if (user.GetClient() != null)
-                        RemoveUserFromRoom(user.GetClient(), false);
+                    var client = user.GetClient();
+                    if (client != null)
+                        RemoveUserFromRoom(client, false);
                     else
                         RemoveRoomUser(user);
                 }
