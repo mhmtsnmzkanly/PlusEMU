@@ -1,47 +1,24 @@
-﻿using Plus.Database;
-using Plus.HabboHotel.GameClients;
+﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Moderation;
 
 namespace Plus.Communication.Packets.Incoming.Moderation;
 
 internal class ModerationMuteEvent : IPacketEvent
 {
-    public readonly IDatabase _database;
+    private readonly IModerationActionService _moderationActionService;
 
-    public ModerationMuteEvent(IDatabase database)
+    public ModerationMuteEvent(IModerationActionService moderationActionService)
     {
-        _database = database;
+        _moderationActionService = moderationActionService;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var sessionHabbo = session.GetHabbo();
-        if (!(sessionHabbo.Permissions?.HasRight("mod_mute") ?? false))
-            return Task.CompletedTask;
         var userId = packet.ReadInt();
         packet.ReadString(); //message
-        double length = packet.ReadInt() * 60;
+        var durationMinutes = packet.ReadInt();
         packet.ReadString(); //unk1
         packet.ReadString(); //unk2
-        var habbo = PlusEnvironment.GetHabboById(userId);
-        if (habbo == null)
-        {
-            session.SendWhisper("An error occoured whilst finding that user in the database.");
-            return Task.CompletedTask;
-        }
-        if ((habbo.Permissions?.HasRight("mod_mute") ?? false) && !(sessionHabbo.Permissions?.HasRight("mod_mute_any") ?? false))
-        {
-            session.SendWhisper("Oops, you cannot mute that user.");
-            return Task.CompletedTask;
-        }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `users` SET `time_muted` = '{length}' WHERE `id` = '{habbo.Id}' LIMIT 1");
-        }
-        if (habbo.Client != null)
-        {
-            habbo.TimeMuted = length;
-            habbo.Client.SendNotification($"You have been muted by a moderator for {length} seconds!");
-        }
-        return Task.CompletedTask;
+        return _moderationActionService.Mute(session, userId, durationMinutes);
     }
 }

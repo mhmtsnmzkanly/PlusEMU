@@ -1,37 +1,17 @@
-﻿using Plus.Database;
-using Plus.HabboHotel.GameClients;
+﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Moderation;
 
 namespace Plus.Communication.Packets.Incoming.Moderation;
 
 internal class ModerationCautionEvent : IPacketEvent
 {
-    private readonly IGameClientManager _clientManager;
-    private readonly IDatabase _database;
+    private readonly IModerationActionService _moderationActionService;
 
-    public ModerationCautionEvent(IGameClientManager clientManager, IDatabase database)
+    public ModerationCautionEvent(IModerationActionService moderationActionService)
     {
-        _clientManager = clientManager;
-        _database = database;
+        _moderationActionService = moderationActionService;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var moderator = session.GetHabbo();
-        if (moderator?.Permissions == null || !moderator.Permissions.HasRight("mod_caution"))
-            return Task.CompletedTask;
-        var userId = packet.ReadInt();
-        var message = packet.ReadString();
-        var client = _clientManager.GetClientByUserId(userId);
-        var targetHabbo = client?.GetHabbo();
-        if (targetHabbo == null)
-            return Task.CompletedTask;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `user_info` SET `cautions` = `cautions` + '1' WHERE `user_id` = '{targetHabbo.Id}' LIMIT 1");
-        }
-        if (client == null)
-            return Task.CompletedTask;
-        client.SendNotification(message);
-        return Task.CompletedTask;
-    }
+        => _moderationActionService.SendCaution(session, packet.ReadInt(), packet.ReadString());
 }

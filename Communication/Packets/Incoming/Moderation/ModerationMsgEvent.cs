@@ -1,27 +1,17 @@
 ﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Moderation;
 
 namespace Plus.Communication.Packets.Incoming.Moderation;
 
 internal class ModerationMsgEvent : IPacketEvent
 {
-    private readonly IGameClientManager _clientManager;
+    private readonly IModerationActionService _moderationActionService;
 
-    public ModerationMsgEvent(IGameClientManager clientManager)
+    public ModerationMsgEvent(IModerationActionService moderationActionService)
     {
-        _clientManager = clientManager;
+        _moderationActionService = moderationActionService;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (!(habbo?.Permissions?.HasRight("mod_alert") ?? false))
-            return Task.CompletedTask;
-        var userId = packet.ReadInt();
-        var message = packet.ReadString();
-        var client = _clientManager.GetClientByUserId(userId);
-        if (client == null)
-            return Task.CompletedTask;
-        client.SendNotification(message);
-        return Task.CompletedTask;
-    }
+        => _moderationActionService.SendMessage(session, packet.ReadInt(), packet.ReadString());
 }
