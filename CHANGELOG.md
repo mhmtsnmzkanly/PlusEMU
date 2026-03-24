@@ -15,6 +15,7 @@
 
 ### Runtime And Framework
 
+- Added the runtime `revisions/example.json` snapshot to version the generated header mapping alongside the codebase.
 - Added a default constructor for `HabboStats` and removed the RP-specific packet/composer headers from `Resources/Revisions/1.6.6.json`.
 - Upgraded `Plus Emulator` and `PluginExample` from `.NET 7` to `.NET 10`.
 - Updated the solution mapping from `x86` release output to `Any CPU` so Release builds now emit to `bin/Release/net10.0`.
