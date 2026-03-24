@@ -39,7 +39,7 @@ internal class OpenGiftEvent : IPacketEvent
             return Task.CompletedTask;
         if (present.UserId != habbo.Id)
             return Task.CompletedTask;
-        DataRow data;
+        DataRow? data;
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT `base_id`,`extra_data` FROM `user_presents` WHERE `item_id` = @presentId LIMIT 1");
@@ -48,55 +48,23 @@ internal class OpenGiftEvent : IPacketEvent
         }
         if (data == null)
         {
-            session.SendNotification("Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
-            room.GetRoomItemHandler().RemoveFurniture(null, present.Id);
-            using (var dbClient = _database.GetQueryReactor())
-            {
-                dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
-                dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
-            }
-            furniture.RemoveItem(present.Id);
-            session.Send(new FurniListRemoveComposer(present.Id));
+            RemoveBrokenPresent(session, room, furniture, present, "Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
             return Task.CompletedTask;
         }
         if (!int.TryParse(present.LegacyDataString.Split(Convert.ToChar(5))[2], out var purchaserId))
         {
-            session.SendNotification("Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
-            room.GetRoomItemHandler().RemoveFurniture(null, present.Id);
-            using (var dbClient = _database.GetQueryReactor())
-            {
-                dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
-                dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
-            }
-            furniture.RemoveItem(present.Id);
-            session.Send(new FurniListRemoveComposer(present.Id));
+            RemoveBrokenPresent(session, room, furniture, present, "Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
             return Task.CompletedTask;
         }
         var purchaser = _cacheManager.GenerateUser(purchaserId);
         if (purchaser == null)
         {
-            session.SendNotification("Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
-            room.GetRoomItemHandler().RemoveFurniture(null, present.Id);
-            using (var dbClient = _database.GetQueryReactor())
-            {
-                dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
-                dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
-            }
-            furniture.RemoveItem(present.Id);
-            session.Send(new FurniListRemoveComposer(present.Id));
+            RemoveBrokenPresent(session, room, furniture, present, "Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
             return Task.CompletedTask;
         }
         if (!_itemDataManger.Items.TryGetValue(Convert.ToUInt32(data["base_id"]), out var baseItem))
         {
-            session.SendNotification("Oops, it appears that the item within the gift is no longer in the hotel!");
-            room.GetRoomItemHandler().RemoveFurniture(null, present.Id);
-            using (var dbClient = _database.GetQueryReactor())
-            {
-                dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
-                dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
-            }
-            furniture.RemoveItem(present.Id);
-            session.Send(new FurniListRemoveComposer(present.Id));
+            RemoveBrokenPresent(session, room, furniture, present, "Oops, it appears that the item within the gift is no longer in the hotel!");
             return Task.CompletedTask;
         }
         present.MagicRemove = true;
@@ -106,11 +74,23 @@ internal class OpenGiftEvent : IPacketEvent
         return Task.CompletedTask;
     }
 
+    private void RemoveBrokenPresent(GameClient session, Room room, FurnitureInventoryComponent furniture, Item present, string message)
+    {
+        session.SendNotification(message);
+        room.GetRoomItemHandler().RemoveFurniture(session, present.Id);
+        using var dbClient = _database.GetQueryReactor();
+        dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{present.Id}' LIMIT 1");
+        dbClient.RunQuery($"DELETE FROM `user_presents` WHERE `item_id` = '{present.Id}' LIMIT 1");
+        furniture.RemoveItem(present.Id);
+        session.Send(new FurniListRemoveComposer(present.Id));
+    }
+
     private void FinishOpenGift(GameClient session, ItemDefinition baseItem, Item present, Room room, DataRow row)
     {
         try
         {
             if (baseItem == null || present == null || room == null || row == null)
+                return;
             Thread.Sleep(1500);
             var itemIsInRoom = true;
             room.GetRoomItemHandler().RemoveFurniture(session, present.Id);
@@ -125,8 +105,11 @@ internal class OpenGiftEvent : IPacketEvent
             }
             present.BaseItem = Convert.ToInt32(row["base_id"]);
             // present.ResetBaseItem(); // TODO @80O: Disabled in item refactor
-            present.LegacyDataString = !string.IsNullOrEmpty(Convert.ToString(row["extra_data"])) ? Convert.ToString(row["extra_data"]) : "";
-            if (present.Definition.Type == ItemType.Floor)
+            present.LegacyDataString = Convert.ToString(row["extra_data"]) ?? string.Empty;
+            var definition = present.Definition;
+            if (definition == null)
+                return;
+            if (definition.Type == ItemType.Floor)
             {
                 if (!room.GetRoomItemHandler().SetFloorItem(session, present, present.GetX, present.GetY, present.Rotation, true, false, true))
                 {
@@ -149,7 +132,7 @@ internal class OpenGiftEvent : IPacketEvent
                 }
                 itemIsInRoom = false;
             }
-            session.Send(new OpenGiftComposer(present.Definition, present.LegacyDataString, present, itemIsInRoom));
+            session.Send(new OpenGiftComposer(definition, present.LegacyDataString, present, itemIsInRoom));
             session.Send(new FurniListUpdateComposer());
         }
         catch
