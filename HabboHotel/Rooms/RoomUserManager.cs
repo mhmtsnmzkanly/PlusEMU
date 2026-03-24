@@ -685,6 +685,7 @@ public class RoomUserManager
                     }
                     else
                     {
+                        var gameMap = _room.GetGameMap();
                         var nextStep = user.Path[user.Path.Count - user.PathStep - 1];
                         user.PathStep++;
                         if (user.FastWalking && user.PathStep < user.Path.Count)
@@ -703,9 +704,9 @@ public class RoomUserManager
                         var nextX = nextStep.X;
                         var nextY = nextStep.Y;
                         user.RemoveStatus("mv");
-                        if (_room.GetGameMap().IsValidStep2(user, new(user.X, user.Y), new(nextX, nextY), user.GoalX == nextX && user.GoalY == nextY, user.AllowOverride))
+                        if (gameMap.IsValidStep2(user, new(user.X, user.Y), new(nextX, nextY), user.GoalX == nextX && user.GoalY == nextY, user.AllowOverride))
                         {
-                            var nextZ = _room.GetGameMap().SqAbsoluteHeight(nextX, nextY);
+                            var nextZ = gameMap.SqAbsoluteHeight(nextX, nextY);
                             if (!user.IsBot)
                             {
                                 if (user.IsSitting)
@@ -775,16 +776,16 @@ public class RoomUserManager
                                     horse.SetZ = nextZ;
                                 }
                             }
-                            _room.GetGameMap().GameMap[user.X, user.Y] = user.SqState; // REstore the old one
-                            user.SqState = _room.GetGameMap().GameMap[user.SetX, user.SetY]; //Backup the new one
+                            gameMap.GameMap[user.X, user.Y] = user.SqState; // REstore the old one
+                            user.SqState = gameMap.GameMap[user.SetX, user.SetY]; //Backup the new one
                             if (!_room.RoomBlockingEnabled)
                             {
                                 var users = _room.GetRoomUserManager().GetUserForSquare(nextX, nextY);
                                 if (users != null)
-                                    _room.GetGameMap().GameMap[nextX, nextY] = 0;
+                                    gameMap.GameMap[nextX, nextY] = 0;
                             }
                             else
-                                _room.GetGameMap().GameMap[nextX, nextY] = 1;
+                                gameMap.GameMap[nextX, nextY] = 1;
                         }
                     }
                     if (!user.RidingHorse)
