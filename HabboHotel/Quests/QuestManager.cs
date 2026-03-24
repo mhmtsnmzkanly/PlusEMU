@@ -41,13 +41,13 @@ public class QuestManager : IQuestManager
                 foreach (DataRow dRow in dTable.Rows)
                 {
                     var id = Convert.ToInt32(dRow["id"]);
-                    var category = Convert.ToString(dRow["type"]);
+                    var category = Convert.ToString(dRow["type"]) ?? string.Empty;
                     var num = Convert.ToInt32(dRow["level_num"]);
                     var type = Convert.ToInt32(dRow["goal_type"]);
                     var goalData = Convert.ToInt32(dRow["goal_data"]);
-                    var name = Convert.ToString(dRow["action"]);
+                    var name = Convert.ToString(dRow["action"]) ?? string.Empty;
                     var reward = Convert.ToInt32(dRow["pixel_reward"]);
-                    var dataBit = Convert.ToString(dRow["data_bit"]);
+                    var dataBit = Convert.ToString(dRow["data_bit"]) ?? string.Empty;
                     var rewardtype = Convert.ToInt32(dRow["reward_type"].ToString());
                     var time = Convert.ToInt32(dRow["timestamp_unlock"]);
                     var locked = Convert.ToInt32(dRow["timestamp_lock"]);
@@ -71,7 +71,7 @@ public class QuestManager : IQuestManager
     public Quest GetQuest(int id)
     {
         _quests.TryGetValue(id, out var quest);
-        return quest;
+        return quest!;
     }
 
     public int GetAmountOfQuestsInCategory(string category)
@@ -135,7 +135,7 @@ public class QuestManager : IQuestManager
             session.Send(new QuestCompletedComposer(session, quest));
             habbo.Duckets += quest.Reward;
             session.Send(new HabboActivityPointNotificationComposer(habbo.Duckets, quest.Reward));
-            GetList(session, null);
+            GetList(session, null!);
         }
     }
 
@@ -144,7 +144,7 @@ public class QuestManager : IQuestManager
         foreach (var quest in _quests.Values)
             if (quest.Category == category && quest.Number == number)
                 return quest;
-        return null;
+        return null!;
     }
 
     public void GetList(GameClient session, ClientPacket message)
@@ -162,7 +162,7 @@ public class QuestManager : IQuestManager
             if (!userQuestGoals.ContainsKey(quest.Category))
             {
                 userQuestGoals.Add(quest.Category, 1);
-                userQuests.Add(quest.Category, null);
+                userQuests.Add(quest.Category, null!);
             }
             if (quest.Number >= userQuestGoals[quest.Category])
             {
