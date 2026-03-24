@@ -78,9 +78,10 @@ public sealed class PacketManager : IPacketManager, IDisposable
         {
             if (t.IsFaulted && t.Exception != null)
             {
+                var habbo = session.GetHabbo();
                 foreach (var e in t.Exception.Flatten().InnerExceptions)
                 {
-                    _logger.LogError("Error handling packet {packetId} for session {session} @ Habbo  {username}: {message} {stacktrace}", pak.GetType().Name, session.Id, session.GetHabbo()?.Username ?? string.Empty, e.Message, e.StackTrace);
+                    _logger.LogError("Error handling packet {packetId} for session {session} @ Habbo  {username}: {message} {stacktrace}", pak.GetType().Name, session.Id, habbo?.Username ?? string.Empty, e.Message, e.StackTrace);
                     session.Disconnect();
                 }
             }

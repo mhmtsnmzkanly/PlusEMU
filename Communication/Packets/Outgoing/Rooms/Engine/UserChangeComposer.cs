@@ -17,7 +17,8 @@ public class UserChangeComposer : IServerPacket
     public UserChangeComposer(RoomUser user, bool self)
     {
         _virtualId = self ? -1 : user.VirtualId;
-        var habbo = user.GetClient()?.GetHabbo();
+        var client = user.GetClient();
+        var habbo = client?.GetHabbo();
         _look = habbo?.Look ?? string.Empty;
         _gender = habbo?.Gender ?? string.Empty;
         _motto = habbo?.Motto ?? string.Empty;
