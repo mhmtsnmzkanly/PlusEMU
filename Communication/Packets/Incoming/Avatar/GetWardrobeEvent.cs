@@ -6,21 +6,12 @@ namespace Plus.Communication.Packets.Incoming.Avatar;
 
 internal class GetWardrobeEvent : IPacketEvent
 {
-    private readonly IWardrobeLoader _wardrobeLoader;
+    private readonly IAvatarClothingService _avatarClothingService;
 
-    public GetWardrobeEvent(IWardrobeLoader wardrobeLoader)
+    public GetWardrobeEvent(IAvatarClothingService avatarClothingService)
     {
-        _wardrobeLoader = wardrobeLoader;
+        _avatarClothingService = avatarClothingService;
     }
 
-    public async Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
-            return;
-
-        var wardrobe = await _wardrobeLoader.LoadUserWardrobe(habbo.Id);
-        if (wardrobe == null) return;
-        session.Send(new WardrobeComposer(wardrobe));
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _avatarClothingService.GetWardrobe(session);
 }
