@@ -900,10 +900,10 @@ public class RoomUserManager
                     continue;
                 if (definition.IsSeat)
                 {
-                    if (!user.Statusses.ContainsKey("sit"))
-                    {
-                        if (!user.Statusses.ContainsKey("sit"))
-                            user.Statusses.Add("sit", TextHandling.GetString(definition.Height));
+                        if (!user!.Statusses.ContainsKey("sit"))
+                        {
+                            if (!user.Statusses.ContainsKey("sit"))
+                                user.Statusses.Add("sit", TextHandling.GetString(definition.Height));
                     }
                     user.Z = item.GetZ;
                     user.RotHead = item.Rotation;
@@ -915,7 +915,7 @@ public class RoomUserManager
                     case InteractionType.Bed:
                     case InteractionType.TentSmall:
                         {
-                            if (!user.Statusses.ContainsKey("lay"))
+                            if (!user!.Statusses.ContainsKey("lay"))
                                 user.Statusses.Add("lay", $"{TextHandling.GetString(definition.Height)} null");
                             user.Z = item.GetZ;
                             user.RotHead = item.Rotation;
@@ -936,7 +936,7 @@ public class RoomUserManager
                                 if (effects == null || t == null)
                                     break;
                                 var effectId = Convert.ToInt32(item.Team + 32);
-                                if (user.Team == Team.None)
+                                if (user!.Team == Team.None)
                                 {
                                     if (t.CanEnterOnTeam(item.Team))
                                     {
@@ -980,7 +980,7 @@ public class RoomUserManager
                                 if (effects == null || t == null)
                                     break;
                                 var effectId = Convert.ToInt32(item.Team + 39);
-                                if (user.Team == Team.None)
+                                if (user!.Team == Team.None)
                                 {
                                     if (t.CanEnterOnTeam(item.Team))
                                     {
@@ -1013,7 +1013,7 @@ public class RoomUserManager
                         }
                     case InteractionType.Banzaitele:
                         {
-                            if (user.Statusses.ContainsKey("mv"))
+                            if (user!.Statusses.ContainsKey("mv"))
                                 _room.GetGameItemHandler().OnTeleportRoomUserEnter(user, item);
                             break;
                         }
@@ -1037,7 +1037,7 @@ public class RoomUserManager
                         }
                     case InteractionType.Arrow:
                         {
-                            if (user.GoalX == item.GetX && user.GoalY == item.GetY)
+                            if (user!.GoalX == item.GetX && user.GoalY == item.GetY)
                             {
                                 var client = user.GetClient();
                                 var habbo = GetHabbo(user);
@@ -1085,7 +1085,7 @@ public class RoomUserManager
                         }
                 }
             }
-            if (user.IsSitting && user.TeleportEnabled)
+            if (user!.IsSitting && user.TeleportEnabled)
             {
                 user.Z -= 0.35;
                 user.UpdateNeeded = true;
