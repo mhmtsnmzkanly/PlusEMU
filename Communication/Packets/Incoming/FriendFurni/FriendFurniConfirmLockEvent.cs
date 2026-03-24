@@ -52,18 +52,24 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
         }
         if (userOne == null)
         {
-            userTwo.CanWalk = true;
-            userTwo.GetClient().SendNotification("Your partner has left the room or has cancelled the love lock.");
-            userTwo.LlPartner = 0;
+            var partner = userTwo;
+            if (partner == null)
+                return Task.CompletedTask;
+            partner.CanWalk = true;
+            userTwoClient.SendNotification("Your partner has left the room or has cancelled the love lock.");
+            partner.LlPartner = 0;
             item.InteractingUser = 0;
             item.InteractingUser2 = 0;
             return Task.CompletedTask;
         }
         if (userTwo == null)
         {
-            userOne.CanWalk = true;
-            userOne.GetClient().SendNotification("Your partner has left the room or has cancelled the love lock.");
-            userOne.LlPartner = 0;
+            var partner = userOne;
+            if (partner == null)
+                return Task.CompletedTask;
+            partner.CanWalk = true;
+            userOneClient.SendNotification("Your partner has left the room or has cancelled the love lock.");
+            partner.LlPartner = 0;
             item.InteractingUser = 0;
             item.InteractingUser2 = 0;
             return Task.CompletedTask;
@@ -71,10 +77,10 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
         if (item.ExtraData.Serialize().Contains(Convert.ToChar(5).ToString()))
         {
             userTwo.CanWalk = true;
-            userTwo.GetClient().SendNotification("It appears this love lock has already been locked.");
+            userTwoClient.SendNotification("It appears this love lock has already been locked.");
             userTwo.LlPartner = 0;
             userOne.CanWalk = true;
-            userOne.GetClient().SendNotification("It appears this love lock has already been locked.");
+            userOneClient.SendNotification("It appears this love lock has already been locked.");
             userOne.LlPartner = 0;
             item.InteractingUser = 0;
             item.InteractingUser2 = 0;

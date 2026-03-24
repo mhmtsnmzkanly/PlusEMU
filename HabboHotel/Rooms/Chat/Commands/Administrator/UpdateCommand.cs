@@ -199,9 +199,11 @@ internal class UpdateCommand : IChatCommand
                 _permissionManager.Init();
                 foreach (var client in _clientManager.GetClients.ToList())
                 {
-                    if (client == null || client.GetHabbo() == null || client.GetHabbo().Permissions == null)
+                    var clientHabbo = client?.GetHabbo();
+                    var clientPermissions = clientHabbo?.Permissions;
+                    if (clientHabbo == null || clientPermissions == null)
                         continue;
-                    client.GetHabbo().Permissions.Init(client.GetHabbo());
+                    clientPermissions.Init(clientHabbo);
                 }
                 session.SendWhisper("Rank definitions successfully updated.");
                 break;

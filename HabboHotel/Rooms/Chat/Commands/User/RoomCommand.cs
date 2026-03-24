@@ -148,6 +148,7 @@ internal class RoomCommand : IChatCommand
                     {
                         if (user == null)
                             continue;
+                        var roomUser = user;
                         var targetClient = user?.GetClient();
                         var targetHabbo = targetClient?.GetHabbo();
                         if (targetHabbo == null || targetClient == null)
@@ -162,10 +163,10 @@ internal class RoomCommand : IChatCommand
                             targetHabbo.PetId = 0;
 
                             //Quickly remove the old user instance.
-                            room.SendPacket(new UserRemoveComposer(user.VirtualId));
+                            room.SendPacket(new UserRemoveComposer(roomUser.VirtualId));
 
                             //Add the new one, they won't even notice a thing!!11 8-)
-                            room.SendPacket(new UsersComposer(user));
+                            room.SendPacket(new UsersComposer(roomUser));
                         }
                     }
                 }

@@ -113,8 +113,14 @@ public class PetBot : BotAi
             _actionTimer--;
         if (_energyTimer <= 0)
         {
+            var currentPet = pet;
+            if (currentPet == null)
+                return;
             RemovePetStatus(); // Remove Status
-            pet.PetData.PetEnergy(true); // Add Energy
+            var petData = currentPet.PetData;
+            if (petData == null)
+                return;
+            petData.PetEnergy(true); // Add Energy
             _energyTimer = Random.Shared.Next(30, 120 + 1); // 2 Min Max
         }
         else

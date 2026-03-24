@@ -30,7 +30,7 @@ internal class TradingOfferItemsEvent : IPacketEvent
         }
         var furniture = habbo.Inventory?.Furniture;
         var item = furniture?.GetItem(itemId);
-        if (item == null)
+        if (item == null || furniture == null)
             return Task.CompletedTask;
         if (!trade.CanChange)
             return Task.CompletedTask;

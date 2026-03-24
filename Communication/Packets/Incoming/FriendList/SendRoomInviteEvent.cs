@@ -48,7 +48,7 @@ internal class SendRoomInviteEvent : IPacketEvent
                 continue;
             var client = _clientManager.GetClientByUserId(userId);
             var targetHabbo = client?.GetHabbo();
-            if (targetHabbo == null || targetHabbo.AllowMessengerInvites || targetHabbo.AllowConsoleMessages == false)
+            if (client == null || targetHabbo == null || targetHabbo.AllowMessengerInvites || targetHabbo.AllowConsoleMessages == false)
                 continue;
             client.Send(new RoomInviteComposer(habbo.Id, message));
         }

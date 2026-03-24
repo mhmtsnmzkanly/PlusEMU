@@ -18,7 +18,7 @@ public class BadgeDefinitionsComposer : IServerPacket
         packet.WriteInteger(_achievements.Count);
         foreach (var achievement in _achievements.Values)
         {
-            packet.WriteString(achievement.GroupName.Replace("ACH_", ""));
+            packet.WriteString((achievement.GroupName ?? string.Empty).Replace("ACH_", ""));
             packet.WriteInteger(achievement.Levels.Count);
             foreach (var level in achievement.Levels.Values)
             {

@@ -79,6 +79,8 @@ internal class PickUpPetEvent : RoomPacketEvent
             dbClient.RunQuery(
                 $"UPDATE `bots_petdata` SET `experience` = '{data.Experience}', `energy` = '{data.Energy}', `nutrition` = '{data.Nutrition}', `respect` = '{data.Respect}' WHERE `id` = '{data.PetId}' LIMIT 1");
         }
+        else
+            return Task.CompletedTask;
         if (data.OwnerId != habbo.Id)
         {
             var target = _clientManager.GetClientByUserId(data.OwnerId);

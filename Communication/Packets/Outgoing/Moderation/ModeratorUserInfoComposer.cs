@@ -18,7 +18,8 @@ public class ModeratorUserInfoComposer : IServerPacket
 
     public void Compose(IOutgoingPacket packet)
     {
-        var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(Convert.ToDouble(_info["trading_locked"]));
+        var tradingLocked = _info != null ? Convert.ToDouble(_info["trading_locked"] ?? 0) : 0;
+        var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(tradingLocked);
         packet.WriteInteger(_user != null ? Convert.ToInt32(_user["id"]) : 0);
         packet.WriteString(_user != null ? Convert.ToString(_user["username"]) ?? "Unknown" : "Unknown");
         packet.WriteString(_user != null ? Convert.ToString(_user["look"]) ?? "Unknown" : "Unknown");
@@ -30,7 +31,7 @@ public class ModeratorUserInfoComposer : IServerPacket
         packet.WriteInteger(_info != null ? Convert.ToInt32(_info["cautions"]) : 0);
         packet.WriteInteger(_info != null ? Convert.ToInt32(_info["bans"]) : 0);
         packet.WriteInteger(_info != null ? Convert.ToInt32(_info["trading_locks_count"]) : 0); //Trading lock counts
-        packet.WriteString(Convert.ToDouble(_info["trading_locked"]) != 0 ? origin.ToString("dd/MM/yyyy HH:mm:ss") : "0"); //Trading lock
+        packet.WriteString(tradingLocked != 0 ? origin.ToString("dd/MM/yyyy HH:mm:ss") : "0"); //Trading lock
         packet.WriteString(""); //Purchases
         packet.WriteInteger(0); //Itendity information tool
         packet.WriteInteger(0); //Id bans.

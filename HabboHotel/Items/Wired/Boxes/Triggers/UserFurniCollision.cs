@@ -40,8 +40,12 @@ internal class UserFurniCollision : IWiredItem
         var item = (Item)@params[1];
         if (item == null)
             return false;
-        var effects = Instance.GetWired().GetEffects(this);
-        var conditions = Instance.GetWired().GetConditions(this);
+        var instance = Instance;
+        if (instance == null)
+            return false;
+        var wired = instance.GetWired();
+        var effects = wired.GetEffects(this);
+        var conditions = wired.GetConditions(this);
         foreach (var condition in conditions.ToList())
         {
             if (!condition.Execute(player))
@@ -60,25 +64,21 @@ internal class UserFurniCollision : IWiredItem
                 return false;
 
             //Success! Let's get our selected box and continue.
-            var selectedBox = Instance.GetWired().GetRandomEffect(effects.ToList());
-            if (!selectedBox.Execute())
+            var selectedBox = wired.GetRandomEffect(effects.ToList());
+            if (selectedBox == null || !selectedBox.Execute())
                 return false;
 
             //Woo! Almost there captain, now lets broadcast the update to the room instance.
-            if (Instance != null)
-            {
-                Instance.GetWired().OnEvent(randomBox.Item);
-                Instance.GetWired().OnEvent(selectedBox.Item);
-            }
+            wired.OnEvent(randomBox.Item);
+            wired.OnEvent(selectedBox.Item);
         }
         else
         {
             foreach (var effect in effects.ToList())
             {
-                if (!effect.Execute(player))
+                if (effect == null || !effect.Execute(player))
                     return false;
-                if (Instance != null)
-                    Instance.GetWired().OnEvent(effect.Item);
+                wired.OnEvent(effect.Item);
             }
         }
         return true;

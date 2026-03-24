@@ -23,7 +23,7 @@ internal class MakeOfferEvent : IPacketEvent
     {
         var habbo = session.GetHabbo();
         var inventory = habbo?.Inventory;
-        if (inventory?.Furniture == null)
+        if (habbo == null || inventory?.Furniture == null)
         {
             session.Send(new MarketplaceMakeOfferResultComposer(0));
             return Task.CompletedTask;
@@ -52,14 +52,20 @@ internal class MakeOfferEvent : IPacketEvent
         var comission = _marketplaceManager.CalculateComissionPrice(sellingPrice);
         var totalPrice = sellingPrice + comission;
         var itemType = 1;
-        if (item.Definition.Type == ItemType.Wall)
+        var definition = item.Definition;
+        if (definition == null)
+        {
+            session.Send(new MarketplaceMakeOfferResultComposer(0));
+            return Task.CompletedTask;
+        }
+        if (definition.Type == ItemType.Wall)
             itemType++;
         using (var dbClient = _database.GetQueryReactor())
         {
             // TODO @80O: Do not delete items from the items table when putting on marketplace. Just reference the furniture instead.
             dbClient.SetQuery(
-                $"INSERT INTO `catalog_marketplace_offers` (`furni_id`,`item_id`,`user_id`,`asking_price`,`total_price`,`public_name`,`sprite_id`,`item_type`,`timestamp`,`extra_data`,`limited_number`,`limited_stack`) VALUES ('{itemId}','{item.Definition.Id}','{habbo.Id}','{sellingPrice}','{totalPrice}',@public_name,'{item.Definition.SpriteId}','{itemType}','{UnixTimestamp.GetNow()}',@extra_data, '{item.UniqueNumber}', '{item.UniqueSeries}')");
-            dbClient.AddParameter("public_name", item.Definition.PublicName);
+                $"INSERT INTO `catalog_marketplace_offers` (`furni_id`,`item_id`,`user_id`,`asking_price`,`total_price`,`public_name`,`sprite_id`,`item_type`,`timestamp`,`extra_data`,`limited_number`,`limited_stack`) VALUES ('{itemId}','{definition.Id}','{habbo.Id}','{sellingPrice}','{totalPrice}',@public_name,'{definition.SpriteId}','{itemType}','{UnixTimestamp.GetNow()}',@extra_data, '{item.UniqueNumber}', '{item.UniqueSeries}')");
+            dbClient.AddParameter("public_name", definition.PublicName);
             dbClient.AddParameter("extra_data", item.ExtraData);
             dbClient.RunQuery();
             dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{itemId}' AND `user_id` = '{habbo.Id}' LIMIT 1");

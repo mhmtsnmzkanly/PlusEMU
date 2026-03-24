@@ -11,7 +11,10 @@ internal class InteractorMannequin : IFurniInteractor
 
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
-        var habbo = session?.GetHabbo();
+        var client = session;
+        if (client == null)
+            return;
+        var habbo = client.GetHabbo();
         if (habbo == null)
             return;
 
@@ -51,15 +54,13 @@ internal class InteractorMannequin : IFurniInteractor
                 dbClient.RunQuery();
             }
             var room = habbo.CurrentRoom;
-            if (room != null)
-            {
-                var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
-                if (user != null)
-                {
-                    session.Send(new UserChangeComposer(user, true));
-                    room.SendPacket(new UserChangeComposer(user, false));
-                }
-            }
+            if (room == null)
+                return;
+            var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
+            if (roomUser == null)
+                return;
+            client.Send(new UserChangeComposer(roomUser, true));
+            room.SendPacket(new UserChangeComposer(roomUser, false));
         }
     }
 

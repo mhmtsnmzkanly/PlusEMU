@@ -82,9 +82,14 @@ public class QuestManager : IQuestManager
 
     public void ProgressUserQuest(GameClient session, QuestType type, int data = 0)
     {
-        var habbo = session?.GetHabbo();
-        if (habbo?.HabboStats == null || habbo.Quests == null || habbo.HabboStats.QuestId <= 0) return;
-        var quest = GetQuest(habbo.HabboStats.QuestId);
+        var client = session;
+        if (client == null)
+            return;
+        var habbo = client.GetHabbo();
+        var stats = habbo?.HabboStats;
+        var quests = habbo?.Quests;
+        if (habbo == null || stats == null || quests == null || stats.QuestId <= 0) return;
+        var quest = GetQuest(stats.QuestId);
         if (quest == null || quest.GoalType != type) return;
         var currentProgress = habbo.GetQuestProgress(quest.Id);
         var totalProgress = currentProgress;
@@ -125,17 +130,20 @@ public class QuestManager : IQuestManager
             if (completeQuest)
                 dbClient.RunQuery($"UPDATE `user_statistics` SET `quest_id` = '0' WHERE `id` = '{habbo.Id}' LIMIT 1");
         }
-        habbo.Quests[habbo.HabboStats.QuestId] = totalProgress;
-        session.Send(new QuestStartedComposer(session, quest));
+        quests[stats.QuestId] = totalProgress;
+        var activeQuest = quest;
+        if (activeQuest == null)
+            return;
+        client.Send(new QuestStartedComposer(client, activeQuest));
         if (completeQuest)
         {
-            _messengerDataLoader.BroadcastStatusUpdate(habbo, MessengerEventTypes.QuestCompleted, $"{quest.Category}.{quest.Name}");
-            habbo.HabboStats.QuestId = 0;
-            habbo.QuestLastCompleted = quest.Id;
-            session.Send(new QuestCompletedComposer(session, quest));
-            habbo.Duckets += quest.Reward;
-            session.Send(new HabboActivityPointNotificationComposer(habbo.Duckets, quest.Reward));
-            GetList(session, null!);
+            _messengerDataLoader.BroadcastStatusUpdate(habbo, MessengerEventTypes.QuestCompleted, $"{activeQuest.Category}.{activeQuest.Name}");
+            stats.QuestId = 0;
+            habbo.QuestLastCompleted = activeQuest.Id;
+            client.Send(new QuestCompletedComposer(client, activeQuest));
+            habbo.Duckets += activeQuest.Reward;
+            client.Send(new HabboActivityPointNotificationComposer(habbo.Duckets, activeQuest.Reward));
+            GetList(client, null!);
         }
     }
 
