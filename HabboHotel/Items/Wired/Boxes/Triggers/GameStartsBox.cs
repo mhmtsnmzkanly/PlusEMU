@@ -56,7 +56,8 @@ internal class GameStartsBox : IWiredItem
             {
                 foreach (var user in Instance.GetRoomUserManager().GetRoomUsers().ToList())
                 {
-                    var habbo = user?.GetClient()?.GetHabbo();
+                    var client = user?.GetClient();
+                    var habbo = client?.GetHabbo();
                     if (habbo == null)
                         continue;
                     effect.Execute(habbo);

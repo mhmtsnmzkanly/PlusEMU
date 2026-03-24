@@ -40,7 +40,9 @@ internal class AddActorToTeamBox : IWiredItem
         var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
         if (user == null)
             return false;
-        var effects = user.GetClient()?.GetHabbo()?.Effects;
+        var client = user.GetClient();
+        var habbo = client?.GetHabbo();
+        var effects = habbo?.Effects;
         if (effects == null)
             return false;
         var toJoin = int.Parse(StringData) == 1 ? Team.Red : int.Parse(StringData) == 2 ? Team.Green : int.Parse(StringData) == 3 ? Team.Blue : int.Parse(StringData) == 4 ? Team.Yellow : Team.None;

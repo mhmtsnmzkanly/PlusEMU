@@ -48,8 +48,10 @@ public class InteractorLoveLock : IFurniInteractor
                     session.SendNotification("You can only use this item with the item owner.");
                 else
                 {
-                    var userOneHabbo = userOne.GetClient()?.GetHabbo();
-                    var userTwoHabbo = userTwo.GetClient()?.GetHabbo();
+                    var userOneClient = userOne.GetClient();
+                    var userTwoClient = userTwo.GetClient();
+                    var userOneHabbo = userOneClient?.GetHabbo();
+                    var userTwoHabbo = userTwoClient?.GetHabbo();
                     if (userOneHabbo == null || userTwoHabbo == null)
                     {
                         session.SendNotification("We couldn't find a valid user to lock this love lock with.");
@@ -59,8 +61,8 @@ public class InteractorLoveLock : IFurniInteractor
                     userTwo.CanWalk = false;
                     item.InteractingUser = userOneHabbo.Id;
                     item.InteractingUser2 = userTwoHabbo.Id;
-                    userOne.GetClient().Send(new LoveLockDialogueComposer(item.Id));
-                    userTwo.GetClient().Send(new LoveLockDialogueComposer(item.Id));
+                    userOneClient.Send(new LoveLockDialogueComposer(item.Id));
+                    userTwoClient.Send(new LoveLockDialogueComposer(item.Id));
                 }
             }
             else
