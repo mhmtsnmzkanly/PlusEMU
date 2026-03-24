@@ -38,6 +38,9 @@ internal class UserSaysCommandBox : IWiredItem
         var player = (Habbo)@params[0];
         if (player == null || player.CurrentRoom == null || !player.InRoom)
             return false;
+        var client = player.Client;
+        if (client == null)
+            return false;
         var user = player.CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)
             return false;
@@ -56,13 +59,15 @@ internal class UserSaysCommandBox : IWiredItem
                     return false;
                 Instance.GetWired().OnEvent(condition.Item);
             }
-            player.Client.Send(new WhisperComposer(user.VirtualId, StringData, 0, 0));
+            client.Send(new WhisperComposer(user.VirtualId, StringData, 0, 0));
             //Check the ICollection to find the random addon effect.
             var hasRandomEffectAddon = effects.Count(x => x.Type == WiredBoxType.AddonRandomEffect) > 0;
             if (hasRandomEffectAddon)
             {
                 //Okay, so we have a random addon effect, now lets get the IWiredItem and attempt to execute it.
                 var randomBox = effects.FirstOrDefault(x => x.Type == WiredBoxType.AddonRandomEffect);
+                if (randomBox == null)
+                    return false;
                 if (!randomBox.Execute())
                     return false;
 
