@@ -1017,7 +1017,7 @@ public class Item
                                     if (target == null || target.IsBot || target.IsPet)
                                         continue;
                                     var targetClient = target.GetClient();
-                                    var targetHabbo = targetClient?.GetHabbo();
+                                    var targetHabbo = GetHabbo(target);
                                     if (targetHabbo == null)
                                         continue;
                                     if (_room.CheckRights(targetClient, true))
@@ -1104,8 +1104,7 @@ public class Item
 
     public void UserFurniCollision(RoomUser user)
     {
-        var client = user?.GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo(user);
         if (habbo == null)
             return;
         GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerUserFurniCollision, habbo, this);
