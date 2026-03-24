@@ -590,11 +590,12 @@ public class RoomUserManager
                 }
                 if (user.SetStep)
                 {
-                    if (_room.GetGameMap().IsValidStep2(user, new(user.X, user.Y), new(user.SetX, user.SetY), user.GoalX == user.SetX && user.GoalY == user.SetY, user.AllowOverride))
+                    var gameMap = _room.GetGameMap();
+                    if (gameMap.IsValidStep2(user, new(user.X, user.Y), new(user.SetX, user.SetY), user.GoalX == user.SetX && user.GoalY == user.SetY, user.AllowOverride))
                     {
                         if (!user.RidingHorse)
-                            _room.GetGameMap().UpdateUserMovement(new(user.Coordinate.X, user.Coordinate.Y), new(user.SetX, user.SetY), user);
-                        var coordinatedItems = _room.GetGameMap().GetCoordinatedItems(new(user.X, user.Y));
+                            gameMap.UpdateUserMovement(new(user.Coordinate.X, user.Coordinate.Y), new(user.SetX, user.SetY), user);
+                        var coordinatedItems = gameMap.GetCoordinatedItems(new(user.X, user.Y));
                         foreach (var item in coordinatedItems.ToList()) item.UserWalksOffFurni(user);
                         if (!user.IsBot)
                         {
@@ -617,12 +618,12 @@ public class RoomUserManager
                                 horse.Y = user.SetY;
                             }
                         }
-                        if (user.X == _room.GetGameMap().Model.DoorX && user.Y == _room.GetGameMap().Model.DoorY && !toRemove.Contains(user) && !user.IsBot)
+                        if (user.X == gameMap.Model.DoorX && user.Y == gameMap.Model.DoorY && !toRemove.Contains(user) && !user.IsBot)
                         {
                             toRemove.Add(user);
                             continue;
                         }
-                        var items = _room.GetGameMap().GetCoordinatedItems(new(user.X, user.Y));
+                        var items = gameMap.GetCoordinatedItems(new(user.X, user.Y));
                         foreach (var item in items.ToList()) item.UserWalksOnFurni(user);
                         UpdateUserStatus(user, true);
                     }
