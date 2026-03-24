@@ -115,7 +115,7 @@ public class RoomUserManager
         OnRemove(user);
     }
 
-    public RoomUser GetUserForSquare(int x, int y) => _room.GetGameMap().GetRoomUsers(new(x, y)).FirstOrDefault();
+    public RoomUser GetUserForSquare(int x, int y) => _room.GetGameMap().GetRoomUsers(new(x, y)).FirstOrDefault()!;
 
     public bool AddAvatarToRoom(GameClient session)
     {
@@ -157,7 +157,7 @@ public class RoomUserManager
         }
         else if (!user.IsBot && (habbo.IsTeleporting || habbo.IsHopping))
         {
-            Item item = null;
+            Item? item = null;
             if (habbo.IsTeleporting)
                 item = _room.GetRoomItemHandler().GetItem(habbo.TeleporterId);
             else if (habbo.IsHopping)
@@ -234,7 +234,9 @@ public class RoomUserManager
         {
             if (_room == null)
                 return;
-            var habbo = session?.GetHabbo();
+            if (session == null)
+                return;
+            var habbo = session.GetHabbo();
             if (habbo == null)
                 return;
             if (notifyKick)
@@ -279,9 +281,9 @@ public class RoomUserManager
                 }
                 if (user.IsTrading)
                 {
-                    Trade trade = null;
+                    Trade? trade = null;
                     if (_room.GetTrading().TryGetTrade(user.TradeId, out trade))
-                        trade.EndTrade(user.TradeId);
+                        trade?.EndTrade(user.TradeId);
                 }
                 habbo.Messenger?.NotifyChangesToFriends();
                 using (var dbClient = PlusEnvironment.DatabaseManager.Connection())
@@ -376,8 +378,7 @@ public class RoomUserManager
             _room.GetGameMap().GameMap[user.X, user.Y] = user.SqState;
         _room.GetGameMap().RemoveUserFromMap(user, new(user.X, user.Y));
         _room.SendPacket(new UserRemoveComposer(user.VirtualId));
-        RoomUser toRemove = null;
-        if (_users.TryRemove(user.InternalRoomId, out toRemove))
+        if (_users.TryRemove(user.InternalRoomId, out _))
         {
             //uhmm, could put the below stuff in but idk.
         }
@@ -397,7 +398,7 @@ public class RoomUserManager
             var id = _bots.FirstOrDefault(x => x.Value.BotData != null && x.Value.BotData.Name.ToLower() == name.ToLower()).Value.BotData.Id;
             return _bots[id];
         }
-        return null;
+        return null!;
     }
 
     public void UpdateUserCount(int count)
@@ -408,9 +409,9 @@ public class RoomUserManager
         dbClient.RunQuery($"UPDATE `rooms` SET `users_now` = '{count}' WHERE `id` = '{_room.RoomId}' LIMIT 1");
     }
 
-    public RoomUser GetRoomUserByVirtualId(int virtualId) => _users.TryGetValue(virtualId, out var user) ? user : null;
+    public RoomUser GetRoomUserByVirtualId(int virtualId) => _users.TryGetValue(virtualId, out var user) ? user : null!;
 
-    public RoomUser GetRoomUserByHabbo(int id) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Id == id);
+    public RoomUser GetRoomUserByHabbo(int id) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Id == id)!;
 
     public List<RoomUser> GetRoomUsers() => GetUserList().Where(x => !x.IsBot).ToList();
 
@@ -426,7 +427,7 @@ public class RoomUserManager
         return returnList;
     }
 
-    public RoomUser GetRoomUserByHabbo(string pName) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Username.Equals(pName, StringComparison.OrdinalIgnoreCase) == true);
+    public RoomUser GetRoomUserByHabbo(string pName) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Username.Equals(pName, StringComparison.OrdinalIgnoreCase) == true)!;
 
     public void UpdatePets()
     {
