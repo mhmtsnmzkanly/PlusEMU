@@ -66,8 +66,8 @@ public class InteractorLoveLock : IFurniInteractor
                     userTwo.CanWalk = false;
                     item.InteractingUser = userOneHabbo.Id;
                     item.InteractingUser2 = userTwoHabbo.Id;
-                    userOneClient.Send(new LoveLockDialogueComposer(item.Id));
-                    userTwoClient.Send(new LoveLockDialogueComposer(item.Id));
+                    userOneClient!.Send(new LoveLockDialogueComposer(item.Id));
+                    userTwoClient!.Send(new LoveLockDialogueComposer(item.Id));
                 }
             }
             else
