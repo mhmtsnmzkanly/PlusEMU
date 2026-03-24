@@ -324,7 +324,7 @@ public class WiredComponent
 
     public IWiredItem GetRandomEffect(ICollection<IWiredItem> effects)
     {
-        return effects.OrderBy(x => Guid.NewGuid()).FirstOrDefault();
+        return effects.OrderBy(x => Guid.NewGuid()).FirstOrDefault()!;
     }
 
     public bool OnUserFurniCollision(Room room, Item item)
@@ -377,8 +377,7 @@ public class WiredComponent
     public void SaveBox(IWiredItem item)
     {
         var items = "";
-        IWiredCycle cycle = null;
-        if (item is IWiredCycle) cycle = (IWiredCycle)item;
+        IWiredCycle? cycle = item as IWiredCycle;
         foreach (var I in item.SetItems.Values)
         {
             var selectedItem = _room.GetRoomItemHandler().GetItem(Convert.ToUInt32(I.Id));
@@ -395,7 +394,7 @@ public class WiredComponent
         dbClient.SetQuery("REPLACE INTO `wired_items` VALUES (@id, @items, @delay, @string, @bool)");
         dbClient.AddParameter("id", item.Item.Id);
         dbClient.AddParameter("items", items);
-        dbClient.AddParameter("delay", item is IWiredCycle ? cycle.Delay : 0);
+        dbClient.AddParameter("delay", cycle?.Delay ?? 0);
         dbClient.AddParameter("string", item.StringData);
         dbClient.AddParameter("bool", item.BoolData ? "1" : "0");
         dbClient.RunQuery();
@@ -408,7 +407,16 @@ public class WiredComponent
         return _wiredItems.TryRemove(itemId, out _);
     }
 
-    public bool TryGet(uint id, out IWiredItem item) => _wiredItems.TryGetValue(id, out item);
+    public bool TryGet(uint id, out IWiredItem item)
+    {
+        if (_wiredItems.TryGetValue(id, out var wiredItem))
+        {
+            item = wiredItem;
+            return true;
+        }
+        item = null!;
+        return false;
+    }
 
     public void Cleanup()
     {

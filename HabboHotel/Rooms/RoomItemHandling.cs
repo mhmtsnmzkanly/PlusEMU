@@ -200,16 +200,14 @@ public class RoomItemHandling
 
     public Item GetItem(uint pId)
     {
-        if (_floorItems != null && _floorItems.ContainsKey(pId))
+        if (_floorItems.ContainsKey(pId))
         {
-            Item? item = null;
-            if (_floorItems.TryGetValue(pId, out item))
+            if (_floorItems.TryGetValue(pId, out var item))
                 return item;
         }
-        else if (_wallItems != null && _wallItems.ContainsKey(pId))
+        else if (_wallItems.ContainsKey(pId))
         {
-            Item? item = null;
-            if (_wallItems.TryGetValue(pId, out item))
+            if (_wallItems.TryGetValue(pId, out var item))
                 return item;
         }
         return null!;
@@ -241,16 +239,15 @@ public class RoomItemHandling
 
         //TODO: Recode this specific part
         if (item.IsWallItem)
-            _wallItems.TryRemove(item.Id, out item);
+            _wallItems.TryRemove(item.Id, out _);
         else
         {
-            _floorItems.TryRemove(item.Id, out item);
+            _floorItems.TryRemove(item.Id, out var removedItem);
             //mFloorItems.OnCycle();
-            if (item != null)
-                _room.GetGameMap().RemoveFromMap(item);
+            if (removedItem != null)
+                _room.GetGameMap().RemoveFromMap(removedItem);
         }
-        if (item != null)
-            RemoveItem(item);
+        RemoveItem(item);
         _room.GetGameMap().GenerateMaps();
         _room.GetRoomUserManager().UpdateUserStatusses();
     }
