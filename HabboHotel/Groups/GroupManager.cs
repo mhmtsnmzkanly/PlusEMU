@@ -88,11 +88,11 @@ public class GroupManager : IGroupManager
     {
         group = null!;
         if (_groups.ContainsKey(id))
-            return _groups.TryGetValue(id, out group);
+            return _groups.TryGetValue(id, out group!);
         lock (_groupLoadingSync)
         {
             if (_groups.ContainsKey(id))
-                return _groups.TryGetValue(id, out group);
+                return _groups.TryGetValue(id, out group!);
             using var dbClient = _database.GetQueryReactor();
             dbClient.SetQuery("SELECT * FROM `groups` WHERE `id` = @id LIMIT 1");
             dbClient.AddParameter("id", id);
