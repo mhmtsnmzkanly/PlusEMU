@@ -574,7 +574,7 @@ public class Room : RoomData
             {
                 if (user == null)
                     continue;
-                var client = user?.GetClient();
+                var client = user.GetClient();
                 if (client == null || user.IsBot)
                     continue;
                 if (withRightsOnly && !CheckRights(client))

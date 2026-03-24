@@ -55,7 +55,7 @@ public class RoomUser
     public bool IsWalking;
     public int LastBubble = 0;
     public double LastInteraction;
-    public Item LastItem = null;
+    public Item? LastItem = null;
 
     public int LlPartner = 0;
     public int LockedTilesCount;
@@ -560,7 +560,7 @@ public class RoomUser
 
     public GameClient GetClient()
     {
-        if (IsBot) return null;
+        if (IsBot) return null!;
         if (_mClient == null)
             _mClient = PlusEnvironment.Game.ClientManager.GetClientByUserId(HabboId);
         return _mClient;
@@ -569,16 +569,19 @@ public class RoomUser
     private Habbo GetHabbo()
     {
         var client = GetClient();
-        return client?.GetHabbo();
+        return client?.GetHabbo()!;
     }
 
     private Room GetRoom()
     {
         if (_mRoom == null)
         {
-            if (PlusEnvironment.Game.RoomManager.TryGetRoom(RoomId, out _mRoom))
-                return _mRoom;
+            if (PlusEnvironment.Game.RoomManager.TryGetRoom(RoomId, out var room))
+            {
+                _mRoom = room;
+                return room;
+            }
         }
-        return _mRoom;
+        return _mRoom!;
     }
 }

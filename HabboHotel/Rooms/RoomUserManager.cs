@@ -532,7 +532,7 @@ public class RoomUserManager
         return true;
     }
 
-    private Habbo GetHabbo(RoomUser user)
+    private Habbo? GetHabbo(RoomUser? user)
     {
         var client = user?.GetClient();
         return client?.GetHabbo();
@@ -747,10 +747,12 @@ public class RoomUserManager
                             {
                                 var horse = GetRoomUserByVirtualId(user.HorseId);
                                 if (horse != null)
+                                {
                                     horse.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
+                                    horse.UpdateNeeded = true;
+                                }
                                 user.SetStatus("mv", $"{+nextX},{nextY},{TextHandling.GetString(nextZ + 1)}");
                                 user.UpdateNeeded = true;
-                                horse.UpdateNeeded = true;
                             }
                             else
                                 user.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
@@ -862,7 +864,7 @@ public class RoomUserManager
                 return;
             double newZ;
             var itemsOnSquare = _room.GetGameMap().GetAllRoomItemForSquare(user.X, user.Y);
-            if (itemsOnSquare != null || itemsOnSquare.Count != 0)
+            if (itemsOnSquare.Count != 0)
             {
                 if (user.RidingHorse && user.IsPet == false)
                     newZ = _room.GetGameMap().SqAbsoluteHeight(user.X, user.Y, itemsOnSquare.ToList()) + 1;
@@ -1033,7 +1035,7 @@ public class RoomUserManager
                         {
                             if (user.GoalX == item.GetX && user.GoalY == item.GetY)
                             {
-                                var client = user?.GetClient();
+                                var client = user.GetClient();
                                 var habbo = GetHabbo(user);
                                 if (habbo == null)
                                     continue;
@@ -1102,9 +1104,11 @@ public class RoomUserManager
 
     private void UpdateUserEffect(RoomUser user, int x, int y)
     {
+        if (user == null || user.IsBot)
+            return;
         var habbo = GetHabbo(user);
         var effects = habbo?.Effects;
-        if (user == null || user.IsBot || effects == null)
+        if (effects == null)
             return;
         try
         {
@@ -1182,9 +1186,5 @@ public class RoomUserManager
         _bots.Clear();
         UserCount = 0;
         PetCount = 0;
-        _users = null;
-        _pets = null;
-        _bots = null;
-        _room = null;
     }
 }
