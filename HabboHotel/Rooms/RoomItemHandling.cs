@@ -126,9 +126,11 @@ public class RoomItemHandling
                         dbClient.RunQuery($"UPDATE `items` SET `room_id` = '0' WHERE `id` = '{item.Id}' LIMIT 1");
                     }
                     var client = PlusEnvironment.Game.ClientManager.GetClientByUserId(item.UserId);
-                    if (client != null)
+                    var clientHabbo = client?.GetHabbo();
+                    var furniture = clientHabbo?.Inventory?.Furniture;
+                    if (client != null && furniture != null)
                     {
-                        client.GetHabbo().Inventory.Furniture.AddItem(item.ToInventoryItem());
+                        furniture.AddItem(item.ToInventoryItem());
                         client.Send(new FurniListUpdateComposer());
                     }
                     continue;
@@ -150,7 +152,10 @@ public class RoomItemHandling
                 }
                 try
                 {
-                    item.WallCoordinates = WallPositionCheck($":{item.WallCoordinates.Split(':')[1]}");
+                    var wallParts = item.WallCoordinates.Split(':');
+                    if (wallParts.Length < 2)
+                        throw new FormatException("Invalid wall position");
+                    item.WallCoordinates = WallPositionCheck($":{wallParts[1]}");
                 }
                 catch
                 {
@@ -197,17 +202,17 @@ public class RoomItemHandling
     {
         if (_floorItems != null && _floorItems.ContainsKey(pId))
         {
-            Item item = null;
+            Item? item = null;
             if (_floorItems.TryGetValue(pId, out item))
                 return item;
         }
         else if (_wallItems != null && _wallItems.ContainsKey(pId))
         {
-            Item item = null;
+            Item? item = null;
             if (_wallItems.TryGetValue(pId, out item))
                 return item;
         }
-        return null;
+        return null!;
     }
 
     public void RemoveFurniture(GameClient session, uint id)
@@ -241,9 +246,11 @@ public class RoomItemHandling
         {
             _floorItems.TryRemove(item.Id, out item);
             //mFloorItems.OnCycle();
-            _room.GetGameMap().RemoveFromMap(item);
+            if (item != null)
+                _room.GetGameMap().RemoveFromMap(item);
         }
-        RemoveItem(item);
+        if (item != null)
+            RemoveItem(item);
         _room.GetGameMap().GenerateMaps();
         _room.GetRoomUserManager().UpdateUserStatusses();
     }
@@ -633,9 +640,9 @@ public class RoomItemHandling
         if (item == null)
             return;
         if (_movedItems.ContainsKey(item.Id))
-            _movedItems.TryRemove(item.Id, out item);
+            _movedItems.TryRemove(item.Id, out _);
         if (_rollers.ContainsKey(item.Id))
-            _rollers.TryRemove(item.Id, out item);
+            _rollers.TryRemove(item.Id, out _);
     }
 
     public void OnCycle()
@@ -657,9 +664,11 @@ public class RoomItemHandling
             var addItems = new List<Item>();
             while (_roomItemUpdateQueue.Count > 0)
             {
-                var item = (Item)null;
+                Item? item = null;
                 if (_roomItemUpdateQueue.TryDequeue(out item))
                 {
+                    if (item == null)
+                        continue;
                     item.ProcessUpdates();
                     if (item.UpdateCounter > 0)
                         addItems.Add(item);

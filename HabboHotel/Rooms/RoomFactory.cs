@@ -20,13 +20,13 @@ public static class RoomFactory
                 else
                 {
                     if (!PlusEnvironment.Game.RoomManager.TryGetModel(Convert.ToString(row["model_name"]), out var model)) continue;
-                    data.Add(new(Convert.ToUInt32(row["id"]), Convert.ToString(row["caption"]), Convert.ToString(row["model_name"]), Convert.ToString(row["username"]),
+                    data.Add(new(Convert.ToUInt32(row["id"]), Convert.ToString(row["caption"]) ?? string.Empty, Convert.ToString(row["model_name"]) ?? string.Empty, Convert.ToString(row["username"]) ?? "Habboon",
                         Convert.ToInt32(row["owner"]),
-                        Convert.ToString(row["password"]), Convert.ToInt32(row["score"]), Convert.ToString(row["roomtype"]), Convert.ToString(row["state"]), Convert.ToInt32(row["users_now"]),
-                        Convert.ToInt32(row["users_max"]), Convert.ToInt32(row["category"]), Convert.ToString(row["description"]), Convert.ToString(row["tags"]), Convert.ToString(row["floor"]),
-                        Convert.ToString(row["landscape"]), Convert.ToString(row["allow_pets"]) == "1", Convert.ToString(row["allow_pets_eat"]) == "1", Convert.ToString(row["room_blocking_disabled"]) == "1",
+                        Convert.ToString(row["password"]) ?? string.Empty, Convert.ToInt32(row["score"]), Convert.ToString(row["roomtype"]) ?? string.Empty, Convert.ToString(row["state"]) ?? string.Empty, Convert.ToInt32(row["users_now"]),
+                        Convert.ToInt32(row["users_max"]), Convert.ToInt32(row["category"]), Convert.ToString(row["description"]) ?? string.Empty, Convert.ToString(row["tags"]) ?? string.Empty, Convert.ToString(row["floor"]) ?? string.Empty,
+                        Convert.ToString(row["landscape"]) ?? string.Empty, Convert.ToString(row["allow_pets"]) == "1", Convert.ToString(row["allow_pets_eat"]) == "1", Convert.ToString(row["room_blocking_disabled"]) == "1",
                         Convert.ToString(row["allow_hidewall"]) == "1",
-                        Convert.ToInt32(row["wallthick"]), Convert.ToInt32(row["floorthick"]), Convert.ToString(row["wallpaper"]), Convert.ToInt32(row["mute_settings"]),
+                        Convert.ToInt32(row["wallthick"]), Convert.ToInt32(row["floorthick"]), Convert.ToString(row["wallpaper"]) ?? string.Empty, Convert.ToInt32(row["mute_settings"]),
                         Convert.ToInt32(row["ban_settings"]),
                         Convert.ToInt32(row["kick_settings"]), Convert.ToInt32(row["chat_mode"]), Convert.ToInt32(row["chat_size"]), Convert.ToInt32(row["chat_speed"]),
                         Convert.ToInt32(row["chat_extra_flood"]),
@@ -55,20 +55,20 @@ public static class RoomFactory
             var row = dbClient.GetRow();
             if (row != null)
             {
-                RoomModel model = null;
+                RoomModel? model = null;
                 if (!PlusEnvironment.Game.RoomManager.TryGetModel(Convert.ToString(row["model_name"]), out model))
                 {
-                    data = null;
+                    data = null!;
                     return false;
                 }
                 
-                var username = !string.IsNullOrEmpty(Convert.ToString(row["username"])) ? Convert.ToString(row["username"]) : "Habboon";
-                data = new(Convert.ToUInt32(row["id"]), Convert.ToString(row["caption"]), Convert.ToString(row["model_name"]), username, Convert.ToInt32(row["owner"]),
-                    Convert.ToString(row["password"]), Convert.ToInt32(row["score"]), Convert.ToString(row["roomtype"]), Convert.ToString(row["state"]), Convert.ToInt32(row["users_now"]),
-                    Convert.ToInt32(row["users_max"]), Convert.ToInt32(row["category"]), Convert.ToString(row["description"]), Convert.ToString(row["tags"]), Convert.ToString(row["floor"]),
-                    Convert.ToString(row["landscape"]), Convert.ToString(row["allow_pets"]) == "1", Convert.ToString(row["allow_pets_eat"]) == "1", Convert.ToString(row["room_blocking_disabled"]) == "1",
+                var username = !string.IsNullOrEmpty(Convert.ToString(row["username"])) ? Convert.ToString(row["username"])! : "Habboon";
+                data = new(Convert.ToUInt32(row["id"]), Convert.ToString(row["caption"]) ?? string.Empty, Convert.ToString(row["model_name"]) ?? string.Empty, username, Convert.ToInt32(row["owner"]),
+                    Convert.ToString(row["password"]) ?? string.Empty, Convert.ToInt32(row["score"]), Convert.ToString(row["roomtype"]) ?? string.Empty, Convert.ToString(row["state"]) ?? string.Empty, Convert.ToInt32(row["users_now"]),
+                    Convert.ToInt32(row["users_max"]), Convert.ToInt32(row["category"]), Convert.ToString(row["description"]) ?? string.Empty, Convert.ToString(row["tags"]) ?? string.Empty, Convert.ToString(row["floor"]) ?? string.Empty,
+                    Convert.ToString(row["landscape"]) ?? string.Empty, Convert.ToString(row["allow_pets"]) == "1", Convert.ToString(row["allow_pets_eat"]) == "1", Convert.ToString(row["room_blocking_disabled"]) == "1",
                     Convert.ToString(row["allow_hidewall"]) == "1",
-                    Convert.ToInt32(row["wallthick"]), Convert.ToInt32(row["floorthick"]), Convert.ToString(row["wallpaper"]), Convert.ToInt32(row["mute_settings"]),
+                    Convert.ToInt32(row["wallthick"]), Convert.ToInt32(row["floorthick"]), Convert.ToString(row["wallpaper"]) ?? string.Empty, Convert.ToInt32(row["mute_settings"]),
                     Convert.ToInt32(row["ban_settings"]),
                     Convert.ToInt32(row["kick_settings"]), Convert.ToInt32(row["chat_mode"]), Convert.ToInt32(row["chat_size"]), Convert.ToInt32(row["chat_speed"]),
                     Convert.ToInt32(row["chat_extra_flood"]),
@@ -79,7 +79,7 @@ public static class RoomFactory
                 return true;
             }
         }
-        data = null;
+        data = null!;
         return false;
     }
 }
