@@ -12,17 +12,20 @@ namespace Plus.HabboHotel.Navigator;
 internal class NavigatorService : INavigatorService
 {
     private readonly INavigatorManager _navigatorManager;
+    private readonly INavigatorQueryService _navigatorQueryService;
     private readonly IRoomManager _roomManager;
     private readonly IWordFilterManager _wordFilterManager;
     private readonly IDatabase _database;
 
     public NavigatorService(
         INavigatorManager navigatorManager,
+        INavigatorQueryService navigatorQueryService,
         IRoomManager roomManager,
         IWordFilterManager wordFilterManager,
         IDatabase database)
     {
         _navigatorManager = navigatorManager;
+        _navigatorQueryService = navigatorQueryService;
         _roomManager = roomManager;
         _wordFilterManager = wordFilterManager;
         _database = database;
@@ -94,13 +97,13 @@ internal class NavigatorService : INavigatorService
                 categories = _navigatorManager.GetResultByIdentifier(category).ToList();
                 if (categories.Count > 0)
                 {
-                    session.Send(new NavigatorSearchResultSetComposer(category, search, categories, session, 2, 100));
+                    session.Send(new NavigatorSearchResultSetComposer(category, search, categories, session, _navigatorQueryService, 2, 100));
                     return Task.CompletedTask;
                 }
             }
         }
 
-        session.Send(new NavigatorSearchResultSetComposer(category, search, categories, session));
+        session.Send(new NavigatorSearchResultSetComposer(category, search, categories, session, _navigatorQueryService));
         return Task.CompletedTask;
     }
 
