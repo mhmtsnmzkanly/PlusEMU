@@ -10,7 +10,7 @@ public interface IModerationManager
     void ReCacheBans();
     void BanUser(string mod, ModerationBanType type, string banValue, string reason, double expireTimestamp);
     bool TryAddTicket(ModerationTicket ticket);
-    bool TryGetTicket(int ticketId, out ModerationTicket ticket);
+    bool TryGetTicket(int ticketId, out ModerationTicket? ticket);
     bool UserHasTickets(int userId);
     ModerationTicket GetTicketBySenderId(int userId);
 
@@ -20,7 +20,7 @@ public interface IModerationManager
     /// <param name="key"></param>
     /// <param name="ban"></param>
     /// <returns></returns>
-    bool IsBanned(string key, out ModerationBan ban);
+    bool IsBanned(string key, out ModerationBan? ban);
 
     /// <summary>
     /// Run a quick database check to see if this ban exists in the database.

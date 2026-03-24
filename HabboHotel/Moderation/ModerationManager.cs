@@ -62,21 +62,21 @@ public sealed class ModerationManager : IModerationManager
             _bans.Clear();
         using (var dbClient = _database.GetQueryReactor())
         {
-            DataTable presetsTable = null;
+            DataTable? presetsTable = null;
             dbClient.SetQuery("SELECT * FROM `moderation_presets`;");
             presetsTable = dbClient.GetTable();
             if (presetsTable != null)
             {
                 foreach (DataRow row in presetsTable.Rows)
                 {
-                    var type = Convert.ToString(row["type"]).ToLower();
+                    var type = (Convert.ToString(row["type"]) ?? string.Empty).ToLower();
                     switch (type)
                     {
                         case "user":
-                            _userPresets.Add(Convert.ToString(row["message"]));
+                            _userPresets.Add(Convert.ToString(row["message"]) ?? string.Empty);
                             break;
                         case "room":
-                            _roomPresets.Add(Convert.ToString(row["message"]));
+                            _roomPresets.Add(Convert.ToString(row["message"]) ?? string.Empty);
                             break;
                     }
                 }
@@ -84,7 +84,7 @@ public sealed class ModerationManager : IModerationManager
         }
         using (var dbClient = _database.GetQueryReactor())
         {
-            DataTable moderationTopics = null;
+            DataTable? moderationTopics = null;
             dbClient.SetQuery("SELECT * FROM `moderation_topics`;");
             moderationTopics = dbClient.GetTable();
             if (moderationTopics != null)
@@ -92,13 +92,13 @@ public sealed class ModerationManager : IModerationManager
                 foreach (DataRow row in moderationTopics.Rows)
                 {
                     if (!_moderationCfhTopics.ContainsKey(Convert.ToInt32(row["id"])))
-                        _moderationCfhTopics.Add(Convert.ToInt32(row["id"]), Convert.ToString(row["caption"]));
+                        _moderationCfhTopics.Add(Convert.ToInt32(row["id"]), Convert.ToString(row["caption"]) ?? string.Empty);
                 }
             }
         }
         using (var dbClient = _database.GetQueryReactor())
         {
-            DataTable moderationTopicsActions = null;
+            DataTable? moderationTopicsActions = null;
             dbClient.SetQuery("SELECT * FROM `moderation_topic_actions`;");
             moderationTopicsActions = dbClient.GetTable();
             if (moderationTopicsActions != null)
@@ -107,25 +107,25 @@ public sealed class ModerationManager : IModerationManager
                 {
                     var parentId = Convert.ToInt32(row["parent_id"]);
                     if (!_moderationCfhTopicActions.ContainsKey(parentId)) _moderationCfhTopicActions.Add(parentId, new());
-                    _moderationCfhTopicActions[parentId].Add(new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["parent_id"]), Convert.ToString(row["type"]),
-                        Convert.ToString(row["caption"]), Convert.ToString(row["message_text"]),
+                    _moderationCfhTopicActions[parentId].Add(new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["parent_id"]), Convert.ToString(row["type"]) ?? string.Empty,
+                        Convert.ToString(row["caption"]) ?? string.Empty, Convert.ToString(row["message_text"]) ?? string.Empty,
                         Convert.ToInt32(row["mute_time"]), Convert.ToInt32(row["ban_time"]), Convert.ToInt32(row["ip_time"]), Convert.ToInt32(row["trade_lock_time"]),
-                        Convert.ToString(row["default_sanction"])));
+                        Convert.ToString(row["default_sanction"]) ?? string.Empty));
                 }
             }
         }
         using (var dbClient = _database.GetQueryReactor())
         {
-            DataTable presetsActionCats = null;
+            DataTable? presetsActionCats = null;
             dbClient.SetQuery("SELECT * FROM `moderation_preset_action_categories`;");
             presetsActionCats = dbClient.GetTable();
             if (presetsActionCats != null)
                 foreach (DataRow row in presetsActionCats.Rows)
-                    _userActionPresetCategories.Add(Convert.ToInt32(row["id"]), Convert.ToString(row["caption"]));
+                    _userActionPresetCategories.Add(Convert.ToInt32(row["id"]), Convert.ToString(row["caption"]) ?? string.Empty);
         }
         using (var dbClient = _database.GetQueryReactor())
         {
-            DataTable presetsActionMessages = null;
+            DataTable? presetsActionMessages = null;
             dbClient.SetQuery("SELECT * FROM `moderation_preset_action_messages`;");
             presetsActionMessages = dbClient.GetTable();
             if (presetsActionMessages != null)
@@ -134,26 +134,26 @@ public sealed class ModerationManager : IModerationManager
                 {
                     var parentId = Convert.ToInt32(row["parent_id"]);
                     if (!_userActionPresetMessages.ContainsKey(parentId)) _userActionPresetMessages.Add(parentId, new());
-                    _userActionPresetMessages[parentId].Add(new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["parent_id"]), Convert.ToString(row["caption"]),
-                        Convert.ToString(row["message_text"]),
+                    _userActionPresetMessages[parentId].Add(new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["parent_id"]), Convert.ToString(row["caption"]) ?? string.Empty,
+                        Convert.ToString(row["message_text"]) ?? string.Empty,
                         Convert.ToInt32(row["mute_hours"]), Convert.ToInt32(row["ban_hours"]), Convert.ToInt32(row["ip_ban_hours"]), Convert.ToInt32(row["trade_lock_days"]),
-                        Convert.ToString(row["notice"])));
+                        Convert.ToString(row["notice"]) ?? string.Empty));
                 }
             }
         }
         using (var dbClient = _database.GetQueryReactor())
         {
-            DataTable getBans = null;
+            DataTable? getBans = null;
             dbClient.SetQuery("SELECT `bantype`,`value`,`reason`,`expire` FROM `bans` WHERE `bantype` = 'machine' OR `bantype` = 'user'");
             getBans = dbClient.GetTable();
             if (getBans != null)
             {
                 foreach (DataRow dRow in getBans.Rows)
                 {
-                    var value = Convert.ToString(dRow["value"]);
-                    var reason = Convert.ToString(dRow["reason"]);
+                    var value = Convert.ToString(dRow["value"]) ?? string.Empty;
+                    var reason = Convert.ToString(dRow["reason"]) ?? string.Empty;
                     var expires = (double)dRow["expire"];
-                    var type = Convert.ToString(dRow["bantype"]);
+                    var type = Convert.ToString(dRow["bantype"]) ?? string.Empty;
                     var ban = new ModerationBan(BanTypeUtility.GetModerationBanType(type), value, reason, expires);
                     if (ban != null)
                     {
@@ -184,17 +184,17 @@ public sealed class ModerationManager : IModerationManager
             _bans.Clear();
         using (var dbClient = _database.GetQueryReactor())
         {
-            DataTable getBans = null;
+            DataTable? getBans = null;
             dbClient.SetQuery("SELECT `bantype`,`value`,`reason`,`expire` FROM `bans` WHERE `bantype` = 'machine' OR `bantype` = 'user'");
             getBans = dbClient.GetTable();
             if (getBans != null)
             {
                 foreach (DataRow dRow in getBans.Rows)
                 {
-                    var value = Convert.ToString(dRow["value"]);
-                    var reason = Convert.ToString(dRow["reason"]);
+                    var value = Convert.ToString(dRow["value"]) ?? string.Empty;
+                    var reason = Convert.ToString(dRow["reason"]) ?? string.Empty;
                     var expires = (double)dRow["expire"];
-                    var type = Convert.ToString(dRow["bantype"]);
+                    var type = Convert.ToString(dRow["bantype"]) ?? string.Empty;
                     var ban = new ModerationBan(BanTypeUtility.GetModerationBanType(type), value, reason, expires);
                     if (ban != null)
                     {
@@ -239,7 +239,7 @@ public sealed class ModerationManager : IModerationManager
         return _modTickets.TryAdd(ticket.Id, ticket);
     }
 
-    public bool TryGetTicket(int ticketId, out ModerationTicket ticket) => _modTickets.TryGetValue(ticketId, out ticket);
+    public bool TryGetTicket(int ticketId, out ModerationTicket? ticket) => _modTickets.TryGetValue(ticketId, out ticket);
 
     public bool UserHasTickets(int userId) => _modTickets.Any(x => x.Value.Sender.Id == userId && x.Value.Answered == false);
 
