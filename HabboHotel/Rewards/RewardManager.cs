@@ -32,8 +32,12 @@ public class RewardManager : IRewardManager
             foreach (DataRow dRow in dTable.Rows)
             {
                 _rewards.TryAdd((int)dRow["id"],
-                    new(Convert.ToDouble(dRow["reward_start"]), Convert.ToDouble(dRow["reward_end"]), Convert.ToString(dRow["reward_type"]), Convert.ToString(dRow["reward_data"]),
-                        Convert.ToString(dRow["message"])));
+                    new(
+                        Convert.ToDouble(dRow["reward_start"]),
+                        Convert.ToDouble(dRow["reward_end"]),
+                        Convert.ToString(dRow["reward_type"]) ?? string.Empty,
+                        Convert.ToString(dRow["reward_data"]) ?? string.Empty,
+                        Convert.ToString(dRow["message"]) ?? string.Empty));
             }
         }
         dbClient.SetQuery("SELECT * FROM `server_reward_logs`");
@@ -44,29 +48,24 @@ public class RewardManager : IRewardManager
             {
                 var id = (int)dRow["user_id"];
                 var rewardId = (int)dRow["reward_id"];
-                if (!_rewardLogs.ContainsKey(id))
-                    _rewardLogs.TryAdd(id, new());
-                if (!_rewardLogs[id].Contains(rewardId))
-                    _rewardLogs[id].Add(rewardId);
+                var rewardLog = _rewardLogs.GetOrAdd(id, static _ => []);
+                if (!rewardLog.Contains(rewardId))
+                    rewardLog.Add(rewardId);
             }
         }
     }
 
     private bool HasReward(int id, int rewardId)
     {
-        if (!_rewardLogs.ContainsKey(id))
-            return false;
-        if (_rewardLogs[id].Contains(rewardId))
-            return true;
-        return false;
+        return _rewardLogs.TryGetValue(id, out var rewardLog) && rewardLog.Contains(rewardId);
     }
 
     private void LogReward(int id, int rewardId)
     {
-        if (!_rewardLogs.ContainsKey(id))
-            _rewardLogs.TryAdd(id, new());
-        if (!_rewardLogs[id].Contains(rewardId))
-            _rewardLogs[id].Add(rewardId);
+        var rewardLog = _rewardLogs.GetOrAdd(id, static _ => []);
+        if (!rewardLog.Contains(rewardId))
+            rewardLog.Add(rewardId);
+
         using var dbClient = _database.GetQueryReactor();
         dbClient.SetQuery("INSERT INTO `server_reward_logs` VALUES ('', @userId, @rewardId)");
         dbClient.AddParameter("userId", id);
