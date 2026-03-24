@@ -14,7 +14,8 @@ internal class SetMannequinNameEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var room = session.GetHabbo()?.CurrentRoom;
+        var habbo = session.GetHabbo();
+        var room = habbo?.CurrentRoom;
         if (room == null || !room.CheckRights(session, true))
             return Task.CompletedTask;
         var itemId = packet.ReadUInt();

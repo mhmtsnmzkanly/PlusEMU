@@ -18,6 +18,10 @@ internal class GetGroupMembersEvent : IPacketEvent
     }
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         var page = packet.ReadInt();
         var searchVal = packet.ReadString();
@@ -72,7 +76,7 @@ internal class GetGroupMembersEvent : IPacketEvent
         var startIndex = (page - 1) * 14 + 14;
         var finishIndex = members.Count;
         session.Send(new GroupMembersComposer(group, members.Skip(startIndex).Take(finishIndex - startIndex).ToList(), members.Count, page,
-            group.CreatorId == session.GetHabbo().Id || group.IsAdmin(session.GetHabbo().Id), requestType, searchVal));
+            group.CreatorId == habbo.Id || group.IsAdmin(habbo.Id), requestType, searchVal));
         return Task.CompletedTask;
     }
 }

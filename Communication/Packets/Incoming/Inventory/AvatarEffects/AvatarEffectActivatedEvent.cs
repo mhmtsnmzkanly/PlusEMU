@@ -7,8 +7,9 @@ internal class AvatarEffectActivatedEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        var effects = habbo?.Effects;
         var effectId = packet.ReadInt();
-        var effects = session.GetHabbo().Effects;
         if (effects == null)
             return Task.CompletedTask;
         var effect = effects.GetEffectNullable(effectId, false, true);

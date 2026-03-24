@@ -7,24 +7,25 @@ internal class TradingAcceptEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!session.GetHabbo().InRoom)
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = session.GetHabbo().CurrentRoom;
+        var room = habbo.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
-        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (roomUser == null)
             return Task.CompletedTask;
         if (!room.GetTrading().TryGetTrade(roomUser.TradeId, out var trade))
         {
-            session.Send(new TradingClosedComposer(session.GetHabbo().Id));
+            session.Send(new TradingClosedComposer(habbo.Id));
             return Task.CompletedTask;
         }
         var tradeUser = trade.Users[0];
         if (tradeUser.RoomUser != roomUser)
             tradeUser = trade.Users[1];
         tradeUser.HasAccepted = true;
-        trade.SendPacket(new TradingAcceptComposer(session.GetHabbo().Id, true));
+        trade.SendPacket(new TradingAcceptComposer(habbo.Id, true));
         if (trade.AllAccepted)
         {
             trade.SendPacket(new TradingCompleteComposer());

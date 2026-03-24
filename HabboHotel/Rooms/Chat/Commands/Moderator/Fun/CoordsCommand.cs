@@ -13,8 +13,12 @@ internal class CoordsCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
-        var currentRoom = session.GetHabbo().CurrentRoom;
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+        var currentRoom = habbo.CurrentRoom;
         if (thisUser == null)
             return;
         if (currentRoom == null)

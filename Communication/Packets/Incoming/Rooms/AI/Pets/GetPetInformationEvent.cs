@@ -23,7 +23,8 @@ internal class GetPetInformationEvent : IPacketEvent
                 return Task.CompletedTask;
 
             //Check some values first, please!
-            var userHabbo = user.GetClient()?.GetHabbo();
+            var userClient = user.GetClient();
+            var userHabbo = userClient?.GetHabbo();
             if (userHabbo == null)
                 return Task.CompletedTask;
 

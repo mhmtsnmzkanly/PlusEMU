@@ -23,16 +23,20 @@ internal class SummonCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var currentRoom = session.GetHabbo().CurrentRoom;
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
         if (currentRoom == null)
             return Task.CompletedTask;
 
-        if (target.Username == session.GetHabbo().Username)
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        if (target.Username == habbo.Username)
         {
             session.SendWhisper("Get a life.");
             return Task.CompletedTask;
         }
-        target.Client.SendNotification($"You have been summoned to {session.GetHabbo().Username}!");
+        target.Client.SendNotification($"You have been summoned to {habbo.Username}!");
         if (!target.InRoom)
             target.Client.Send(new RoomForwardComposer(currentRoom.Id));
         else

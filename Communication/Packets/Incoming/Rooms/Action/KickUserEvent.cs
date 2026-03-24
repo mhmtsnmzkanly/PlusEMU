@@ -14,7 +14,8 @@ internal class KickUserEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var room = session.GetHabbo()?.CurrentRoom;
+        var habbo = session.GetHabbo();
+        var room = habbo?.CurrentRoom;
         if (room == null)
             return Task.CompletedTask;
         if (!room.CheckRights(session) && room.WhoCanKick != 2 && room.Group == null)

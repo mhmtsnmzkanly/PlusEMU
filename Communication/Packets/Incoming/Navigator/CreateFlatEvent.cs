@@ -21,7 +21,11 @@ internal class CreateFlatEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var rooms = RoomFactory.GetRoomsDataByOwnerSortByName(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        var rooms = RoomFactory.GetRoomsDataByOwnerSortByName(habbo.Id);
         if (rooms.Count >= 500)
         {
             session.Send(new CanCreateRoomComposer(true, 500));
@@ -41,7 +45,7 @@ internal class CreateFlatEvent : IPacketEvent
             return Task.CompletedTask;
         if (!_navigatorManager.TryGetSearchResultList(category, out var searchResultList))
             category = 36;
-        if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > session.GetHabbo().Rank)
+        if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank)
             category = 36;
         if (maxVisitors < 10 || maxVisitors > 25)
             maxVisitors = 10;
@@ -50,7 +54,7 @@ internal class CreateFlatEvent : IPacketEvent
         var newRoom = _roomManager.CreateRoom(session, name, description, category, maxVisitors, tradeSettings, model);
         if (newRoom != null) session.Send(new FlatCreatedComposer(newRoom.Id, name));
 
-        session.GetHabbo().Messenger?.NotifyChangesToFriends();
+        habbo.Messenger?.NotifyChangesToFriends();
         return Task.CompletedTask;
     }
 }

@@ -16,13 +16,17 @@ internal class AlertCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo habbo, string[] parameters)
     {
-        if (habbo.Username == session.GetHabbo().Username)
+        var sessionHabbo = session.GetHabbo();
+        if (sessionHabbo == null)
+            return Task.CompletedTask;
+
+        if (habbo.Username == sessionHabbo.Username)
         {
             session.SendWhisper("Get a life.");
             return Task.CompletedTask;
         }
         var message = CommandManager.MergeParams(parameters);
-        habbo.Client.SendNotification($"{session.GetHabbo().Username} alerted you with the following message:\n\n{message}");
+        habbo.Client.SendNotification($"{sessionHabbo.Username} alerted you with the following message:\n\n{message}");
         session.SendWhisper($"Alert successfully sent to {habbo.Username}");
         return Task.CompletedTask;
     }

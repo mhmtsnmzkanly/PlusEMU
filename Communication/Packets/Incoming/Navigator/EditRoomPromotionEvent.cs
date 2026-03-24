@@ -21,12 +21,16 @@ internal class EditRoomPromotionEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var roomId = packet.ReadUInt();
         var name = _wordFilterManager.CheckMessage(packet.ReadString());
         var desc = _wordFilterManager.CheckMessage(packet.ReadString());
         if (!RoomFactory.TryGetData(roomId, out var data))
             return Task.CompletedTask;
-        if (data.OwnerId != session.GetHabbo().Id)
+        if (data.OwnerId != habbo.Id)
             return Task.CompletedTask;
         if (data.Promotion == null)
         {

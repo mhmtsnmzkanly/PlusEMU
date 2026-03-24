@@ -39,7 +39,8 @@ internal class PickUpPetEvent : RoomPacketEvent
                 return Task.CompletedTask;
 
             //Check some values first, please!
-            var targetHabbo = targetUser.GetClient()?.GetHabbo();
+            var targetClient = targetUser.GetClient();
+            var targetHabbo = targetClient?.GetHabbo();
             if (targetHabbo == null)
                 return Task.CompletedTask;
 
@@ -81,7 +82,8 @@ internal class PickUpPetEvent : RoomPacketEvent
         if (data.OwnerId != habbo.Id)
         {
             var target = _clientManager.GetClientByUserId(data.OwnerId);
-            var targetPets = target?.GetHabbo()?.Inventory?.Pets;
+            var targetHabbo = target?.GetHabbo();
+            var targetPets = targetHabbo?.Inventory?.Pets;
             if (target != null && targetPets != null)
             {
                 if (targetPets.AddPet(pet.PetData))

@@ -8,7 +8,11 @@ internal class GetGroupCreationWindowEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var rooms = RoomFactory.GetRoomsDataByOwnerSortByName(session.GetHabbo().Id).Where(x => x.Group == null).ToList();
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        var rooms = RoomFactory.GetRoomsDataByOwnerSortByName(habbo.Id).Where(x => x.Group == null).ToList();
         session.Send(new GroupCreationWindowComposer(rooms));
         return Task.CompletedTask;
     }

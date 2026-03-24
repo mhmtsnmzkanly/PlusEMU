@@ -13,6 +13,10 @@ internal class MassEnableCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
         if (!parameters.Any())
         {
             session.SendWhisper("Please enter an effect ID.");
@@ -25,7 +29,7 @@ internal class MassEnableCommand : IChatCommand
                 session.Disconnect();
                 return;
             }
-            if (!(session.GetHabbo().Permissions?.HasCommand("command_override_massenable") ?? false) && room.OwnerId != session.GetHabbo().Id)
+            if (!(habbo.Permissions?.HasCommand("command_override_massenable") ?? false) && room.OwnerId != habbo.Id)
             {
                 session.SendWhisper("You can only use this command in your own room.");
                 return;

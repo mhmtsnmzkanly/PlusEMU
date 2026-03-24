@@ -40,7 +40,8 @@ internal class MimicCommand : ITargetChatCommand
             session.SendWhisper("An error occoured whilst finding that user, maybe they're not online or in this room.");
             return Task.CompletedTask;
         }
-        var targetHabbo = targetUser.GetClient()?.GetHabbo();
+        var targetClient = targetUser.GetClient();
+        var targetHabbo = targetClient?.GetHabbo();
         if (targetHabbo == null)
             return Task.CompletedTask;
         habbo.Gender = targetHabbo.Gender;

@@ -7,7 +7,8 @@ internal class GetMarketplaceCanMakeOfferEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var errorCode = session.GetHabbo()?.TradingLockExpiry > 0 ? 6 : 1;
+        var habbo = session.GetHabbo();
+        var errorCode = habbo?.TradingLockExpiry > 0 ? 6 : 1;
         session.Send(new MarketplaceCanMakeOfferResultComposer(errorCode));
         return Task.CompletedTask;
     }

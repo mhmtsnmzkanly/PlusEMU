@@ -10,7 +10,8 @@ internal class AddStickyNoteEvent : RoomPacketEvent
 {
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        var furniture = session.GetHabbo()?.Inventory?.Furniture;
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
         if (furniture == null)
             return Task.CompletedTask;
 

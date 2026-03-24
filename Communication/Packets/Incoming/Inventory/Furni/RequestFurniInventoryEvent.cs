@@ -8,7 +8,8 @@ internal class RequestFurniInventoryEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var furniture = session.GetHabbo().Inventory?.Furniture;
+        var habbo = session.GetHabbo();
+        var furniture = habbo?.Inventory?.Furniture;
         if (furniture == null)
         {
             session.Send(new FurniListComposer(new List<InventoryItem>(), 1, 1));

@@ -22,12 +22,17 @@ internal class FollowCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        if (target.CurrentRoom == session.GetHabbo().CurrentRoom)
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        if (target.CurrentRoom == habbo.CurrentRoom)
         {
             session.SendWhisper($"Hey you, open your eyes! {target.Username} is in this room!");
             return Task.CompletedTask;
         }
-        if (target.Username == session.GetHabbo().Username)
+        if (target.Username == habbo.Username)
         {
             session.SendWhisper("* Windows shutdown noise *");
             return Task.CompletedTask;
@@ -37,12 +42,12 @@ internal class FollowCommand : ITargetChatCommand
             session.SendWhisper("That user currently isn't in a room!");
             return Task.CompletedTask;
         }
-        if (target.CurrentRoom.Access != RoomAccess.Open && !session.GetHabbo().Permissions.HasRight("mod_tool"))
+        if (target.CurrentRoom.Access != RoomAccess.Open && !(permissions?.HasRight("mod_tool") ?? false))
         {
             session.SendWhisper("Oops, the room that user is either locked, passworded or invisible. You cannot follow!");
             return Task.CompletedTask;
         }
-        session.GetHabbo().PrepareRoom(target.CurrentRoom.RoomId, "");
+        habbo.PrepareRoom(target.CurrentRoom.RoomId, "");
         return Task.CompletedTask;
     }
 }

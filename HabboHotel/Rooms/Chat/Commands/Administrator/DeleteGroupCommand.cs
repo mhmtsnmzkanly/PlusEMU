@@ -25,7 +25,8 @@ internal class DeleteGroupCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        room = session.GetHabbo()?.CurrentRoom;
+        var habbo = session.GetHabbo();
+        room = habbo?.CurrentRoom;
         if (room == null)
             return;
         if (room.Group == null)

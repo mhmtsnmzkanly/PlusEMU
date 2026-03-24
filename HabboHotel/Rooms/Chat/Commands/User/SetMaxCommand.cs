@@ -20,7 +20,8 @@ internal class SetMaxCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var permissions = session.GetHabbo()?.Permissions;
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
         if (!room.CheckRights(session, true))
             return;
         if (!parameters.Any())

@@ -22,7 +22,8 @@ internal class FreezeCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var currentRoom = session.GetHabbo().CurrentRoom;
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
         if (currentRoom == null)
             return Task.CompletedTask;
 

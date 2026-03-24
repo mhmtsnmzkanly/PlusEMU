@@ -13,7 +13,8 @@ internal class SetSpeedCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var currentRoom = session.GetHabbo()?.CurrentRoom;
+        var habbo = session.GetHabbo();
+        var currentRoom = habbo?.CurrentRoom;
         if (!room.CheckRights(session, true))
             return;
         if (!parameters.Any())

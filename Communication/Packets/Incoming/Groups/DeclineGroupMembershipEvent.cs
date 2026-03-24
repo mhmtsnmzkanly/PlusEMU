@@ -15,11 +15,15 @@ internal class DeclineGroupMembershipEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var groupId = packet.ReadInt();
         var userId = packet.ReadInt();
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
-        if (session.GetHabbo().Id != group.CreatorId && !group.IsAdmin(session.GetHabbo().Id))
+        if (habbo.Id != group.CreatorId && !group.IsAdmin(habbo.Id))
             return Task.CompletedTask;
         if (!group.HasRequest(userId))
             return Task.CompletedTask;

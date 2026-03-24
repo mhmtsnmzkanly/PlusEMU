@@ -23,7 +23,8 @@ internal class MuteCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var permissions = session.GetHabbo()?.Permissions;
+        var habbo = session.GetHabbo();
+        var permissions = habbo?.Permissions;
         if (target.Permissions.HasRight("mod_tool") && !(permissions?.HasRight("mod_mute_any") ?? false))
         {
             session.SendWhisper("Oops, you cannot mute that user.");

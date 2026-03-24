@@ -23,7 +23,9 @@ internal class GetPetTrainingPanelEvent : IPacketEvent
                 return Task.CompletedTask;
 
             //Check some values first, please!
-            if (user.GetClient()?.GetHabbo() == null)
+            var userClient = user.GetClient();
+            var userHabbo = userClient?.GetHabbo();
+            if (userHabbo == null)
                 return Task.CompletedTask;
 
             //And boom! Let us send the training panel composer 8-).

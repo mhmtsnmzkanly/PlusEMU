@@ -17,7 +17,8 @@ internal class RequestFriendEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var messenger = session.GetHabbo()?.Messenger;
+        var habbo = session.GetHabbo();
+        var messenger = habbo?.Messenger;
         if (messenger == null)
             return;
 

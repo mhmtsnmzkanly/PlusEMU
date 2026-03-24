@@ -20,7 +20,8 @@ internal class HalCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var username = session.GetHabbo()?.Username;
+        var habbo = session.GetHabbo();
+        var username = habbo?.Username;
         if (string.IsNullOrEmpty(username))
             return;
 

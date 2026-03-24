@@ -18,7 +18,8 @@ internal class GetRelationshipsEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var messenger = session.GetHabbo()?.Messenger;
+        var habbo = session.GetHabbo();
+        var messenger = habbo?.Messenger;
         var userId = packet.ReadInt();
         if (messenger == null)
         {

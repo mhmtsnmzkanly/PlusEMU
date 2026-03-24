@@ -22,6 +22,11 @@ internal class MassBadgeCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        var username = habbo?.Username;
+        if (string.IsNullOrEmpty(username))
+            return;
+
         var badgeCode = parameters.FirstOrDefault();
         if (string.IsNullOrWhiteSpace(badgeCode))
         {
@@ -30,15 +35,16 @@ internal class MassBadgeCommand : IChatCommand
         }
         foreach (var client in _gameClientManager.GetClients.ToList())
         {
-            if (client == null || client.GetHabbo() == null || client.GetHabbo().Username == session.GetHabbo().Username)
+            var targetHabbo = client?.GetHabbo();
+            if (targetHabbo == null || targetHabbo.Username == username)
                 continue;
-            if (!client.GetHabbo().Inventory.Badges.HasBadge(badgeCode))
+            if (!targetHabbo.Inventory.Badges.HasBadge(badgeCode))
             {
-                _badgeManager.GiveBadge(client.GetHabbo(), badgeCode).Wait();
+                _badgeManager.GiveBadge(targetHabbo, badgeCode).Wait();
                 client.SendNotification("You have just been given a badge!");
             }
             else
-                client.SendWhisper($"{session.GetHabbo().Username} tried to give you a badge, but you already have it!");
+                client.SendWhisper($"{username} tried to give you a badge, but you already have it!");
         }
         session.SendWhisper($"You have successfully given every user in this hotel the {badgeCode} badge!");
     }

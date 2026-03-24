@@ -13,13 +13,17 @@ internal class AllAroundMeCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         var users = room.GetRoomUserManager().GetRoomUsers();
         foreach (var u in users.ToList())
         {
-            if (u == null || session.GetHabbo().Id == u.UserId)
+            if (u == null || habbo.Id == u.UserId)
                 continue;
             u.MoveTo(user.X, user.Y, true);
         }

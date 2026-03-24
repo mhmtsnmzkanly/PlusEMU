@@ -13,7 +13,8 @@ internal class ModerationMsgEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!(session.GetHabbo().Permissions?.HasRight("mod_alert") ?? false))
+        var habbo = session.GetHabbo();
+        if (!(habbo?.Permissions?.HasRight("mod_alert") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         var message = packet.ReadString();

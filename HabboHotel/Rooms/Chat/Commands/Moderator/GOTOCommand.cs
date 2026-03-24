@@ -13,6 +13,10 @@ internal class GotoCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
         if (!parameters.Any())
         {
             session.SendWhisper("You must specify a room id!");
@@ -27,7 +31,7 @@ internal class GotoCommand : IChatCommand
                 session.SendWhisper("This room does not exist!");
                 return;
             }
-            session.GetHabbo().PrepareRoom(roomId, "");
+            habbo.PrepareRoom(roomId, "");
         }
     }
 }

@@ -21,12 +21,16 @@ internal class DisableForcedFxCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        session.GetHabbo().DisableForcedEffects = !session.GetHabbo().DisableForcedEffects;
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        habbo.DisableForcedEffects = !habbo.DisableForcedEffects;
         using (var connection = _database.Connection())
         {
             connection.Execute("UPDATE users SET disable_forced_effects = @DisableForcedEffects WHERE id = @userId LIMIT 1",
-                new { DisabledForcedEffects = session.GetHabbo().DisableForcedEffects, userId = session.GetHabbo().Id });
+                new { DisableForcedEffects = habbo.DisableForcedEffects, userId = habbo.Id });
         }
-        session.SendWhisper($"Forced FX mode is now {(session.GetHabbo().DisableForcedEffects ? "disabled!" : "enabled!")}");
+        session.SendWhisper($"Forced FX mode is now {(habbo.DisableForcedEffects ? "disabled!" : "enabled!")}");
     }
 }

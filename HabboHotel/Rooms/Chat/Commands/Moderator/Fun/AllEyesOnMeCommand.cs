@@ -14,13 +14,17 @@ internal class AllEyesOnMeCommand : IChatCommand
 
     public void Execute(GameClient session, Room room, string[] parameters)
     {
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(session.GetHabbo().Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (thisUser == null)
             return;
         var users = room.GetRoomUserManager().GetRoomUsers();
         foreach (var u in users.ToList())
         {
-            if (u == null || session.GetHabbo().Id == u.UserId)
+            if (u == null || habbo.Id == u.UserId)
                 continue;
             u.SetRot(Rotation.Calculate(u.X, u.Y, thisUser.X, thisUser.Y), false);
         }

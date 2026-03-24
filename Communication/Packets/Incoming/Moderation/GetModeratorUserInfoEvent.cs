@@ -19,7 +19,8 @@ internal class GetModeratorUserInfoEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (!(session.GetHabbo().Permissions?.HasRight("mod_tool") ?? false))
+        var habbo = session.GetHabbo();
+        if (!(habbo?.Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
         var userId = packet.ReadInt();
         DataRow? user;
