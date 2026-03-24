@@ -47,7 +47,7 @@ public class WiredComponent
     public IWiredItem LoadWiredBox(Item item)
     {
         var newBox = GenerateNewBox(item);
-        DataRow row = null;
+        DataRow? row = null;
         using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT * FROM wired_items WHERE id=@id LIMIT 1");
@@ -68,15 +68,15 @@ public class WiredComponent
                     else if (newBox.Type == WiredBoxType.EffectMoveAndRotate)
                         newBox.StringData = "0;0";
                 }
-                newBox.StringData = Convert.ToString(row["string"]);
+                newBox.StringData = Convert.ToString(row["string"]) ?? newBox.StringData;
                 newBox.BoolData = Convert.ToInt32(row["bool"]) == 1;
-                newBox.ItemsData = Convert.ToString(row["items"]);
+                newBox.ItemsData = Convert.ToString(row["items"]) ?? string.Empty;
                 if (newBox is IWiredCycle)
                 {
                     var box = (IWiredCycle)newBox;
                     box.Delay = Convert.ToInt32(row["delay"]);
                 }
-                foreach (var str in Convert.ToString(row["items"]).Split(';'))
+                foreach (var str in (Convert.ToString(row["items"]) ?? string.Empty).Split(';'))
                 {
                     var id = 0;
                     var sId = "0";
@@ -229,7 +229,7 @@ public class WiredComponent
             case WiredBoxType.EffectGiveUserBadge:
                 return new GiveUserBadgeBox(_room, item);
         }
-        return null;
+        return null!;
     }
 
     public bool IsTrigger(Item item) => item.Definition.InteractionType == InteractionType.WiredTrigger;
@@ -277,6 +277,8 @@ public class WiredComponent
                     }
                 }
                 var message = Convert.ToString(@params[1]);
+                if (string.IsNullOrEmpty(message))
+                    return false;
                 foreach (var box in ranBoxes.ToList())
                 {
                     if (box == null)

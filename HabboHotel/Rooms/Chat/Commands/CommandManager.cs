@@ -38,7 +38,7 @@ public class CommandManager : ICommandManager
     /// <returns>True if parsed or false if not.</returns>
     public async Task<bool> Parse(GameClient session, string message)
     {
-        var habbo = session?.GetHabbo();
+        var habbo = session.GetHabbo();
         var permissions = habbo?.Permissions;
         var currentRoom = habbo?.CurrentRoom;
         if (permissions == null || currentRoom == null || habbo == null)
