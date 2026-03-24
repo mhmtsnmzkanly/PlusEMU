@@ -1,5 +1,5 @@
-using System.Data;
 using System.Text.RegularExpressions;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Inventory.Bots;
@@ -26,6 +26,22 @@ namespace Plus.HabboHotel.Rooms.AI;
 
 internal class RoomCreatureService : IRoomCreatureService
 {
+    private sealed class BotPlacementRow
+    {
+        public string AiType { get; init; } = string.Empty;
+        public int Rotation { get; init; }
+        public string WalkMode { get; init; } = string.Empty;
+        public string AutomaticChat { get; init; } = string.Empty;
+        public int SpeakingInterval { get; init; }
+        public string MixSentences { get; init; } = string.Empty;
+        public int ChatBubble { get; init; }
+    }
+
+    private sealed class BotSpeechRow
+    {
+        public string Text { get; init; } = string.Empty;
+    }
+
     private readonly ILogger<RoomCreatureService> _logger;
     private readonly IRoomManager _roomManager;
     private readonly ISettingsManager _settingsManager;
@@ -155,10 +171,21 @@ internal class RoomCreatureService : IRoomCreatureService
         if (data == null)
             return Task.CompletedTask;
 
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            dbClient.RunQuery($"UPDATE `bots` SET `room_id` = '0', `x` = '0', `Y` = '0', `Z` = '0' WHERE `id` = '{data.PetId}' LIMIT 1");
-            dbClient.RunQuery($"UPDATE `bots_petdata` SET `experience` = '{data.Experience}', `energy` = '{data.Energy}', `nutrition` = '{data.Nutrition}', `respect` = '{data.Respect}' WHERE `id` = '{data.PetId}' LIMIT 1");
+            connection.Execute(
+                "UPDATE `bots` SET `room_id` = 0, `x` = 0, `Y` = 0, `Z` = 0 WHERE `id` = @petId LIMIT 1",
+                new { petId = data.PetId });
+            connection.Execute(
+                "UPDATE `bots_petdata` SET `experience` = @experience, `energy` = @energy, `nutrition` = @nutrition, `respect` = @respect WHERE `id` = @petId LIMIT 1",
+                new
+                {
+                    petId = data.PetId,
+                    experience = data.Experience,
+                    energy = data.Energy,
+                    nutrition = data.Nutrition,
+                    respect = data.Respect
+                });
         }
 
         if (data.OwnerId != habbo.Id)
@@ -395,10 +422,10 @@ internal class RoomCreatureService : IRoomCreatureService
 
         var saddleId = ItemUtility.GetSaddleId(petUser.PetData.Saddle);
         petUser.PetData.Saddle = 0;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `bots_petdata` SET `have_saddle` = '0' WHERE `id` = '{petUser.PetData.PetId}' LIMIT 1");
-        }
+        using (var connection = _database.Connection())
+            connection.Execute(
+                "UPDATE `bots_petdata` SET `have_saddle` = 0 WHERE `id` = @petId LIMIT 1",
+                new { petId = petUser.PetData.PetId });
 
         if (!_itemDataManager.Items.TryGetValue(saddleId, out var itemData))
             return Task.CompletedTask;
@@ -438,38 +465,45 @@ internal class RoomCreatureService : IRoomCreatureService
             return Task.CompletedTask;
         }
 
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("UPDATE `bots` SET `room_id` = @roomId, `x` = @CoordX, `y` = @CoordY WHERE `id` = @BotId LIMIT 1");
-            dbClient.AddParameter("roomId", room.RoomId);
-            dbClient.AddParameter("BotId", bot.Id);
-            dbClient.AddParameter("CoordX", x);
-            dbClient.AddParameter("CoordY", y);
-            dbClient.RunQuery();
-        }
+        using (var connection = _database.Connection())
+            connection.Execute(
+                "UPDATE `bots` SET `room_id` = @roomId, `x` = @coordX, `y` = @coordY WHERE `id` = @botId LIMIT 1",
+                new { roomId = room.RoomId, botId = bot.Id, coordX = x, coordY = y });
 
         var botSpeechList = new List<RandomSpeech>();
-        DataRow? getData;
-        using (var dbClient = _database.GetQueryReactor())
+        BotPlacementRow? getData;
+        using (var connection = _database.Connection())
         {
-            dbClient.SetQuery("SELECT `ai_type`,`rotation`,`walk_mode`,`automatic_chat`,`speaking_interval`,`mix_sentences`,`chat_bubble` FROM `bots` WHERE `id` = @BotId LIMIT 1");
-            dbClient.AddParameter("BotId", bot.Id);
-            getData = dbClient.GetRow();
-            dbClient.SetQuery("SELECT `text` FROM `bots_speech` WHERE `bot_id` = @BotId");
-            dbClient.AddParameter("BotId", bot.Id);
-            var botSpeech = dbClient.GetTable();
-            if (botSpeech != null)
-                foreach (DataRow speech in botSpeech.Rows)
-                    botSpeechList.Add(new(Convert.ToString(speech["text"]) ?? string.Empty, bot.Id));
+            getData = connection.QueryFirstOrDefault<BotPlacementRow>(
+                """
+                SELECT
+                    `ai_type` AS AiType,
+                    `rotation` AS Rotation,
+                    `walk_mode` AS WalkMode,
+                    `automatic_chat` AS AutomaticChat,
+                    `speaking_interval` AS SpeakingInterval,
+                    `mix_sentences` AS MixSentences,
+                    `chat_bubble` AS ChatBubble
+                FROM `bots`
+                WHERE `id` = @botId
+                LIMIT 1
+                """,
+                new { botId = bot.Id });
+            foreach (var speech in connection.Query<BotSpeechRow>(
+                         "SELECT `text` AS Text FROM `bots_speech` WHERE `bot_id` = @botId",
+                         new { botId = bot.Id }))
+            {
+                botSpeechList.Add(new(speech.Text, bot.Id));
+            }
         }
 
         if (getData == null)
             return Task.CompletedTask;
 
         var botUser = room.GetRoomUserManager().DeployBot(
-            new(bot.Id, room.RoomId, Convert.ToString(getData["ai_type"]) ?? string.Empty, Convert.ToString(getData["walk_mode"]) ?? string.Empty, bot.Name, "", bot.Figure, x, y, 0, 4, 0, 0, 0, 0,
-                ref botSpeechList, "", 0, bot.OwnerId, ConvertExtensions.EnumToBool(getData["automatic_chat"].ToString() ?? "0"), Convert.ToInt32(getData["speaking_interval"]),
-                ConvertExtensions.EnumToBool(getData["mix_sentences"].ToString() ?? "0"), Convert.ToInt32(getData["chat_bubble"])), null!);
+            new(bot.Id, room.RoomId, getData.AiType, getData.WalkMode, bot.Name, "", bot.Figure, x, y, 0, 4, 0, 0, 0, 0,
+                ref botSpeechList, "", 0, bot.OwnerId, ConvertExtensions.EnumToBool(getData.AutomaticChat), getData.SpeakingInterval,
+                ConvertExtensions.EnumToBool(getData.MixSentences), getData.ChatBubble), null!);
         botUser.Chat("Hello!");
         room.GetGameMap().UpdateUserMovement(new(x, y), new(x, y), botUser);
         if (!inventory.Bots.RemoveBot(botId))
@@ -496,12 +530,10 @@ internal class RoomCreatureService : IRoomCreatureService
             return Task.CompletedTask;
         }
 
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("UPDATE `bots` SET `room_id` = '0' WHERE `id` = @id LIMIT 1");
-            dbClient.AddParameter("id", botId);
-            dbClient.RunQuery();
-        }
+        using (var connection = _database.Connection())
+            connection.Execute(
+                "UPDATE `bots` SET `room_id` = 0 WHERE `id` = @id LIMIT 1",
+                new { id = botId });
 
         room.GetGameMap().RemoveUserFromMap(botUser, new(botUser.X, botUser.Y));
         if (habbo.Inventory?.Bots == null)
@@ -546,20 +578,20 @@ internal class RoomCreatureService : IRoomCreatureService
                 bot.BotData.Look = habbo.Look;
                 bot.BotData.Gender = habbo.Gender;
                 room.SendPacket(new UserChangeComposer(bot.BotData));
-                using (var dbClient = _database.GetQueryReactor())
-                {
-                    dbClient.SetQuery($"UPDATE `bots` SET `look` = @look, `gender` = '{habbo.Gender}' WHERE `id` = '{bot.BotData.Id}' LIMIT 1");
-                    dbClient.AddParameter("look", habbo.Look);
-                    dbClient.RunQuery();
-                }
+                using (var connection = _database.Connection())
+                    connection.Execute(
+                        "UPDATE `bots` SET `look` = @look, `gender` = @gender WHERE `id` = @id LIMIT 1",
+                        new { look = habbo.Look, gender = habbo.Gender, id = bot.BotData.Id });
                 break;
             case 2:
                 SaveBotSpeech(botId, roomBot, dataString);
                 break;
             case 3:
                 roomBot.WalkingMode = roomBot.WalkingMode == "stand" ? "freeroam" : "stand";
-                using (var dbClient = _database.GetQueryReactor())
-                    dbClient.RunQuery($"UPDATE `bots` SET `walk_mode` = '{roomBot.WalkingMode}' WHERE `id` = '{roomBot.Id}' LIMIT 1");
+                using (var connection = _database.Connection())
+                    connection.Execute(
+                        "UPDATE `bots` SET `walk_mode` = @walkMode WHERE `id` = @id LIMIT 1",
+                        new { walkMode = roomBot.WalkingMode, id = roomBot.Id });
                 break;
             case 4:
                 roomBot.DanceId = roomBot.DanceId > 0 ? 0 : Random.Shared.Next(1, 4);
@@ -582,12 +614,10 @@ internal class RoomCreatureService : IRoomCreatureService
                     return Task.CompletedTask;
                 }
                 roomBot.Name = dataString;
-                using (var dbClient = _database.GetQueryReactor())
-                {
-                    dbClient.SetQuery($"UPDATE `bots` SET `name` = @name WHERE `id` = '{roomBot.Id}' LIMIT 1");
-                    dbClient.AddParameter("name", dataString);
-                    dbClient.RunQuery();
-                }
+                using (var connection = _database.Connection())
+                    connection.Execute(
+                        "UPDATE `bots` SET `name` = @name WHERE `id` = @id LIMIT 1",
+                        new { name = dataString, id = roomBot.Id });
                 room.SendPacket(new UsersComposer(bot));
                 break;
         }
@@ -607,38 +637,51 @@ internal class RoomCreatureService : IRoomCreatureService
         roomBot.SpeakingInterval = Convert.ToInt32(speakingInterval);
         roomBot.MixSentences = Convert.ToBoolean(mixChat);
 
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.RunQuery($"DELETE FROM `bots_speech` WHERE `bot_id` = '{roomBot.Id}'");
+        using var connection = _database.Connection();
+        connection.Execute(
+            "DELETE FROM `bots_speech` WHERE `bot_id` = @botId",
+            new { botId = roomBot.Id });
         for (var i = 0; i <= speechData.Length - 1; i++)
         {
             speechData[i] = Regex.Replace(speechData[i], "<(.|\\n)*?>", string.Empty);
-            dbClient.SetQuery("INSERT INTO `bots_speech` (`bot_id`, `text`) VALUES (@id, @data)");
-            dbClient.AddParameter("id", botId);
-            dbClient.AddParameter("data", speechData[i]);
-            dbClient.RunQuery();
-            dbClient.SetQuery("UPDATE `bots` SET `automatic_chat` = @AutomaticChat, `speaking_interval` = @SpeakingInterval, `mix_sentences` = @MixChat WHERE `id` = @id LIMIT 1");
-            dbClient.AddParameter("id", botId);
-            dbClient.AddParameter("AutomaticChat", automaticChat.ToLower());
-            dbClient.AddParameter("SpeakingInterval", Convert.ToInt32(speakingInterval));
-            dbClient.AddParameter("MixChat", ConvertExtensions.ToStringEnumValue(roomBot.MixSentences));
-            dbClient.RunQuery();
+            connection.Execute(
+                "INSERT INTO `bots_speech` (`bot_id`, `text`) VALUES (@id, @data)",
+                new { id = botId, data = speechData[i] });
         }
+        connection.Execute(
+            """
+            UPDATE `bots`
+            SET `automatic_chat` = @automaticChat, `speaking_interval` = @speakingInterval, `mix_sentences` = @mixChat
+            WHERE `id` = @id
+            LIMIT 1
+            """,
+            new
+            {
+                id = botId,
+                automaticChat = automaticChat.ToLower(),
+                speakingInterval = Convert.ToInt32(speakingInterval),
+                mixChat = ConvertExtensions.ToStringEnumValue(roomBot.MixSentences)
+            });
 
         roomBot.RandomSpeech.Clear();
-        dbClient.SetQuery("SELECT `text` FROM `bots_speech` WHERE `bot_id` = @id");
-        dbClient.AddParameter("id", botId);
-        var botSpeech = dbClient.GetTable();
-        if (botSpeech != null)
-            foreach (DataRow speech in botSpeech.Rows)
-                roomBot.RandomSpeech.Add(new(Convert.ToString(speech["text"]) ?? string.Empty, botId));
+        foreach (var speech in connection.Query<BotSpeechRow>(
+                     "SELECT `text` AS Text FROM `bots_speech` WHERE `bot_id` = @id",
+                     new { id = botId }))
+        {
+            roomBot.RandomSpeech.Add(new(speech.Text, botId));
+        }
     }
 
     private void UpdateHorsePetAndConsumeItem(int petId, uint itemId, Room room, GameClient session, Item item, string field, string value)
     {
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            dbClient.RunQuery($"UPDATE `bots_petdata` SET `{field}` = '{value}' WHERE `id` = '{petId}' LIMIT 1");
-            dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{item.Id}' LIMIT 1");
+            connection.Execute(
+                $"UPDATE `bots_petdata` SET `{field}` = @value WHERE `id` = @petId LIMIT 1",
+                new { value, petId });
+            connection.Execute(
+                "DELETE FROM `items` WHERE `id` = @id LIMIT 1",
+                new { id = item.Id });
         }
         room.GetRoomItemHandler().RemoveFurniture(session, itemId);
     }
