@@ -22,7 +22,7 @@ public sealed class ChatStyleManager : IChatStyleManager
     {
         if (_styles.Count > 0)
             _styles.Clear();
-        DataTable table = null;
+        DataTable? table = null;
         using (var dbClient = _database.GetQueryReactor())
         {
             dbClient.SetQuery("SELECT * FROM `room_chat_styles`;");
@@ -34,7 +34,12 @@ public sealed class ChatStyleManager : IChatStyleManager
                     try
                     {
                         if (!_styles.ContainsKey(Convert.ToInt32(row["id"])))
-                            _styles.Add(Convert.ToInt32(row["id"]), new(Convert.ToInt32(row["id"]), Convert.ToString(row["name"]), Convert.ToString(row["required_right"])));
+                            _styles.Add(
+                                Convert.ToInt32(row["id"]),
+                                new(
+                                    Convert.ToInt32(row["id"]),
+                                    Convert.ToString(row["name"]) ?? string.Empty,
+                                    Convert.ToString(row["required_right"]) ?? string.Empty));
                     }
                     catch (Exception ex)
                     {
@@ -46,5 +51,5 @@ public sealed class ChatStyleManager : IChatStyleManager
         _logger.LogInformation("Loaded " + _styles.Count + " chat styles.");
     }
 
-    public bool TryGetStyle(int id, out ChatStyle style) => _styles.TryGetValue(id, out style);
+    public bool TryGetStyle(int id, out ChatStyle style) => _styles.TryGetValue(id, out style!);
 }
