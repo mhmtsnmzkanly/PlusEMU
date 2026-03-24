@@ -84,26 +84,26 @@ public class RoomManager : IRoomManager
             return;
         foreach (DataRow row in data.Rows)
         {
-            var model = Convert.ToString(row["id"]);
+            var model = Convert.ToString(row["id"]) ?? string.Empty;
             _roomModels.Add(model, new(model, Convert.ToInt32(row["door_x"]), Convert.ToInt32(row["door_y"]), (double)row["door_z"], Convert.ToInt32(row["door_dir"]),
-                Convert.ToString(row["heightmap"]), ConvertExtensions.EnumToBool(row["club_only"].ToString()), Convert.ToInt32(row["wall_height"]), false));
+                Convert.ToString(row["heightmap"]) ?? string.Empty, ConvertExtensions.EnumToBool(Convert.ToString(row["club_only"]) ?? "0"), Convert.ToInt32(row["wall_height"]), false));
         }
     }
 
     public bool LoadModel(string id)
     {
-        DataRow row = null;
+        DataRow? row = null;
         using var dbClient = _database.GetQueryReactor();
         dbClient.SetQuery("SELECT id,door_x,door_y,door_z,door_dir,heightmap,club_only,poolmap,`wall_height` FROM `room_models` WHERE `custom` = '1' AND `id` = @modelId LIMIT 1");
         dbClient.AddParameter("modelId", id);
         row = dbClient.GetRow();
         if (row == null)
             return false;
-        var model = Convert.ToString(row["id"]);
+        var model = Convert.ToString(row["id"]) ?? string.Empty;
         if (!_roomModels.ContainsKey(model))
         {
             _roomModels.Add(model, new(model, Convert.ToInt32(row["door_x"]), Convert.ToInt32(row["door_y"]), Convert.ToDouble(row["door_z"]), Convert.ToInt32(row["door_dir"]),
-                Convert.ToString(row["heightmap"]), ConvertExtensions.EnumToBool(row["club_only"].ToString()), Convert.ToInt32(row["wall_height"]), true));
+                Convert.ToString(row["heightmap"]) ?? string.Empty, ConvertExtensions.EnumToBool(Convert.ToString(row["club_only"]) ?? "0"), Convert.ToInt32(row["wall_height"]), true));
         }
         return true;
     }
@@ -136,7 +136,7 @@ public class RoomManager : IRoomManager
                 return true;
             }
         }
-        model = null;
+        model = null!;
         return false;
     }
 
@@ -147,7 +147,7 @@ public class RoomManager : IRoomManager
 
     public bool TryLoadRoom(uint roomId, out Room room)
     {
-        Room inst = null;
+        Room? inst = null;
         if (_rooms.TryGetValue(roomId, out inst))
         {
             if (!inst.Unloaded)
@@ -155,7 +155,7 @@ public class RoomManager : IRoomManager
                 room = inst;
                 return true;
             }
-            room = null;
+            room = null!;
             return false;
         }
         lock (_roomLoadingSync)
@@ -167,12 +167,12 @@ public class RoomManager : IRoomManager
                     room = inst;
                     return true;
                 }
-                room = null;
+                room = null!;
                 return false;
             }
             if (!RoomFactory.TryGetData(roomId, out var data))
             {
-                room = null;
+                room = null!;
                 return false;
             }
             var myInstance = new Room(data);
@@ -181,7 +181,7 @@ public class RoomManager : IRoomManager
                 room = myInstance;
                 return true;
             }
-            room = null;
+            room = null!;
             return false;
         }
     }
@@ -241,7 +241,7 @@ public class RoomManager : IRoomManager
 
     public Room TryGetRandomLoadedRoom()
     {
-        return _rooms.Values.Where(x => x.UsersNow > 0 && x.Access != RoomAccess.Invisible && x.UsersNow < x.UsersMax).OrderByDescending(x => x.UsersNow).FirstOrDefault();
+        return _rooms.Values.Where(x => x.UsersNow > 0 && x.Access != RoomAccess.Invisible && x.UsersNow < x.UsersMax).OrderByDescending(x => x.UsersNow).FirstOrDefault()!;
     }
 
 
@@ -252,12 +252,12 @@ public class RoomManager : IRoomManager
     {
         var habbo = session.GetHabbo();
         if (habbo == null)
-            return null;
+            return null!;
 
         if (name.Length < 3)
         {
             session.SendNotification(_languageManager.TryGetValue("room.creation.name.too_short"));
-            return null;
+            return null!;
         }
         var roomId = 0u;
         using (var dbClient = _database.GetQueryReactor())
