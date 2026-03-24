@@ -24,19 +24,20 @@ public class GameAchievementListComposer : IServerPacket
         packet.WriteInteger(_achievements.Count);
         foreach (var ach in _achievements.ToList())
         {
-            var userData = habbo?.GetAchievementData(ach.GroupName);
+            var groupName = ach.GroupName ?? string.Empty;
+            var userData = habbo?.GetAchievementData(groupName);
             var targetLevel = userData != null ? userData.Level + 1 : 1;
             var targetLevelData = ach.Levels[targetLevel];
             packet.WriteInteger(ach.Id); // ach id
             packet.WriteInteger(targetLevel); // target level
-            packet.WriteString(ach.GroupName + targetLevel); // badge
+            packet.WriteString(groupName + targetLevel); // badge
             packet.WriteInteger(targetLevelData.Requirement); // requirement
             packet.WriteInteger(targetLevelData.Requirement); // requirement
             packet.WriteInteger(targetLevelData.RewardPixels); // pixels
             packet.WriteInteger(0); // ach score
             packet.WriteInteger(userData?.Progress ?? 0); // Current progress
             packet.WriteBoolean(userData != null && userData.Level >= ach.Levels.Count); // Set 100% completed(??)
-            packet.WriteString(ach.Category);
+            packet.WriteString(ach.Category ?? string.Empty);
             packet.WriteString("basejump");
             packet.WriteInteger(0); // total levels
             packet.WriteInteger(0);
