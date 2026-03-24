@@ -1,3 +1,4 @@
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Navigator;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Permissions;
@@ -51,9 +52,11 @@ internal class RoomAccessService : IRoomAccessService
         }
 
         room.UsersWithRights.Add(userId);
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            dbClient.RunQuery($"INSERT INTO `room_rights` (`room_id`,`user_id`) VALUES ('{room.RoomId}','{userId}')");
+            connection.Execute(
+                "INSERT INTO `room_rights` (`room_id`,`user_id`) VALUES (@roomId, @userId)",
+                new { roomId = room.RoomId, userId });
         }
 
         var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
@@ -94,12 +97,11 @@ internal class RoomAccessService : IRoomAccessService
                 user.GetClient()?.Send(new YouAreControllerComposer(0));
             }
 
-            using (var dbClient = _database.GetQueryReactor())
+            using (var connection = _database.Connection())
             {
-                dbClient.SetQuery("DELETE FROM `room_rights` WHERE `user_id` = @uid AND `room_id` = @rid LIMIT 1");
-                dbClient.AddParameter("uid", userId);
-                dbClient.AddParameter("rid", room.Id);
-                dbClient.RunQuery();
+                connection.Execute(
+                    "DELETE FROM `room_rights` WHERE `user_id` = @uid AND `room_id` = @rid LIMIT 1",
+                    new { uid = userId, rid = room.Id });
             }
 
             room.UsersWithRights.Remove(userId);
@@ -124,12 +126,11 @@ internal class RoomAccessService : IRoomAccessService
                 user.GetClient()?.Send(new YouAreControllerComposer(0));
             }
 
-            using (var dbClient = _database.GetQueryReactor())
+            using (var connection = _database.Connection())
             {
-                dbClient.SetQuery("DELETE FROM `room_rights` WHERE `user_id` = @uid AND `room_id` = @rid LIMIT 1");
-                dbClient.AddParameter("uid", userId);
-                dbClient.AddParameter("rid", room.Id);
-                dbClient.RunQuery();
+                connection.Execute(
+                    "DELETE FROM `room_rights` WHERE `user_id` = @uid AND `room_id` = @rid LIMIT 1",
+                    new { uid = userId, rid = room.Id });
             }
 
             session.Send(new FlatControllerRemovedComposer(room, userId));
@@ -155,12 +156,11 @@ internal class RoomAccessService : IRoomAccessService
             user.GetClient()?.Send(new YouAreNotControllerComposer());
         }
 
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            dbClient.SetQuery("DELETE FROM `room_rights` WHERE `user_id` = @uid AND `room_id` = @rid LIMIT 1");
-            dbClient.AddParameter("uid", habbo.Id);
-            dbClient.AddParameter("rid", room.Id);
-            dbClient.RunQuery();
+            connection.Execute(
+                "DELETE FROM `room_rights` WHERE `user_id` = @uid AND `room_id` = @rid LIMIT 1",
+                new { uid = habbo.Id, rid = room.Id });
         }
 
         room.UsersWithRights.Remove(habbo.Id);
