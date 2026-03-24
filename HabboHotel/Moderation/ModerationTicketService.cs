@@ -1,0 +1,150 @@
+using Dapper;
+using Plus.Communication.Packets.Outgoing.Moderation;
+using Plus.Database;
+using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Rooms;
+using Plus.Utilities;
+
+namespace Plus.HabboHotel.Moderation;
+
+internal class ModerationTicketService : IModerationTicketService
+{
+    private readonly IModerationManager _moderationManager;
+    private readonly IGameClientManager _clientManager;
+    private readonly IDatabase _database;
+
+    public ModerationTicketService(
+        IModerationManager moderationManager,
+        IGameClientManager clientManager,
+        IDatabase database)
+    {
+        _moderationManager = moderationManager;
+        _clientManager = clientManager;
+        _database = database;
+    }
+
+    public async Task Submit(GameClient session, string message, int category, int reportedUserId, int type, IReadOnlyCollection<string> reportedChats)
+    {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        if (_moderationManager.UserHasTickets(habbo.Id))
+        {
+            var pendingTicket = _moderationManager.GetTicketBySenderId(habbo.Id);
+            if (pendingTicket != null)
+            {
+                session.Send(new CallForHelpPendingCallsComposer(pendingTicket));
+                return;
+            }
+        }
+
+        var reportedUser = PlusEnvironment.GetHabboById(reportedUserId);
+        if (reportedUser == null)
+            return;
+
+        var currentRoom = habbo.CurrentRoom;
+        if (currentRoom == null)
+            return;
+
+        var ticket = new ModerationTicket(
+            1,
+            type,
+            category,
+            UnixTimestamp.GetNow(),
+            1,
+            habbo,
+            reportedUser,
+            StringCharFilter.Escape(message.Trim()),
+            currentRoom,
+            reportedChats.ToList());
+
+        if (!_moderationManager.TryAddTicket(ticket))
+            return;
+
+        using var connection = _database.Connection();
+        await connection.ExecuteAsync(
+            "UPDATE `user_info` SET `cfhs` = `cfhs` + 1 WHERE `user_id` = @userId LIMIT 1",
+            new { userId = habbo.Id });
+
+        _clientManager.ModAlert("A new support ticket has been submitted!");
+        _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
+    }
+
+    public async Task Close(GameClient session, int result, int ticketId)
+    {
+        var moderator = session.GetHabbo();
+        if (!(moderator?.Permissions?.HasRight("mod_tool") ?? false))
+            return;
+
+        if (!_moderationManager.TryGetTicket(ticketId, out var ticket) || ticket == null)
+            return;
+        if (ticket.Moderator?.Id != moderator.Id)
+            return;
+
+        var client = _clientManager.GetClientByUserId(ticket.Sender.Id);
+        client?.Send(new ModeratorSupportTicketResponseComposer(result));
+
+        if (result == 2)
+        {
+            using var connection = _database.Connection();
+            await connection.ExecuteAsync(
+                "UPDATE `user_info` SET `cfhs_abusive` = `cfhs_abusive` + 1 WHERE `user_id` = @senderId LIMIT 1",
+                new { senderId = ticket.Sender.Id });
+        }
+
+        ticket.Answered = true;
+        _clientManager.SendPacket(new ModeratorSupportTicketComposer(moderator.Id, ticket), "mod_tool");
+    }
+
+    public Task Pick(GameClient session, int ticketId)
+    {
+        var habbo = session.GetHabbo();
+        if (habbo?.Permissions == null || !habbo.Permissions.HasRight("mod_tool"))
+            return Task.CompletedTask;
+
+        if (!_moderationManager.TryGetTicket(ticketId, out var ticket) || ticket == null)
+            return Task.CompletedTask;
+
+        ticket.Moderator = habbo;
+        _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
+        return Task.CompletedTask;
+    }
+
+    public Task Release(GameClient session, IReadOnlyCollection<int> ticketIds)
+    {
+        var habbo = session.GetHabbo();
+        if (habbo?.Permissions == null || !habbo.Permissions.HasRight("mod_tool"))
+            return Task.CompletedTask;
+
+        foreach (var ticketId in ticketIds)
+        {
+            if (!_moderationManager.TryGetTicket(ticketId, out var ticket) || ticket == null)
+                continue;
+
+            ticket.Moderator = null;
+            _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task DeletePendingCalls(GameClient session)
+    {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        if (_moderationManager.UserHasTickets(habbo.Id))
+        {
+            var pendingTicket = _moderationManager.GetTicketBySenderId(habbo.Id);
+            if (pendingTicket != null)
+            {
+                pendingTicket.Answered = true;
+                _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, pendingTicket), "mod_tool");
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+}

@@ -6,28 +6,20 @@ namespace Plus.Communication.Packets.Incoming.Moderation;
 
 internal class ReleaseTicketEvent : IPacketEvent
 {
-    public readonly IModerationManager _moderationManager;
-    public readonly IGameClientManager _clientManager;
+    private readonly IModerationTicketService _moderationTicketService;
 
-    public ReleaseTicketEvent(IModerationManager moderationManager, IGameClientManager clientManager)
+    public ReleaseTicketEvent(IModerationTicketService moderationTicketService)
     {
-        _moderationManager = moderationManager;
-        _clientManager = clientManager;
+        _moderationTicketService = moderationTicketService;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo?.Permissions == null || !habbo.Permissions.HasRight("mod_tool"))
-            return Task.CompletedTask;
         var amount = packet.ReadInt();
+        var ticketIds = new List<int>(amount);
         for (var i = 0; i < amount; i++)
-        {
-            if (!_moderationManager.TryGetTicket(packet.ReadInt(), out var ticket) || ticket == null)
-                continue;
-            ticket.Moderator = null;
-            _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
-        }
-        return Task.CompletedTask;
+            ticketIds.Add(packet.ReadInt());
+
+        return _moderationTicketService.Release(session, ticketIds);
     }
 }

@@ -6,26 +6,16 @@ namespace Plus.Communication.Packets.Incoming.Moderation;
 
 internal class PickTicketEvent : IPacketEvent
 {
-    public readonly IModerationManager _moderationManager;
-    public readonly IGameClientManager _clientManager;
+    private readonly IModerationTicketService _moderationTicketService;
 
-    public PickTicketEvent(IModerationManager moderationManager, IGameClientManager clientManager)
+    public PickTicketEvent(IModerationTicketService moderationTicketService)
     {
-        _moderationManager = moderationManager;
-        _clientManager = clientManager;
+        _moderationTicketService = moderationTicketService;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo?.Permissions == null || !habbo.Permissions.HasRight("mod_tool"))
-            return Task.CompletedTask;
         packet.ReadInt(); //Junk
-        var ticketId = packet.ReadInt();
-        if (!_moderationManager.TryGetTicket(ticketId, out var ticket) || ticket == null)
-            return Task.CompletedTask;
-        ticket.Moderator = habbo;
-        _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
-        return Task.CompletedTask;
+        return _moderationTicketService.Pick(session, packet.ReadInt());
     }
 }

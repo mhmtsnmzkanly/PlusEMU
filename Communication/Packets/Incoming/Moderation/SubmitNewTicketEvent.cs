@@ -1,74 +1,32 @@
 ﻿using Plus.Communication.Packets.Outgoing.Moderation;
-using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Moderation;
-using Plus.HabboHotel.Rooms;
-using Plus.Utilities;
 
 namespace Plus.Communication.Packets.Incoming.Moderation;
 
 internal class SubmitNewTicketEvent : IPacketEvent
 {
-    public readonly IModerationManager _moderationManager;
-    public readonly IGameClientManager _clientManager;
-    public readonly IDatabase _database;
+    private readonly IModerationTicketService _moderationTicketService;
 
-    public SubmitNewTicketEvent(IModerationManager moderationManager, IGameClientManager clientManager, IDatabase database)
+    public SubmitNewTicketEvent(IModerationTicketService moderationTicketService)
     {
-        _moderationManager = moderationManager;
-        _clientManager = clientManager;
-        _database = database;
+        _moderationTicketService = moderationTicketService;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
-            return Task.CompletedTask;
-
-        // Run a quick check to see if we have any existing tickets.
-        if (_moderationManager.UserHasTickets(habbo.Id))
-        {
-            var pendingTicket = _moderationManager.GetTicketBySenderId(habbo.Id);
-            if (pendingTicket != null)
-            {
-                session.Send(new CallForHelpPendingCallsComposer(pendingTicket));
-                return Task.CompletedTask;
-            }
-        }
-        var chats = new List<string>();
-        var message = StringCharFilter.Escape(packet.ReadString().Trim());
+        var message = packet.ReadString();
         var category = packet.ReadInt();
         var reportedUserId = packet.ReadInt();
-        var type = packet.ReadInt(); // Unsure on what this actually is.
-        var reportedUser = PlusEnvironment.GetHabboById(reportedUserId);
-        if (reportedUser == null)
-        {
-            // User doesn't exist.
-            return Task.CompletedTask;
-        }
+        var type = packet.ReadInt();
         var messagecount = packet.ReadInt();
+        var chats = new List<string>(messagecount);
         for (var i = 0; i < messagecount; i++)
         {
             packet.ReadInt();
             chats.Add(packet.ReadString());
         }
-        var currentRoom = habbo.CurrentRoom;
-        if (currentRoom == null)
-            return Task.CompletedTask;
-        var ticket = new ModerationTicket(1, type, category, UnixTimestamp.GetNow(), 1, habbo, reportedUser, message, currentRoom, chats);
-        if (!_moderationManager.TryAddTicket(ticket))
-            return Task.CompletedTask;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            // TODO: Come back to this.
-            /*dbClient.SetQuery("INSERT INTO `moderation_tickets` (`score`,`type`,`status`,`sender_id`,`reported_id`,`moderator_id`,`message`,`room_id`,`room_name`,`timestamp`) VALUES (1, '" + Category + "', 'open', '" + Session.GetHabbo().Id + "', '" + ReportedUserId + "', '0', @message, '0', '', '" + PlusEnvironment.GetNow() + "')");
-            dbClient.AddParameter("message", Message);
-            dbClient.RunQuery();*/
-            dbClient.RunQuery($"UPDATE `user_info` SET `cfhs` = `cfhs` + '1' WHERE `user_id` = '{habbo.Id}' LIMIT 1");
-        }
-        _clientManager.ModAlert("A new support ticket has been submitted!");
-        _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
-        return Task.CompletedTask;
+
+        return _moderationTicketService.Submit(session, message, category, reportedUserId, type, chats);
     }
 }
