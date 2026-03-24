@@ -41,19 +41,21 @@ internal class GiveUserBadgeBox : IWiredItem
         if (@params == null || @params.Length == 0)
             return false;
         var owner = PlusEnvironment.GetHabboById(Item.UserId);
-        if (owner == null || !owner.Permissions.HasRight("room_item_wired_rewards"))
+        var ownerPermissions = owner?.Permissions;
+        if (ownerPermissions == null || !ownerPermissions.HasRight("room_item_wired_rewards"))
             return false;
         var player = (Habbo)@params[0];
         var playerClient = player?.Client;
         var currentRoom = player?.CurrentRoom;
-        if (player == null || playerClient == null || currentRoom == null)
+        var playerBadges = player?.Inventory?.Badges;
+        if (player == null || playerClient == null || currentRoom == null || playerBadges == null)
             return false;
         var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)
             return false;
         if (string.IsNullOrEmpty(StringData))
             return false;
-        if (player.Inventory.Badges.HasBadge(StringData))
+        if (playerBadges.HasBadge(StringData))
             playerClient.Send(new WhisperComposer(user.VirtualId, "Oops, it appears you have already recieved this badge!", 0, user.LastBubble));
         else
         {
