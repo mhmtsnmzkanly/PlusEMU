@@ -1,30 +1,16 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Settings;
-using Plus.HabboHotel.Achievements;
-using Plus.HabboHotel.GameClients;
+﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Rooms;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Settings;
 
 internal class GetRoomFilterListEvent : IPacketEvent
 {
-    private readonly IAchievementManager _achievementManager;
+    private readonly IRoomAccessService _roomAccessService;
 
-    public GetRoomFilterListEvent(IAchievementManager achievementManager)
+    public GetRoomFilterListEvent(IRoomAccessService roomAccessService)
     {
-        _achievementManager = achievementManager;
+        _roomAccessService = roomAccessService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
-            return Task.CompletedTask;
-        var instance = habbo.CurrentRoom;
-        if (instance == null)
-            return Task.CompletedTask;
-        if (!instance.CheckRights(session))
-            return Task.CompletedTask;
-        session.Send(new GetRoomFilterListComposer(instance));
-        _achievementManager.ProgressAchievement(session, "ACH_SelfModRoomFilterSeen", 1);
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _roomAccessService.GetRoomFilterList(session);
 }

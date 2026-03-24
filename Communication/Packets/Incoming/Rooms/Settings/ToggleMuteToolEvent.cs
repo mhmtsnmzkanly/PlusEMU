@@ -1,28 +1,16 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Settings;
-using Plus.HabboHotel.GameClients;
+﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Rooms;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Settings;
 
 internal class ToggleMuteToolEvent : IPacketEvent
 {
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    private readonly IRoomAccessService _roomAccessService;
+
+    public ToggleMuteToolEvent(IRoomAccessService roomAccessService)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
-            return Task.CompletedTask;
-        var room = habbo.CurrentRoom;
-        if (room == null || !room.CheckRights(session, true))
-            return Task.CompletedTask;
-        room.RoomMuted = !room.RoomMuted;
-        var roomUsers = room.GetRoomUserManager().GetRoomUsers();
-        foreach (var roomUser in roomUsers.ToList())
-        {
-            if (roomUser == null || roomUser.GetClient() == null)
-                continue;
-            roomUser.GetClient()
-                .SendWhisper(room.RoomMuted ? "This room has been muted" : "This room has been unmuted");
-        }
-        room.SendPacket(new RoomMuteSettingsComposer(room.RoomMuted));
-        return Task.CompletedTask;
+        _roomAccessService = roomAccessService;
     }
+
+    public Task Parse(GameClient session, IIncomingPacket packet) => _roomAccessService.ToggleMuteTool(session);
 }
