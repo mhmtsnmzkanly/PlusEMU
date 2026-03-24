@@ -351,7 +351,8 @@ public class Room : RoomData
             return;
         try
         {
-            if (GetRoomUserManager().GetRoomUsers().Count == 0)
+            var roomUserManager = GetRoomUserManager();
+            if (roomUserManager.GetRoomUsers().Count == 0)
                 IdleTime++;
             else if (IdleTime > 0)
                 IdleTime = 0;
@@ -371,7 +372,7 @@ public class Room : RoomData
             }
             try
             {
-                GetRoomUserManager().OnCycle();
+                roomUserManager.OnCycle();
             }
             catch (Exception e)
             {
