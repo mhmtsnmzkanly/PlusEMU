@@ -6,11 +6,11 @@ namespace Plus.HabboHotel.Rooms.Games;
 
 public class GameManager
 {
-    private ConcurrentDictionary<uint, Item> _blueTeamItems;
-    private ConcurrentDictionary<uint, Item> _greenTeamItems;
-    private ConcurrentDictionary<uint, Item> _redTeamItems;
-    private ConcurrentDictionary<uint, Item> _yellowTeamItems;
-    private Room _room;
+    private readonly ConcurrentDictionary<uint, Item> _blueTeamItems;
+    private readonly ConcurrentDictionary<uint, Item> _greenTeamItems;
+    private readonly ConcurrentDictionary<uint, Item> _redTeamItems;
+    private readonly ConcurrentDictionary<uint, Item> _yellowTeamItems;
+    private readonly Room _room;
 
     public GameManager(Room room)
     {
@@ -200,11 +200,6 @@ public class GameManager
         _blueTeamItems.Clear();
         _greenTeamItems.Clear();
         _yellowTeamItems.Clear();
-        Points = null;
-        _redTeamItems = null;
-        _blueTeamItems = null;
-        _greenTeamItems = null;
-        _yellowTeamItems = null;
-        _room = null;
+        Points = Array.Empty<int>();
     }
 }
