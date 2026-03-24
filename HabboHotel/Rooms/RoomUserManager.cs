@@ -386,9 +386,9 @@ public class RoomUserManager
         OnRemove(user);
     }
 
-    public bool TryGetPet(int petId, out RoomUser pet) => _pets.TryGetValue(petId, out pet);
+    public bool TryGetPet(int petId, out RoomUser pet) => _pets.TryGetValue(petId, out pet!);
 
-    public bool TryGetBot(int botId, out RoomUser bot) => _bots.TryGetValue(botId, out bot);
+    public bool TryGetBot(int botId, out RoomUser bot) => _bots.TryGetValue(botId, out bot!);
 
     public RoomUser GetBotByName(string name)
     {
@@ -895,25 +895,28 @@ public class RoomUserManager
             {
                 if (item == null)
                     continue;
-                if (item.Definition.IsSeat)
+                var definition = item.Definition;
+                if (definition == null)
+                    continue;
+                if (definition.IsSeat)
                 {
                     if (!user.Statusses.ContainsKey("sit"))
                     {
                         if (!user.Statusses.ContainsKey("sit"))
-                            user.Statusses.Add("sit", TextHandling.GetString(item.Definition.Height));
+                            user.Statusses.Add("sit", TextHandling.GetString(definition.Height));
                     }
                     user.Z = item.GetZ;
                     user.RotHead = item.Rotation;
                     user.RotBody = item.Rotation;
                     user.UpdateNeeded = true;
                 }
-                switch (item.Definition.InteractionType)
+                switch (definition.InteractionType)
                 {
                     case InteractionType.Bed:
                     case InteractionType.TentSmall:
                         {
                             if (!user.Statusses.ContainsKey("lay"))
-                                user.Statusses.Add("lay", $"{TextHandling.GetString(item.Definition.Height)} null");
+                                user.Statusses.Add("lay", $"{TextHandling.GetString(definition.Height)} null");
                             user.Z = item.GetZ;
                             user.RotHead = item.Rotation;
                             user.RotBody = item.Rotation;
@@ -1023,9 +1026,9 @@ public class RoomUserManager
                                 var effects = GetHabbo(user)?.Effects;
                                 if (item == null || item.Definition == null || effects == null)
                                     return;
-                                if (item.Definition.EffectId == 0 && effects.CurrentEffect == 0)
+                                if (definition.EffectId == 0 && effects.CurrentEffect == 0)
                                     return;
-                                effects.ApplyEffect(item.Definition.EffectId);
+                                effects.ApplyEffect(definition.EffectId);
                                 item.LegacyDataString = "1";
                                 item.UpdateState(false, true);
                                 item.RequestUpdate(2, true);
@@ -1125,13 +1128,13 @@ public class RoomUserManager
                     {
                         case ItemEffectType.Iceskates:
                             {
-                                effects.ApplyEffect(habbo.Gender == "M" ? 38 : 39);
+                                effects.ApplyEffect(habbo?.Gender == "M" ? 38 : 39);
                                 user.CurrentItemEffect = ItemEffectType.Iceskates;
                                 break;
                             }
                         case ItemEffectType.Normalskates:
                             {
-                                effects.ApplyEffect(habbo.Gender == "M" ? 55 : 56);
+                                effects.ApplyEffect(habbo?.Gender == "M" ? 55 : 56);
                                 user.CurrentItemEffect = type;
                                 break;
                             }
