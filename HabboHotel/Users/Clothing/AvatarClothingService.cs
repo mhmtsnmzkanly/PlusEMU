@@ -102,11 +102,9 @@ internal class AvatarClothingService : IAvatarClothingService
             return Task.CompletedTask;
         }
 
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            dbClient.SetQuery("DELETE FROM `items` WHERE `id` = @ItemId LIMIT 1");
-            dbClient.AddParameter("ItemId", item.Id);
-            dbClient.RunQuery();
+            connection.Execute("DELETE FROM `items` WHERE `id` = @itemId LIMIT 1", new { itemId = item.Id });
         }
 
         room.GetRoomItemHandler().RemoveFurniture(session, item.Id);
@@ -168,12 +166,11 @@ internal class AvatarClothingService : IAvatarClothingService
             item.LegacyDataString = $"m{Convert.ToChar(5)}.ch-210-1321.lg-285-92{Convert.ToChar(5)}Default Mannequin";
         }
 
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            dbClient.SetQuery("UPDATE `items` SET `extra_data` = @Ed WHERE `id` = @itemId LIMIT 1");
-            dbClient.AddParameter("itemId", item.Id);
-            dbClient.AddParameter("Ed", item.LegacyDataString);
-            dbClient.RunQuery();
+            connection.Execute(
+                "UPDATE `items` SET `extra_data` = @extraData WHERE `id` = @itemId LIMIT 1",
+                new { itemId = item.Id, extraData = item.LegacyDataString });
         }
 
         item.UpdateState(true, true);
