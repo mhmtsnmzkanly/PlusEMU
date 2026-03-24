@@ -408,22 +408,11 @@ public class RoomUserManager
         dbClient.RunQuery($"UPDATE `rooms` SET `users_now` = '{count}' WHERE `id` = '{_room.RoomId}' LIMIT 1");
     }
 
-    public RoomUser GetRoomUserByVirtualId(int virtualId)
-    {
-        RoomUser user = null;
-        if (!_users.TryGetValue(virtualId, out user))
-            return null;
-        return user;
-    }
+    public RoomUser GetRoomUserByVirtualId(int virtualId) => _users.TryGetValue(virtualId, out var user) ? user : null;
 
     public RoomUser GetRoomUserByHabbo(int id) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Id == id);
 
-    public List<RoomUser> GetRoomUsers()
-    {
-        var list = new List<RoomUser>();
-        list = GetUserList().Where(x => !x.IsBot).ToList();
-        return list;
-    }
+    public List<RoomUser> GetRoomUsers() => GetUserList().Where(x => !x.IsBot).ToList();
 
     public List<RoomUser> GetRoomUserByRank(int minRank)
     {
