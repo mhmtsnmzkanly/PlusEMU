@@ -13,10 +13,10 @@ public class InteractorLoveLock : IFurniInteractor
 
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
-        var habbo = session?.GetHabbo();
-        RoomUser? user = null;
-        if (habbo != null)
-            user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return;
         if (Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y))
@@ -50,6 +50,11 @@ public class InteractorLoveLock : IFurniInteractor
                 {
                     var userOneClient = userOne.GetClient();
                     var userTwoClient = userTwo.GetClient();
+                    if (userOneClient == null || userTwoClient == null)
+                    {
+                        session.SendNotification("We couldn't find a valid user to lock this love lock with.");
+                        return;
+                    }
                     var userOneHabbo = userOneClient?.GetHabbo();
                     var userTwoHabbo = userTwoClient?.GetHabbo();
                     if (userOneHabbo == null || userTwoHabbo == null)
@@ -61,8 +66,8 @@ public class InteractorLoveLock : IFurniInteractor
                     userTwo.CanWalk = false;
                     item.InteractingUser = userOneHabbo.Id;
                     item.InteractingUser2 = userTwoHabbo.Id;
-                    userOneClient?.Send(new LoveLockDialogueComposer(item.Id));
-                    userTwoClient?.Send(new LoveLockDialogueComposer(item.Id));
+                    userOneClient.Send(new LoveLockDialogueComposer(item.Id));
+                    userTwoClient.Send(new LoveLockDialogueComposer(item.Id));
                 }
             }
             else
