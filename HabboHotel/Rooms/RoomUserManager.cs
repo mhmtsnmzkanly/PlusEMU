@@ -1043,7 +1043,7 @@ public class RoomUserManager
                             if (user.GoalX == item.GetX && user.GoalY == item.GetY)
                             {
                                 var client = user?.GetClient();
-                                var habbo = client?.GetHabbo();
+                                var habbo = GetHabbo(user);
                                 if (habbo == null)
                                     continue;
                                 var room = habbo.CurrentRoom;
@@ -1111,8 +1111,7 @@ public class RoomUserManager
 
     private void UpdateUserEffect(RoomUser user, int x, int y)
     {
-        var client = user?.GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo(user);
         var effects = habbo?.Effects;
         if (user == null || user.IsBot || effects == null)
             return;
