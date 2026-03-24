@@ -1,51 +1,16 @@
-﻿using Plus.Communication.Packets.Outgoing.Inventory.Bots;
-using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Rooms.AI;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.AI.Bots;
 
 internal class PickUpBotEvent : IPacketEvent
 {
-    public readonly IDatabase _database;
+    private readonly IRoomCreatureService _roomCreatureService;
 
-    public PickUpBotEvent(IDatabase database)
+    public PickUpBotEvent(IRoomCreatureService roomCreatureService)
     {
-        _database = database;
+        _roomCreatureService = roomCreatureService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
-    {
-        var habbo = session.GetHabbo();
-        if (!habbo.InRoom)
-            return Task.CompletedTask;
-        var botId = packet.ReadInt();
-        if (botId == 0)
-            return Task.CompletedTask;
-        var room = habbo.CurrentRoom;
-        if (room == null)
-            return Task.CompletedTask;
-        if (!room.GetRoomUserManager().TryGetBot(botId, out var botUser))
-            return Task.CompletedTask;
-        if (botUser.BotData == null)
-            return Task.CompletedTask;
-        if (habbo.Id != botUser.BotData.OwnerId && !(habbo.Permissions?.HasRight("bot_place_any_override") ?? false))
-        {
-            session.SendWhisper("You can only pick up your own bots!");
-            return Task.CompletedTask;
-        }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("UPDATE `bots` SET `room_id` = '0' WHERE `id` = @id LIMIT 1");
-            dbClient.AddParameter("id", botId);
-            dbClient.RunQuery();
-        }
-        room.GetGameMap().RemoveUserFromMap(botUser, new(botUser.X, botUser.Y));
-        if (habbo.Inventory?.Bots == null)
-            return Task.CompletedTask;
-        habbo.Inventory.Bots.AddBot(new(Convert.ToInt32(botUser.BotData.Id), Convert.ToInt32(botUser.BotData.OwnerId), botUser.BotData.Name, botUser.BotData.Motto,
-            botUser.BotData.Look, botUser.BotData.Gender));
-        session.Send(new BotInventoryComposer(habbo.Inventory.Bots.Bots.Values.ToList()));
-        room.GetRoomUserManager().RemoveBot(botUser.VirtualId, false);
-        return Task.CompletedTask;
-    }
+    public Task Parse(GameClient session, IIncomingPacket packet) => _roomCreatureService.PickUpBot(session, packet.ReadInt());
 }
