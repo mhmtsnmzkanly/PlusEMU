@@ -34,6 +34,7 @@ internal class UseFurnitureEvent : RoomPacketEvent
         {
             if (!room.CheckRights(session, true))
                 return Task.CompletedTask;
+            room.TonerData ??= new(item.Id);
             room.TonerData.Enabled = room.TonerData.Enabled == 0 ? 1 : 0;
             room.SendPacket(new ObjectUpdateComposer(item));
             item.UpdateState();
@@ -53,7 +54,7 @@ internal class UseFurnitureEvent : RoomPacketEvent
         }
         var request = packet.ReadInt();
         item.Interactor.OnTrigger(session, item, request, hasRights);
-        if (toggle)
+        if (toggle && habbo != null)
             item.GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerStateChanges, habbo, item);
         _questManager.ProgressUserQuest(session, QuestType.ExploreFindItem, (int)item.Definition.Id); 
         return Task.CompletedTask;
