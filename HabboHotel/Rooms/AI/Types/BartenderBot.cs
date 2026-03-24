@@ -30,11 +30,14 @@ internal class BartenderBot : BotAi
     {
         if (user == null)
             return;
-        var client = user?.GetClient();
+        var roomUser = GetRoomUser();
+        if (roomUser == null)
+            return;
+        var client = user.GetClient();
         var habbo = client?.GetHabbo();
         if (habbo == null)
             return;
-        if (Gamemap.TileDistance(GetRoomUser().X, GetRoomUser().Y, user.X, user.Y) > 8)
+        if (Gamemap.TileDistance(roomUser.X, roomUser.Y, user.X, user.Y) > 8)
             return;
         var response = PlusEnvironment.Game.BotManager.GetResponse(GetBotData().AiType, message);
         if (response == null)
@@ -45,10 +48,10 @@ internal class BartenderBot : BotAi
                 GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "shout":
-                GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
+                roomUser.Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "whisper":
-                client.Send(new WhisperComposer(GetRoomUser().VirtualId, response.ResponseText.Replace("{username}", habbo.Username), 0, 0));
+                client.Send(new WhisperComposer(roomUser.VirtualId, response.ResponseText.Replace("{username}", habbo.Username), 0, 0));
                 break;
         }
         if (response.BeverageIds.Count > 0) user.CarryItem(response.BeverageIds[Random.Shared.Next(0, response.BeverageIds.Count)]);
@@ -58,11 +61,14 @@ internal class BartenderBot : BotAi
     {
         if (user == null)
             return;
-        var client = user?.GetClient();
+        var roomUser = GetRoomUser();
+        if (roomUser == null)
+            return;
+        var client = user.GetClient();
         var habbo = client?.GetHabbo();
         if (habbo == null)
             return;
-        if (Gamemap.TileDistance(GetRoomUser().X, GetRoomUser().Y, user.X, user.Y) > 8)
+        if (Gamemap.TileDistance(roomUser.X, roomUser.Y, user.X, user.Y) > 8)
             return;
         var response = PlusEnvironment.Game.BotManager.GetResponse(GetBotData().AiType, message);
         if (response == null)
@@ -73,10 +79,10 @@ internal class BartenderBot : BotAi
                 GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "shout":
-                GetRoomUser().Chat(response.ResponseText.Replace("{username}", habbo.Username));
+                roomUser.Chat(response.ResponseText.Replace("{username}", habbo.Username));
                 break;
             case "whisper":
-                client.Send(new WhisperComposer(GetRoomUser().VirtualId, response.ResponseText.Replace("{username}", habbo.Username), 0, 0));
+                client.Send(new WhisperComposer(roomUser.VirtualId, response.ResponseText.Replace("{username}", habbo.Username), 0, 0));
                 break;
         }
         if (response.BeverageIds.Count > 0) user.CarryItem(response.BeverageIds[Random.Shared.Next(0, response.BeverageIds.Count)]);
