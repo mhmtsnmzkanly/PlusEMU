@@ -500,7 +500,8 @@ public class Room : RoomData
         var users = _tents[tentId];
         foreach (var user in users.ToList())
         {
-            var habbo = user?.GetClient()?.GetHabbo();
+            var client = user?.GetClient();
+            var habbo = client?.GetHabbo();
             if (habbo == null)
                 continue;
             habbo.TentId = 0;
@@ -511,7 +512,8 @@ public class Room : RoomData
 
     public void AddUserToTent(uint tentId, RoomUser user)
     {
-        var habbo = user?.GetClient()?.GetHabbo();
+        var client = user?.GetClient();
+        var habbo = client?.GetHabbo();
         if (habbo != null)
         {
             if (!_tents.ContainsKey(tentId))
@@ -524,7 +526,8 @@ public class Room : RoomData
 
     public void RemoveUserFromTent(uint tentId, RoomUser user)
     {
-        var habbo = user?.GetClient()?.GetHabbo();
+        var client = user?.GetClient();
+        var habbo = client?.GetHabbo();
         if (habbo != null)
         {
             if (!_tents.ContainsKey(tentId))
@@ -541,10 +544,11 @@ public class Room : RoomData
             return;
         foreach (var user in _tents[tentId].ToList())
         {
-            var habbo = user?.GetClient()?.GetHabbo();
+            var client = user?.GetClient();
+            var habbo = client?.GetHabbo();
             if (habbo == null || habbo.IgnoresComponent?.IsIgnored(id) == true || habbo.TentId != tentId)
                 continue;
-            user.GetClient().Send(packet);
+            client.Send(packet);
         }
     }
 
