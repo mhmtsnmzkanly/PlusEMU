@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 using Plus.HabboHotel.Rooms;
@@ -10,6 +9,29 @@ namespace Plus.HabboHotel.Navigator;
 
 public sealed class NavigatorManager : INavigatorManager
 {
+    private sealed class NavigatorCategoryRow
+    {
+        public int Id { get; init; }
+        public int Enabled { get; init; }
+        public string Category { get; init; } = string.Empty;
+        public string CategoryIdentifier { get; init; } = string.Empty;
+        public string PublicName { get; init; } = string.Empty;
+        public int RequiredRank { get; init; }
+        public string ViewMode { get; init; } = string.Empty;
+        public string CategoryType { get; init; } = string.Empty;
+        public string SearchAllowance { get; init; } = string.Empty;
+        public int OrderId { get; init; }
+    }
+
+    private sealed class NavigatorPublicRow
+    {
+        public uint RoomId { get; init; }
+        public string Caption { get; init; } = string.Empty;
+        public string Description { get; init; } = string.Empty;
+        public string ImageUrl { get; init; } = string.Empty;
+        public int Enabled { get; init; }
+    }
+
     private readonly IDatabase _database;
     private readonly ILogger<NavigatorManager> _logger;
 
@@ -38,41 +60,55 @@ public sealed class NavigatorManager : INavigatorManager
             _searchResultLists.Clear();
         if (_featuredRooms.Count > 0)
             _featuredRooms.Clear();
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            dbClient.SetQuery("SELECT * FROM `navigator_categories` ORDER BY `id` ASC");
-            var table = dbClient.GetTable();
-            if (table != null)
+            foreach (var row in connection.Query<NavigatorCategoryRow>(
+                         """
+                         SELECT
+                             `id` AS Id,
+                             `enabled` AS Enabled,
+                             `category` AS Category,
+                             `category_identifier` AS CategoryIdentifier,
+                             `public_name` AS PublicName,
+                             `required_rank` AS RequiredRank,
+                             `view_mode` AS ViewMode,
+                             `category_type` AS CategoryType,
+                             `search_allowance` AS SearchAllowance,
+                             `order_id` AS OrderId
+                         FROM `navigator_categories`
+                         ORDER BY `id` ASC
+                         """))
             {
-                foreach (DataRow row in table.Rows)
-                {
-                    if (Convert.ToInt32(row["enabled"]) == 1)
-                    {
-                        if (!_searchResultLists.ContainsKey(Convert.ToInt32(row["id"])))
-                        {
-                            _searchResultLists.Add(Convert.ToInt32(row["id"]),
-                                new(Convert.ToInt32(row["id"]), Convert.ToString(row["category"]) ?? string.Empty, Convert.ToString(row["category_identifier"]) ?? string.Empty, Convert.ToString(row["public_name"]) ?? string.Empty,
-                                    true, -1, Convert.ToInt32(row["required_rank"]), NavigatorViewModeUtility.GetViewModeByString(Convert.ToString(row["view_mode"]) ?? string.Empty),
-                                    Convert.ToString(row["category_type"]) ?? string.Empty, Convert.ToString(row["search_allowance"]) ?? string.Empty, Convert.ToInt32(row["order_id"])));
-                        }
-                    }
-                }
+                if (row.Enabled != 1)
+                    continue;
+                if (_searchResultLists.ContainsKey(row.Id))
+                    continue;
+
+                _searchResultLists.Add(row.Id,
+                    new(row.Id, row.Category, row.CategoryIdentifier, row.PublicName,
+                        true, -1, row.RequiredRank, NavigatorViewModeUtility.GetViewModeByString(row.ViewMode),
+                        row.CategoryType, row.SearchAllowance, row.OrderId));
             }
-            dbClient.SetQuery("SELECT `room_id`,`caption`,`description`,`image_url`,`enabled` FROM `navigator_publics` ORDER BY `order_num` ASC");
-            var getPublics = dbClient.GetTable();
-            if (getPublics != null)
+
+            foreach (var row in connection.Query<NavigatorPublicRow>(
+                         """
+                         SELECT
+                             `room_id` AS RoomId,
+                             `caption` AS Caption,
+                             `description` AS Description,
+                             `image_url` AS ImageUrl,
+                             `enabled` AS Enabled
+                         FROM `navigator_publics`
+                         ORDER BY `order_num` ASC
+                         """))
             {
-                foreach (DataRow row in getPublics.Rows)
-                {
-                    if (Convert.ToInt32(row["enabled"]) == 1)
-                    {
-                        if (!_featuredRooms.ContainsKey(Convert.ToUInt32(row["room_id"])))
-                        {
-                            _featuredRooms.Add(Convert.ToUInt32(row["room_id"]),
-                                new(Convert.ToInt32(row["room_id"]), Convert.ToString(row["caption"]) ?? string.Empty, Convert.ToString(row["description"]) ?? string.Empty, Convert.ToString(row["image_url"]) ?? string.Empty));
-                        }
-                    }
-                }
+                if (row.Enabled != 1)
+                    continue;
+                if (_featuredRooms.ContainsKey(row.RoomId))
+                    continue;
+
+                _featuredRooms.Add(row.RoomId,
+                    new((int)row.RoomId, row.Caption, row.Description, row.ImageUrl));
             }
         }
         _logger.LogInformation("Navigator -> LOADED");
