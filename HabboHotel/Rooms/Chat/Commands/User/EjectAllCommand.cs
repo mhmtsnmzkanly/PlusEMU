@@ -39,10 +39,11 @@ internal class EjectAllCommand : IChatCommand
                     continue;
                 var targetClient = _gameClientManager.GetClientByUserId(item.UserId);
                 var targetHabbo = targetClient?.GetHabbo();
-                if (targetHabbo != null)
+                var targetFurniture = targetHabbo?.Inventory?.Furniture;
+                if (targetHabbo != null && targetClient != null && targetFurniture != null)
                 {
                     room.GetRoomItemHandler().RemoveFurniture(targetClient, item.Id);
-                    targetHabbo.Inventory.Furniture.AddItem(item.ToInventoryItem());
+                    targetFurniture.AddItem(item.ToInventoryItem());
                     targetClient.Send(new FurniListUpdateComposer());
                 }
                 else
@@ -61,10 +62,11 @@ internal class EjectAllCommand : IChatCommand
                     continue;
                 var targetClient = _gameClientManager.GetClientByUserId(item.UserId);
                 var targetHabbo = targetClient?.GetHabbo();
-                if (targetHabbo != null)
+                var targetFurniture = targetHabbo?.Inventory?.Furniture;
+                if (targetHabbo != null && targetClient != null && targetFurniture != null)
                 {
                     room.GetRoomItemHandler().RemoveFurniture(targetClient, item.Id);
-                    targetHabbo.Inventory.Furniture.AddItem(item.ToInventoryItem());
+                    targetFurniture.AddItem(item.ToInventoryItem());
                     targetClient.Send(new FurniListUpdateComposer());
                 }
                 else
