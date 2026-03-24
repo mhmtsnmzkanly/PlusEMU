@@ -4,7 +4,7 @@ namespace Plus.HabboHotel.Rooms;
 
 internal static class RoomAppender
 {
-    public static void WriteRoom(IOutgoingPacket packet, RoomData data, RoomPromotion promotion)
+    public static void WriteRoom(IOutgoingPacket packet, RoomData data, RoomPromotion? promotion)
     {
         packet.WriteUInteger(data.Id);
         packet.WriteString(data.Name);
