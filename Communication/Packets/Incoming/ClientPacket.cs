@@ -4,7 +4,7 @@ namespace Plus.Communication.Packets.Incoming;
 
 public class ClientPacket
 {
-    private byte[] _body;
+    private byte[] _body = [];
     private int _pointer;
 
     public ClientPacket(int messageId, byte[] body)

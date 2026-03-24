@@ -7,8 +7,8 @@ public class ItemDefinition
 {
     public uint Id { get; set; }
     public int SpriteId { get; set; }
-    public string ItemName { get; set; }
-    public string PublicName { get; set; }
+    public string ItemName { get; set; } = string.Empty;
+    public string PublicName { get; set; } = string.Empty;
     public ItemType Type { get; set; }
     public FurniCategory Category { get; set; } = FurniCategory.Default;
     public int Width { get; set; }
@@ -27,8 +27,8 @@ public class ItemDefinition
     public InteractionType InteractionType { get; set; }
     public int BehaviourData { get; set; }
     public int Modes { get; set; }
-    public List<int> VendingIds { get; set; }
-    public List<double> AdjustableHeights { get; set; }
+    public List<int> VendingIds { get; set; } = [];
+    public List<double> AdjustableHeights { get; set; } = [];
     public int EffectId { get; set; }
 
     /// TODO @80O: Should be removed, use unique interaction name instead.

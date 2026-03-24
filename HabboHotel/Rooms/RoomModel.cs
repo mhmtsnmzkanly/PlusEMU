@@ -7,16 +7,16 @@ public class RoomModel
     public int DoorX;
     public int DoorY;
     public double DoorZ;
-    public string Heightmap;
+    public string Heightmap = string.Empty;
     public int MapSizeX;
     public int MapSizeY;
 
-    public byte[,] MRoomModelfx;
-    public short[,] SqFloorHeight;
-    public byte[,] SqSeatRot;
-    public SquareState[,] SqState;
+    public byte[,] MRoomModelfx = new byte[0, 0];
+    public short[,] SqFloorHeight = new short[0, 0];
+    public byte[,] SqSeatRot = new byte[0, 0];
+    public SquareState[,] SqState = new SquareState[0, 0];
 
-    public string StaticFurniMap;
+    public string StaticFurniMap = string.Empty;
 
     public int WallHeight;
 
@@ -144,9 +144,9 @@ public class RoomModel
 
     public void Destroy()
     {
-        Heightmap = null;
-        SqState = null;
-        SqFloorHeight = null;
-        SqSeatRot = null;
+        Heightmap = string.Empty;
+        SqState = new SquareState[0, 0];
+        SqFloorHeight = new short[0, 0];
+        SqSeatRot = new byte[0, 0];
     }
 }

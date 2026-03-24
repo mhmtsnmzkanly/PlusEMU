@@ -9,7 +9,7 @@ public class MoodlightData
     public bool Enabled;
     public uint ItemId;
 
-    public List<MoodlightPreset> Presets;
+    public List<MoodlightPreset> Presets = [];
 
     public MoodlightData(uint itemId)
     {

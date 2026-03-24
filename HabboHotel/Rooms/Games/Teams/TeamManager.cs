@@ -4,11 +4,11 @@ namespace Plus.HabboHotel.Rooms.Games.Teams;
 
 public class TeamManager
 {
-    public List<RoomUser> BlueTeam;
-    public string Game;
-    public List<RoomUser> GreenTeam;
-    public List<RoomUser> RedTeam;
-    public List<RoomUser> YellowTeam;
+    public List<RoomUser> BlueTeam = [];
+    public string Game = string.Empty;
+    public List<RoomUser> GreenTeam = [];
+    public List<RoomUser> RedTeam = [];
+    public List<RoomUser> YellowTeam = [];
 
     public static TeamManager CreateTeam(string game)
     {

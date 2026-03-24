@@ -88,7 +88,7 @@ public class RoomBot
 
     public void LoadRandomSpeech(List<RandomSpeech> speeches)
     {
-        RandomSpeech = new();
+        RandomSpeech = [];
         foreach (var speech in speeches)
         {
             if (speech.BotId == BotId)
