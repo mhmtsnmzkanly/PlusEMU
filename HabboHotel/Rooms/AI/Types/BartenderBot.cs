@@ -34,6 +34,8 @@ internal class BartenderBot : BotAi
         if (roomUser == null)
             return;
         var client = user.GetClient();
+        if (client == null)
+            return;
         var habbo = client?.GetHabbo();
         if (habbo == null)
             return;
@@ -65,6 +67,8 @@ internal class BartenderBot : BotAi
         if (roomUser == null)
             return;
         var client = user.GetClient();
+        if (client == null)
+            return;
         var habbo = client?.GetHabbo();
         if (habbo == null)
             return;
