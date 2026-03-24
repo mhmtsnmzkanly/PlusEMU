@@ -1,3 +1,4 @@
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Navigator;
 using Plus.Communication.Packets.Outgoing.Rooms.Settings;
 using Plus.Database;
@@ -40,21 +41,25 @@ internal class ModerationRoomService : IModerationRoomService
         if (room.HasActivePromotion)
             room.EndPromotion();
 
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
             if (setName && setLock)
             {
-                dbClient.RunQuery(
-                    $"UPDATE `rooms` SET `caption` = 'Inappropriate to Hotel Management', `description` = 'Inappropriate to Hotel Management', `tags` = '', `state` = '1' WHERE `id` = '{room.RoomId}' LIMIT 1");
+                connection.Execute(
+                    "UPDATE `rooms` SET `caption` = @caption, `description` = @description, `tags` = '', `state` = '1' WHERE `id` = @roomId LIMIT 1",
+                    new { caption = "Inappropriate to Hotel Management", description = "Inappropriate to Hotel Management", roomId = room.RoomId });
             }
             else if (setName)
             {
-                dbClient.RunQuery(
-                    $"UPDATE `rooms` SET `caption` = 'Inappropriate to Hotel Management', `description` = 'Inappropriate to Hotel Management', `tags` = '' WHERE `id` = '{room.RoomId}' LIMIT 1");
+                connection.Execute(
+                    "UPDATE `rooms` SET `caption` = @caption, `description` = @description, `tags` = '' WHERE `id` = @roomId LIMIT 1",
+                    new { caption = "Inappropriate to Hotel Management", description = "Inappropriate to Hotel Management", roomId = room.RoomId });
             }
             else if (setLock)
             {
-                dbClient.RunQuery($"UPDATE `rooms` SET `state` = '1', `tags` = '' WHERE `id` = '{room.RoomId}' LIMIT 1");
+                connection.Execute(
+                    "UPDATE `rooms` SET `state` = '1', `tags` = '' WHERE `id` = @roomId LIMIT 1",
+                    new { roomId = room.RoomId });
             }
         }
 

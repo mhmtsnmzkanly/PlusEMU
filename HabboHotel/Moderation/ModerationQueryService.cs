@@ -1,4 +1,3 @@
-using System.Data;
 using Dapper;
 using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Core.Language;
@@ -13,6 +12,28 @@ namespace Plus.HabboHotel.Moderation;
 
 internal class ModerationQueryService : IModerationQueryService
 {
+    private sealed class ModeratorUserInfoRow
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public int Online { get; set; }
+        public string Mail { get; set; } = string.Empty;
+        public string IpLast { get; set; } = string.Empty;
+        public string Look { get; set; } = string.Empty;
+        public double AccountCreated { get; set; }
+        public double LastOnline { get; set; }
+    }
+
+    private sealed class ModeratorUserStatsRow
+    {
+        public int Cfhs { get; set; }
+        public int CfhsAbusive { get; set; }
+        public int Cautions { get; set; }
+        public int Bans { get; set; }
+        public double TradingLocked { get; set; }
+        public int TradingLocksCount { get; set; }
+    }
+
     private sealed class RoomVisitRow
     {
         public uint RoomId { get; set; }
@@ -56,29 +77,69 @@ internal class ModerationQueryService : IModerationQueryService
         if (!(habbo?.Permissions?.HasRight("mod_tool") ?? false))
             return Task.CompletedTask;
 
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("SELECT `id`,`username`,`online`,`mail`,`ip_last`,`look`,`account_created`,`last_online` FROM `users` WHERE `id` = @userId LIMIT 1");
-        dbClient.AddParameter("userId", userId);
-        var user = dbClient.GetRow();
+        using var connection = _database.Connection();
+        var user = connection.QueryFirstOrDefault<ModeratorUserInfoRow>(
+            """
+            SELECT
+                `id` AS Id,
+                `username` AS Username,
+                `online` AS Online,
+                `mail` AS Mail,
+                `ip_last` AS IpLast,
+                `look` AS Look,
+                `account_created` AS AccountCreated,
+                `last_online` AS LastOnline
+            FROM `users`
+            WHERE `id` = @userId
+            LIMIT 1
+            """,
+            new { userId });
         if (user == null)
         {
             session.SendNotification(_languageManager.TryGetValue("user.not_found"));
             return Task.CompletedTask;
         }
 
-        dbClient.SetQuery("SELECT `cfhs`,`cfhs_abusive`,`cautions`,`bans`,`trading_locked`,`trading_locks_count` FROM `user_info` WHERE `user_id` = @userId LIMIT 1");
-        dbClient.AddParameter("userId", userId);
-        var info = dbClient.GetRow();
+        var info = connection.QueryFirstOrDefault<ModeratorUserStatsRow>(
+            """
+            SELECT
+                `cfhs` AS Cfhs,
+                `cfhs_abusive` AS CfhsAbusive,
+                `cautions` AS Cautions,
+                `bans` AS Bans,
+                `trading_locked` AS TradingLocked,
+                `trading_locks_count` AS TradingLocksCount
+            FROM `user_info`
+            WHERE `user_id` = @userId
+            LIMIT 1
+            """,
+            new { userId });
         if (info == null)
         {
-            dbClient.RunQuery($"INSERT INTO `user_info` (`user_id`) VALUES ('{userId}')");
-            dbClient.SetQuery("SELECT `cfhs`,`cfhs_abusive`,`cautions`,`bans`,`trading_locked`,`trading_locks_count` FROM `user_info` WHERE `user_id` = @userId LIMIT 1");
-            dbClient.AddParameter("userId", userId);
-            info = dbClient.GetRow();
+            connection.Execute(
+                "INSERT INTO `user_info` (`user_id`) VALUES (@userId)",
+                new { userId });
+            info = connection.QueryFirstOrDefault<ModeratorUserStatsRow>(
+                """
+                SELECT
+                    `cfhs` AS Cfhs,
+                    `cfhs_abusive` AS CfhsAbusive,
+                    `cautions` AS Cautions,
+                    `bans` AS Bans,
+                    `trading_locked` AS TradingLocked,
+                    `trading_locks_count` AS TradingLocksCount
+                FROM `user_info`
+                WHERE `user_id` = @userId
+                LIMIT 1
+                """,
+                new { userId });
         }
 
         if (info != null)
-            session.Send(new ModeratorUserInfoComposer(user, info));
+            session.Send(new ModeratorUserInfoComposer(
+                user,
+                info,
+                _clientManager.GetClientByUserId(user.Id) != null));
 
         return Task.CompletedTask;
     }
