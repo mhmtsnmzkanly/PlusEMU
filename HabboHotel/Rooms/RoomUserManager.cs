@@ -753,7 +753,8 @@ public class RoomUserManager
                             }
                             if (!user.IsBot && !user.IsPet && user.GetClient() != null)
                             {
-                                var habbo = user.GetClient()?.GetHabbo();
+                                var client = user.GetClient();
+                                var habbo = client?.GetHabbo();
                                 if (habbo?.IsTeleporting == true)
                                 {
                                     habbo.IsTeleporting = false;
@@ -946,7 +947,8 @@ public class RoomUserManager
                         {
                             if (cyclegameitems)
                             {
-                                var habbo = user.GetClient()?.GetHabbo();
+                                var client = user.GetClient();
+                                var habbo = client?.GetHabbo();
                                 var effects = habbo?.Effects;
                                 var t = habbo?.CurrentRoom?.GetTeamManagerForBanzai();
                                 if (effects == null || t == null)
@@ -990,7 +992,8 @@ public class RoomUserManager
                         {
                             if (cyclegameitems)
                             {
-                                var habbo = user.GetClient()?.GetHabbo();
+                                var client = user.GetClient();
+                                var habbo = client?.GetHabbo();
                                 var effects = habbo?.Effects;
                                 var t = habbo?.CurrentRoom?.GetTeamManagerForFreeze();
                                 if (effects == null || t == null)
@@ -1039,7 +1042,9 @@ public class RoomUserManager
                                 return;
                             if (!user.IsBot)
                             {
-                                var effects = user.GetClient()?.GetHabbo()?.Effects;
+                                var client = user.GetClient();
+                                var habbo = client?.GetHabbo();
+                                var effects = habbo?.Effects;
                                 if (item == null || item.Definition == null || effects == null)
                                     return;
                                 if (item.Definition.EffectId == 0 && effects.CurrentEffect == 0)
