@@ -48,9 +48,13 @@ public class GameClientManager : IGameClientManager
         HandleTimeouts();
     }
 
-    public GameClient? GetClientByUserId(int userId) => _userIdRegister.ContainsKey(userId) ? _userIdRegister[userId] : null;
+    public GameClient? GetClientByUserId(int userId) => _userIdRegister.TryGetValue(userId, out var client) ? client : null;
 
-    public GameClient? GetClientByUsername(string username) => _usernameRegister.ContainsKey(username.ToLower()) ? _usernameRegister[username.ToLower()] : null;
+    public GameClient? GetClientByUsername(string username)
+    {
+        var normalizedUsername = username.ToLower();
+        return _usernameRegister.TryGetValue(normalizedUsername, out var client) ? client : null;
+    }
 
     public bool TryGetClient(int clientId, out GameClient? client) => _clients.TryGetValue(clientId, out client);
 
@@ -292,8 +296,8 @@ public class GameClientManager : IGameClientManager
                 while (_timedOutConnections.Count > 0)
                 {
                     GameClient? client = null;
-                    if (_timedOutConnections.Count > 0)
-                        client = (GameClient)_timedOutConnections.Dequeue();
+                    if (_timedOutConnections.Count > 0 && _timedOutConnections.Dequeue() is GameClient timedOutClient)
+                        client = timedOutClient;
                     if (client != null)
                         client.Disconnect();
                 }

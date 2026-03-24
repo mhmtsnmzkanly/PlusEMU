@@ -118,6 +118,8 @@ public class FigureDataManager : IFigureDataManager
                             colorId = GetRandomColor(figureSet.PalletId);
                         }
                     }
+                    if (set == null)
+                        continue;
                     if (set.Colorable)
                     {
                         //Couldn't think of a better way to split the colors, if I looped the parts I still have to remove Type-PartId, then loop color 1 & color 2. Meh
@@ -230,12 +232,12 @@ public class FigureDataManager : IFigureDataManager
         return rebuildFigure;
     }
 
-    public Palette GetPalette(int colorId)
+    public Palette? GetPalette(int colorId)
     {
         return _palettes.FirstOrDefault(x => x.Value.Colors.ContainsKey(colorId)).Value;
     }
 
-    public bool TryGetPalette(int palletId, out Palette palette) => _palettes.TryGetValue(palletId, out palette);
+    public bool TryGetPalette(int palletId, out Palette? palette) => _palettes.TryGetValue(palletId, out palette);
 
     public int GetRandomColor(int palletId) => _palettes[palletId].Colors.FirstOrDefault().Value.Id;
 

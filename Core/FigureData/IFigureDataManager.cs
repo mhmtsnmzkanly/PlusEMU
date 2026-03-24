@@ -9,8 +9,8 @@ public interface IFigureDataManager
     
     void Init();
     string ProcessFigure(string figure, string gender, ICollection<ClothingParts> clothingParts, bool hasHabboClub);
-    Palette GetPalette(int colorId);
-    bool TryGetPalette(int palletId, out Palette palette);
+    Palette? GetPalette(int colorId);
+    bool TryGetPalette(int palletId, out Palette? palette);
     int GetRandomColor(int palletId);
     public string FilterFigure(string figure);
 }
