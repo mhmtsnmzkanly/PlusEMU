@@ -78,8 +78,7 @@ internal static class ItemBehaviourUtility
             case InteractionType.GuildItem:
             case InteractionType.GuildGate:
             case InteractionType.GuildForum:
-                Group group = null;
-                if (!PlusEnvironment.Game.GroupManager.TryGetGroup(item.GroupId, out group))
+                if (!PlusEnvironment.Game.GroupManager.TryGetGroup(item.GroupId, out var group))
                 {
                     packet.WriteInteger(1);
                     packet.WriteInteger(0);
@@ -175,15 +174,16 @@ internal static class ItemBehaviourUtility
             case InteractionType.Toner:
                 if (item.RoomId != 0)
                 {
-                    if (item.GetRoom().TonerData == null)
-                        item.GetRoom().TonerData = new(item.Id);
+                    var room = item.GetRoom();
+                    room.TonerData ??= new(item.Id);
+                    var tonerData = room.TonerData;
                     packet.WriteInteger(0);
                     packet.WriteInteger(5);
                     packet.WriteInteger(4);
-                    packet.WriteInteger(item.GetRoom().TonerData.Enabled);
-                    packet.WriteInteger(item.GetRoom().TonerData.Hue);
-                    packet.WriteInteger(item.GetRoom().TonerData.Saturation);
-                    packet.WriteInteger(item.GetRoom().TonerData.Lightness);
+                    packet.WriteInteger(tonerData.Enabled);
+                    packet.WriteInteger(tonerData.Hue);
+                    packet.WriteInteger(tonerData.Saturation);
+                    packet.WriteInteger(tonerData.Lightness);
                 }
                 else
                 {
