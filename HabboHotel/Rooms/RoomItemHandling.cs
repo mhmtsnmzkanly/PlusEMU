@@ -348,7 +348,8 @@ public class RoomItemHandling
         pUser.Y = pNextCoord.Y;
         pUser.Z = nextZ;
         _room.GetGameMap().GameMap[pUser.X, pUser.Y] = 0;
-        var habbo = pUser?.GetClient()?.GetHabbo();
+        var client = pUser?.GetClient();
+        var habbo = client?.GetHabbo();
         if (habbo != null)
         {
             var items = _room.GetGameMap().GetRoomItemForSquare(pNextCoord.X, pNextCoord.Y);

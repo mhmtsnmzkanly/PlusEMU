@@ -795,7 +795,8 @@ public class Gamemap
                 {
                     if (!PlusEnvironment.Game.GroupManager.TryGetGroup(I.GroupId, out var group))
                         return false;
-                    var habbo = user.GetClient()?.GetHabbo();
+                    var client = user.GetClient();
+                    var habbo = client?.GetHabbo();
                     if (habbo == null)
                         return false;
                     if (group.IsMember(habbo.Id))

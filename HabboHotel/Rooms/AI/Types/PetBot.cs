@@ -45,7 +45,8 @@ public class PetBot : BotAi
 
     public override void OnUserEnterRoom(RoomUser user)
     {
-        var habbo = user.GetClient()?.GetHabbo();
+        var client = user.GetClient();
+        var habbo = client?.GetHabbo();
         if (habbo != null)
         {
             var pet = GetRoomUser();
@@ -137,7 +138,9 @@ public class PetBot : BotAi
 
         //if (!Pet.Statusses.ContainsKey("gst thr"))
         //    Pet.Statusses.Add("gst thr", TextHandling.GetString(Pet.Z));
-        if (message.ToLower().StartsWith($"{pet.PetData.Name.ToLower()} ") && (user.GetClient()?.GetHabbo()?.Username?.ToLower() == pet.PetData.OwnerName.ToLower()) ||
+        var userClient = user.GetClient();
+        var userHabbo = userClient?.GetHabbo();
+        if (message.ToLower().StartsWith($"{pet.PetData.Name.ToLower()} ") && (userHabbo?.Username?.ToLower() == pet.PetData.OwnerName.ToLower()) ||
             message.ToLower().StartsWith($"{pet.PetData.Name.ToLower()} ") &&
             PlusEnvironment.Game.ChatManager.GetPetCommands().TryInvoke(message.Substring(pet.PetData.Name.ToLower().Length + 1)) == 8)
         {
