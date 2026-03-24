@@ -16,6 +16,7 @@ using Plus.HabboHotel.Rooms.Games.Football;
 using Plus.HabboHotel.Rooms.Games.Freeze;
 using Plus.HabboHotel.Rooms.Games.Teams;
 using Plus.HabboHotel.Rooms.Instance;
+using Plus.HabboHotel.Users;
 using Plus.Utilities;
 
 namespace Plus.HabboHotel.Rooms;
@@ -502,8 +503,7 @@ public class Room : RoomData
         var users = _tents[tentId];
         foreach (var user in users.ToList())
         {
-            var client = user?.GetClient();
-            var habbo = client?.GetHabbo();
+            var habbo = GetHabbo(user);
             if (habbo == null)
                 continue;
             habbo.TentId = 0;
@@ -514,8 +514,7 @@ public class Room : RoomData
 
     public void AddUserToTent(uint tentId, RoomUser user)
     {
-        var client = user?.GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo(user);
         if (habbo == null)
             return;
         if (!_tents.ContainsKey(tentId))
@@ -527,8 +526,7 @@ public class Room : RoomData
 
     public void RemoveUserFromTent(uint tentId, RoomUser user)
     {
-        var client = user?.GetClient();
-        var habbo = client?.GetHabbo();
+        var habbo = GetHabbo(user);
         if (habbo == null)
             return;
         if (!_tents.ContainsKey(tentId))
@@ -545,11 +543,17 @@ public class Room : RoomData
         foreach (var user in _tents[tentId].ToList())
         {
             var client = user?.GetClient();
-            var habbo = client?.GetHabbo();
+            var habbo = GetHabbo(user);
             if (habbo == null || habbo.IgnoresComponent?.IsIgnored(id) == true || habbo.TentId != tentId)
                 continue;
             client.Send(packet);
         }
+    }
+
+    private Habbo? GetHabbo(RoomUser? user)
+    {
+        var client = user?.GetClient();
+        return client?.GetHabbo();
     }
 
     public void SendPacket(IServerPacket packet, bool withRightsOnly = false)
