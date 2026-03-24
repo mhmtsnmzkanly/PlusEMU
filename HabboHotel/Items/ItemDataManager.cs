@@ -36,8 +36,8 @@ public class ItemDataManager : IItemDataManager
                         {
                             Id = Convert.ToUInt32(row["id"]),
                             SpriteId = Convert.ToInt32(row["sprite_id"]),
-                            ItemName = Convert.ToString(row["item_name"]),
-                            PublicName = Convert.ToString(row["public_name"]),
+                            ItemName = Convert.ToString(row["item_name"]) ?? string.Empty,
+                            PublicName = Convert.ToString(row["public_name"]) ?? string.Empty,
                             Type = string.Equals(row["type"].ToString(), "s", StringComparison.OrdinalIgnoreCase) ? ItemType.Floor : ItemType.Wall,
                             Width = Convert.ToInt32(row["width"]),
                             Length = Convert.ToInt32(row["length"]),
@@ -50,14 +50,14 @@ public class ItemDataManager : IItemDataManager
                             AllowMarketplaceSell = row["allow_marketplace_sell"].ToString() == "1",
                             AllowGift = row["allow_gift"].ToString() == "1",
                             AllowInventoryStack = row["allow_inventory_stack"].ToString() == "1",
-                            InteractionType = InteractionTypes.GetTypeFromString(row["interaction_type"].ToString()),
+                            InteractionType = InteractionTypes.GetTypeFromString(Convert.ToString(row["interaction_type"]) ?? string.Empty),
                             BehaviourData = Convert.ToInt32(row["behaviour_data"]),
                             Modes = Convert.ToInt32(row["interaction_modes_count"]),
                             VendingIds = (!string.IsNullOrEmpty(Convert.ToString(row["vending_ids"])) && Convert.ToString(row["vending_ids"]) != "0")
-                                ? Convert.ToString(row["vending_ids"]).Split(",").Select(int.Parse).ToList()
+                                ? (Convert.ToString(row["vending_ids"]) ?? string.Empty).Split(",").Select(int.Parse).ToList()
                                 : new(0),
                             AdjustableHeights = (!string.IsNullOrEmpty(Convert.ToString(row["height_adjustable"])) && Convert.ToString(row["height_adjustable"]) != "0")
-                                ? Convert.ToString(row["height_adjustable"]).Split(",").Select(double.Parse).ToList()
+                                ? (Convert.ToString(row["height_adjustable"]) ?? string.Empty).Split(",").Select(double.Parse).ToList()
                                 : new(0),
                             EffectId = Convert.ToInt32(row["effect_id"]),
                             IsRare = row["is_rare"].ToString() == "1",
@@ -87,6 +87,6 @@ public class ItemDataManager : IItemDataManager
             if (item.ItemName == name)
                 return item;
         }
-        return null;
+        return null!;
     }
 }
