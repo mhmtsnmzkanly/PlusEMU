@@ -145,7 +145,7 @@ public class GameClientManager : IGameClientManager
         }
         foreach (var client in GetClients.ToList())
         {
-            var habbo = client?.GetHabbo();
+            var habbo = client.GetHabbo();
             var permissions = habbo?.Permissions;
             if (habbo == null || permissions == null)
                 continue;
@@ -159,9 +159,7 @@ public class GameClientManager : IGameClientManager
     {
         foreach (var client in _clients.Values.ToList())
         {
-            if (client == null)
-                continue;
-            var habbo = client?.GetHabbo();
+            var habbo = client.GetHabbo();
             if (habbo == null)
                 continue;
             if (!string.IsNullOrEmpty(fuse))

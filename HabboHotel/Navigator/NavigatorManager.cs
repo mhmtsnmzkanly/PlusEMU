@@ -90,11 +90,38 @@ public sealed class NavigatorManager : INavigatorManager
 
     public IReadOnlyCollection<SearchResultList> SearchResultLists => _searchResultLists.Values;
 
-    public bool TryGetTopLevelItem(int id, out TopLevelItem topLevelItem) => _topLevelItems.TryGetValue(id, out topLevelItem);
+    public bool TryGetTopLevelItem(int id, out TopLevelItem topLevelItem)
+    {
+        if (_topLevelItems.TryGetValue(id, out var item))
+        {
+            topLevelItem = item;
+            return true;
+        }
+        topLevelItem = null!;
+        return false;
+    }
 
-    public bool TryGetSearchResultList(int id, out SearchResultList searchResultList) => _searchResultLists.TryGetValue(id, out searchResultList);
+    public bool TryGetSearchResultList(int id, out SearchResultList searchResultList)
+    {
+        if (_searchResultLists.TryGetValue(id, out var resultList))
+        {
+            searchResultList = resultList;
+            return true;
+        }
+        searchResultList = null!;
+        return false;
+    }
 
-    public bool TryGetFeaturedRoom(uint roomId, out FeaturedRoom publicRoom) => _featuredRooms.TryGetValue(roomId, out publicRoom);
+    public bool TryGetFeaturedRoom(uint roomId, out FeaturedRoom publicRoom)
+    {
+        if (_featuredRooms.TryGetValue(roomId, out var featuredRoom))
+        {
+            publicRoom = featuredRoom;
+            return true;
+        }
+        publicRoom = null!;
+        return false;
+    }
 
     public IReadOnlyCollection<FeaturedRoom> FeaturedRooms => _featuredRooms.Values;
 

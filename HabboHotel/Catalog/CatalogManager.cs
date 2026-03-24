@@ -162,11 +162,38 @@ public class CatalogManager : ICatalogManager, IStartable
         _logger.LogInformation("Catalog Manager -> LOADED");
     }
 
-    public bool TryGetBot(uint itemId, out CatalogBot bot) => _botPresets.TryGetValue(itemId, out bot);
+    public bool TryGetBot(uint itemId, out CatalogBot bot)
+    {
+        if (_botPresets.TryGetValue(itemId, out var preset))
+        {
+            bot = preset;
+            return true;
+        }
+        bot = null!;
+        return false;
+    }
 
-    public bool TryGetPage(int pageId, out CatalogPage page) => _pages.TryGetValue(pageId, out page);
+    public bool TryGetPage(int pageId, out CatalogPage page)
+    {
+        if (_pages.TryGetValue(pageId, out var catalogPage))
+        {
+            page = catalogPage;
+            return true;
+        }
+        page = null!;
+        return false;
+    }
 
-    public bool TryGetDeal(int dealId, out CatalogDeal deal) => _deals.TryGetValue(dealId, out deal);
+    public bool TryGetDeal(int dealId, out CatalogDeal deal)
+    {
+        if (_deals.TryGetValue(dealId, out var catalogDeal))
+        {
+            deal = catalogDeal;
+            return true;
+        }
+        deal = null!;
+        return false;
+    }
 
     public ICollection<CatalogPage> Pages => _pages.Values;
 
