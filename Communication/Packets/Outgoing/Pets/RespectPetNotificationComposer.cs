@@ -41,6 +41,8 @@ public class RespectPetNotificationComposer : IServerPacket
         }
         else
         {
+            if (_user == null || _habbo == null)
+                return;
             packet.WriteInteger(_user.VirtualId);
             packet.WriteInteger(_user.VirtualId);
             packet.WriteInteger(_habbo.Id); //Pet Id, 100%
