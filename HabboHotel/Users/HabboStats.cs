@@ -2,6 +2,11 @@
 
 public class HabboStats
 {
+    public HabboStats()
+    {
+        RespectsTimestamp = string.Empty;
+    }
+
     public HabboStats(int roomVisits, double onlineTime, int respect, int respectGiven, int giftsGiven, int giftsReceived, int dailyRespectPoints, int dailyPetRespectPoints, int achievementPoints,
         int questId, int questProgress, int groupId, string respectsTimestamp, int forumPosts)
     {

@@ -1,11 +1,6 @@
 ﻿{
   "Name": "NITRO-1-6-6",
   "IncomingHeaders": {
-    "GetRPUserInfoEvent": 9002,
-    "GetRPUserCurrentInventoryEvent": 9004,
-    "UpdateRPItemPositionEvent": 9006,
-    "ItemOfferEvent": 9008,
-    "ItemOfferResponseMessageEvent": 9010,
     "InitDiffieHandshakeEvent": 3110,
     "GenerateSecretKeyEvent": 773,
     "UniqueIdEvent": 2490,
@@ -275,11 +270,6 @@
     "CloseTicketEvent": 2067
   },
   "OutgoingHeaders": {
-    "SendRPUserDataComposer": 9001,
-    "SendRPUserInventoryComposer": 9003,
-    "UpdateRPItemPositionComposer": 9005,
-    "ItemOfferComposer": 9007,
-    "ItemOfferResponseComposer": 9009,
     "InitCryptoComposer": 1347,
     "SecretKeyComposer": 3885,
     "AuthenticationOkComposer": 2491,
