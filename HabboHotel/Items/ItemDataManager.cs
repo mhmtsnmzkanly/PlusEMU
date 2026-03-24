@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 using Plus.HabboHotel.Users.Inventory.Furniture;
@@ -7,6 +7,34 @@ namespace Plus.HabboHotel.Items;
 
 public class ItemDataManager : IItemDataManager
 {
+    private sealed class FurnitureRow
+    {
+        public uint Id { get; init; }
+        public int SpriteId { get; init; }
+        public string ItemName { get; init; } = string.Empty;
+        public string PublicName { get; init; } = string.Empty;
+        public string Type { get; init; } = string.Empty;
+        public int Width { get; init; }
+        public int Length { get; init; }
+        public double StackHeight { get; init; }
+        public string CanStack { get; init; } = "0";
+        public string IsWalkable { get; init; } = "0";
+        public string CanSit { get; init; } = "0";
+        public string AllowRecycle { get; init; } = "0";
+        public string AllowTrade { get; init; } = "0";
+        public string AllowMarketplaceSell { get; init; } = "0";
+        public string AllowGift { get; init; } = "0";
+        public string AllowInventoryStack { get; init; } = "0";
+        public string InteractionType { get; init; } = string.Empty;
+        public int BehaviourData { get; init; }
+        public int InteractionModesCount { get; init; }
+        public string VendingIds { get; init; } = string.Empty;
+        public string HeightAdjustable { get; init; } = string.Empty;
+        public int EffectId { get; init; }
+        public string IsRare { get; init; } = "0";
+        public string ExtraRot { get; init; } = "0";
+    }
+
     private readonly ILogger<ItemDataManager> _logger;
     private readonly IDatabase _database;
     public Dictionary<int, uint> Gifts { get; } = new(0); //<SpriteId, Item>
@@ -22,57 +50,82 @@ public class ItemDataManager : IItemDataManager
     {
         if (Items.Count > 0)
             Items.Clear();
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT * FROM `furniture`");
-            var itemData = dbClient.GetTable();
-            if (itemData != null)
-            {
-                foreach (DataRow row in itemData.Rows)
-                {
-                    try
-                    {
-                        var definition = new ItemDefinition
-                        {
-                            Id = Convert.ToUInt32(row["id"]),
-                            SpriteId = Convert.ToInt32(row["sprite_id"]),
-                            ItemName = Convert.ToString(row["item_name"]) ?? string.Empty,
-                            PublicName = Convert.ToString(row["public_name"]) ?? string.Empty,
-                            Type = string.Equals(row["type"].ToString(), "s", StringComparison.OrdinalIgnoreCase) ? ItemType.Floor : ItemType.Wall,
-                            Width = Convert.ToInt32(row["width"]),
-                            Length = Convert.ToInt32(row["length"]),
-                            Height = Convert.ToDouble(row["stack_height"]),
-                            Stackable = row["can_stack"].ToString() == "1",
-                            Walkable = row["is_walkable"].ToString() == "1",
-                            IsSeat = row["can_sit"].ToString() == "1",
-                            AllowEcotronRecycle = row["allow_recycle"].ToString() == "1",
-                            AllowTrade = row["allow_trade"].ToString() == "1",
-                            AllowMarketplaceSell = row["allow_marketplace_sell"].ToString() == "1",
-                            AllowGift = row["allow_gift"].ToString() == "1",
-                            AllowInventoryStack = row["allow_inventory_stack"].ToString() == "1",
-                            InteractionType = InteractionTypes.GetTypeFromString(Convert.ToString(row["interaction_type"]) ?? string.Empty),
-                            BehaviourData = Convert.ToInt32(row["behaviour_data"]),
-                            Modes = Convert.ToInt32(row["interaction_modes_count"]),
-                            VendingIds = (!string.IsNullOrEmpty(Convert.ToString(row["vending_ids"])) && Convert.ToString(row["vending_ids"]) != "0")
-                                ? (Convert.ToString(row["vending_ids"]) ?? string.Empty).Split(",").Select(int.Parse).ToList()
-                                : new(0),
-                            AdjustableHeights = (!string.IsNullOrEmpty(Convert.ToString(row["height_adjustable"])) && Convert.ToString(row["height_adjustable"]) != "0")
-                                ? (Convert.ToString(row["height_adjustable"]) ?? string.Empty).Split(",").Select(double.Parse).ToList()
-                                : new(0),
-                            EffectId = Convert.ToInt32(row["effect_id"]),
-                            IsRare = row["is_rare"].ToString() == "1",
-                            ExtraRot = row["extra_rot"].ToString() == "1",
-                        };
+        if (Gifts.Count > 0)
+            Gifts.Clear();
 
-                        Gifts.TryAdd(definition.SpriteId, definition.Id);
-                        Items.Add(definition.Id, definition);
-                    }
-                    catch (Exception e)
+        using (var connection = _database.Connection())
+        {
+            foreach (var row in connection.Query<FurnitureRow>(
+                         """
+                         SELECT
+                             `id` AS Id,
+                             `sprite_id` AS SpriteId,
+                             `item_name` AS ItemName,
+                             `public_name` AS PublicName,
+                             `type` AS Type,
+                             `width` AS Width,
+                             `length` AS Length,
+                             `stack_height` AS StackHeight,
+                             `can_stack` AS CanStack,
+                             `is_walkable` AS IsWalkable,
+                             `can_sit` AS CanSit,
+                             `allow_recycle` AS AllowRecycle,
+                             `allow_trade` AS AllowTrade,
+                             `allow_marketplace_sell` AS AllowMarketplaceSell,
+                             `allow_gift` AS AllowGift,
+                             `allow_inventory_stack` AS AllowInventoryStack,
+                             `interaction_type` AS InteractionType,
+                             `behaviour_data` AS BehaviourData,
+                             `interaction_modes_count` AS InteractionModesCount,
+                             `vending_ids` AS VendingIds,
+                             `height_adjustable` AS HeightAdjustable,
+                             `effect_id` AS EffectId,
+                             `is_rare` AS IsRare,
+                             `extra_rot` AS ExtraRot
+                         FROM `furniture`
+                         """))
+            {
+                try
+                {
+                    var definition = new ItemDefinition
                     {
-                        Console.WriteLine(e.ToString());
-                        Console.ReadKey();
-                        //Logging.WriteLine("Could not load item #" + Convert.ToInt32(Row[0]) + ", please verify the data is okay.");
-                    }
+                        Id = row.Id,
+                        SpriteId = row.SpriteId,
+                        ItemName = row.ItemName,
+                        PublicName = row.PublicName,
+                        Type = string.Equals(row.Type, "s", StringComparison.OrdinalIgnoreCase) ? ItemType.Floor : ItemType.Wall,
+                        Width = row.Width,
+                        Length = row.Length,
+                        Height = row.StackHeight,
+                        Stackable = row.CanStack == "1",
+                        Walkable = row.IsWalkable == "1",
+                        IsSeat = row.CanSit == "1",
+                        AllowEcotronRecycle = row.AllowRecycle == "1",
+                        AllowTrade = row.AllowTrade == "1",
+                        AllowMarketplaceSell = row.AllowMarketplaceSell == "1",
+                        AllowGift = row.AllowGift == "1",
+                        AllowInventoryStack = row.AllowInventoryStack == "1",
+                        InteractionType = InteractionTypes.GetTypeFromString(row.InteractionType),
+                        BehaviourData = row.BehaviourData,
+                        Modes = row.InteractionModesCount,
+                        VendingIds = (!string.IsNullOrEmpty(row.VendingIds) && row.VendingIds != "0")
+                                ? row.VendingIds.Split(",").Select(int.Parse).ToList()
+                                : new(0),
+                        AdjustableHeights = (!string.IsNullOrEmpty(row.HeightAdjustable) && row.HeightAdjustable != "0")
+                                ? row.HeightAdjustable.Split(",").Select(double.Parse).ToList()
+                                : new(0),
+                        EffectId = row.EffectId,
+                        IsRare = row.IsRare == "1",
+                        ExtraRot = row.ExtraRot == "1",
+                    };
+
+                    Gifts.TryAdd(definition.SpriteId, definition.Id);
+                    Items.Add(definition.Id, definition);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    Console.ReadKey();
                 }
             }
         }
