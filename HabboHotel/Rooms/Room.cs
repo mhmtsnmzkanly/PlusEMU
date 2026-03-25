@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿using Dapper;
 using Plus.Communication.Packets;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
@@ -23,6 +23,60 @@ namespace Plus.HabboHotel.Rooms;
 
 public class Room : RoomData
 {
+    private sealed class BotRow
+    {
+        public int Id { get; init; }
+        public uint RoomId { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string Motto { get; init; } = string.Empty;
+        public string Look { get; init; } = string.Empty;
+        public int X { get; init; }
+        public int Y { get; init; }
+        public int Z { get; init; }
+        public int Rotation { get; init; }
+        public string Gender { get; init; } = string.Empty;
+        public int UserId { get; init; }
+        public string AiType { get; init; } = string.Empty;
+        public string WalkMode { get; init; } = string.Empty;
+        public bool AutomaticChat { get; init; }
+        public int SpeakingInterval { get; init; }
+        public string MixSentences { get; init; } = "0";
+        public int ChatBubble { get; init; }
+    }
+
+    private sealed class BotSpeechRow
+    {
+        public string Text { get; init; } = string.Empty;
+    }
+
+    private sealed class PetBotRow
+    {
+        public int Id { get; init; }
+        public int UserId { get; init; }
+        public uint RoomId { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public int X { get; init; }
+        public int Y { get; init; }
+        public double Z { get; init; }
+    }
+
+    private sealed class PetDataRow
+    {
+        public int Type { get; init; }
+        public string Race { get; init; } = string.Empty;
+        public string Color { get; init; } = string.Empty;
+        public int Experience { get; init; }
+        public int Energy { get; init; }
+        public int Nutrition { get; init; }
+        public int Respect { get; init; }
+        public double CreateStamp { get; init; }
+        public int HaveSaddle { get; init; }
+        public int AnyoneRide { get; init; }
+        public int HairDye { get; init; }
+        public int PetHair { get; init; }
+        public string GnomeClothing { get; init; } = string.Empty;
+    }
+
     private readonly BansComponent _bansComponent;
 
     private readonly FilterComponent _filterComponent;
@@ -178,25 +232,43 @@ public class Room : RoomData
         if (roomUserManager == null)
             return;
 
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery(
-            $"SELECT `id`,`room_id`,`name`,`motto`,`look`,`x`,`y`,`z`,`rotation`,`gender`,`user_id`,`ai_type`,`walk_mode`,`automatic_chat`,`speaking_interval`,`mix_sentences`,`chat_bubble` FROM `bots` WHERE `room_id` = '{RoomId}' AND `ai_type` != 'pet'");
-        var data = dbClient.GetTable();
-        if (data == null)
-            return;
-        foreach (DataRow bot in data.Rows)
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        var bots = connection.Query<BotRow>(
+            """
+            SELECT
+                `id` AS Id,
+                `room_id` AS RoomId,
+                `name` AS Name,
+                `motto` AS Motto,
+                `look` AS Look,
+                `x` AS X,
+                `y` AS Y,
+                `z` AS Z,
+                `rotation` AS Rotation,
+                `gender` AS Gender,
+                `user_id` AS UserId,
+                `ai_type` AS AiType,
+                `walk_mode` AS WalkMode,
+                `automatic_chat` AS AutomaticChat,
+                `speaking_interval` AS SpeakingInterval,
+                `mix_sentences` AS MixSentences,
+                `chat_bubble` AS ChatBubble
+            FROM `bots`
+            WHERE `room_id` = @roomId AND `ai_type` != 'pet'
+            """,
+            new { roomId = RoomId });
+        foreach (var bot in bots)
         {
-            dbClient.SetQuery($"SELECT `text` FROM `bots_speech` WHERE `bot_id` = '{Convert.ToInt32(bot["id"])}'");
-            var botSpeech = dbClient.GetTable();
             var speeches = new List<RandomSpeech>();
-            if (botSpeech != null)
-                foreach (DataRow speech in botSpeech.Rows)
-                    speeches.Add(new(Convert.ToString(speech["text"]) ?? string.Empty, Convert.ToInt32(bot["id"])));
+            foreach (var speech in connection.Query<BotSpeechRow>(
+                         "SELECT `text` AS Text FROM `bots_speech` WHERE `bot_id` = @botId",
+                         new { botId = bot.Id }))
+                speeches.Add(new(speech.Text, bot.Id));
             roomUserManager.DeployBot(
-                new(Convert.ToInt32(bot["id"]), Convert.ToUInt32(bot["room_id"]), Convert.ToString(bot["ai_type"]) ?? string.Empty, Convert.ToString(bot["walk_mode"]) ?? string.Empty, Convert.ToString(bot["name"]) ?? string.Empty,
-                    Convert.ToString(bot["motto"]) ?? string.Empty, Convert.ToString(bot["look"]) ?? string.Empty, int.Parse(bot["x"].ToString() ?? "0"), int.Parse(bot["y"].ToString() ?? "0"), int.Parse(bot["z"].ToString() ?? "0"),
-                    int.Parse(bot["rotation"].ToString() ?? "0"), 0, 0, 0, 0, ref speeches, "M", 0, Convert.ToInt32(bot["user_id"].ToString()), Convert.ToBoolean(bot["automatic_chat"]),
-                    Convert.ToInt32(bot["speaking_interval"]), ConvertExtensions.EnumToBool(bot["mix_sentences"].ToString() ?? "0"), Convert.ToInt32(bot["chat_bubble"])), null!);
+                new(bot.Id, bot.RoomId, bot.AiType, bot.WalkMode, bot.Name,
+                    bot.Motto, bot.Look, bot.X, bot.Y, bot.Z,
+                    bot.Rotation, 0, 0, 0, 0, ref speeches, "M", 0, bot.UserId, bot.AutomaticChat,
+                    bot.SpeakingInterval, ConvertExtensions.EnumToBool(bot.MixSentences), bot.ChatBubble), null!);
         }
     }
 
@@ -206,24 +278,41 @@ public class Room : RoomData
         if (roomUserManager == null)
             return;
 
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery($"SELECT `id`,`user_id`,`room_id`,`name`,`x`,`y`,`z` FROM `bots` WHERE `room_id` = '{RoomId}' AND `ai_type` = 'pet'");
-        var data = dbClient.GetTable();
-        if (data == null)
-            return;
-        foreach (DataRow row in data.Rows)
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        var pets = connection.Query<PetBotRow>(
+            "SELECT `id` AS Id, `user_id` AS UserId, `room_id` AS RoomId, `name` AS Name, `x` AS X, `y` AS Y, `z` AS Z FROM `bots` WHERE `room_id` = @roomId AND `ai_type` = 'pet'",
+            new { roomId = RoomId });
+        foreach (var row in pets)
         {
-            dbClient.SetQuery(
-                $"SELECT `type`,`race`,`color`,`experience`,`energy`,`nutrition`,`respect`,`createstamp`,`have_saddle`,`anyone_ride`,`hairdye`,`pethair`,`gnome_clothing` FROM `bots_petdata` WHERE `id` = '{row[0]}' LIMIT 1");
-            var mRow = dbClient.GetRow();
+            var mRow = connection.QueryFirstOrDefault<PetDataRow>(
+                """
+                SELECT
+                    `type` AS Type,
+                    `race` AS Race,
+                    `color` AS Color,
+                    `experience` AS Experience,
+                    `energy` AS Energy,
+                    `nutrition` AS Nutrition,
+                    `respect` AS Respect,
+                    `createstamp` AS CreateStamp,
+                    `have_saddle` AS HaveSaddle,
+                    `anyone_ride` AS AnyoneRide,
+                    `hairdye` AS HairDye,
+                    `pethair` AS PetHair,
+                    `gnome_clothing` AS GnomeClothing
+                FROM `bots_petdata`
+                WHERE `id` = @id
+                LIMIT 1
+                """,
+                new { id = row.Id });
             if (mRow == null)
                 continue;
-            var pet = new Pet(Convert.ToInt32(row["id"]), Convert.ToInt32(row["user_id"]), Convert.ToUInt32(row["room_id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToInt32(mRow["type"]),
-                Convert.ToString(mRow["race"]) ?? string.Empty,
-                Convert.ToString(mRow["color"]) ?? string.Empty, Convert.ToInt32(mRow["experience"]), Convert.ToInt32(mRow["energy"]), Convert.ToInt32(mRow["nutrition"]), Convert.ToInt32(mRow["respect"]),
-                Convert.ToDouble(mRow["createstamp"]), Convert.ToInt32(row["x"]), Convert.ToInt32(row["y"]),
-                Convert.ToDouble(row["z"]), Convert.ToInt32(mRow["have_saddle"]), Convert.ToInt32(mRow["anyone_ride"]), Convert.ToInt32(mRow["hairdye"]), Convert.ToInt32(mRow["pethair"]),
-                Convert.ToString(mRow["gnome_clothing"]) ?? string.Empty);
+            var pet = new Pet(row.Id, row.UserId, row.RoomId, row.Name, mRow.Type,
+                mRow.Race,
+                mRow.Color, mRow.Experience, mRow.Energy, mRow.Nutrition, mRow.Respect,
+                mRow.CreateStamp, row.X, row.Y,
+                row.Z, mRow.HaveSaddle, mRow.AnyoneRide, mRow.HairDye, mRow.PetHair,
+                mRow.GnomeClothing);
             var rndSpeechList = new List<RandomSpeech>();
             roomUserManager.DeployBot(
                 new(pet.PetId, RoomId, "pet", "freeroam", pet.Name, "", pet.Look, pet.X, pet.Y, Convert.ToInt32(pet.Z), 0, 0, 0, 0, 0, ref rndSpeechList, "", 0, pet.OwnerId, false, 0, false,
@@ -244,31 +333,25 @@ public class Room : RoomData
         UsersWithRights = new();
         if (Group != null)
             return;
-        DataTable? data = null;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using (var connection = PlusEnvironment.DatabaseManager.Connection())
         {
-            dbClient.SetQuery("SELECT room_rights.user_id FROM room_rights WHERE room_id = @roomid");
-            dbClient.AddParameter("roomid", Id);
-            data = dbClient.GetTable();
+            foreach (var userId in connection.Query<int>(
+                         "SELECT `user_id` FROM `room_rights` WHERE `room_id` = @roomId",
+                         new { roomId = Id }))
+                UsersWithRights.Add(userId);
         }
-        if (data != null)
-            foreach (DataRow row in data.Rows)
-                UsersWithRights.Add(Convert.ToInt32(row["user_id"]));
     }
 
     private void LoadFilter()
     {
         WordFilterList = new();
-        DataTable? data = null;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using (var connection = PlusEnvironment.DatabaseManager.Connection())
         {
-            dbClient.SetQuery("SELECT * FROM `room_filter` WHERE `room_id` = @roomid;");
-            dbClient.AddParameter("roomid", Id);
-            data = dbClient.GetTable();
+            foreach (var word in connection.Query<string>(
+                         "SELECT `word` FROM `room_filter` WHERE `room_id` = @roomId",
+                         new { roomId = Id }))
+                WordFilterList.Add(word ?? string.Empty);
         }
-        if (data == null)
-            return;
-        foreach (DataRow row in data.Rows) WordFilterList.Add(Convert.ToString(row["word"]) ?? string.Empty);
     }
 
     public bool CheckRights(GameClient session) => CheckRights(session, false);
