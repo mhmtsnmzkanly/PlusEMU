@@ -1,9 +1,16 @@
-﻿using System.Data;
+﻿using Dapper;
 
 namespace Plus.HabboHotel.Rooms.Chat.Pets.Locale;
 
 public class PetLocale : IPetLocale
 {
+    private sealed class PetLocaleRow
+    {
+        public string? Key { get; init; }
+
+        public string? Value { get; init; }
+    }
+
     private Dictionary<string, string[]> _values;
 
     public PetLocale()
@@ -14,18 +21,14 @@ public class PetLocale : IPetLocale
     public void Init()
     {
         _values = new();
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery("SELECT * FROM `bots_pet_responses`");
-        var pets = dbClient.GetTable();
-        if (pets != null)
-            foreach (DataRow row in pets.Rows)
-            {
-                var key = row[0].ToString();
-                var value = row[1].ToString();
-                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
-                    continue;
-                _values.Add(key, value.Split(';'));
-            }
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        var pets = connection.Query<PetLocaleRow>("SELECT `key` AS Key, `value` AS Value FROM `bots_pet_responses`");
+        foreach (var row in pets)
+        {
+            if (string.IsNullOrEmpty(row.Key) || string.IsNullOrEmpty(row.Value))
+                continue;
+            _values.Add(row.Key, row.Value.Split(';'));
+        }
     }
 
     public string[] GetValue(string key)

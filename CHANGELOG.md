@@ -4,6 +4,7 @@
 
 ### Build Cleanup
 
+- Moved `AvatarEffectFactory` and `PetLocale` off the legacy query wrapper by inserting avatar effects and loading pet locale responses through `DatabaseManager.Connection()`/Dapper.
 - Moved `BansComponent` and `FilterComponent` off the legacy query wrapper by persisting room bans and room filter updates through `DatabaseManager.Connection()`/Dapper.
 - Moved `ClothingComponent` and `CalendarComponent` off the legacy query wrapper by loading user clothing parts and advent calendar state through `DatabaseManager.Connection()`/Dapper.
 - Moved avatar effect loading and persistence off the legacy query wrapper by switching `EffectsComponent` and `AvatarEffect` to `DatabaseManager.Connection()`/Dapper for load, activate, expire, and quantity update flows.
