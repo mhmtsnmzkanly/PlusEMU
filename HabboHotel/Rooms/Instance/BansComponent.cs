@@ -1,11 +1,18 @@
 ﻿using System.Collections.Concurrent;
-using System.Data;
+using Dapper;
 using Plus.Utilities;
 
 namespace Plus.HabboHotel.Rooms.Instance;
 
 public class BansComponent
 {
+    private sealed class RoomBanRow
+    {
+        public int UserId { get; init; }
+
+        public double Expire { get; init; }
+    }
+
     /// <summary>
     /// The bans collection for storing them for this room.
     /// </summary>
@@ -23,13 +30,12 @@ public class BansComponent
     {
         _instance = instance;
         _bans = new();
-        DataTable? getBans = null;
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery($"SELECT `user_id`, `expire` FROM `room_bans` WHERE `room_id` = {_instance.Id} AND `expire` > UNIX_TIMESTAMP();");
-        getBans = dbClient.GetTable();
-        if (getBans != null)
-            foreach (DataRow row in getBans.Rows)
-                _bans.TryAdd(Convert.ToInt32(row["user_id"]), Convert.ToDouble(row["expire"]));
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        var getBans = connection.Query<RoomBanRow>(
+            "SELECT `user_id` AS UserId, `expire` AS Expire FROM `room_bans` WHERE `room_id` = @roomId AND `expire` > UNIX_TIMESTAMP();",
+            new { roomId = _instance.Id });
+        foreach (var row in getBans)
+            _bans.TryAdd(row.UserId, row.Expire);
     }
 
     public int Count => _bans.Count;
@@ -41,13 +47,10 @@ public class BansComponent
         var banTime = UnixTimestamp.GetNow() + time;
         if (!_bans.TryAdd(avatar.UserId, banTime))
             _bans[avatar.UserId] = banTime;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using (var connection = PlusEnvironment.DatabaseManager.Connection())
         {
-            dbClient.SetQuery("REPLACE INTO `room_bans` (`user_id`,`room_id`,`expire`) VALUES (@uid, @rid, @expire);");
-            dbClient.AddParameter("rid", _instance.Id);
-            dbClient.AddParameter("uid", avatar.UserId);
-            dbClient.AddParameter("expire", banTime);
-            dbClient.RunQuery();
+            connection.Execute("REPLACE INTO `room_bans` (`user_id`,`room_id`,`expire`) VALUES (@uid, @rid, @expire);",
+                new { rid = _instance.Id, uid = avatar.UserId, expire = banTime });
         }
         _instance.GetRoomUserManager().RemoveUserFromRoom(avatar.GetClient(), true, true);
     }
@@ -60,11 +63,9 @@ public class BansComponent
         if (banTime <= 0)
         {
             _bans.TryRemove(userId, out var time);
-            using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-            dbClient.SetQuery("DELETE FROM `room_bans` WHERE `room_id` = @rid AND `user_id` = @uid;");
-            dbClient.AddParameter("rid", _instance.Id);
-            dbClient.AddParameter("uid", userId);
-            dbClient.RunQuery();
+            using var connection = PlusEnvironment.DatabaseManager.Connection();
+            connection.Execute("DELETE FROM `room_bans` WHERE `room_id` = @rid AND `user_id` = @uid;",
+                new { rid = _instance.Id, uid = userId });
             return false;
         }
         return true;
@@ -76,11 +77,9 @@ public class BansComponent
             return false;
         if (_bans.TryRemove(userId, out var time))
         {
-            using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-            dbClient.SetQuery("DELETE FROM `room_bans` WHERE `room_id` = @rid AND `user_id` = @uid;");
-            dbClient.AddParameter("rid", _instance.Id);
-            dbClient.AddParameter("uid", userId);
-            dbClient.RunQuery();
+            using var connection = PlusEnvironment.DatabaseManager.Connection();
+            connection.Execute("DELETE FROM `room_bans` WHERE `room_id` = @rid AND `user_id` = @uid;",
+                new { rid = _instance.Id, uid = userId });
             return true;
         }
         return false;
@@ -91,20 +90,12 @@ public class BansComponent
         if (_instance == null)
             return new List<int>();
 
-        DataTable? getBans = null;
-        var bans = new List<int>();
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery($"SELECT `user_id` FROM `room_bans` WHERE `room_id` = '{_instance.Id}' AND `expire` > UNIX_TIMESTAMP();");
-        getBans = dbClient.GetTable();
-        if (getBans != null)
-        {
-            foreach (DataRow row in getBans.Rows)
-            {
-                if (!bans.Contains(Convert.ToInt32(row["user_id"])))
-                    bans.Add(Convert.ToInt32(row["user_id"]));
-            }
-        }
-        return bans;
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        return connection.Query<int>(
+            "SELECT `user_id` FROM `room_bans` WHERE `room_id` = @roomId AND `expire` > UNIX_TIMESTAMP();",
+            new { roomId = _instance.Id })
+            .Distinct()
+            .ToList();
     }
 
     public void Cleanup()
