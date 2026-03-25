@@ -1,0 +1,22 @@
+**Regarding creating commits & PRs**
+- Be explicit in your commit messages. Putting in WIP, test, whatever non descriptive doesnt help. It can cause confusion when doing reviews.
+- Keep commits as small as possible, but dont do individual file commits. Commit per resolved / fixed / improved issue or feature. Bundling commits can cause bigger issues when merging.
+- Put a descriptive title in your PR request that captures the essence in one sentence.
+- Create a pull request per feature / bug. This keeps it clear with whats already been resolved by the community.
+- If you resolve a bug, implement an feature request or resolve an issue from github, please put the issuenumber in the title of the request (Resolved Bug #332: Part x was broken)
+- Do it right or don't do it at all. Dont create PRs for half implemented features or solutions that are not applied everywhere.
+- TEST YOUR PRs. Nothing more annoying than the code base gets broken. Don't worry, its fine if it does on accident, but please at least verify your solution or improvement is actually working. Mistakes happen, we don't blame you for that but sloppy work gets rejected.
+- Massive code changes? Restructuring? Please discuss this in advance. This prevents merge conflicts or possibly wasting your time.
+Database & SQL stuff:
+- If you do any database changes, please create a file in `Resources/SQLs/Updates` with a sequential number. Also APPEND the same SQLs to **the end** of the `Original Database.sql` file.
+- Only data structure changes or if its some kind of new placeholder default data. Do not add furniture, furniture interaction changes etc.
+
+
+GUIDE FOR Refactoring: Refactoring code to dedicated services.
+
+Its important to encapsulate parts of logic in dedicated services so that these can be reused.
+
+Example:
+
+In `GetWardrobeEvent.cs`, the client requests the players wardrobe inventory (saved looks). This data is send using the `WardrobeComposer`
+
