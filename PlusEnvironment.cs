@@ -296,10 +296,9 @@ public class PlusEnvironment : IPlusEnvironment
     }
 
 
-    public static void PerformShutDown()
+    public static void PerformShutDown(string? reason = null)
     {
-        Console.Clear();
-        Log.Info("Server shutting down...");
+        Log.Info("Server shutting down... Reason: {reason}", string.IsNullOrWhiteSpace(reason) ? "Unspecified" : reason);
         Console.Title = "PLUS EMULATOR: SHUTTING DOWN!";
         Game.ClientManager.SendPacket(new BroadcastMessageAlertComposer(LanguageManager.TryGetValue("server.shutdown.message")));
         Game.StopGameLoop();

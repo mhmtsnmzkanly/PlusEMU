@@ -46,8 +46,7 @@ public sealed class PacketManager : IPacketManager, IDisposable
     {
         if (!_incomingPackets.TryGetValue(messageId, out var pak))
         {
-            if (Debugger.IsAttached)
-                _logger.LogDebug("Unhandled Packet: " + messageId);
+            _logger.LogWarning("Unhandled packet {messageId} for session {sessionId}. Build: {build}.", messageId, session.Id, session.ClientBuild ?? "<unknown>");
             return;
         }
 
@@ -78,11 +77,11 @@ public sealed class PacketManager : IPacketManager, IDisposable
         {
             if (t.IsFaulted && t.Exception != null)
             {
-                var habbo = session.GetHabbo();
+                var habbo = session.GetHabboOrNull();
                 foreach (var e in t.Exception.Flatten().InnerExceptions)
                 {
                     _logger.LogError("Error handling packet {packetId} for session {session} @ Habbo  {username}: {message} {stacktrace}", pak.GetType().Name, session.Id, habbo?.Username ?? string.Empty, e.Message, e.StackTrace);
-                    session.Disconnect();
+                    session.Disconnect($"Packet handler exception in {pak.GetType().Name}: {e.Message}");
                 }
             }
         });

@@ -1,4 +1,5 @@
-﻿using Plus.Communication.Attributes;
+﻿using Microsoft.Extensions.Logging;
+using Plus.Communication.Attributes;
 using Plus.Communication.Packets.Outgoing.BuildersClub;
 using Plus.Communication.Packets.Outgoing.Handshake;
 using Plus.Communication.Packets.Outgoing.Inventory.Achievements;
@@ -37,6 +38,7 @@ public class SsoTicketEvent : IPacketEvent
     private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IRewardManager _rewardManager;
+    private readonly ILogger<SsoTicketEvent> _logger;
 
     public SsoTicketEvent(IAuthenticator authenticate,
         IBadgeManager badgeManager,
@@ -48,7 +50,8 @@ public class SsoTicketEvent : IPacketEvent
         IFigureDataManager figureManager,
         ILanguageManager languageManager,
         ISettingsManager settingsManager,
-        IRewardManager rewardManager)
+        IRewardManager rewardManager,
+        ILogger<SsoTicketEvent> logger)
     {
         _authenticate = authenticate;
         _badgeManager = badgeManager;
@@ -61,18 +64,28 @@ public class SsoTicketEvent : IPacketEvent
         _languageManager = languageManager;
         _settingsManager = settingsManager;
         _rewardManager = rewardManager;
+        _logger = logger;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var sso = packet.ReadString();
+        _logger.LogInformation("Received SsoTicketEvent for session {sessionId}. Build: {build}. TicketLength: {ticketLength}.", session.Id, session.ClientBuild ?? "<unknown>", sso?.Length ?? 0);
         var error = await _authenticate.AuthenticateUsingSSO(session, sso);
+        if (error != null)
+        {
+            _logger.LogWarning("SSO authentication failed for session {sessionId}: {error}.", session.Id, error);
+            session.Disconnect($"SSO authentication failed: {error}");
+            return;
+        }
+
         if (error == null)
         {
             var habbo = session.GetHabbo();
             var effects = habbo.Effects;
             var clothing = habbo.Clothing;
             var inventory = habbo.Inventory;
+            _logger.LogInformation("SSO authentication succeeded for session {sessionId}. HabboId: {habboId}, Username: {username}.", session.Id, habbo.Id, habbo.Username);
             session.Send(new AuthenticationOkComposer());
 
             // TODO @80O: Move to individual incoming message handlers.

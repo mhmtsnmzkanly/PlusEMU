@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-03-25
+
+### Nitro Handshake Diagnostics
+
+- Moved runtime revision loading from `revisions/` and `Resources/Revisions` conventions to `Config/Revisions`, and updated the project to copy revision JSON files into the build output `Config` tree.
+- Added richer Nitro handshake diagnostics covering client-hello acceptance, unknown revision reporting, Diffie/secret-key/unique-id/SSO handshake stages, disconnect reasons, and unhandled packet logging.
+- Hardened websocket/TCP session logging against disposed-socket crashes and added shutdown reason / unhandled exception logging so handshake investigation no longer terminates the emulator.
+
 ## 2026-03-24
 
 ### Build Cleanup

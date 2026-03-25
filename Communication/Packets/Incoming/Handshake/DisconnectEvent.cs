@@ -6,7 +6,7 @@ internal class DisconnectEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        session.Disconnect();
+        session.Disconnect("Client requested disconnect during handshake.");
         return Task.CompletedTask;
     }
 }

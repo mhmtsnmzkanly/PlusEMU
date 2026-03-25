@@ -29,14 +29,16 @@ public abstract class GameClient
     public int PingCount { get; set; }
 
     public Revision Revision { get; set; } = null!;
+    public string? ClientBuild { get; set; }
 
     internal Func<SocketAsyncEventArgs, bool> SendCallback { get; set; } = _ => false;
-    internal Action? DisconnectRequested { get; set; }
+    internal Action<string?>? DisconnectRequested { get; set; }
 
     public Guid Id { get; set; }
 
 
-    public void Disconnect() => DisconnectRequested?.Invoke();
+    public void Disconnect(string? reason = null) => DisconnectRequested?.Invoke(reason);
+    public Habbo? GetHabboOrNull() => _habbo;
 
     protected GameClient(IGameServer server, IPacketFactory packetFactory)
     {

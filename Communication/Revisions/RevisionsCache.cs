@@ -12,7 +12,7 @@ public class RevisionsCache : IRevisionsCache, IStartable
     public Revision InternalRevision { get; private set; } = new();
 
     private string? _directory;
-    public string Location => _directory ??= Path.Join(Directory.GetCurrentDirectory(), "revisions");
+    public string Location => _directory ??= Path.Join(Directory.GetCurrentDirectory(), "Config", "Revisions");
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {

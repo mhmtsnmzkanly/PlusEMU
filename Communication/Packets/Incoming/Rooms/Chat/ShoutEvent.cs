@@ -91,7 +91,7 @@ public class ShoutEvent : IPacketEvent
             {
                 _moderationManager.BanUser("System", ModerationBanType.Username, habbo.Username, $"Spamming banned phrases ({message})",
                     UnixTimestamp.GetNow() + 78892200);
-                session.Disconnect();
+                session.Disconnect($"Auto-ban for banned phrase spam in shout: {message}");
                 return;
             }
             session.Send(new ShoutComposer(user.VirtualId, message, 0, colour));

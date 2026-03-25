@@ -20,7 +20,7 @@ public static class ConsoleCommands
                 case "shutdown":
                 {
                     Log.Warn("The server is saving users furniture, rooms, etc. WAIT FOR THE SERVER TO CLOSE, DO NOT EXIT THE PROCESS IN TASK MANAGER!!");
-                    PlusEnvironment.PerformShutDown();
+                    PlusEnvironment.PerformShutDown("Console command: shutdown");
                     break;
                 }
                 case "alert":

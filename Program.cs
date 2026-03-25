@@ -153,8 +153,16 @@ public static class Program
 
     private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs args)
     {
-        var e = (Exception)args.ExceptionObject;
-        //Logger.LogCriticalException("SYSTEM CRITICAL EXCEPTION: " + e);
-        PlusEnvironment.PerformShutDown();
+        var logger = LogManager.GetLogger("Plus.Program");
+        if (args.ExceptionObject is Exception e)
+        {
+            logger.Error(e, "Unhandled exception terminated the emulator.");
+            PlusEnvironment.PerformShutDown($"Unhandled exception: {e.GetType().Name}: {e.Message}");
+        }
+        else
+        {
+            logger.Error("Unhandled non-exception object terminated the emulator: {exceptionObject}", args.ExceptionObject);
+            PlusEnvironment.PerformShutDown("Unhandled non-exception object");
+        }
     }
 }

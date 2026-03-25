@@ -103,7 +103,7 @@ public class WhisperEvent : IPacketEvent
             {
                 _moderationManager.BanUser("System", ModerationBanType.Username, habbo.Username, $"Spamming banned phrases ({message})",
                     UnixTimestamp.GetNow() + 78892200);
-                session.Disconnect();
+                session.Disconnect($"Auto-ban for banned phrase spam in whisper: {message}");
                 return Task.CompletedTask;
             }
             session.Send(new WhisperComposer(user.VirtualId, message, 0, user.LastBubble));

@@ -20,17 +20,22 @@ public class ClientHelloEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var build = packet.ReadString();
-        var clientType = packet.ReadString();
-        var clientPlatform = packet.ReadInt();
-        var clientDeviceType = packet.ReadInt();
+        packet.ReadString();
+        packet.ReadInt();
+        packet.ReadInt();
+        session.ClientBuild = build;
         if (!_revisionsCache.Revisions.TryGetValue(build, out var revision))
         {
-            _logger.LogWarning("Unknown revision connected {revision}.", build);
-            session.Disconnect();
+            _logger.LogWarning("Unknown revision connected. Session {sessionId}, revision {revision}. Loaded revisions: {loadedRevisions}.",
+                session.Id,
+                build,
+                string.Join(", ", _revisionsCache.Revisions.Keys.OrderBy(x => x)));
+            session.Disconnect($"Unknown revision: {build}");
             return Task.CompletedTask;
         }
 
         session.Revision = revision;
+        _logger.LogInformation("Accepted client hello for session {sessionId}. Revision {revision}.", session.Id, build);
         return Task.CompletedTask;
     }
 }

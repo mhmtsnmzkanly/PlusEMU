@@ -94,7 +94,7 @@ public class ChatEvent : IPacketEvent
             {
                 _moderationManager.BanUser("System", ModerationBanType.Username, habbo.Username, $"Spamming banned phrases ({message})",
                     UnixTimestamp.GetNow() + 78892200);
-                session.Disconnect();
+                session.Disconnect($"Auto-ban for banned phrase spam in chat: {message}");
                 return;
             }
             session.Send(new ChatComposer(user.VirtualId, message, 0, colour));

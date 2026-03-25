@@ -18,5 +18,5 @@ public interface IGameClient
     Habbo GetHabbo();
     void SetHabbo(Habbo habbo);
     void Send(IServerPacket composer);
-    bool Disconnect();
+    void Disconnect(string? reason = null);
 }

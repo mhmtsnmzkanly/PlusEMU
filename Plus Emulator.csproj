@@ -61,10 +61,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ContentWithTargetPath Include="Resources\Revisions\**">
+		<None Update="Config\Revisions\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>revisions\%(Filename)%(Extension)</TargetPath>
-		</ContentWithTargetPath>
+		</None>
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition=" '$(OS)' == 'Windows_NT' ">

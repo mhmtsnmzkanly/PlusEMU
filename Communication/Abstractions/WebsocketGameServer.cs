@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetCoreServer;
 using Plus.Communication.Flash;
@@ -13,14 +14,17 @@ public abstract class WebsocketGameServer<TGameServerOptions> : WsServer, IGameS
     private readonly IGameClientFactory<WsSessionProxy, WsServer> _clientFactory;
     private readonly IPacketManager _packetManager;
     private readonly ConcurrentDictionary<Guid, WsSessionProxy> _connectedClients = new();
+    private readonly ILogger _logger;
 
     protected WebsocketGameServer(IOptions<TGameServerOptions> options,
         IGameClientFactory<WsSessionProxy, WsServer> clientFactory,
-        IPacketManager packetManager) : base(options.Value.Hostname,
+        IPacketManager packetManager,
+        ILogger logger) : base(options.Value.Hostname,
         options.Value.Port)
     {
         _clientFactory = clientFactory;
         _packetManager = packetManager;
+        _logger = logger;
     }
 
     protected override WsSession CreateSession() => _clientFactory.Create(this);
@@ -30,20 +34,35 @@ public abstract class WebsocketGameServer<TGameServerOptions> : WsServer, IGameS
         if (session is not WsSessionProxy gameClient)
         {
             session.Disconnect();
-            //_logger.LogWarning("Expected {TGameClient} to be connected. Got {type}", typeof(TGameClient), session.GetType());
+            _logger.LogWarning("Rejected websocket session {sessionId}: unexpected session type {type}.", session.Id, session.GetType().Name);
             return;
         }
 
         if (!_connectedClients.TryAdd(gameClient.Id, gameClient))
         {
-            //_logger.LogWarning("Failed to cache client. {id} {ip}", gameClient.Id, gameClient.Socket.RemoteEndPoint?.ToString());
+            _logger.LogWarning("Failed to cache websocket client {clientId} from {remoteEndPoint}.", gameClient.Id, SocketLogging.TryGetRemoteEndPoint(gameClient.Socket));
             gameClient.Disconnect();
+            return;
         }
+
+        _logger.LogDebug("Websocket client connected {clientId} from {remoteEndPoint}. Build: {build}.", gameClient.Id, SocketLogging.TryGetRemoteEndPoint(gameClient.Socket), gameClient.GetClientBuildDisplay());
     }
 
     protected override void OnDisconnected(TcpSession session)
     {
         _connectedClients.TryRemove(session.Id, out _);
+        if (session is WsSessionProxy gameClient)
+            _logger.LogDebug("Websocket client disconnected {clientId} from {remoteEndPoint}. Build: {build}.",
+                session.Id,
+                SocketLogging.TryGetRemoteEndPoint(session.Socket),
+                gameClient.GetClientBuildDisplay());
+        else
+            _logger.LogDebug("Websocket client disconnected {clientId} from {remoteEndPoint}.", session.Id, SocketLogging.TryGetRemoteEndPoint(session.Socket));
+    }
+
+    protected override void OnError(System.Net.Sockets.SocketError error)
+    {
+        _logger.LogError("Websocket server socket error: {error}.", error);
     }
 
 
