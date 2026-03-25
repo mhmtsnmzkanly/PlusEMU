@@ -1,11 +1,20 @@
 ﻿using System.Collections.Concurrent;
-using System.Data;
+using Dapper;
 using Plus.HabboHotel.Users.Clothing.Parts;
 
 namespace Plus.HabboHotel.Users.Clothing;
 
 public sealed class ClothingComponent
 {
+    private sealed class UserClothingRow
+    {
+        public int Id { get; init; }
+
+        public int PartId { get; init; }
+
+        public string? Part { get; init; }
+    }
+
     /// <summary>
     /// Effects stored by ID > Effect.
     /// </summary>
@@ -22,20 +31,15 @@ public sealed class ClothingComponent
     {
         if (_allClothing.Count > 0)
             return false;
-        DataTable? getClothing = null;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using (var connection = PlusEnvironment.DatabaseManager.Connection())
         {
-            dbClient.SetQuery("SELECT `id`,`part_id`,`part` FROM `user_clothing` WHERE `user_id` = @id;");
-            dbClient.AddParameter("id", habbo.Id);
-            getClothing = dbClient.GetTable();
-            if (getClothing != null)
+            var getClothing = connection.Query<UserClothingRow>("SELECT `id`,`part_id` AS PartId,`part` FROM `user_clothing` WHERE `user_id` = @id;",
+                new { id = habbo.Id });
+            foreach (var row in getClothing)
             {
-                foreach (DataRow row in getClothing.Rows)
+                if (_allClothing.TryAdd(row.PartId, new(row.Id, row.PartId, row.Part ?? string.Empty)))
                 {
-                    if (_allClothing.TryAdd(Convert.ToInt32(row["part_id"]), new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["part_id"]), Convert.ToString(row["part"]) ?? string.Empty)))
-                    {
-                        //umm?
-                    }
+                    //umm?
                 }
             }
         }
@@ -53,16 +57,13 @@ public sealed class ClothingComponent
         {
             if (!_allClothing.ContainsKey(partId))
             {
-                var newId = 0;
-                using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+                using (var connection = PlusEnvironment.DatabaseManager.Connection())
                 {
-                    dbClient.SetQuery("INSERT INTO `user_clothing` (`user_id`,`part_id`,`part`) VALUES (@UserId, @PartId, @Part)");
-                    dbClient.AddParameter("UserId", habbo.Id);
-                    dbClient.AddParameter("PartId", partId);
-                    dbClient.AddParameter("Part", clothingName);
-                    newId = Convert.ToInt32(dbClient.InsertQuery());
+                    var newId = Convert.ToInt32(connection.ExecuteScalar<long>(
+                        "INSERT INTO `user_clothing` (`user_id`,`part_id`,`part`) VALUES (@UserId, @PartId, @Part); SELECT LAST_INSERT_ID();",
+                        new { UserId = habbo.Id, PartId = partId, Part = clothingName }));
+                    _allClothing.TryAdd(partId, new(newId, partId, clothingName));
                 }
-                _allClothing.TryAdd(partId, new(newId, partId, clothingName));
             }
         }
     }

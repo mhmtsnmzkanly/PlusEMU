@@ -1,4 +1,4 @@
-﻿using System.Data;
+﻿using Dapper;
 
 namespace Plus.HabboHotel.Users.Calendar;
 
@@ -7,6 +7,13 @@ namespace Plus.HabboHotel.Users.Calendar;
 /// </summary>
 public sealed class CalendarComponent
 {
+    private sealed class CalendarDayRow
+    {
+        public int Day { get; init; }
+
+        public int Status { get; init; }
+    }
+
     /// <summary>
     /// Permission rights are stored here.
     /// </summary>
@@ -30,20 +37,16 @@ public sealed class CalendarComponent
             _lateBoxes.Clear();
         if (_openedBoxes.Count > 0)
             _openedBoxes.Clear();
-        DataTable? getData;
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery("SELECT * FROM `user_xmas15_calendar` WHERE `user_id` = @id;");
-        dbClient.AddParameter("id", player.Id);
-        getData = dbClient.GetTable();
-        if (getData != null)
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        var getData = connection.Query<CalendarDayRow>(
+            "SELECT `day` AS Day, `status` AS Status FROM `user_xmas15_calendar` WHERE `user_id` = @id;",
+            new { id = player.Id });
+        foreach (var row in getData)
         {
-            foreach (DataRow row in getData.Rows)
-            {
-                if (Convert.ToInt32(row["status"]) == 0)
-                    _lateBoxes.Add(Convert.ToInt32(row["day"]));
-                else
-                    _openedBoxes.Add(Convert.ToInt32(row["day"]));
-            }
+            if (row.Status == 0)
+                _lateBoxes.Add(row.Day);
+            else
+                _openedBoxes.Add(row.Day);
         }
         return true;
     }
