@@ -1,11 +1,28 @@
-﻿using System.Data;
+﻿using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
+using Plus.Utilities;
 
 namespace Plus.HabboHotel.Games;
 
 public class GameDataManager : IGameDataManager
 {
+    private sealed class GameDataRow
+    {
+        public int Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string ColourOne { get; init; } = string.Empty;
+        public string ColourTwo { get; init; } = string.Empty;
+        public string ResourcePath { get; init; } = string.Empty;
+        public string StringThree { get; init; } = string.Empty;
+        public string GameSwf { get; init; } = string.Empty;
+        public string GameAssets { get; init; } = string.Empty;
+        public string GameServerHost { get; init; } = string.Empty;
+        public string GameServerPort { get; init; } = string.Empty;
+        public string SocketPolicyPort { get; init; } = string.Empty;
+        public string GameEnabled { get; init; } = "0";
+    }
+
     private readonly IDatabase _database;
     private readonly ILogger<GameDataManager> _logger;
 
@@ -24,23 +41,31 @@ public class GameDataManager : IGameDataManager
     {
         if (_games.Count > 0)
             _games.Clear();
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            DataTable? data = null;
-            dbClient.SetQuery(
-                "SELECT `id`,`name`,`colour_one`,`colour_two`,`resource_path`,`string_three`,`game_swf`,`game_assets`,`game_server_host`,`game_server_port`,`socket_policy_port`,`game_enabled` FROM `games_config`");
-            data = dbClient.GetTable();
-            if (data != null)
+            foreach (var row in connection.Query<GameDataRow>(
+                         """
+                         SELECT
+                             `id` AS Id,
+                             `name` AS Name,
+                             `colour_one` AS ColourOne,
+                             `colour_two` AS ColourTwo,
+                             `resource_path` AS ResourcePath,
+                             `string_three` AS StringThree,
+                             `game_swf` AS GameSwf,
+                             `game_assets` AS GameAssets,
+                             `game_server_host` AS GameServerHost,
+                             `game_server_port` AS GameServerPort,
+                             `socket_policy_port` AS SocketPolicyPort,
+                             `game_enabled` AS GameEnabled
+                         FROM `games_config`
+                         """))
             {
-                foreach (DataRow row in data.Rows)
-                {
-                    var enabled = row["game_enabled"].ToString() ?? "0";
-                    _games.Add(Convert.ToInt32(row["id"]),
-                        new(Convert.ToInt32(row["id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToString(row["colour_one"]) ?? string.Empty, Convert.ToString(row["colour_two"]) ?? string.Empty,
-                            Convert.ToString(row["resource_path"]) ?? string.Empty, Convert.ToString(row["string_three"]) ?? string.Empty, Convert.ToString(row["game_swf"]) ?? string.Empty, Convert.ToString(row["game_assets"]) ?? string.Empty,
-                            Convert.ToString(row["game_server_host"]) ?? string.Empty, Convert.ToString(row["game_server_port"]) ?? string.Empty, Convert.ToString(row["socket_policy_port"]) ?? string.Empty,
-                           PlusEnvironment.EnumToBool(enabled)));
-                }
+                _games.Add(row.Id,
+                    new(row.Id, row.Name, row.ColourOne, row.ColourTwo,
+                        row.ResourcePath, row.StringThree, row.GameSwf, row.GameAssets,
+                        row.GameServerHost, row.GameServerPort, row.SocketPolicyPort,
+                        ConvertExtensions.EnumToBool(row.GameEnabled)));
             }
         }
         _logger.LogInformation("Game Data Manager -> LOADED");
