@@ -22,7 +22,7 @@ public class PetLocale : IPetLocale
     {
         _values = new();
         using var connection = PlusEnvironment.DatabaseManager.Connection();
-        var pets = connection.Query<PetLocaleRow>("SELECT `key` AS Key, `value` AS Value FROM `bots_pet_responses`");
+        var pets = connection.Query<PetLocaleRow>("SELECT `key` AS `Key`, `value` AS `Value` FROM `bots_pet_responses`");
         foreach (var row in pets)
         {
             if (string.IsNullOrEmpty(row.Key) || string.IsNullOrEmpty(row.Value))

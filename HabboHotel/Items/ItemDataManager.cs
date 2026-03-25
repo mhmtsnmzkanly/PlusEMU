@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Globalization;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 using Plus.HabboHotel.Users.Inventory.Furniture;
@@ -108,12 +109,8 @@ public class ItemDataManager : IItemDataManager
                         InteractionType = InteractionTypes.GetTypeFromString(row.InteractionType),
                         BehaviourData = row.BehaviourData,
                         Modes = row.InteractionModesCount,
-                        VendingIds = (!string.IsNullOrEmpty(row.VendingIds) && row.VendingIds != "0")
-                                ? row.VendingIds.Split(",").Select(int.Parse).ToList()
-                                : new(0),
-                        AdjustableHeights = (!string.IsNullOrEmpty(row.HeightAdjustable) && row.HeightAdjustable != "0")
-                                ? row.HeightAdjustable.Split(",").Select(double.Parse).ToList()
-                                : new(0),
+                        VendingIds = ParseIntList(row.VendingIds),
+                        AdjustableHeights = ParseDoubleList(row.HeightAdjustable),
                         EffectId = row.EffectId,
                         IsRare = row.IsRare == "1",
                         ExtraRot = row.ExtraRot == "1",
@@ -141,5 +138,53 @@ public class ItemDataManager : IItemDataManager
                 return item;
         }
         return null!;
+    }
+
+    private List<int> ParseIntList(string rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue) || rawValue == "0")
+            return new(0);
+
+        var normalized = rawValue.Replace(';', ',').Trim();
+        var values = new List<int>();
+
+        foreach (var token in normalized.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
+            {
+                values.Add(intValue);
+                continue;
+            }
+
+            // Some imported rows used "." as a list delimiter instead of ",".
+            if (!token.Contains('.') || !token.All(character => char.IsDigit(character) || character == '.'))
+                continue;
+
+            foreach (var subToken in token.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (int.TryParse(subToken, NumberStyles.Integer, CultureInfo.InvariantCulture, out var splitValue))
+                    values.Add(splitValue);
+            }
+        }
+
+        return values;
+    }
+
+    private List<double> ParseDoubleList(string rawValue)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue) || rawValue == "0")
+            return new(0);
+
+        var normalized = rawValue.Replace(';', ',').Trim();
+        var values = new List<double>();
+
+        foreach (var token in normalized.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var candidate = token.StartsWith('.') ? $"0{token}" : token;
+            if (double.TryParse(candidate, NumberStyles.Float | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var doubleValue))
+                values.Add(doubleValue);
+        }
+
+        return values;
     }
 }
