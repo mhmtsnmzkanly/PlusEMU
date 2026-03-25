@@ -1,4 +1,5 @@
-﻿using Plus.Communication.Packets.Outgoing.Inventory.AvatarEffects;
+﻿using Dapper;
+using Plus.Communication.Packets.Outgoing.Inventory.AvatarEffects;
 using Plus.Utilities;
 
 namespace Plus.HabboHotel.Users.Effects;
@@ -50,11 +51,10 @@ public sealed class AvatarEffect
     public bool Activate()
     {
         var tsNow = UnixTimestamp.GetNow();
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery("UPDATE `user_effects` SET `is_activated` = '1', `activated_stamp` = @ts WHERE `id` = @id");
-        dbClient.AddParameter("ts", tsNow);
-        dbClient.AddParameter("id", Id);
-        dbClient.RunQuery();
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        connection.Execute(
+            "UPDATE `user_effects` SET `is_activated` = '1', `activated_stamp` = @ts WHERE `id` = @id",
+            new { ts = tsNow, id = Id });
         Activated = true;
         TimestampActivated = tsNow;
         return true;
@@ -65,20 +65,19 @@ public sealed class AvatarEffect
         Quantity--;
         Activated = false;
         TimestampActivated = 0;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using (var connection = PlusEnvironment.DatabaseManager.Connection())
         {
             if (Quantity < 1)
             {
-                dbClient.SetQuery("DELETE FROM `user_effects` WHERE `id` = @id");
-                dbClient.AddParameter("id", Id);
-                dbClient.RunQuery();
+                connection.Execute(
+                    "DELETE FROM `user_effects` WHERE `id` = @id",
+                    new { id = Id });
             }
             else
             {
-                dbClient.SetQuery("UPDATE `user_effects` SET `quantity` = @qt, `is_activated` = '0', `activated_stamp` = 0 WHERE `id` = @id");
-                dbClient.AddParameter("qt", Quantity);
-                dbClient.AddParameter("id", Id);
-                dbClient.RunQuery();
+                connection.Execute(
+                    "UPDATE `user_effects` SET `quantity` = @qt, `is_activated` = '0', `activated_stamp` = 0 WHERE `id` = @id",
+                    new { qt = Quantity, id = Id });
             }
         }
         habbo.Client?.Send(new AvatarEffectExpiredComposer(this));
@@ -88,10 +87,9 @@ public sealed class AvatarEffect
     public void AddToQuantity()
     {
         Quantity++;
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery("UPDATE `user_effects` SET `quantity` = @qt WHERE `id` = @id");
-        dbClient.AddParameter("qt", Quantity);
-        dbClient.AddParameter("id", Id);
-        dbClient.RunQuery();
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        connection.Execute(
+            "UPDATE `user_effects` SET `quantity` = @qt WHERE `id` = @id",
+            new { qt = Quantity, id = Id });
     }
 }

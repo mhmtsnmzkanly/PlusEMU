@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Data;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
 using Plus.Utilities;
 
@@ -7,6 +7,17 @@ namespace Plus.HabboHotel.Users.Effects;
 
 public sealed class EffectsComponent
 {
+    private sealed class UserEffectRow
+    {
+        public int Id { get; init; }
+        public int UserId { get; init; }
+        public int EffectId { get; init; }
+        public double TotalDuration { get; init; }
+        public string IsActivated { get; init; } = "0";
+        public double ActivatedStamp { get; init; }
+        public int Quantity { get; init; }
+    }
+
     /// <summary>
     /// Effects stored by ID > Effect.
     /// </summary>
@@ -24,22 +35,26 @@ public sealed class EffectsComponent
     {
         if (_effects.Count > 0)
             return false;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using (var connection = PlusEnvironment.DatabaseManager.Connection())
         {
-            dbClient.SetQuery("SELECT * FROM `user_effects` WHERE `user_id` = @id;");
-            dbClient.AddParameter("id", habbo.Id);
-            var getEffects = dbClient.GetTable();
-            if (getEffects != null)
+            foreach (var row in connection.Query<UserEffectRow>(
+                         """
+                         SELECT
+                             `id` AS Id,
+                             `user_id` AS UserId,
+                             `effect_id` AS EffectId,
+                             `total_duration` AS TotalDuration,
+                             `is_activated` AS IsActivated,
+                             `activated_stamp` AS ActivatedStamp,
+                             `quantity` AS Quantity
+                         FROM `user_effects`
+                         WHERE `user_id` = @id
+                         """,
+                         new { id = habbo.Id }))
             {
-                foreach (DataRow row in getEffects.Rows)
-                {
-                    if (_effects.TryAdd(Convert.ToInt32(row["id"]),
-                            new(Convert.ToInt32(row["id"]), Convert.ToInt32(row["user_id"]), Convert.ToInt32(row["effect_id"]), Convert.ToDouble(row["total_duration"]),
-                                ConvertExtensions.EnumToBool(Convert.ToString(row["is_activated"]) ?? "0"), Convert.ToDouble(row["activated_stamp"]), Convert.ToInt32(row["quantity"]))))
-                    {
-                        //umm?
-                    }
-                }
+                _effects.TryAdd(row.Id,
+                    new(row.Id, row.UserId, row.EffectId, row.TotalDuration,
+                        ConvertExtensions.EnumToBool(row.IsActivated), row.ActivatedStamp, row.Quantity));
             }
         }
         _habbo = habbo;
