@@ -263,11 +263,76 @@ public class Habbo
         if (!_habboSaved)
         {
             _habboSaved = true;
-            using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-            dbClient.RunQuery(
-                $"UPDATE `users` SET `online` = false, `last_online` = '{(int)UnixTimestamp.GetNow()}', `activity_points` = '{Duckets}', `credits` = '{Credits}', `vip_points` = '{Diamonds}', `home_room` = '{HomeRoom}', `gotw_points` = '{GotwPoints}', `time_muted` = '{TimeMuted}',`friend_bar_state` = '{FriendBarStateUtility.GetInt(FriendbarState)}', `bubble_id` = '{CustomBubbleId}' WHERE id = '{Id}' LIMIT 1;UPDATE `user_statistics` SET `roomvisits` = '{HabboStats.RoomVisits}', `onlineTime` = '{(int)(UnixTimestamp.GetNow() - SessionStart + HabboStats.OnlineTime)}', `respect` = '{HabboStats.Respect}', `respectGiven` = '{HabboStats.RespectGiven}', `giftsGiven` = '{HabboStats.GiftsGiven}', `giftsReceived` = '{HabboStats.GiftsReceived}', `dailyRespectPoints` = '{HabboStats.DailyRespectPoints}', `dailyPetRespectPoints` = '{HabboStats.DailyPetRespectPoints}', `AchievementScore` = '{HabboStats.AchievementPoints}', `quest_id` = '{HabboStats.QuestId}', `quest_progress` = '{HabboStats.QuestProgress}', `groupid` = '{HabboStats.FavouriteGroupId}',`forum_posts` = '{HabboStats.ForumPosts}' WHERE `id` = '{Id}' LIMIT 1;");
+            using var connection = PlusEnvironment.DatabaseManager.Connection();
+            connection.Execute(
+                """
+                UPDATE `users`
+                SET `online` = false,
+                    `last_online` = @lastOnline,
+                    `activity_points` = @duckets,
+                    `credits` = @credits,
+                    `vip_points` = @diamonds,
+                    `home_room` = @homeRoom,
+                    `gotw_points` = @gotwPoints,
+                    `time_muted` = @timeMuted,
+                    `friend_bar_state` = @friendBarState,
+                    `bubble_id` = @bubbleId
+                WHERE `id` = @id
+                LIMIT 1
+                """,
+                new
+                {
+                    lastOnline = (int)UnixTimestamp.GetNow(),
+                    duckets = Duckets,
+                    credits = Credits,
+                    diamonds = Diamonds,
+                    homeRoom = HomeRoom,
+                    gotwPoints = GotwPoints,
+                    timeMuted = TimeMuted,
+                    friendBarState = FriendBarStateUtility.GetInt(FriendbarState),
+                    bubbleId = CustomBubbleId,
+                    id = Id
+                });
+            connection.Execute(
+                """
+                UPDATE `user_statistics`
+                SET `roomvisits` = @roomVisits,
+                    `onlineTime` = @onlineTime,
+                    `respect` = @respect,
+                    `respectGiven` = @respectGiven,
+                    `giftsGiven` = @giftsGiven,
+                    `giftsReceived` = @giftsReceived,
+                    `dailyRespectPoints` = @dailyRespectPoints,
+                    `dailyPetRespectPoints` = @dailyPetRespectPoints,
+                    `AchievementScore` = @achievementScore,
+                    `quest_id` = @questId,
+                    `quest_progress` = @questProgress,
+                    `groupid` = @groupId,
+                    `forum_posts` = @forumPosts
+                WHERE `id` = @id
+                LIMIT 1
+                """,
+                new
+                {
+                    roomVisits = HabboStats.RoomVisits,
+                    onlineTime = (int)(UnixTimestamp.GetNow() - SessionStart + HabboStats.OnlineTime),
+                    respect = HabboStats.Respect,
+                    respectGiven = HabboStats.RespectGiven,
+                    giftsGiven = HabboStats.GiftsGiven,
+                    giftsReceived = HabboStats.GiftsReceived,
+                    dailyRespectPoints = HabboStats.DailyRespectPoints,
+                    dailyPetRespectPoints = HabboStats.DailyPetRespectPoints,
+                    achievementScore = HabboStats.AchievementPoints,
+                    questId = HabboStats.QuestId,
+                    questProgress = HabboStats.QuestProgress,
+                    groupId = HabboStats.FavouriteGroupId,
+                    forumPosts = HabboStats.ForumPosts,
+                    id = Id
+                });
             if (Permissions?.HasRight("mod_tickets") == true)
-                dbClient.RunQuery($"UPDATE `moderation_tickets` SET `status` = 'open', `moderator_id` = '0' WHERE `status` ='picked' AND `moderator_id` = '{Id}'");
+                connection.Execute(
+                    "UPDATE `moderation_tickets` SET `status` = 'open', `moderator_id` = 0 WHERE `status` = 'picked' AND `moderator_id` = @id",
+                    new { id = Id });
         }
         Dispose();
         Client = null;
@@ -339,10 +404,10 @@ public class Habbo
 
     public void SaveKey(string key, string value)
     {
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery($"UPDATE `users` SET {key} = @value WHERE `id` = '{Id}' LIMIT 1;");
-        dbClient.AddParameter("value", value);
-        dbClient.RunQuery();
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        connection.Execute(
+            $"UPDATE `users` SET {key} = @value WHERE `id` = @id LIMIT 1",
+            new { value, id = Id });
     }
 
     public void PrepareRoom(uint id, string password)
