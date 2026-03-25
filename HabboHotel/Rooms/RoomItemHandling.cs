@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Drawing;
+using Dapper;
 using Plus.Communication.Packets;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
@@ -111,20 +112,19 @@ public class RoomItemHandling
                 continue;
             if (item.UserId == 0)
             {
-                using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-                dbClient.SetQuery("UPDATE `items` SET `user_id` = @UserId WHERE `id` = @ItemId LIMIT 1");
-                dbClient.AddParameter("ItemId", item.Id);
-                dbClient.AddParameter("UserId", _room.OwnerId);
-                dbClient.RunQuery();
+                using var connection = PlusEnvironment.DatabaseManager.Connection();
+                connection.Execute(
+                    "UPDATE `items` SET `user_id` = @userId WHERE `id` = @itemId LIMIT 1",
+                    new { itemId = item.Id, userId = _room.OwnerId });
             }
             if (item.IsFloorItem)
             {
                 if (!_room.GetGameMap().ValidTile(item.GetX, item.GetY))
                 {
-                    using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
-                    {
-                        dbClient.RunQuery($"UPDATE `items` SET `room_id` = '0' WHERE `id` = '{item.Id}' LIMIT 1");
-                    }
+                    using (var connection = PlusEnvironment.DatabaseManager.Connection())
+                        connection.Execute(
+                            "UPDATE `items` SET `room_id` = 0 WHERE `id` = @id LIMIT 1",
+                            new { id = item.Id });
                     var client = PlusEnvironment.Game.ClientManager.GetClientByUserId(item.UserId);
                     var clientHabbo = client?.GetHabbo();
                     var furniture = clientHabbo?.Inventory?.Furniture;
@@ -142,12 +142,10 @@ public class RoomItemHandling
             {
                 if (string.IsNullOrWhiteSpace(item.WallCoordinates))
                 {
-                    using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
-                    {
-                        dbClient.SetQuery($"UPDATE `items` SET `wall_pos` = @WallPosition WHERE `id` = '{item.Id}' LIMIT 1");
-                        dbClient.AddParameter("WallPosition", ":w=0,2 l=11,53 l");
-                        dbClient.RunQuery();
-                    }
+                    using (var connection = PlusEnvironment.DatabaseManager.Connection())
+                        connection.Execute(
+                            "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
+                            new { wallPosition = ":w=0,2 l=11,53 l", id = item.Id });
                     item.WallCoordinates = ":w=0,2 l=11,53 l";
                 }
                 try
@@ -159,12 +157,10 @@ public class RoomItemHandling
                 }
                 catch
                 {
-                    using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
-                    {
-                        dbClient.SetQuery($"UPDATE `items` SET `wall_pos` = @WallPosition WHERE `id` = '{item.Id}' LIMIT 1");
-                        dbClient.AddParameter("WallPosition", ":w=0,2 l=11,53 l");
-                        dbClient.RunQuery();
-                    }
+                    using (var connection = PlusEnvironment.DatabaseManager.Connection())
+                        connection.Execute(
+                            "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
+                            new { wallPosition = ":w=0,2 l=11,53 l", id = item.Id });
                     item.WallCoordinates = ":w=0,2 l=11,53 l";
                 }
                 if (!_wallItems.ContainsKey(item.Id))
@@ -375,23 +371,25 @@ public class RoomItemHandling
         {
             if (_movedItems.Count > 0)
             {
-                using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
+                using var connection = PlusEnvironment.DatabaseManager.Connection();
                 foreach (var item in _movedItems.Values.ToList())
                 {
                     if (!string.IsNullOrEmpty(item.LegacyDataString))
                     {
-                        dbClient.SetQuery($"UPDATE `items` SET `extra_data` = @edata{item.Id} WHERE `id` = '{item.Id}' LIMIT 1");
-                        dbClient.AddParameter($"edata{item.Id}", item.ExtraData.Serialize());
-                        dbClient.RunQuery();
+                        connection.Execute(
+                            "UPDATE `items` SET `extra_data` = @extraData WHERE `id` = @id LIMIT 1",
+                            new { extraData = item.ExtraData.Serialize(), id = item.Id });
                     }
                     if (item.IsWallItem && (!item.Definition.ItemName.Contains("wallpaper_single") || !item.Definition.ItemName.Contains("floor_single") ||
                                             !item.Definition.ItemName.Contains("landscape_single")))
                     {
-                        dbClient.SetQuery($"UPDATE `items` SET `wall_pos` = @wallPos WHERE `id` = '{item.Id}' LIMIT 1");
-                        dbClient.AddParameter("wallPos", item.WallCoordinates);
-                        dbClient.RunQuery();
+                        connection.Execute(
+                            "UPDATE `items` SET `wall_pos` = @wallPos WHERE `id` = @id LIMIT 1",
+                            new { wallPos = item.WallCoordinates, id = item.Id });
                     }
-                    dbClient.RunQuery($"UPDATE `items` SET `x` = '{item.GetX}', `y` = '{item.GetY}', `z` = '{item.GetZ}', `rot` = '{item.Rotation}' WHERE `id` = '{item.Id}' LIMIT 1");
+                    connection.Execute(
+                        "UPDATE `items` SET `x` = @x, `y` = @y, `z` = @z, `rot` = @rot WHERE `id` = @id LIMIT 1",
+                        new { x = item.GetX, y = item.GetY, z = item.GetZ, rot = item.Rotation, id = item.Id });
                 }
             }
         }
@@ -571,8 +569,10 @@ public class RoomItemHandling
             _room.RemoveTent(item.Id);
             _room.AddTent(item.Id);
         }
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.RunQuery($"UPDATE `items` SET `room_id` = '{_room.RoomId}', `x` = '{item.GetX}', `y` = '{item.GetY}', `z` = '{item.GetZ}', `rot` = '{item.Rotation}' WHERE `id` = '{item.Id}' LIMIT 1");
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        connection.Execute(
+            "UPDATE `items` SET `room_id` = @roomId, `x` = @x, `y` = @y, `z` = @z, `rot` = @rot WHERE `id` = @id LIMIT 1",
+            new { roomId = _room.RoomId, x = item.GetX, y = item.GetY, z = item.GetZ, rot = item.Rotation, id = item.Id });
         return true;
     }
 
@@ -611,12 +611,20 @@ public class RoomItemHandling
                 item.LegacyDataString = _room.MoodlightData.GenerateExtraData();
             }
         }
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using (var connection = PlusEnvironment.DatabaseManager.Connection())
         {
-            dbClient.SetQuery(
-                $"UPDATE `items` SET `room_id` = '{_room.RoomId}', `x` = '{item.GetX}', `y` = '{item.GetY}', `z` = '{item.GetZ}', `rot` = '{item.Rotation}', `wall_pos` = @WallPos WHERE `id` = '{item.Id}' LIMIT 1");
-            dbClient.AddParameter("WallPos", item.WallCoordinates);
-            dbClient.RunQuery();
+            connection.Execute(
+                "UPDATE `items` SET `room_id` = @roomId, `x` = @x, `y` = @y, `z` = @z, `rot` = @rot, `wall_pos` = @wallPos WHERE `id` = @id LIMIT 1",
+                new
+                {
+                    roomId = _room.RoomId,
+                    x = item.GetX,
+                    y = item.GetY,
+                    z = item.GetZ,
+                    rot = item.Rotation,
+                    wallPos = item.WallCoordinates,
+                    id = item.Id
+                });
         }
         _wallItems.TryAdd(item.Id, item);
         _room.SendPacket(new ItemAddComposer(item));
