@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Plus.Communication.Attributes;
 using Plus.Communication.Packets.Outgoing.BuildersClub;
 using Plus.Communication.Packets.Outgoing.Handshake;
@@ -69,8 +69,8 @@ public class SsoTicketEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var sso = packet.ReadString();
-        _logger.LogInformation("Received SsoTicketEvent for session {sessionId}. Build: {build}. TicketLength: {ticketLength}.", session.Id, session.ClientBuild ?? "<unknown>", sso?.Length ?? 0);
+        var sso = packet.ReadString() ?? string.Empty;
+        _logger.LogInformation("Received SsoTicketEvent for session {sessionId}. Build: {build}. TicketLength: {ticketLength}.", session.Id, session.ClientBuild ?? "<unknown>", sso.Length);
         var error = await _authenticate.AuthenticateUsingSSO(session, sso);
         if (error != null)
         {
