@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Core;
 using Plus.Core.Language;
@@ -77,33 +78,30 @@ public class RoomManager : IRoomManager
     {
         if (_roomModels.Count > 0)
             _roomModels.Clear();
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("SELECT id,door_x,door_y,door_z,door_dir,heightmap,club_only,poolmap,`wall_height` FROM `room_models` WHERE `custom` = '0'");
-        var data = dbClient.GetTable();
-        if (data == null)
-            return;
-        foreach (DataRow row in data.Rows)
+        using var connection = _database.Connection();
+        var models = connection.Query("SELECT id,door_x,door_y,door_z,door_dir,heightmap,club_only,poolmap,`wall_height` FROM `room_models` WHERE `custom` = '0'");
+        
+        foreach (var row in models)
         {
-            var model = Convert.ToString(row["id"]) ?? string.Empty;
-            _roomModels.Add(model, new(model, Convert.ToInt32(row["door_x"]), Convert.ToInt32(row["door_y"]), (double)row["door_z"], Convert.ToInt32(row["door_dir"]),
-                Convert.ToString(row["heightmap"]) ?? string.Empty, ConvertExtensions.EnumToBool(Convert.ToString(row["club_only"]) ?? "0"), Convert.ToInt32(row["wall_height"]), false));
+            var model = Convert.ToString(row.id) ?? string.Empty;
+            _roomModels.Add(model, new RoomModel(model, Convert.ToInt32(row.door_x), Convert.ToInt32(row.door_y), Convert.ToDouble(row.door_z), Convert.ToInt32(row.door_dir),
+                Convert.ToString(row.heightmap) ?? string.Empty, ConvertExtensions.EnumToBool(Convert.ToString(row.club_only) ?? "0"), Convert.ToInt32(row.wall_height), false));
         }
     }
 
     public bool LoadModel(string id)
     {
-        DataRow? row = null;
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("SELECT id,door_x,door_y,door_z,door_dir,heightmap,club_only,poolmap,`wall_height` FROM `room_models` WHERE `custom` = '1' AND `id` = @modelId LIMIT 1");
-        dbClient.AddParameter("modelId", id);
-        row = dbClient.GetRow();
+        using var connection = _database.Connection();
+        var row = connection.QuerySingleOrDefault("SELECT id,door_x,door_y,door_z,door_dir,heightmap,club_only,poolmap,`wall_height` FROM `room_models` WHERE `custom` = '1' AND `id` = @modelId LIMIT 1", new { modelId = id });
+        
         if (row == null)
             return false;
-        var model = Convert.ToString(row["id"]) ?? string.Empty;
+            
+        var model = Convert.ToString(row.id) ?? string.Empty;
         if (!_roomModels.ContainsKey(model))
         {
-            _roomModels.Add(model, new(model, Convert.ToInt32(row["door_x"]), Convert.ToInt32(row["door_y"]), Convert.ToDouble(row["door_z"]), Convert.ToInt32(row["door_dir"]),
-                Convert.ToString(row["heightmap"]) ?? string.Empty, ConvertExtensions.EnumToBool(Convert.ToString(row["club_only"]) ?? "0"), Convert.ToInt32(row["wall_height"]), true));
+            _roomModels.Add(model, new RoomModel(model, Convert.ToInt32(row.door_x), Convert.ToInt32(row.door_y), Convert.ToDouble(row.door_z), Convert.ToInt32(row.door_dir),
+                Convert.ToString(row.heightmap) ?? string.Empty, ConvertExtensions.EnumToBool(Convert.ToString(row.club_only) ?? "0"), Convert.ToInt32(row.wall_height), true));
         }
         return true;
     }
@@ -269,18 +267,12 @@ public class RoomManager : IRoomManager
             return null!;
         }
         var roomId = 0u;
-        using (var dbClient = _database.GetQueryReactor())
+        using (var connection = _database.Connection())
         {
-            dbClient.SetQuery(
-                "INSERT INTO `rooms` (`roomtype`,`caption`,`description`,`owner`,`model_name`,`category`,`users_max`,`trade_settings`) VALUES ('private',@caption,@description,@UserId,@model,@category,@usersmax,@tradesettings)");
-            dbClient.AddParameter("caption", name);
-            dbClient.AddParameter("description", description);
-            dbClient.AddParameter("UserId", habbo.Id);
-            dbClient.AddParameter("model", model.Id);
-            dbClient.AddParameter("category", category);
-            dbClient.AddParameter("usersmax", maxVisitors);
-            dbClient.AddParameter("tradesettings", tradeSettings);
-            roomId = Convert.ToUInt32(dbClient.InsertQuery());
+            ulong insertId = connection.QuerySingle<ulong>(
+                "INSERT INTO `rooms` (`roomtype`,`caption`,`description`,`owner`,`model_name`,`category`,`users_max`,`trade_settings`) VALUES ('private',@caption,@description,@UserId,@model,@category,@usersmax,@tradesettings); SELECT LAST_INSERT_ID();",
+                new { caption = name, description = description, UserId = habbo.Id, model = model.Id, category = category, usersmax = maxVisitors, tradesettings = tradeSettings });
+            roomId = Convert.ToUInt32(insertId);
         }
         var data = new RoomData(roomId, name, model.Id, habbo.Username, habbo.Id, "", 0, "public", "open", 0, maxVisitors, category, description, string.Empty,
             floor, landscape, true, true, false, false, wallthick, floorthick, wallpaper, 1, 1, 1, 1, 1, 1, 1, 8, tradeSettings, true, true, true, true, true, true, true, 0, 0, true, model);

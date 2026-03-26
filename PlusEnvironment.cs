@@ -219,12 +219,10 @@ public class PlusEnvironment : IPlusEnvironment
         var user = Game.CacheManager.GenerateUser(userId);
         if (user != null)
             return user.Username;
-        using (var dbClient = DatabaseManager.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT `username` FROM `users` WHERE `id` = @id LIMIT 1");
-            dbClient.AddParameter("id", userId);
-            name = dbClient.GetString();
-        }
+        using var connection = DatabaseManager.Connection();
+        var nameResult = connection.QuerySingleOrDefault<string>("SELECT `username` FROM `users` WHERE `id` = @id LIMIT 1", new { id = userId });
+        if (!string.IsNullOrEmpty(nameResult))
+            name = nameResult;
         if (string.IsNullOrEmpty(name))
             name = "Unknown User";
         return name;
@@ -281,12 +279,10 @@ public class PlusEnvironment : IPlusEnvironment
     {
         try
         {
-            using var dbClient = DatabaseManager.GetQueryReactor();
-            dbClient.SetQuery("SELECT `id` FROM `users` WHERE `username` = @user LIMIT 1");
-            dbClient.AddParameter("user", userName);
-            var id = dbClient.GetInteger();
+            using var connection = DatabaseManager.Connection();
+            var id = connection.QuerySingleOrDefault<int>("SELECT `id` FROM `users` WHERE `username` = @user LIMIT 1", new { user = userName });
             if (id > 0)
-                return GetHabboById(Convert.ToInt32(id));
+                return GetHabboById(id);
             return null;
         }
         catch
@@ -308,11 +304,11 @@ public class PlusEnvironment : IPlusEnvironment
         Game.RoomManager.Dispose(); //Stop the game loop.
         if (!Debugger.IsAttached)
         {
-            using var dbClient = _database.GetQueryReactor();
-            dbClient.RunQuery("TRUNCATE `catalog_marketplace_data`");
-            dbClient.RunQuery("UPDATE `users` SET `online` = false, `auth_ticket` = NULL");
-            dbClient.RunQuery("UPDATE `rooms` SET `users_now` = '0' WHERE `users_now` > '0'");
-            dbClient.RunQuery("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
+            using var connection = _database.Connection();
+            connection.Execute("TRUNCATE `catalog_marketplace_data`");
+            connection.Execute("UPDATE `users` SET `online` = false, `auth_ticket` = NULL");
+            connection.Execute("UPDATE `rooms` SET `users_now` = '0' WHERE `users_now` > '0'");
+            connection.Execute("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
         }
         Log.Info("Plus Emulator has successfully shutdown.");
         Thread.Sleep(1000);

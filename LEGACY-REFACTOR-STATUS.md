@@ -49,6 +49,14 @@ These packet-heavy domains were already moved into dedicated services:
 
 The following areas were already moved away from `GetQueryReactor()`:
 
+- `PlusEnvironment.cs`
+- `HabboHotel/Groups/Group.cs`
+- `HabboHotel/Rooms/RoomUserManager.cs`
+- `HabboHotel/Rooms/RoomManager.cs`
+- `HabboHotel/GameClients/GameClientManager.cs`
+- `HabboHotel/Users/Messenger/SearchResultFactory.cs`
+- `HabboHotel/Subscriptions/SubscriptionManager.cs`
+- `HabboHotel/Rooms/Chat/Commands/*`
 - `HabboHotel/Users/Clothing/AvatarClothingService.cs`
 - `HabboHotel/Moderation/ModerationQueryService.cs`
 - `HabboHotel/Rooms/AI/RoomCreatureService.cs`
@@ -102,23 +110,9 @@ The broad service-first migration is in good shape. The main remaining technical
 
 Priority order for future sessions:
 
-1. `PlusEnvironment.cs`
-   - contains remaining legacy helpers:
-     - `GetUsernameById`
-     - `GetHabboByUsername`
-     - direct wrapper access
-2. `HabboHotel/Groups/Group.cs`
-   - still has heavy `GetQueryReactor()` usage
-3. `HabboHotel/Rooms/RoomUserManager.cs`
-   - contains legacy DB access and global lookups
-4. `HabboHotel/Rooms/RoomManager.cs`
-5. `HabboHotel/GameClients/GameClientManager.cs`
-6. `HabboHotel/Users/Messenger/SearchResultFactory.cs`
-7. `HabboHotel/Subscriptions/SubscriptionManager.cs`
-8. `HabboHotel/Catalog/Vouchers/VoucherManager.cs`
-9. `HabboHotel/Catalog/Marketplace/MarketplaceManager.cs`
-10. `HabboHotel/Rooms/Chat/Commands/*`
-    - especially moderator/user commands that still write to DB directly
+1. `HabboHotel/Catalog/Vouchers/VoucherManager.cs`
+2. `HabboHotel/Catalog/Marketplace/MarketplaceManager.cs`
+3. Remaining legacy instances in components like `ItemLoader`, `PetLoader` or `BotLoader`.
 
 ### Lower-Risk Short Batches
 

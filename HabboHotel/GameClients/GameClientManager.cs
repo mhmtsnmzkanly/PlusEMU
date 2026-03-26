@@ -1,8 +1,12 @@
-﻿using System.Collections;
+using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Communication.Packets;
@@ -129,20 +133,18 @@ public class GameClientManager : IGameClientManager
         builder.Append($"Reporter: {reporter.GetHabbo().Username}\r");
         builder.Append($"Reported User: {target.GetHabbo().Username}\r\r");
         builder.Append($"{target.GetHabbo().Username}s last 10 messages:\r\r");
-        using (var dbClient = _database.GetQueryReactor())
+        
+        using (var connection = _database.Connection())
         {
-            dbClient.SetQuery($"SELECT `message` FROM `chatlogs` WHERE `user_id` = '{target.GetHabbo().Id}' ORDER BY `id` DESC LIMIT 10");
-            var logs = dbClient.GetTable();
-            if (logs != null)
+            var logs = connection.Query<string>("SELECT `message` FROM `chatlogs` WHERE `user_id` = @id ORDER BY `id` DESC LIMIT 10", new { id = target.GetHabbo().Id });
+            var number = 11;
+            foreach (var message in logs)
             {
-                var number = 11;
-                foreach (DataRow log in logs.Rows)
-                {
-                    number -= 1;
-                    builder.Append($"{number}: {Convert.ToString(log["message"])}\r");
-                }
+                number -= 1;
+                builder.Append($"{number}: {message}\r");
             }
         }
+        
         foreach (var client in GetClients.ToList())
         {
             var habbo = client.GetHabbo();
@@ -205,9 +207,9 @@ public class GameClientManager : IGameClientManager
             {
                 try
                 {
-                    using (var dbClient = _database.GetQueryReactor())
+                    using (var connection = _database.Connection())
                     {
-                        dbClient!.RunQuery(habbo.GetQueryString);
+                        connection.Execute(habbo.GetQueryString);
                     }
                     Console.Clear();
                     _logger.LogInformation("<<- SERVER SHUTDOWN ->> IVNENTORY IS SAVING");
@@ -217,23 +219,6 @@ public class GameClientManager : IGameClientManager
         }
         _logger.LogInformation("Done saving users inventory!");
         _logger.LogInformation("Closing server connections...");
-        //try
-        //{
-        //    foreach (var client in GetClients.ToList())
-        //    {
-        //        try
-        //        {
-        //            client.Dispose();
-        //        }
-        //        catch { }
-        //        Console.Clear();
-        //        Log.Info("<<- SERVER SHUTDOWN ->> CLOSING CONNECTIONS");
-        //    }
-        //}
-        //catch (Exception e)
-        //{
-        //    ExceptionLogger.LogException(e);
-        //}
         if (_clients.Count > 0)
             _clients.Clear();
         _logger.LogInformation("Connections closed!");
@@ -249,18 +234,6 @@ public class GameClientManager : IGameClientManager
                 var toPing = new List<GameClient>();
                 foreach (var client in _clients.Values.ToList())
                 {
-                    //if (client.PingCount < 6)
-                    //{
-                    //    client.PingCount++;
-                    //    toPing.Add(client);
-                    //}
-                    //else
-                    //{
-                    //    lock (_timedOutConnections.SyncRoot)
-                    //    {
-                    //        _timedOutConnections.Enqueue(client);
-                    //    }
-                    //}
                 }
                 var start = DateTime.Now;
                 foreach (var client in toPing.ToList())

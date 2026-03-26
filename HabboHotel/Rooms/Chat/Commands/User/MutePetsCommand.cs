@@ -1,5 +1,6 @@
 ﻿using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User;
 
@@ -25,10 +26,8 @@ internal class MutePetsCommand : IChatCommand
             return;
 
         habbo.AllowPetSpeech = !habbo.AllowPetSpeech;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `users` SET `pets_muted` = '{habbo.AllowPetSpeech}' WHERE `id` = '{habbo.Id}' LIMIT 1");
-        }
+        using var connection = _database.Connection();
+        connection.Execute("UPDATE `users` SET `pets_muted` = @muted WHERE `id` = @id LIMIT 1", new { muted = habbo.AllowPetSpeech, id = habbo.Id });
         if (habbo.AllowPetSpeech)
             session.SendWhisper("Change successful, you can no longer see speech from pets.");
         else

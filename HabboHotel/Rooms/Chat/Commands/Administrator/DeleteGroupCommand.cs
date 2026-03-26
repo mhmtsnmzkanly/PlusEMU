@@ -1,5 +1,6 @@
 ﻿using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 using Plus.HabboHotel.Groups;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.Administrator;
@@ -34,15 +35,13 @@ internal class DeleteGroupCommand : IChatCommand
             session.SendWhisper("Oops, there is no group here?");
             return;
         }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"DELETE FROM `groups` WHERE `id` = '{room.Group.Id}'");
-            dbClient.RunQuery($"DELETE FROM `group_memberships` WHERE `group_id` = '{room.Group.Id}'");
-            dbClient.RunQuery($"DELETE FROM `group_requests` WHERE `group_id` = '{room.Group.Id}'");
-            dbClient.RunQuery($"UPDATE `rooms` SET `group_id` = '0' WHERE `group_id` = '{room.Group.Id}' LIMIT 1");
-            dbClient.RunQuery($"UPDATE `user_statistics` SET `groupid` = '0' WHERE `groupid` = '{room.Group.Id}' LIMIT 1");
-            dbClient.RunQuery($"DELETE FROM `items_groups` WHERE `group_id` = '{room.Group.Id}'");
-        }
+        using var connection = _database.Connection();
+        connection.Execute("DELETE FROM `groups` WHERE `id` = @id", new { id = room.Group.Id });
+        connection.Execute("DELETE FROM `group_memberships` WHERE `group_id` = @id", new { id = room.Group.Id });
+        connection.Execute("DELETE FROM `group_requests` WHERE `group_id` = @id", new { id = room.Group.Id });
+        connection.Execute("UPDATE `rooms` SET `group_id` = '0' WHERE `group_id` = @id LIMIT 1", new { id = room.Group.Id });
+        connection.Execute("UPDATE `user_statistics` SET `groupid` = '0' WHERE `groupid` = @id LIMIT 1", new { id = room.Group.Id });
+        connection.Execute("DELETE FROM `items_groups` WHERE `group_id` = @id", new { id = room.Group.Id });
         _groupManager.DeleteGroup(room.Group.Id);
         room.Group = null;
         _roomManager.UnloadRoom(room.Id);

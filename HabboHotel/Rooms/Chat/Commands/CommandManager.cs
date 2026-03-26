@@ -3,6 +3,7 @@ using System.Text;
 using Plus.Communication.Packets.Outgoing.Notifications;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands;
@@ -142,13 +143,9 @@ public class CommandManager : ICommandManager
 
     public void LogCommand(int userId, string data, string machineId)
     {
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("INSERT INTO `logs_client_staff` (`user_id`,`data_string`,`machine_id`, `timestamp`) VALUES (@UserId,@Data,@MachineId,@Timestamp)");
-        dbClient.AddParameter("UserId", userId);
-        dbClient.AddParameter("Data", data);
-        dbClient.AddParameter("MachineId", machineId ?? string.Empty);
-        dbClient.AddParameter("Timestamp", PlusEnvironment.GetUnixTimestamp());
-        dbClient.RunQuery();
+        using var connection = _database.Connection();
+        connection.Execute("INSERT INTO `logs_client_staff` (`user_id`,`data_string`,`machine_id`, `timestamp`) VALUES (@UserId,@Data,@MachineId,@Timestamp)", 
+            new { UserId = userId, Data = data, MachineId = machineId ?? string.Empty, Timestamp = PlusEnvironment.GetUnixTimestamp() });
     }
 
     public bool TryGetCommand(string command, out ICommandBase chatCommand)

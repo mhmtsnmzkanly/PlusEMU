@@ -1,5 +1,6 @@
 ﻿using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 using Plus.HabboHotel.Moderation;
 using Plus.HabboHotel.Users;
 using Plus.Utilities;
@@ -39,12 +40,9 @@ internal class IpBanCommand : ITargetChatCommand
         var ipAddress = string.Empty;
         var expire = UnixTimestamp.GetNow() + 78892200;
         var username = target.Username;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `user_info` SET `bans` = `bans` + '1' WHERE `user_id` = '{target.Id}' LIMIT 1");
-            dbClient.SetQuery($"SELECT `ip_last` FROM `users` WHERE `id` = '{target.Id}' LIMIT 1");
-            ipAddress = dbClient.GetString();
-        }
+        using var connection = _database.Connection();
+        connection.Execute("UPDATE `user_info` SET `bans` = `bans` + '1' WHERE `user_id` = @id LIMIT 1", new { id = target.Id });
+        ipAddress = connection.QuerySingleOrDefault<string>("SELECT `ip_last` FROM `users` WHERE `id` = @id LIMIT 1", new { id = target.Id });
         string reason;
         if (parameters.Any())
             reason = CommandManager.MergeParams(parameters);

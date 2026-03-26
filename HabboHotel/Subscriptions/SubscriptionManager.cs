@@ -1,4 +1,6 @@
-﻿using System.Data;
+using System;
+using System.Collections.Generic;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 
@@ -20,23 +22,21 @@ public class SubscriptionManager : ISubscriptionManager
     {
         if (_subscriptions.Count > 0)
             _subscriptions.Clear();
-        using (var dbClient = _database.GetQueryReactor())
+
+        using var connection = _database.Connection();
+        var subscriptions = connection.Query("SELECT * FROM `subscriptions`;");
+
+        foreach (var row in subscriptions)
         {
-            dbClient.SetQuery("SELECT * FROM `subscriptions`;");
-            var getSubscriptions = dbClient.GetTable();
-            if (getSubscriptions != null)
+            var id = Convert.ToInt32(row.id);
+            if (!_subscriptions.ContainsKey(id))
             {
-                foreach (DataRow row in getSubscriptions.Rows)
-                {
-                    if (!_subscriptions.ContainsKey(Convert.ToInt32(row["id"])))
-                    {
-                        _subscriptions.Add(Convert.ToInt32(row["id"]),
-                            new(Convert.ToInt32(row["id"]), Convert.ToString(row["name"]) ?? string.Empty, Convert.ToString(row["badge_code"]) ?? string.Empty, Convert.ToInt32(row["credits"]),
-                                Convert.ToInt32(row["duckets"]), Convert.ToInt32(row["respects"])));
-                    }
-                }
+                _subscriptions.Add(id,
+                    new SubscriptionData(id, Convert.ToString(row.name) ?? string.Empty, Convert.ToString(row.badge_code) ?? string.Empty, Convert.ToInt32(row.credits),
+                        Convert.ToInt32(row.duckets), Convert.ToInt32(row.respects)));
             }
         }
+
         _logger.LogInformation("Loaded " + _subscriptions.Count + " subscriptions.");
     }
 

@@ -1,5 +1,6 @@
 ﻿using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User;
 
@@ -25,10 +26,8 @@ internal class MuteBotsCommand : IChatCommand
             return;
 
         habbo.AllowBotSpeech = !habbo.AllowBotSpeech;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `users` SET `bots_muted` = '{habbo.AllowBotSpeech}' WHERE `id` = '{habbo.Id}' LIMIT 1");
-        }
+        using var connection = _database.Connection();
+        connection.Execute("UPDATE `users` SET `bots_muted` = @muted WHERE `id` = @id LIMIT 1", new { muted = habbo.AllowBotSpeech, id = habbo.Id });
         if (habbo.AllowBotSpeech)
             session.SendWhisper("Change successful, you can no longer see speech from bots.");
         else

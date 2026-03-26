@@ -1,6 +1,7 @@
 ﻿using Plus.Communication.Packets.Outgoing.Inventory.Bots;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User;
 
@@ -40,12 +41,8 @@ internal class KickBotsCommand : IChatCommand
                 return;
             if (botUser == null)
                 continue;
-            using (var dbClient = _database.GetQueryReactor())
-            {
-                dbClient.SetQuery("UPDATE `bots` SET `room_id` = '0' WHERE `id` = @id LIMIT 1");
-                dbClient.AddParameter("id", user.BotData.Id);
-                dbClient.RunQuery();
-            }
+            using var connection = _database.Connection();
+            connection.Execute("UPDATE `bots` SET `room_id` = '0' WHERE `id` = @id LIMIT 1", new { id = user.BotData.Id });
             inventory.AddBot(new(Convert.ToInt32(botUser.BotData.Id), Convert.ToInt32(botUser.BotData.OwnerId), botUser.BotData.Name, botUser.BotData.Motto,
                 botUser.BotData.Look, botUser.BotData.Gender));
             session.Send(new BotInventoryComposer(inventory.Bots.Values.ToList()));

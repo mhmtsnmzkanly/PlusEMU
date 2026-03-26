@@ -1,5 +1,6 @@
 ﻿using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.Moderator;
@@ -26,10 +27,8 @@ internal class UnmuteCommand : ITargetChatCommand
         var habbo = session.GetHabbo();
         var username = habbo?.Username ?? string.Empty;
         var targetClient = target.Client;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `users` SET `time_muted` = '0' WHERE `id` = '{target.Id}' LIMIT 1");
-        }
+        using var connection = _database.Connection();
+        connection.Execute("UPDATE `users` SET `time_muted` = '0' WHERE `id` = @id LIMIT 1", new { id = target.Id });
         target.TimeMuted = 0;
         targetClient?.SendNotification($"You have been un-muted by {username}!");
         session.SendWhisper($"You have successfully un-muted {target.Username}!");

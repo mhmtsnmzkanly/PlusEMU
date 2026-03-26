@@ -1,5 +1,6 @@
 ﻿using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 using Plus.HabboHotel.Moderation;
 using Plus.HabboHotel.Users;
 using Plus.Utilities;
@@ -47,10 +48,8 @@ internal class BanCommand : ITargetChatCommand
         else
             reason = "No reason specified.";
         var username = target.Username;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `user_info` SET `bans` = `bans` + '1' WHERE `user_id` = '{target.Id}' LIMIT 1");
-        }
+        using var connection = _database.Connection();
+        connection.Execute("UPDATE `user_info` SET `bans` = `bans` + '1' WHERE `user_id` = @id LIMIT 1", new { id = target.Id });
         _moderationManager.BanUser(habbo?.Username ?? string.Empty, ModerationBanType.Username, target.Username, reason, expire);
         targetClient?.Disconnect();
         session.SendWhisper($"Success, you have account banned the user '{username}' for {hours} hour(s) with the reason '{reason}'!");

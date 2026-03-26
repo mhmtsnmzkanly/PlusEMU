@@ -2,6 +2,7 @@
 using Plus.Core.FigureData;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User.Fun;
 
@@ -47,10 +48,8 @@ internal class FacelessCommand : IChatCommand
             }
         }
         habbo.Look = _figureDataManager.ProcessFigure(habbo.Look, habbo.Gender, habbo.Clothing.GetClothingParts, true);
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `users` SET `look` = '{habbo.Look}' WHERE `id` = '{habbo.Id}' LIMIT 1");
-        }
+        using var connection = _database.Connection();
+        connection.Execute("UPDATE `users` SET `look` = @look WHERE `id` = @id LIMIT 1", new { look = habbo.Look, id = habbo.Id });
         session.Send(new UserChangeComposer(user, true));
         habbo.CurrentRoom?.SendPacket(new UserChangeComposer(user, false));
     }

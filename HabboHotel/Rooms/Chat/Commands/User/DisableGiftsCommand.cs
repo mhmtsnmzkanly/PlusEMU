@@ -1,5 +1,6 @@
 ﻿using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User;
 
@@ -26,9 +27,7 @@ internal class DisableGiftsCommand : IChatCommand
 
         habbo.AllowGifts = !habbo.AllowGifts;
         session.SendWhisper($"You're {(habbo.AllowGifts ? "now" : "no longer")} accepting gifts.");
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery($"UPDATE `users` SET `allow_gifts` = @AllowGifts WHERE `id` = '{habbo.Id}'");
-        dbClient.AddParameter("AllowGifts", habbo.AllowGifts);
-        dbClient.RunQuery();
+        using var connection = _database.Connection();
+        connection.Execute("UPDATE `users` SET `allow_gifts` = @AllowGifts WHERE `id` = @id LIMIT 1", new { AllowGifts = habbo.AllowGifts, id = habbo.Id });
     }
 }

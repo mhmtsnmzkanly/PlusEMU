@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-03-26
+
+### Legacy Database Wrapper Migration
+
+- Refactored `PlusEnvironment.cs` static DB access methods to use `DatabaseManager.Connection()` with Dapper.
+- Moved `HabboHotel/Groups/Group.cs` group initialization and member queries off the legacy wrapper.
+- Moved `HabboHotel/Rooms/RoomUserManager.cs` user count and pet/bot updates off the legacy wrapper.
+- Moved room model loading and room creation persistence in `HabboHotel/Rooms/RoomManager.cs` to `Connection()`/Dapper.
+- Refactored `HabboHotel/GameClients/GameClientManager.cs` chatlog reporting and inventory disconnect-saves to Dapper.
+- Converted `HabboHotel/Users/Messenger/SearchResultFactory.cs` user search to `Connection().Query()` using Dapper.
+- Replaced `GetQueryReactor()` in `HabboHotel/Subscriptions/SubscriptionManager.cs` with Dapper-powered initialization.
+- Completely migrated all Chat Commands (`HabboHotel/Rooms/Chat/Commands/*`) for standard Users, Fun, Moderators, and Administrators to `DatabaseManager.Connection()` with Dapper, resolving over 20 files.
+
+
 ## 2026-03-25
 
 ### Nitro Handshake Diagnostics

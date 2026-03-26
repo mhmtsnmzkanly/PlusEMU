@@ -1,6 +1,7 @@
 ﻿using Plus.Communication.Packets.Outgoing.Inventory.Pets;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User;
 
@@ -65,10 +66,11 @@ internal class KickPetsCommand : IChatCommand
             }
             if (inventory.AddPet(pet))
                 session.Send(new PetInventoryComposer(inventory.Pets.Values.ToList()));
-            using var dbClient = _database.GetQueryReactor();
-            dbClient.RunQuery($"UPDATE `bots` SET `room_id` = '0', `x` = '0', `Y` = '0', `Z` = '0' WHERE `id` = '{pet.PetId}' LIMIT 1");
-            dbClient.RunQuery(
-                $"UPDATE `bots_petdata` SET `experience` = '{pet.Experience}', `energy` = '{pet.Energy}', `nutrition` = '{pet.Nutrition}', `respect` = '{pet.Respect}' WHERE `id` = '{pet.PetId}' LIMIT 1");
+            using var connection = _database.Connection();
+            connection.Execute("UPDATE `bots` SET `room_id` = '0', `x` = '0', `Y` = '0', `Z` = '0' WHERE `id` = @id LIMIT 1", new { id = pet.PetId });
+            connection.Execute(
+                "UPDATE `bots_petdata` SET `experience` = @exp, `energy` = @eng, `nutrition` = @nut, `respect` = @res WHERE `id` = @id LIMIT 1", 
+                new { exp = pet.Experience, eng = pet.Energy, nut = pet.Nutrition, res = pet.Respect, id = pet.PetId });
         }
         session.SendWhisper("All pets have been kicked from the room.");
     }

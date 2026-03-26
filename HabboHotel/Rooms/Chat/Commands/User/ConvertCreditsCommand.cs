@@ -1,4 +1,7 @@
-﻿using System.Data;
+using System;
+using System.Data;
+using System.Linq;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Database;
@@ -35,35 +38,27 @@ internal class ConvertCreditsCommand : IChatCommand
         var totalValue = 0;
         try
         {
-            DataTable? table;
-            using (var dbClient = _database.GetQueryReactor())
-            {
-                dbClient.SetQuery($"SELECT `id` FROM `items` WHERE `user_id` = '{habbo.Id}' AND (`room_id`=  '0' OR `room_id` = '')");
-                table = dbClient.GetTable();
-            }
-            if (table == null)
+            using var connection = _database.Connection();
+            var items = connection.Query<uint>("SELECT `id` FROM `items` WHERE `user_id` = @userId AND (`room_id` = '0' OR `room_id` = '')", new { userId = habbo.Id }).ToList();
+            if (items.Count == 0)
             {
                 session.SendWhisper("You currently have no items in your inventory!");
                 return;
             }
-            if (table.Rows.Count > 0)
+            foreach (var itemId in items)
             {
-                using var dbClient = _database.GetQueryReactor();
-                foreach (DataRow row in table.Rows)
+                var item = inventory.GetItem(itemId);
+                if (item == null || item.Definition.InteractionType != InteractionType.Exchange)
+                    continue;
+                var value = item.Definition.BehaviourData;
+                connection.Execute("DELETE FROM `items` WHERE `id` = @id LIMIT 1", new { id = item.Id });
+                inventory.RemoveItem(item.Id);
+                session.Send(new FurniListRemoveComposer(item.Id));
+                totalValue += value;
+                if (value > 0)
                 {
-                    var item = inventory.GetItem(Convert.ToUInt32(row[0]));
-                    if (item == null || item.Definition.InteractionType != InteractionType.Exchange)
-                        continue;
-                    var value = item.Definition.BehaviourData;
-                    dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{item.Id}' LIMIT 1");
-                    inventory.RemoveItem(item.Id);
-                    session.Send(new FurniListRemoveComposer(item.Id));
-                    totalValue += value;
-                    if (value > 0)
-                    {
-                        habbo.Credits += value;
-                        session.Send(new CreditBalanceComposer(habbo.Credits));
-                    }
+                    habbo.Credits += value;
+                    session.Send(new CreditBalanceComposer(habbo.Credits));
                 }
             }
             if (totalValue > 0)

@@ -405,8 +405,8 @@ public class RoomUserManager
     {
         UserCount = count;
         _room.UsersNow = count;
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.RunQuery($"UPDATE `rooms` SET `users_now` = '{count}' WHERE `id` = '{_room.RoomId}' LIMIT 1");
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        connection.Execute("UPDATE `rooms` SET `users_now` = @count WHERE `id` = @roomId LIMIT 1", new { count = count, roomId = _room.RoomId });
     }
 
     public RoomUser GetRoomUserByVirtualId(int virtualId) => _users.TryGetValue(virtualId, out var user) ? user : null!;
@@ -431,29 +431,30 @@ public class RoomUserManager
 
     public void UpdatePets()
     {
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
         foreach (var pet in GetPets().ToList())
         {
             if (pet == null)
                 continue;
             if (pet.DbState == PetDatabaseUpdateState.NeedsInsert)
             {
-                dbClient.SetQuery($"INSERT INTO `bots` (`id`,`user_id`,`room_id`,`name`,`x`,`y`,`z`) VALUES ('{pet.PetId}','{pet.OwnerId}','{pet.RoomId}',@name,'0','0','0')");
-                dbClient.AddParameter("name", pet.Name);
-                dbClient.RunQuery();
-                dbClient.SetQuery(
-                    $"INSERT INTO `bots_petdata` (`type`,`race`,`color`,`experience`,`energy`,`createstamp`,`nutrition`,`respect`) VALUES ('{pet.Type}',@race,@color,'0','100','{pet.CreationStamp}','0','0')");
-                dbClient.AddParameter($"{pet.PetId}race", pet.Race);
-                dbClient.AddParameter($"{pet.PetId}color", pet.Color);
-                dbClient.RunQuery();
+                connection.Execute("INSERT INTO `bots` (`id`,`user_id`,`room_id`,`name`,`x`,`y`,`z`) VALUES (@id, @ownerId, @roomId, @name, '0', '0', '0')", 
+                    new { id = pet.PetId, ownerId = pet.OwnerId, roomId = pet.RoomId, name = pet.Name });
+                
+                connection.Execute(
+                    "INSERT INTO `bots_petdata` (`type`,`race`,`color`,`experience`,`energy`,`createstamp`,`nutrition`,`respect`) VALUES (@type, @race, @color, '0', '100', @creationStamp, '0', '0')", 
+                    new { type = pet.Type, race = pet.Race, color = pet.Color, creationStamp = pet.CreationStamp });
             }
             else if (pet.DbState == PetDatabaseUpdateState.NeedsUpdate)
             {
                 //Surely this can be *99 better? // TODO
                 var user = GetRoomUserByVirtualId(pet.VirtualId);
-                dbClient.RunQuery($"UPDATE `bots` SET room_id = {pet.RoomId}, x = {(user?.X ?? 0)}, Y = {(user?.Y ?? 0)}, Z = {(user?.Z ?? 0)} WHERE `id` = '{pet.PetId}' LIMIT 1");
-                dbClient.RunQuery(
-                    $"UPDATE `bots_petdata` SET `experience` = '{pet.Experience}', `energy` = '{pet.Energy}', `nutrition` = '{pet.Nutrition}', `respect` = '{pet.Respect}' WHERE `id` = '{pet.PetId}' LIMIT 1");
+                connection.Execute("UPDATE `bots` SET room_id = @roomId, x = @x, y = @y, z = @z WHERE `id` = @id LIMIT 1", 
+                    new { roomId = pet.RoomId, x = user?.X ?? 0, y = user?.Y ?? 0, z = user?.Z ?? 0, id = pet.PetId });
+                    
+                connection.Execute(
+                    "UPDATE `bots_petdata` SET `experience` = @experience, `energy` = @energy, `nutrition` = @nutrition, `respect` = @respect WHERE `id` = @id LIMIT 1", 
+                    new { experience = pet.Experience, energy = pet.Energy, nutrition = pet.Nutrition, respect = pet.Respect, id = pet.PetId });
             }
             pet.DbState = PetDatabaseUpdateState.Updated;
         }
@@ -461,22 +462,15 @@ public class RoomUserManager
 
     private void UpdateBots()
     {
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
+        using var connection = PlusEnvironment.DatabaseManager.Connection();
         foreach (var user in GetRoomUsers().ToList())
         {
             if (user == null || !user.IsBot)
                 continue;
             if (user.IsBot)
             {
-                dbClient.SetQuery("UPDATE bots SET x=@x, y=@y, z=@z, name=@name, look=@look, rotation=@rotation WHERE id=@id LIMIT 1;");
-                dbClient.AddParameter("name", user.BotData.Name);
-                dbClient.AddParameter("look", user.BotData.Look);
-                dbClient.AddParameter("rotation", user.BotData.Rot);
-                dbClient.AddParameter("x", user.X);
-                dbClient.AddParameter("y", user.Y);
-                dbClient.AddParameter("z", user.Z);
-                dbClient.AddParameter("id", user.BotData.BotId);
-                dbClient.RunQuery();
+                connection.Execute("UPDATE bots SET x=@x, y=@y, z=@z, name=@name, look=@look, rotation=@rotation WHERE id=@id LIMIT 1;", 
+                    new { name = user.BotData.Name, look = user.BotData.Look, rotation = user.BotData.Rot, x = user.X, y = user.Y, z = user.Z, id = user.BotData.BotId });
             }
         }
     }
@@ -1181,9 +1175,9 @@ public class RoomUserManager
         UpdatePets();
         UpdateBots();
         _room.UsersNow = 0;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using (var connection = PlusEnvironment.DatabaseManager.Connection())
         {
-            dbClient.RunQuery($"UPDATE `rooms` SET `users_now` = '0' WHERE `id` = '{_room.Id}' LIMIT 1");
+            connection.Execute("UPDATE `rooms` SET `users_now` = '0' WHERE `id` = @roomId LIMIT 1", new { roomId = _room.Id });
         }
         _users.Clear();
         _pets.Clear();

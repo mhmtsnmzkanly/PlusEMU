@@ -1,6 +1,7 @@
 ﻿using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 using Plus.HabboHotel.Items;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User;
@@ -49,8 +50,8 @@ internal class EjectAllCommand : IChatCommand
                 else
                 {
                     room.GetRoomItemHandler().RemoveFurniture(session, item.Id);
-                    using var dbClient = _database.GetQueryReactor();
-                    dbClient.RunQuery($"UPDATE `items` SET `room_id` = '0' WHERE `id` = '{item.Id}' LIMIT 1");
+                    using var connection = _database.Connection();
+                    connection.Execute("UPDATE `items` SET `room_id` = '0' WHERE `id` = @id LIMIT 1", new { id = item.Id });
                 }
             }
         }
@@ -72,8 +73,8 @@ internal class EjectAllCommand : IChatCommand
                 else
                 {
                     room.GetRoomItemHandler().RemoveFurniture(session, item.Id);
-                    using var dbClient = _database.GetQueryReactor();
-                    dbClient.RunQuery($"UPDATE `items` SET `room_id` = '0' WHERE `id` = '{item.Id}' LIMIT 1");
+                    using var connection = _database.Connection();
+                    connection.Execute("UPDATE `items` SET `room_id` = '0' WHERE `id` = @id LIMIT 1", new { id = item.Id });
                 }
             }
         }

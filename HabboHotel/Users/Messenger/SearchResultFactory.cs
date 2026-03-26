@@ -1,4 +1,6 @@
-﻿using System.Data;
+using System;
+using System.Collections.Generic;
+using Dapper;
 using Plus.Database;
 
 namespace Plus.HabboHotel.Users.Messenger;
@@ -14,23 +16,18 @@ public class SearchResultFactory : ISearchResultFactory
 
     public List<SearchResult> GetSearchResult(string query)
     {
-        DataTable dTable;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT `id`,`username`,`motto`,`look`,`last_online` FROM users WHERE username LIKE @query LIMIT 50");
-            dbClient.AddParameter("query", $"{query}%");
-            dTable = dbClient.GetTable();
-        }
         var results = new List<SearchResult>();
-        if (dTable != null)
+        using var connection = _database.Connection();
+        var rows = connection.Query("SELECT `id`,`username`,`motto`,`look`,`last_online` FROM users WHERE username LIKE @query LIMIT 50", new { query = $"{query}%" });
+        
+        foreach (var row in rows)
         {
-            foreach (DataRow dRow in dTable.Rows)
-                results.Add(new(
-                    Convert.ToInt32(dRow[0]),
-                    Convert.ToString(dRow[1]) ?? string.Empty,
-                    Convert.ToString(dRow[2]) ?? string.Empty,
-                    Convert.ToString(dRow[3]) ?? string.Empty,
-                    dRow[4].ToString() ?? string.Empty));
+            results.Add(new SearchResult(
+                Convert.ToInt32(row.id),
+                Convert.ToString(row.username) ?? string.Empty,
+                Convert.ToString(row.motto) ?? string.Empty,
+                Convert.ToString(row.look) ?? string.Empty,
+                Convert.ToString(row.last_online) ?? string.Empty));
         }
         return results;
     }

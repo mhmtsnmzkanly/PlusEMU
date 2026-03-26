@@ -2,6 +2,7 @@
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Dapper;
 using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User.Fun;
@@ -46,14 +47,8 @@ internal class MimicCommand : ITargetChatCommand
             return Task.CompletedTask;
         habbo.Gender = targetHabbo.Gender;
         habbo.Look = targetHabbo.Look;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("UPDATE `users` SET `gender` = @gender, `look` = @look WHERE `id` = @id LIMIT 1");
-            dbClient.AddParameter("gender", habbo.Gender);
-            dbClient.AddParameter("look", habbo.Look);
-            dbClient.AddParameter("id", habbo.Id);
-            dbClient.RunQuery();
-        }
+        using var connection = _database.Connection();
+        connection.Execute("UPDATE `users` SET `gender` = @gender, `look` = @look WHERE `id` = @id LIMIT 1", new { gender = habbo.Gender, look = habbo.Look, id = habbo.Id });
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user != null)
         {
