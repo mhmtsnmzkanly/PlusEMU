@@ -10,12 +10,12 @@ namespace Plus.Communication.Packets.Incoming.Users;
 
 internal class RespectUserEvent : RoomPacketEvent
 {
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IQuestService _questService;
 
-    public RespectUserEvent(IAchievementManager achievementManager, IQuestService questService)
+    public RespectUserEvent(IAchievementService achievementService, IQuestService questService)
     {
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _questService = questService;
     }
 
@@ -33,9 +33,9 @@ internal class RespectUserEvent : RoomPacketEvent
         if (thisUser == null)
             return;
         await _questService.ProgressUserQuest(session, QuestType.SocialRespect);
-        _achievementManager.ProgressAchievement(session, "ACH_RespectGiven", 1);
+        await _achievementService.ProgressAchievement(session, "ACH_RespectGiven", 1);
         if (targetClient != null)
-            _achievementManager.ProgressAchievement(targetClient, "ACH_RespectEarned", 1);
+            await _achievementService.ProgressAchievement(targetClient, "ACH_RespectEarned", 1);
         habbo.HabboStats.DailyRespectPoints -= 1;
         habbo.HabboStats.RespectGiven += 1;
         targetHabbo.HabboStats.Respect += 1;

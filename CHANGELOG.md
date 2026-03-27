@@ -71,6 +71,14 @@ All SQL injection risks from string interpolation have been eliminated. Build is
 - Maintained legacy compatibility via `IGame.QuestService` for non-DI classes.
 - Fixed `CS8602` and `CS4032` build errors during migration.
 
+#### Phase 3 — Achievement Service & Deep Integration
+- Completed the migration of `AchievementManager` to `IAchievementService`.
+- Refactored `CatalogService.cs` and `RoomAccessService.cs` to use `IAchievementService` via Dependency Injection.
+- Modernized legacy code in `Habbo.cs`, `Room.cs`, `BattleBanzai.cs`, and `ProcessComponent.cs` to use `IAchievementService` (fire-and-forget for synchronous paths).
+- Updated 10+ Packet Handlers (Ban, Kick, Mute, Ignore, SaveRoomSettings, PlaceObject, etc.) to use `IAchievementService` and `async/await`.
+- Converted synchronous methods like `RoomAccessService.GetRoomFilterList` to asynchronous `Task` returning methods.
+- Cleared remaining static dependencies on `PlusEnvironment.Game.AchievementManager` in favor of Service-based access.
+
 ## 2026-03-26
 
 ### Legacy Database Wrapper Migration

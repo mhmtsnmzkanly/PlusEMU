@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Concurrent;
 using Plus.Communication.Packets.Outgoing.Handshake;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
@@ -510,7 +510,7 @@ public class Habbo
         if (room.OwnerId != Id)
         {
             clientHabbo.HabboStats.RoomVisits += 1;
-            PlusEnvironment.Game.AchievementManager.ProgressAchievement(client, "ACH_RoomEntry", 1);
+            _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(client, "ACH_RoomEntry", 1);
         }
         return true;
     }

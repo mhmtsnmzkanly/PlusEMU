@@ -22,7 +22,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
     private readonly ISettingsManager _settingsManager;
     private readonly IItemDataManager _itemManager;
     private readonly IDatabase _database;
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IGameClientManager _gameClientManager;
     private readonly IQuestService _questService;
     private readonly IItemFactory _itemFactory;
@@ -31,7 +31,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         ISettingsManager settingsManager,
         IItemDataManager itemManager,
         IDatabase database,
-        IAchievementManager achievementManager,
+        IAchievementService achievementService,
         IGameClientManager gameClientManager,
         IQuestService questService,
         IItemFactory itemFactory)
@@ -40,7 +40,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         _settingsManager = settingsManager;
         _itemManager = itemManager;
         _database = database;
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _gameClientManager = gameClientManager;
         _questService = questService;
         _itemFactory = itemFactory;
@@ -145,7 +145,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                             return;
                         if (color.Length != 6)
                             return;
-                        _achievementManager.ProgressAchievement(session, "ACH_PetLover", 1);
+                        await _achievementService.ProgressAchievement(session, "ACH_PetLover", 1);
                     }
                     catch
                     {
@@ -216,9 +216,9 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
 
             if (receiverHabbo.Id != sender.Id)
             {
-                _achievementManager.ProgressAchievement(session, "ACH_GiftGiver", 1);
+                await _achievementService.ProgressAchievement(session, "ACH_GiftGiver", 1);
                 if (receiver != null)
-                    _achievementManager.ProgressAchievement(receiver, "ACH_GiftReceiver", 1);
+                    await _achievementService.ProgressAchievement(receiver, "ACH_GiftReceiver", 1);
                 await _questService.ProgressUserQuest(session, QuestType.GiftOthers);
             }
         }

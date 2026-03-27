@@ -36,6 +36,7 @@ public interface IGame
     [Obsolete("Use dependency injection instead.")] IQuestManager QuestManager { get; }
     [Obsolete("Use dependency injection instead.")] IQuestService QuestService { get; }
     [Obsolete("Use dependency injection instead.")] ICatalogService CatalogService { get; }
+    [Obsolete("Use dependency injection instead.")] IAchievementService AchievementService { get; }
 
     [Obsolete("Use dependency injection instead.")] IGroupManager GroupManager { get; }
 

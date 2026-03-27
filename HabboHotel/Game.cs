@@ -35,6 +35,7 @@ public class Game : IGame
     private readonly IQuestManager _questManager;
     private readonly IQuestService _questService;
     private readonly ICatalogService _catalogService;
+    private readonly IAchievementService _achievementService;
     private readonly IAchievementManager _achievementManager;
 
     private IBadgeManager _badgeManager;
@@ -65,6 +66,7 @@ public class Game : IGame
         IQuestManager questManager,
         IQuestService questService,
         ICatalogService catalogService,
+        IAchievementService achievementService,
         IAchievementManager achievementManager,
         ITalentTrackManager talentTrackManager,
         IGameDataManager gameDataManager,
@@ -88,6 +90,7 @@ public class Game : IGame
         _questManager = questManager;
         _questService = questService;
         _catalogService = catalogService;
+        _achievementService = achievementService;
         _achievementManager = achievementManager;
         _talentTrackManager = talentTrackManager;
         _gameDataManager = gameDataManager;
@@ -156,6 +159,7 @@ public class Game : IGame
     public IQuestManager QuestManager => _questManager;
     public IQuestService QuestService => _questService;
     public ICatalogService CatalogService => _catalogService;
+    public IAchievementService AchievementService => _achievementService;
     public IGroupManager GroupManager => _groupManager;
     public IChatManager ChatManager => _chatManager;
     public IGameDataManager GameDataManager => _gameDataManager;

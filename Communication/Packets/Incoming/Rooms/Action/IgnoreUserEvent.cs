@@ -1,35 +1,34 @@
-﻿using Plus.HabboHotel.Achievements;
+using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.GameClients;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Action;
 
 internal class IgnoreUserEvent : IPacketEvent
 {
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IGameClientManager _gameClientManager;
 
-    public IgnoreUserEvent(IAchievementManager achievementManager, IGameClientManager gameClientManager)
+    public IgnoreUserEvent(IAchievementService achievementService, IGameClientManager gameClientManager)
     {
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _gameClientManager = gameClientManager;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        if (!habbo.InRoom)
-            return Task.CompletedTask;
+        if (habbo?.InRoom != true)
+            return;
         var room = habbo.CurrentRoom;
         if (room == null)
-            return Task.CompletedTask;
+            return;
         var username = packet.ReadString();
         var player = _gameClientManager.GetClientByUsername(username)?.GetHabbo();
         if (player == null || (player.Permissions?.HasRight("mod_tool") ?? false))
-            return Task.CompletedTask;
+            return;
         if (habbo.IgnoresComponent?.IsIgnored(player.Id) == true)
-            return Task.CompletedTask;
+            return;
         habbo.IgnoresComponent?.Ignore(player.Id);
-        _achievementManager.ProgressAchievement(session, "ACH_SelfModIgnoreSeen", 1);
-        return Task.CompletedTask;
+        await _achievementService.ProgressAchievement(session, "ACH_SelfModIgnoreSeen", 1);
     }
 }

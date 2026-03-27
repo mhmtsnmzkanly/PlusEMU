@@ -27,7 +27,7 @@ internal class CatalogService : ICatalogService
     private readonly IVoucherManager _voucherManager;
     private readonly IDatabase _database;
     private readonly ISettingsManager _settingsManager;
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IItemDataManager _itemManager;
     private readonly IBadgeManager _badgeManager;
     private readonly IItemFactory _itemFactory;
@@ -37,7 +37,7 @@ internal class CatalogService : ICatalogService
         IVoucherManager voucherManager,
         IDatabase database,
         ISettingsManager settingsManager,
-        IAchievementManager achievementManager,
+        IAchievementService achievementService,
         IItemDataManager itemManager,
         IBadgeManager badgeManager,
         IItemFactory itemFactory,
@@ -47,7 +47,7 @@ internal class CatalogService : ICatalogService
         _voucherManager = voucherManager;
         _database = database;
         _settingsManager = settingsManager;
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _itemManager = itemManager;
         _badgeManager = badgeManager;
         _itemFactory = itemFactory;
@@ -141,7 +141,7 @@ internal class CatalogService : ICatalogService
             case InteractionType.Pet:
                 var bits = extraData.Split('\n');
                 if (bits.Length < 3 || !PetUtility.CheckPetName(bits[0]) || bits[1].Length > 2 || bits[2].Length != 6) return;
-                _achievementManager.ProgressAchievement(session, "ACH_PetLover", 1);
+                await _achievementService.ProgressAchievement(session, "ACH_PetLover", 1);
                 break;
             case InteractionType.Floor:
             case InteractionType.Wallpaper:

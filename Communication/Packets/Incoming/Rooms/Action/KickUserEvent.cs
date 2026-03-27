@@ -1,41 +1,40 @@
-﻿using Plus.HabboHotel.Achievements;
+using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.GameClients;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Action;
 
 internal class KickUserEvent : IPacketEvent
 {
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
 
-    public KickUserEvent(IAchievementManager achievementManager)
+    public KickUserEvent(IAchievementService achievementService)
     {
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         var room = habbo?.CurrentRoom;
         if (room == null)
-            return Task.CompletedTask;
+            return;
         if (!room.CheckRights(session) && room.WhoCanKick != 2 && room.Group == null)
-            return Task.CompletedTask;
+            return;
         if (room.Group != null && !room.CheckRights(session, false, true))
-            return Task.CompletedTask;
+            return;
         var userId = packet.ReadInt();
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
         if (user == null || user.IsBot)
-            return Task.CompletedTask;
+            return;
 
         //Cannot kick owner or moderators.
         var targetClient = user.GetClient();
         var targetHabbo = targetClient?.GetHabbo();
         if (targetClient == null || targetHabbo == null)
-            return Task.CompletedTask;
+            return;
         if (room.CheckRights(targetClient, true) || (targetHabbo.Permissions?.HasRight("mod_tool") ?? false))
-            return Task.CompletedTask;
+            return;
         room.GetRoomUserManager().RemoveUserFromRoom(targetClient, true, true);
-        _achievementManager.ProgressAchievement(session, "ACH_SelfModKickSeen", 1);
-        return Task.CompletedTask;
+        await _achievementService.ProgressAchievement(session, "ACH_SelfModKickSeen", 1);
     }
 }

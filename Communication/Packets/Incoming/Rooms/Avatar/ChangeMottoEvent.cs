@@ -12,14 +12,14 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Avatar;
 internal class ChangeMottoEvent : IPacketEvent
 {
     private readonly IWordFilterManager _wordFilterManager;
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IQuestService _questService;
     private readonly IDatabase _database;
 
-    public ChangeMottoEvent(IWordFilterManager wordFilterManager, IAchievementManager achievementManager, IQuestService questService, IDatabase database)
+    public ChangeMottoEvent(IWordFilterManager wordFilterManager, IAchievementService achievementService, IQuestService questService, IDatabase database)
     {
         _wordFilterManager = wordFilterManager;
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _questService = questService;
         _database = database;
     }
@@ -40,7 +40,7 @@ internal class ChangeMottoEvent : IPacketEvent
         using var db = _database.Connection();
         db.Execute("UPDATE `users` SET `motto` = @motto WHERE `id` = @userId LIMIT 1", new { motto = newMotto, userId = habbo.Id });
         await _questService.ProgressUserQuest(session, QuestType.ProfileChangeMotto);
-        _achievementManager.ProgressAchievement(session, "ACH_Motto", 1);
+        await _achievementService.ProgressAchievement(session, "ACH_Motto", 1);
         if (habbo.InRoom)
         {
             var room = habbo.CurrentRoom;

@@ -19,7 +19,7 @@ internal class RoomAccessService : IRoomAccessService
     private readonly ICacheManager _cacheManager;
     private readonly IDatabase _database;
     private readonly IGameClientManager _clientManager;
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IRoomManager _roomManager;
     private readonly INavigatorManager _navigatorManager;
 
@@ -28,7 +28,7 @@ internal class RoomAccessService : IRoomAccessService
         ICacheManager cacheManager,
         IDatabase database,
         IGameClientManager clientManager,
-        IAchievementManager achievementManager,
+        IAchievementService achievementService,
         IRoomManager roomManager,
         INavigatorManager navigatorManager)
     {
@@ -36,7 +36,7 @@ internal class RoomAccessService : IRoomAccessService
         _cacheManager = cacheManager;
         _database = database;
         _clientManager = clientManager;
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _roomManager = roomManager;
         _navigatorManager = navigatorManager;
     }
@@ -229,15 +229,14 @@ internal class RoomAccessService : IRoomAccessService
         return Task.CompletedTask;
     }
 
-    public Task GetRoomFilterList(GameClient session)
+    public async Task GetRoomFilterList(GameClient session)
     {
         var room = session.GetHabbo()?.CurrentRoom;
         if (room == null || !room.CheckRights(session))
-            return Task.CompletedTask;
+            return;
 
         session.Send(new GetRoomFilterListComposer(room));
-        _achievementManager.ProgressAchievement(session, "ACH_SelfModRoomFilterSeen", 1);
-        return Task.CompletedTask;
+        await _achievementService.ProgressAchievement(session, "ACH_SelfModRoomFilterSeen", 1);
     }
 
     public Task ModifyRoomFilterList(GameClient session, bool added, string word)

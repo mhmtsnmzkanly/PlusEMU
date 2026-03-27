@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Navigator;
+using Plus.Communication.Packets.Outgoing.Navigator;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Session;
 using Plus.Communication.Packets.Outgoing.Users;
@@ -18,15 +18,15 @@ internal class ChangeUserNameEvent : IPacketEvent
     private readonly IUserDataFactory _userDataFactory;
     private readonly IGameClientManager _clientManager;
     private readonly IRoomManager _roomManager;
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IDatabase _database;
 
-    public ChangeUserNameEvent(IUserDataFactory userDataFactory, IGameClientManager clientManager, IRoomManager roomManager, IAchievementManager achievementManager, IDatabase database)
+    public ChangeUserNameEvent(IUserDataFactory userDataFactory, IGameClientManager clientManager, IRoomManager roomManager, IAchievementService achievementService, IDatabase database)
     {
         _userDataFactory = userDataFactory;
         _clientManager = clientManager;
         _roomManager = roomManager;
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _database = database;
     }
 
@@ -94,9 +94,8 @@ internal class ChangeUserNameEvent : IPacketEvent
             ownRooms.OwnerName = newName;
             ownRooms.SendPacket(new RoomInfoUpdatedComposer(ownRooms.Id));
         }
-        _achievementManager.ProgressAchievement(session, "ACH_Name", 1);
+        await _achievementService.ProgressAchievement(session, "ACH_Name", 1);
         session.Send(new RoomForwardComposer(room.Id));
-        return;
     }
 
     private static bool CanChangeName(Habbo habbo)

@@ -42,6 +42,7 @@ These packet-heavy domains were already moved into dedicated services:
 - Pets / bots — `HabboHotel/Rooms/AI/RoomCreatureService.cs`
 - Catalog — `HabboHotel/Catalog/CatalogService.cs`
 - Quests — `HabboHotel/Quests/QuestService.cs`
+- Achievements — `HabboHotel/Achievements/AchievementService.cs` (Phase 1, 2, 3 complete)
 
 ## Completed Legacy DB Wrapper Migration
 
@@ -182,4 +183,10 @@ Verify no remaining legacy usage (should return empty):
 
 ```bash
 grep -r "GetQueryReactor" --include="*.cs" -l | grep -v "Database/"
+```
+
+Verify no remaining legacy AchievementManager usage (should return only commented lines):
+
+```bash
+grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | grep -v "IAchievementManager" | grep -v "AchievementManager.cs" | grep -v "AchievementService.cs"
 ```

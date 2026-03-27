@@ -238,8 +238,8 @@ public class BattleBanzai
                 {
                     if (UnixTimestamp.GetNow() - _timestarted > 5)
                     {
-                        PlusEnvironment.Game.AchievementManager.ProgressAchievement(user.GetClient(), "ACH_BattleBallTilesLocked", user.LockedTilesCount);
-                        PlusEnvironment.Game.AchievementManager.ProgressAchievement(user.GetClient(), "ACH_BattleBallPlayer", 1);
+                        _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(user.GetClient(), "ACH_BattleBallTilesLocked", user.LockedTilesCount);
+                        _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(user.GetClient(), "ACH_BattleBallPlayer", 1);
                     }
                 }
                 if (winners == Team.Blue)
@@ -247,7 +247,7 @@ public class BattleBanzai
                     if (user.CurrentEffect == 35)
                     {
                         if (UnixTimestamp.GetNow() - _timestarted > 5)
-                            PlusEnvironment.Game.AchievementManager.ProgressAchievement(user.GetClient(), "ACH_BattleBallWinner", 1);
+                            _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(user.GetClient(), "ACH_BattleBallWinner", 1);
                         _room.SendPacket(new ActionComposer(user.VirtualId, 1));
                     }
                 }
@@ -256,7 +256,7 @@ public class BattleBanzai
                     if (user.CurrentEffect == 33)
                     {
                         if (UnixTimestamp.GetNow() - _timestarted > 5)
-                            PlusEnvironment.Game.AchievementManager.ProgressAchievement(user.GetClient(), "ACH_BattleBallWinner", 1);
+                            _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(user.GetClient(), "ACH_BattleBallWinner", 1);
                         _room.SendPacket(new ActionComposer(user.VirtualId, 1));
                     }
                 }
@@ -265,7 +265,7 @@ public class BattleBanzai
                     if (user.CurrentEffect == 34)
                     {
                         if (UnixTimestamp.GetNow() - _timestarted > 5)
-                            PlusEnvironment.Game.AchievementManager.ProgressAchievement(user.GetClient(), "ACH_BattleBallWinner", 1);
+                            _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(user.GetClient(), "ACH_BattleBallWinner", 1);
                         _room.SendPacket(new ActionComposer(user.VirtualId, 1));
                     }
                 }
@@ -274,7 +274,7 @@ public class BattleBanzai
                     if (user.CurrentEffect == 36)
                     {
                         if (UnixTimestamp.GetNow() - _timestarted > 5)
-                            PlusEnvironment.Game.AchievementManager.ProgressAchievement(user.GetClient(), "ACH_BattleBallWinner", 1);
+                            _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(user.GetClient(), "ACH_BattleBallWinner", 1);
                         _room.SendPacket(new ActionComposer(user.VirtualId, 1));
                     }
                 }

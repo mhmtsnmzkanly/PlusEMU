@@ -13,14 +13,14 @@ namespace Plus.Communication.Packets.Incoming.Users;
 internal class UpdateFigureDataEvent : IPacketEvent
 {
     private readonly IFigureDataManager _figureManager;
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IQuestService _questService;
     private readonly IDatabase _database;
 
-    public UpdateFigureDataEvent(IFigureDataManager figureDataManager, IAchievementManager achievementManager, IQuestService questService, IDatabase database)
+    public UpdateFigureDataEvent(IFigureDataManager figureDataManager, IAchievementService achievementService, IQuestService questService, IDatabase database)
     {
         _figureManager = figureDataManager;
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _questService = questService;
         _database = database;
     }
@@ -44,7 +44,7 @@ internal class UpdateFigureDataEvent : IPacketEvent
         using var db = _database.Connection();
         db.Execute("UPDATE `users` SET `look` = @look, `gender` = @gender WHERE `id` = @id LIMIT 1",
             new { look, gender, id = habbo.Id });
-        _achievementManager.ProgressAchievement(session, "ACH_AvatarLooks", 1);
+        await _achievementService.ProgressAchievement(session, "ACH_AvatarLooks", 1);
         session.Send(new AvatarAspectUpdateComposer(look, gender));
         if (habbo.Look.Contains("ha-1006")) await _questService.ProgressUserQuest(session, QuestType.WearHat);
         if (habbo.InRoom)

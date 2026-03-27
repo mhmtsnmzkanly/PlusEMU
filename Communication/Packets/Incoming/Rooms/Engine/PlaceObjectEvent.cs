@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Inventory.Furni;
+using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Rooms.Notifications;
 using Plus.Core.Settings;
 using Plus.HabboHotel.Achievements;
@@ -12,49 +12,49 @@ internal class PlaceObjectEvent : RoomPacketEvent
 {
     private readonly IRoomManager _roomManager;
     private readonly ISettingsManager _settingsManager;
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
 
-    public PlaceObjectEvent(IRoomManager roomManager, ISettingsManager settingsManager, IAchievementManager achievementManager)
+    public PlaceObjectEvent(IRoomManager roomManager, ISettingsManager settingsManager, IAchievementService achievementService)
     {
         _roomManager = roomManager;
         _settingsManager = settingsManager;
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
     }
 
     /// TODO @80O: Unfuck this mess
-    public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
+    public override async Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         var furniture = habbo?.Inventory?.Furniture;
         if (habbo?.Permissions == null || furniture == null)
-            return Task.CompletedTask;
+            return;
 
         var rawData = packet.ReadString();
         var data = rawData.Split(' ');
         if (!uint.TryParse(data[0], out var itemId))
-            return Task.CompletedTask;
+            return;
         var hasRights = room.CheckRights(session, false, true);
         if (!hasRights)
         {
             session.Send(new RoomNotificationComposer("furni_placement_error", "message", "${room.error.cant_set_not_owner}"));
-            return Task.CompletedTask;
+            return;
         }
         if (room.GetRoomItemHandler().GetWallAndFloor.Count() > Convert.ToInt32(_settingsManager.TryGetValue("room.item.placement_limit")))
         {
             session.SendNotification($"You cannot have more than {Convert.ToInt32(_settingsManager.TryGetValue("room.item.placement_limit"))} items in a room!");
-            return Task.CompletedTask;
+            return;
         }
         var inventoryItem = furniture.GetItem(itemId);
         if (inventoryItem == null)
-            return Task.CompletedTask;
+            return;
         var item = inventoryItem.ToRoomObject();
         if (item == null)
-            return Task.CompletedTask;
+            return;
 
         if (item.Definition.InteractionType == InteractionType.Exchange && room.OwnerId != habbo.Id && !habbo.Permissions.HasRight("room_item_place_exchange_anywhere"))
         {
             session.SendNotification("You cannot place exchange items in other people's rooms!");
-            return Task.CompletedTask;
+            return;
         }
 
         //TODO: Make neat.
@@ -66,7 +66,7 @@ internal class PlaceObjectEvent : RoomPacketEvent
                 if (moodData != null && room.GetRoomItemHandler().GetItem(moodData.ItemId) != null)
                 {
                     session.SendNotification("You can only have one background moodlight per room!");
-                    return Task.CompletedTask;
+                    return;
                 }
                 break;
             }
@@ -76,7 +76,7 @@ internal class PlaceObjectEvent : RoomPacketEvent
                 if (tonerData != null && room.GetRoomItemHandler().GetItem(tonerData.ItemId) != null)
                 {
                     session.SendNotification("You can only have one background toner per room!");
-                    return Task.CompletedTask;
+                    return;
                 }
                 break;
             }
@@ -85,7 +85,7 @@ internal class PlaceObjectEvent : RoomPacketEvent
                 if (room.GetRoomItemHandler().HopperCount > 0)
                 {
                     session.SendNotification("You can only have one hopper per room!");
-                    return Task.CompletedTask;
+                    return;
                 }
                 break;
             }
@@ -99,16 +99,16 @@ internal class PlaceObjectEvent : RoomPacketEvent
         if (!item.IsWallItem)
         {
             if (data.Length < 4)
-                return Task.CompletedTask;
-            if (!int.TryParse(data[1], out var x)) return Task.CompletedTask;
-            if (!int.TryParse(data[2], out var y)) return Task.CompletedTask;
-            if (!int.TryParse(data[3], out var rotation)) return Task.CompletedTask;
+                return;
+            if (!int.TryParse(data[1], out var x)) return;
+            if (!int.TryParse(data[2], out var y)) return;
+            if (!int.TryParse(data[3], out var rotation)) return;
             if (room.GetRoomItemHandler().SetFloorItem(session, item, x, y, rotation, true, false, true))
             {
                 furniture.RemoveItem(itemId);
                 session.Send(new FurniListRemoveComposer(itemId));
                 if (habbo.Id == room.OwnerId)
-                    _achievementManager.ProgressAchievement(session, "ACH_RoomDecoFurniCount", 1);
+                    await _achievementService.ProgressAchievement(session, "ACH_RoomDecoFurniCount", 1);
                 if (item.IsWired)
                 {
                     try
@@ -139,7 +139,7 @@ internal class PlaceObjectEvent : RoomPacketEvent
                         furniture.RemoveItem(itemId);
                         session.Send(new FurniListRemoveComposer(itemId));
                         if (habbo.Id == room.OwnerId)
-                            _achievementManager.ProgressAchievement(session, "ACH_RoomDecoFurniCount", 1);
+                            await _achievementService.ProgressAchievement(session, "ACH_RoomDecoFurniCount", 1);
                     }
                 }
                 catch
@@ -150,6 +150,5 @@ internal class PlaceObjectEvent : RoomPacketEvent
             else
                 session.Send(new RoomNotificationComposer("furni_placement_error", "message", "${room.error.cant_set_item}"));
         }
-        return Task.CompletedTask;
     }
 }

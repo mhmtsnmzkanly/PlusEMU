@@ -1,38 +1,38 @@
-﻿using Plus.HabboHotel.Achievements;
+using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.GameClients;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Action;
 
 internal class BanUserEvent : IPacketEvent
 {
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
 
-    public BanUserEvent(IAchievementManager achievementManager)
+    public BanUserEvent(IAchievementService achievementService)
     {
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         var room = habbo?.CurrentRoom;
         if (room == null)
-            return Task.CompletedTask;
+            return;
         if (room.WhoCanBan == 0 && !room.CheckRights(session, true) && room.Group == null || room.WhoCanBan == 1 && !room.CheckRights(session) && room.Group == null ||
             room.Group != null && !room.CheckRights(session, false, true))
-            return Task.CompletedTask;
+            return;
         var userId = packet.ReadInt();
         packet.ReadInt(); //roomId
         var r = packet.ReadString();
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(Convert.ToInt32(userId));
         if (user == null || user.IsBot)
-            return Task.CompletedTask;
+            return;
         if (room.OwnerId == userId)
-            return Task.CompletedTask;
+            return;
         var targetClient = user.GetClient();
         var targetHabbo = targetClient?.GetHabbo();
         if (targetHabbo == null || (targetHabbo.Permissions?.HasRight("mod_tool") ?? false))
-            return Task.CompletedTask;
+            return;
         long time = 0;
         if (r.ToLower().Contains("hour"))
             time = 3600;
@@ -41,7 +41,6 @@ internal class BanUserEvent : IPacketEvent
         else if (r.ToLower().Contains("perm"))
             time = 78892200;
         room.GetBans().Ban(user, time);
-        _achievementManager.ProgressAchievement(session, "ACH_SelfModBanSeen", 1);
-        return Task.CompletedTask;
+        await _achievementService.ProgressAchievement(session, "ACH_SelfModBanSeen", 1);
     }
 }

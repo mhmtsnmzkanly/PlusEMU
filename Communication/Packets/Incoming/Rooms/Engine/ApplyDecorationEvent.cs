@@ -13,13 +13,13 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
 
 internal class ApplyDecorationEvent : RoomPacketEvent
 {
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IQuestService _questService;
     private readonly IDatabase _database;
 
-    public ApplyDecorationEvent(IAchievementManager achievementManager, IQuestService questService, IDatabase database)
+    public ApplyDecorationEvent(IAchievementService achievementService, IQuestService questService, IDatabase database)
     {
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _questService = questService;
         _database = database;
     }
@@ -46,22 +46,22 @@ internal class ApplyDecorationEvent : RoomPacketEvent
             case "floor": 
                 room.Floor = data; 
                 await _questService.ProgressUserQuest(session, QuestType.FurniDecoFloor); 
-                _achievementManager.ProgressAchievement(session, "ACH_RoomDecoFloor", 1); 
+                await _achievementService.ProgressAchievement(session, "ACH_RoomDecoFloor", 1); 
                 break;
             case "wallpaper": 
                 room.Wallpaper = data; 
                 await _questService.ProgressUserQuest(session, QuestType.FurniDecoWall); 
-                _achievementManager.ProgressAchievement(session, "ACH_RoomDecoWallpaper", 1); 
+                await _achievementService.ProgressAchievement(session, "ACH_RoomDecoWallpaper", 1); 
                 break;
             case "landscape": 
                 room.Landscape = data; 
-                _achievementManager.ProgressAchievement(session, "ACH_RoomDecoLandscape", 1); 
+                await _achievementService.ProgressAchievement(session, "ACH_RoomDecoLandscape", 1); 
                 break;
         }
         using var db = _database.Connection();
         // decorationKey is validated against enum values above (floor/wallpaper/landscape only) — column name is safe
         db.Execute($"UPDATE `rooms` SET `{decorationKey}` = @extradata WHERE `id` = @roomId LIMIT 1",
-            new { extradata = item.ExtraData, roomId = room.RoomId });
+            new { extradata = data, roomId = room.RoomId });
         db.Execute("DELETE FROM `items` WHERE `id` = @id LIMIT 1", new { id = item.Id });
         furniture.RemoveItem(item.Id);
         session.Send(new FurniListRemoveComposer(item.Id));

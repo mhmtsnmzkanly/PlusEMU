@@ -47,7 +47,7 @@ internal class RoomCreatureService : IRoomCreatureService
     private readonly ISettingsManager _settingsManager;
     private readonly IGameClientManager _clientManager;
     private readonly IDatabase _database;
-    private readonly IAchievementManager _achievementManager;
+    private readonly IAchievementService _achievementService;
     private readonly IQuestService _questService;
     private readonly IPetLocale _petLocale;
     private readonly IItemDataManager _itemDataManager;
@@ -59,7 +59,7 @@ internal class RoomCreatureService : IRoomCreatureService
         ILogger<RoomCreatureService> logger,
         IGameClientManager clientManager,
         IDatabase database,
-        IAchievementManager achievementManager,
+        IAchievementService achievementService,
         IQuestService questService,
         IPetLocale petLocale,
         IItemDataManager itemDataManager,
@@ -70,7 +70,7 @@ internal class RoomCreatureService : IRoomCreatureService
         _logger = logger;
         _clientManager = clientManager;
         _database = database;
-        _achievementManager = achievementManager;
+        _achievementService = achievementService;
         _questService = questService;
         _petLocale = petLocale;
         _itemDataManager = itemDataManager;
@@ -230,8 +230,8 @@ internal class RoomCreatureService : IRoomCreatureService
             }
 
             await _questService.ProgressUserQuest(session, QuestType.SocialRespect);
-            _achievementManager.ProgressAchievement(session, "ACH_RespectGiven", 1);
-            _achievementManager.ProgressAchievement(targetClient!, "ACH_RespectEarned", 1);
+            await _achievementService.ProgressAchievement(session, "ACH_RespectGiven", 1);
+            await _achievementService.ProgressAchievement(targetClient!, "ACH_RespectEarned", 1);
             habbo.HabboStats.DailyPetRespectPoints -= 1;
             habbo.HabboStats.RespectGiven += 1;
             targetHabbo.HabboStats.Respect += 1;
@@ -247,7 +247,7 @@ internal class RoomCreatureService : IRoomCreatureService
             return;
 
         habbo.HabboStats.DailyPetRespectPoints -= 1;
-        _achievementManager.ProgressAchievement(session, "ACH_PetRespectGiver", 1);
+        await _achievementService.ProgressAchievement(session, "ACH_PetRespectGiver", 1);
         thisUser.CarryItemId = 999999999;
         thisUser.CarryTimer = 5;
         pet.PetData.OnRespect();
