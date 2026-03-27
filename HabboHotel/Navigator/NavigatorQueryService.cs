@@ -10,6 +10,7 @@ internal class NavigatorQueryService : INavigatorQueryService
 {
     private readonly IDatabase _database;
     private readonly IRoomManager _roomManager;
+    private readonly IRoomFactory _roomFactory;
     private readonly IGroupManager _groupManager;
 
     private sealed class UserIdRow
@@ -17,10 +18,11 @@ internal class NavigatorQueryService : INavigatorQueryService
         public int Id { get; init; }
     }
 
-    public NavigatorQueryService(IDatabase database, IRoomManager roomManager, IGroupManager groupManager)
+    public NavigatorQueryService(IDatabase database, IRoomManager roomManager, IRoomFactory roomFactory, IGroupManager groupManager)
     {
         _database = database;
         _roomManager = roomManager;
+        _roomFactory = roomFactory;
         _groupManager = groupManager;
     }
 
@@ -38,7 +40,7 @@ internal class NavigatorQueryService : INavigatorQueryService
             NavigatorCategoryType.Popular => _roomManager.GetPopularRooms(-1, limit).Cast<RoomData>().ToList(),
             NavigatorCategoryType.Recommended => _roomManager.GetRecommendedRooms(limit).Cast<RoomData>().ToList(),
             NavigatorCategoryType.Category => _roomManager.GetRoomsByCategory(result.Id, limit).Cast<RoomData>().ToList(),
-            NavigatorCategoryType.MyRooms => RoomFactory.GetRoomsDataByOwnerSortByName(habbo.Id).OrderByDescending(x => x.UsersNow).ToList(),
+            NavigatorCategoryType.MyRooms => _roomFactory.GetRoomsDataByOwnerSortByName(habbo.Id).OrderByDescending(x => x.UsersNow).ToList(),
             NavigatorCategoryType.MyFavourites => GetFavouriteRooms(habbo),
             NavigatorCategoryType.MyGroups => GetMyGroups(habbo.Id, limit),
             NavigatorCategoryType.MyFriendsRooms => GetMyFriendsRooms(habbo),
@@ -107,9 +109,9 @@ internal class NavigatorQueryService : INavigatorQueryService
                 roomId = (uint)intRoomId;
             else
                 continue;
-            if (!RoomFactory.TryGetData(roomId, out var data))
+            if (!_roomFactory.TryGetData(roomId, out var data))
                 continue;
-            if (!favourites.Contains(data))
+            if (data != null && !favourites.Contains(data))
                 favourites.Add(data);
         }
 
@@ -121,9 +123,9 @@ internal class NavigatorQueryService : INavigatorQueryService
         var myGroups = new List<RoomData>();
         foreach (var group in _groupManager.GetGroupsForUser(userId).ToList())
         {
-            if (!RoomFactory.TryGetData((uint)group.RoomId, out var data))
+            if (!_roomFactory.TryGetData((uint)group.RoomId, out var data))
                 continue;
-            if (!myGroups.Contains(data))
+            if (data != null && !myGroups.Contains(data))
                 myGroups.Add(data);
         }
 
@@ -156,14 +158,14 @@ internal class NavigatorQueryService : INavigatorQueryService
         return ResolveRooms(roomIds);
     }
 
-    private static ICollection<RoomData> ResolveRooms(IEnumerable<uint> roomIds)
+    private ICollection<RoomData> ResolveRooms(IEnumerable<uint> roomIds)
     {
         var results = new List<RoomData>();
         foreach (var roomId in roomIds)
         {
-            if (!RoomFactory.TryGetData(roomId, out var data))
+            if (!_roomFactory.TryGetData(roomId, out var data))
                 continue;
-            if (!results.Contains(data))
+            if (data != null && !results.Contains(data))
                 results.Add(data);
         }
 

@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 using Plus.HabboHotel.Rooms;
@@ -33,15 +33,17 @@ public sealed class NavigatorManager : INavigatorManager
     }
 
     private readonly IDatabase _database;
+    private readonly IRoomFactory _roomFactory;
     private readonly ILogger<NavigatorManager> _logger;
 
     private readonly Dictionary<uint, FeaturedRoom> _featuredRooms;
     private readonly Dictionary<int, SearchResultList> _searchResultLists;
     private readonly Dictionary<int, TopLevelItem> _topLevelItems;
 
-    public NavigatorManager(IDatabase database, ILogger<NavigatorManager> logger)
+    public NavigatorManager(IDatabase database, IRoomFactory roomFactory, ILogger<NavigatorManager> logger)
     {
         _database = database;
+        _roomFactory = roomFactory;
         _logger = logger;
         _topLevelItems = new();
         _searchResultLists = new();
@@ -171,7 +173,7 @@ public sealed class NavigatorManager : INavigatorManager
     {
         habbo.HomeRoom = roomId;
 
-        if (!RoomFactory.TryGetData(roomId, out _))
+        if (!_roomFactory.TryGetData(roomId, out _))
             return;
 
         using var connection = _database.Connection();

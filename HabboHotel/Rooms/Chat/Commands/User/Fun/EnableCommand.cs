@@ -12,7 +12,7 @@ internal class EnableCommand : IChatCommand
 
     public string Description => "Gives you the ability to set an effect on your user!";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var currentRoom = habbo?.CurrentRoom;

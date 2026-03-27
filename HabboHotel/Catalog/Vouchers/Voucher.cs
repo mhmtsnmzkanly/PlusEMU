@@ -1,5 +1,3 @@
-using Dapper;
-
 namespace Plus.HabboHotel.Catalog.Vouchers;
 
 public class Voucher
@@ -23,12 +21,8 @@ public class Voucher
 
     public int MaxUses { get; set; }
 
-    public void UpdateUses()
+    public void IncrementUses()
     {
-        CurrentUses += 1;
-        using var db = PlusEnvironment.DatabaseManager.Connection();
-        db.Execute(
-            "UPDATE `catalog_vouchers` SET `current_uses` = `current_uses` + 1 WHERE `voucher` = @code LIMIT 1",
-            new { code = Code });
+        CurrentUses++;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text;
 using Plus.Communication.Packets.Outgoing.Notifications;
 using Plus.Database;
@@ -83,7 +83,7 @@ public class CommandManager : ICommandManager
 
             if (command is IChatCommand chatCommand)
             {
-                chatCommand.Execute(session, currentRoom, parameters);
+                await chatCommand.Execute(session, currentRoom, parameters);
             }
             else if (command is ITargetChatCommand targetChatCommand)
             {

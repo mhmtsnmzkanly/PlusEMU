@@ -1,27 +1,28 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Rooms.Chat.Logs;
-using Plus.HabboHotel.Users;
 using Plus.Utilities;
 
 namespace Plus.Communication.Packets.Outgoing.Moderation;
 
 public class ModeratorUserChatlogComposer : IServerPacket
 {
-    private readonly Habbo _habbo;
+    private readonly int _userId;
+    private readonly string _username;
     private readonly List<KeyValuePair<RoomData, List<ChatlogEntry>>> _chatlogs;
     public uint MessageId => ServerPacketHeader.ModeratorUserChatlogComposer;
 
-    public ModeratorUserChatlogComposer(Habbo habbo, List<KeyValuePair<RoomData, List<ChatlogEntry>>> chatlogs)
+    public ModeratorUserChatlogComposer(int userId, string username, List<KeyValuePair<RoomData, List<ChatlogEntry>>> chatlogs)
     {
-        _habbo = habbo;
+        _userId = userId;
+        _username = username;
         _chatlogs = chatlogs;
     }
 
     public void Compose(IOutgoingPacket packet)
     {
-        packet.WriteInteger(_habbo.Id);
-        packet.WriteString(_habbo.Username);
+        packet.WriteInteger(_userId);
+        packet.WriteString(_username);
         packet.WriteInteger(_chatlogs.Count); // Room Visits Count
         foreach (var chatlog in _chatlogs)
         {
@@ -44,7 +45,7 @@ public class ModeratorUserChatlogComposer : IServerPacket
                 packet.WriteInteger(entry.PlayerId); // UserId of message
                 packet.WriteString(username); // Username of message
                 packet.WriteString(!string.IsNullOrEmpty(entry.Message) ? entry.Message : "** user sent a blank message **"); // Message
-                packet.WriteBoolean(_habbo.Id == entry.PlayerId);
+                packet.WriteBoolean(_userId == entry.PlayerId);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Rooms.Chat.Logs;
 using Plus.Utilities;
@@ -7,11 +7,11 @@ namespace Plus.Communication.Packets.Outgoing.Moderation;
 
 public class ModeratorRoomChatlogComposer : IServerPacket
 {
-    private readonly Room _room;
+    private readonly RoomData _room;
     private readonly ICollection<ChatlogEntry> _chats;
     public uint MessageId => ServerPacketHeader.ModeratorRoomChatlogComposer;
 
-    public ModeratorRoomChatlogComposer(Room room, ICollection<ChatlogEntry> chats)
+    public ModeratorRoomChatlogComposer(RoomData room, ICollection<ChatlogEntry> chats)
     {
         _room = room;
         _chats = chats;

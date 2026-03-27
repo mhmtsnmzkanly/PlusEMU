@@ -27,7 +27,7 @@ public class ItemFactory : IItemFactory
             UniqueSeries = limitedStack,
             GroupId = groupId
         };
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         item.Id = Convert.ToUInt32(db.ExecuteScalar<long>(
             "INSERT INTO `items` (`base_item`,`user_id`,`room_id`,`x`,`y`,`z`,`wall_pos`,`rot`,`extra_data`,`limited_number`,`limited_stack`) VALUES (@did,@uid,0,0,0,0,'',0,@extra,@lnum,@lstack); SELECT LAST_INSERT_ID();",
             new { did = definition.Id, uid = habbo.Id, extra = extraData, lnum = limitedNumber, lstack = limitedStack }));
@@ -48,7 +48,7 @@ public class ItemFactory : IItemFactory
             UniqueNumber = limitedNumber,
             UniqueSeries = limitedStack
         };
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         db.Execute(
             "INSERT INTO `items` (`id`,`base_item`,`user_id`,`room_id`,`x`,`y`,`z`,`wall_pos`,`rot`,`extra_data`,`limited_number`,`limited_stack`) VALUES (@id,@did,@uid,0,0,0,0,'',0,@extra,@lnum,@lstack)",
             new { id = itemId, did = definition.Id, uid = habbo.Id, extra = extraData, lnum = limitedNumber, lstack = limitedStack });
@@ -66,7 +66,7 @@ public class ItemFactory : IItemFactory
             UniqueNumber = limitedNumber,
             UniqueSeries = limitedStack,
         };
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         db.Execute(
             "INSERT INTO `items` (`id`,`base_item`,`user_id`,`room_id`,`x`,`y`,`z`,`wall_pos`,`rot`,`extra_data`,`limited_number`,`limited_stack`) VALUES (@id,@did,@uid,0,0,0,0,'',0,@extra,@lnum,@lstack)",
             new { id = itemId, did = definition.Id, uid = habbo.Id, extra = extraData, lnum = limitedNumber, lstack = limitedStack });
@@ -77,7 +77,7 @@ public class ItemFactory : IItemFactory
     {
         if (definition == null) throw new InvalidOperationException("Data cannot be null.");
         var items = new List<Item>();
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         for (var i = 0; i < amount; i++)
         {
             var newId = Convert.ToUInt32(db.ExecuteScalar<long>(
@@ -100,7 +100,7 @@ public class ItemFactory : IItemFactory
 
     public List<Item> CreateTeleporterItems(ItemDefinition definition, Habbo habbo, int groupId = 0)
     {
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         var item1Id = Convert.ToUInt32(db.ExecuteScalar<long>(
             "INSERT INTO `items` (`base_item`,`user_id`,`room_id`,`x`,`y`,`z`,`wall_pos`,`rot`,`extra_data`) VALUES (@did,@uid,0,0,0,0,'',0,''); SELECT LAST_INSERT_ID();",
             new { did = definition.Id, uid = habbo.Id }));
@@ -117,7 +117,7 @@ public class ItemFactory : IItemFactory
 
     public void CreateMoodlightData(Item item)
     {
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         db.Execute(
             "INSERT INTO `room_items_moodlight` (`id`, `enabled`, `current_preset`, `preset_one`, `preset_two`, `preset_three`) VALUES (@id, '0', 1, @preset, @preset, @preset)",
             new { id = item.Id, preset = "#000000,255,0" });
@@ -125,7 +125,7 @@ public class ItemFactory : IItemFactory
 
     public void CreateTonerData(Item item)
     {
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         db.Execute(
             "INSERT INTO `room_items_toner` (`id`, `data1`, `data2`, `data3`, `enabled`) VALUES (@id, 0, 0, 0, '0')",
             new { id = item.Id });

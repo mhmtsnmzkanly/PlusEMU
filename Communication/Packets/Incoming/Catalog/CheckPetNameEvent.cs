@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Catalog;
+using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.HabboHotel.Catalog.Utilities;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms.Chat.Filter;
@@ -8,10 +8,12 @@ namespace Plus.Communication.Packets.Incoming.Catalog;
 public class CheckPetNameEvent : IPacketEvent
 {
     private readonly IWordFilterManager _wordFilterManager;
+    private readonly IPetUtility _petUtility;
 
-    public CheckPetNameEvent(IWordFilterManager wordFilterManager)
+    public CheckPetNameEvent(IWordFilterManager wordFilterManager, IPetUtility petUtility)
     {
         _wordFilterManager = wordFilterManager;
+        _petUtility = petUtility;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
@@ -27,7 +29,7 @@ public class CheckPetNameEvent : IPacketEvent
             session.Send(new CheckPetNameComposer(1, "15"));
             return Task.CompletedTask;
         }
-        if (!PetUtility.CheckPetName(petName))
+        if (!_petUtility.CheckPetName(petName))
         {
             session.Send(new CheckPetNameComposer(3, string.Empty));
             return Task.CompletedTask;

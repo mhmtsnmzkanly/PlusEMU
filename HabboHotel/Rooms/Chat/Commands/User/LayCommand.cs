@@ -11,7 +11,7 @@ internal class LayCommand : IChatCommand
 
     public string Description => "Allows you to lay down in the room, without needing a bed.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         if (habbo?.Effects == null)

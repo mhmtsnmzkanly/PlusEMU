@@ -26,6 +26,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
     private readonly IGameClientManager _gameClientManager;
     private readonly IQuestService _questService;
     private readonly IItemFactory _itemFactory;
+    private readonly IPetUtility _petUtility;
 
     public PurchaseFromCatalogAsGiftEvent(ICatalogManager catalogManager,
         ISettingsManager settingsManager,
@@ -34,7 +35,8 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         IAchievementService achievementService,
         IGameClientManager gameClientManager,
         IQuestService questService,
-        IItemFactory itemFactory)
+        IItemFactory itemFactory,
+        IPetUtility petUtility)
     {
         _catalogManager = catalogManager;
         _settingsManager = settingsManager;
@@ -44,6 +46,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         _gameClientManager = gameClientManager;
         _questService = questService;
         _itemFactory = itemFactory;
+        _petUtility = petUtility;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -119,13 +122,13 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
             return;
         var extra_data = giftUser + Convert.ToChar(5) + giftMessage + Convert.ToChar(5) + sender.Id + Convert.ToChar(5) + item.Definition.Id + Convert.ToChar(5) + spriteId + Convert.ToChar(5) + ribbon +
                  Convert.ToChar(5) + colour;
-        int newItemId;
+        int newItemId = 0;
         using (var connection = _database.Connection())
         {
             //Insert the dummy item.
-            var InsertQuery = await connection.ExecuteAsync("INSERT INTO `items` (`base_item`,`user_id`,`extra_data`) VALUES (@baseId, @habboId, @extra_data)",
+            var InsertId = await connection.ExecuteScalarAsync<int>("INSERT INTO `items` (`base_item`,`user_id`,`extra_data`) VALUES (@baseId, @habboId, @extra_data); SELECT LAST_INSERT_ID();",
                 new { baseId = presentData.Id, habboId = receiverHabbo.Id, extra_data = extra_data });
-            newItemId = Convert.ToInt32(InsertQuery);
+            newItemId = InsertId;
             string? itemExtraData = null;
             switch (item.Definition.InteractionType)
             {
@@ -139,7 +142,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                         var petName = bits[0];
                         var race = bits[1];
                         var color = bits[2];
-                        if (PetUtility.CheckPetName(petName))
+                        if (!_petUtility.CheckPetName(petName))
                             return;
                         if (race.Length > 2)
                             return;

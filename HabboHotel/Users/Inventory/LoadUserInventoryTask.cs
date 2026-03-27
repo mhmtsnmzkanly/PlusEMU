@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.Badges;
+using Plus.HabboHotel.Badges;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Users.Inventory.Bots;
 using Plus.HabboHotel.Users.Inventory.Pets;
@@ -11,17 +11,19 @@ internal class LoadUserInventoryTask : IUserDataLoadingTask
     private readonly IBadgeManager _badgeManager;
     private readonly IPetLoader _petLoader;
     private readonly IBotLoader _botLoader;
+    private readonly IItemLoader _itemLoader;
 
-    public LoadUserInventoryTask(IBadgeManager badgeManager, IPetLoader petLoader, IBotLoader botLoader)
+    public LoadUserInventoryTask(IBadgeManager badgeManager, IPetLoader petLoader, IBotLoader botLoader, IItemLoader itemLoader)
     {
         _badgeManager = badgeManager;
         _petLoader = petLoader;
         _botLoader = botLoader;
+        _itemLoader = itemLoader;
     }
 
     public async Task Load(Habbo habbo)
     {
-        var items = ItemLoader.GetItemsForUser((uint)habbo.Id);
+        var items = _itemLoader.GetItemsForUser((uint)habbo.Id);
         habbo.Inventory = new()
         {
             Badges = new((await _badgeManager.LoadBadgesForHabbo(habbo.Id)).ToDictionary(badge => badge.Code)),

@@ -11,7 +11,7 @@ internal class SuperFastwalkCommand : IChatCommand
 
     public string Description => "Gives you the ability to walk very very fast.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)

@@ -11,7 +11,7 @@ internal class StandCommand : IChatCommand
 
     public string Description => "Allows you to stand up if not stood already.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var username = habbo?.Username;

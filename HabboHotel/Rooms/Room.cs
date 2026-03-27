@@ -1,6 +1,7 @@
-﻿using Dapper;
+using Dapper;
 using Plus.Communication.Packets;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
+using Plus.Database;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Session;
 using Plus.Core;
@@ -98,6 +99,9 @@ public class Room : RoomData
     public bool IsCrashed;
     public DateTime LastRegeneration;
     public DateTime LastTimerReset;
+    private readonly IGameClientManager _clientManager;
+    private readonly IDatabase _database;
+    private readonly IItemLoader _itemLoader;
     public bool MDisposed;
     public MoodlightData? MoodlightData;
 
@@ -113,9 +117,12 @@ public class Room : RoomData
 
     public List<int> UsersWithRights = new();
 
-    public Room(RoomData data)
+    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader)
         : base(data)
     {
+        _clientManager = clientManager;
+        _database = database;
+        _itemLoader = itemLoader;
         IsLagging = 0;
         Unloaded = false;
         IdleTime = 0;
@@ -123,8 +130,8 @@ public class Room : RoomData
         MutedUsers = new();
         _tents = new();
         _gamemap = new(this, data.Model);
-        _roomItemHandling = new(this);
-        _roomUserManager = new(this);
+        _roomItemHandling = new(this, _itemLoader);
+        _roomUserManager = new(this, clientManager, database);
         _filterComponent = new(this);
         _wiredComponent = new(this);
         _bansComponent = new(this);
@@ -155,7 +162,7 @@ public class Room : RoomData
 
     public RoomItemHandling GetRoomItemHandler()
     {
-        if (_roomItemHandling == null) _roomItemHandling = new(this);
+        if (_roomItemHandling == null) _roomItemHandling = new(this, _itemLoader);
         return _roomItemHandling;
     }
 

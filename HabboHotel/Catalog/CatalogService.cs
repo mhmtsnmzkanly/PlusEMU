@@ -31,6 +31,8 @@ internal class CatalogService : ICatalogService
     private readonly IItemDataManager _itemManager;
     private readonly IBadgeManager _badgeManager;
     private readonly IItemFactory _itemFactory;
+    private readonly IBotUtility _botUtility;
+    private readonly IPetUtility _petUtility;
     private readonly ILogger<CatalogService> _logger;
 
     public CatalogService(ICatalogManager catalogManager,
@@ -41,6 +43,8 @@ internal class CatalogService : ICatalogService
         IItemDataManager itemManager,
         IBadgeManager badgeManager,
         IItemFactory itemFactory,
+        IBotUtility botUtility,
+        IPetUtility petUtility,
         ILogger<CatalogService> logger)
     {
         _catalogManager = catalogManager;
@@ -51,6 +55,8 @@ internal class CatalogService : ICatalogService
         _itemManager = itemManager;
         _badgeManager = badgeManager;
         _itemFactory = itemFactory;
+        _botUtility = botUtility;
+        _petUtility = petUtility;
         _logger = logger;
     }
 
@@ -85,7 +91,7 @@ internal class CatalogService : ICatalogService
         connection.Execute("INSERT INTO `user_vouchers` (`user_id`, `voucher_id`) VALUES (@userId, @voucherCode)",
             new { userId = habbo.Id, voucherCode = code });
 
-        voucher.UpdateUses();
+        _voucherManager.UpdateUses(voucher);
 
         if (voucher.Type == VoucherType.Credit)
         {
@@ -140,7 +146,7 @@ internal class CatalogService : ICatalogService
         {
             case InteractionType.Pet:
                 var bits = extraData.Split('\n');
-                if (bits.Length < 3 || !PetUtility.CheckPetName(bits[0]) || bits[1].Length > 2 || bits[2].Length != 6) return;
+                if (bits.Length < 3 || !_petUtility.CheckPetName(bits[0]) || bits[1].Length > 2 || bits[2].Length != 6) return;
                 await _achievementService.ProgressAchievement(session, "ACH_PetLover", 1);
                 break;
             case InteractionType.Floor:
@@ -207,7 +213,7 @@ internal class CatalogService : ICatalogService
                 session.Send(new AvatarEffectAddedComposer(item.Definition.SpriteId, 3600));
                 break;
             case "r": // Bot
-                var bot = BotUtility.CreateBot(item.Definition, habbo.Id);
+                var bot = _botUtility.CreateBot(item.Definition, habbo.Id);
                 if (bot != null) { inventory.Bots.AddBot(bot); session.Send(new BotInventoryComposer(inventory.Bots.Bots.Values.ToList())); session.Send(new FurniListNotificationComposer((uint)bot.Id, 5)); }
                 break;
             case "b": // Badge
@@ -216,7 +222,7 @@ internal class CatalogService : ICatalogService
                 break;
             case "p": // Pet
                 var petData = extraData.Split('\n');
-                var pet = PetUtility.CreatePet(habbo.Id, petData[0], item.Definition.BehaviourData, petData[1], petData[2]);
+                var pet = _petUtility.CreatePet(habbo.Id, petData[0], item.Definition.BehaviourData, petData[1], petData[2]);
                 if (pet != null && inventory.Pets.AddPet(pet))
                 {
                     session.Send(new FurniListNotificationComposer((uint)pet.PetId, 3));

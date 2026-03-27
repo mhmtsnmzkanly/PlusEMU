@@ -23,6 +23,7 @@ internal class GroupService : IGroupService
 {
     private readonly IGroupManager _groupManager;
     private readonly IRoomManager _roomManager;
+    private readonly IRoomFactory _roomFactory;
     private readonly IDatabase _database;
     private readonly ICacheManager _cacheManager;
     private readonly ISettingsManager _settingsManager;
@@ -32,6 +33,7 @@ internal class GroupService : IGroupService
     public GroupService(
         IGroupManager groupManager,
         IRoomManager roomManager,
+        IRoomFactory roomFactory,
         IDatabase database,
         ICacheManager cacheManager,
         ISettingsManager settingsManager,
@@ -40,6 +42,7 @@ internal class GroupService : IGroupService
     {
         _groupManager = groupManager;
         _roomManager = roomManager;
+        _roomFactory = roomFactory;
         _database = database;
         _cacheManager = cacheManager;
         _settingsManager = settingsManager;
@@ -47,92 +50,102 @@ internal class GroupService : IGroupService
         _gameClientManager = gameClientManager;
     }
 
-    public Task JoinGroup(GameClient session, int groupId)
+    public async Task JoinGroup(GameClient session, int groupId)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)
-            return Task.CompletedTask;
+            return;
 
         if (!_groupManager.TryGetGroup(groupId, out var group))
-            return Task.CompletedTask;
+            return;
         if (group.IsMember(habbo.Id) || group.IsAdmin(habbo.Id) || group.HasRequest(habbo.Id) && group.Type == GroupType.Private)
-            return Task.CompletedTask;
+            return;
 
         var groups = _groupManager.GetGroupsForUser(habbo.Id);
         if (groups.Count >= 1500)
         {
             session.Send(new BroadcastMessageAlertComposer("Oops, it appears that you've hit the group membership limit! You can only join upto 1,500 groups."));
-            return Task.CompletedTask;
+            return;
         }
 
         group.AddMember(habbo.Id);
-        if (group.Type == GroupType.Locked)
+
+        using (var connection = _database.Connection())
         {
-            var groupAdmins = _gameClientManager.GetClients
-                .Where(client => client?.GetHabbo() != null && group.IsAdmin(client.GetHabbo()!.Id))
-                .Cast<GameClient>()
-                .ToList();
+            if (group.Type == GroupType.Locked)
+            {
+                await connection.ExecuteAsync("INSERT INTO `group_requests` (user_id, group_id) VALUES (@uid, @gid)", new { gid = group.Id, uid = habbo.Id });
+                var groupAdmins = _gameClientManager.GetClients
+                    .Where(client => client?.GetHabbo() != null && group.IsAdmin(client.GetHabbo()!.Id))
+                    .Cast<GameClient>()
+                    .ToList();
 
-            foreach (var client in groupAdmins)
-                client.Send(new GroupMembershipRequestedComposer(group.Id, habbo, 3));
+                foreach (var client in groupAdmins)
+                    client.Send(new GroupMembershipRequestedComposer(group.Id, habbo, 3));
 
-            session.Send(new GroupInfoComposer(group, session));
-            return Task.CompletedTask;
+                session.Send(new GroupInfoComposer(group, session, _roomFactory));
+                return;
+            }
+
+            await connection.ExecuteAsync("INSERT INTO `group_memberships` (user_id, group_id) VALUES (@uid, @gid)", new { gid = group.Id, uid = habbo.Id });
         }
 
         session.Send(new GroupFurniConfigComposer(_groupManager.GetGroupsForUser(habbo.Id)));
-        session.Send(new GroupInfoComposer(group, session));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory));
         var currentRoom = habbo.CurrentRoom;
         if (currentRoom != null)
             currentRoom.SendPacket(new RefreshFavouriteGroupComposer(habbo.Id));
         else
             session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
-
-        return Task.CompletedTask;
     }
 
-    public Task AcceptMembership(GameClient session, int groupId, int userId)
+    public async Task AcceptMembership(GameClient session, int groupId, int userId)
     {
         var habbo = session.GetHabbo();
         var permissions = habbo?.Permissions;
         if (habbo == null || permissions == null)
-            return Task.CompletedTask;
+            return;
 
         if (!_groupManager.TryGetGroup(groupId, out var group))
-            return Task.CompletedTask;
+            return;
         if (habbo.Id != group.CreatorId && !group.IsAdmin(habbo.Id) && !permissions.HasRight("fuse_group_accept_any"))
-            return Task.CompletedTask;
+            return;
         if (!group.HasRequest(userId))
-            return Task.CompletedTask;
+            return;
 
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
             session.SendNotification("Oops, an error occurred whilst finding this user.");
-            return Task.CompletedTask;
+            return;
         }
 
         group.HandleRequest(userId, true);
+        using var connection = _database.Connection();
+        await connection.ExecuteAsync("INSERT INTO group_memberships (user_id, group_id) VALUES (@uid, @gid)", new { gid = group.Id, uid = userId });
+        await connection.ExecuteAsync("DELETE FROM group_requests WHERE user_id=@uid AND group_id=@gid LIMIT 1", new { gid = group.Id, uid = userId });
+
         session.Send(new GroupMemberUpdatedComposer(groupId, targetHabbo, 4));
-        return Task.CompletedTask;
     }
 
-    public Task DeclineMembership(GameClient session, int groupId, int userId)
+    public async Task DeclineMembership(GameClient session, int groupId, int userId)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)
-            return Task.CompletedTask;
+            return;
 
         if (!_groupManager.TryGetGroup(groupId, out var group))
-            return Task.CompletedTask;
+            return;
         if (habbo.Id != group.CreatorId && !group.IsAdmin(habbo.Id))
-            return Task.CompletedTask;
+            return;
         if (!group.HasRequest(userId))
-            return Task.CompletedTask;
+            return;
 
         group.HandleRequest(userId, false);
+        using var connection = _database.Connection();
+        await connection.ExecuteAsync("DELETE FROM group_requests WHERE user_id=@uid AND group_id=@gid LIMIT 1", new { gid = group.Id, uid = userId });
+
         session.Send(new UnknownGroupComposer(group.Id, userId));
-        return Task.CompletedTask;
     }
 
     public async Task SetFavourite(GameClient session, int groupId)
@@ -166,14 +179,19 @@ internal class GroupService : IGroupService
         }
     }
 
-    public Task RemoveFavourite(GameClient session)
+    public async Task RemoveFavourite(GameClient session)
     {
         var habbo = session.GetHabbo();
         var habboStats = habbo?.HabboStats;
         if (habbo == null || habboStats == null)
-            return Task.CompletedTask;
+            return;
 
         habboStats.FavouriteGroupId = 0;
+        using var connection = _database.Connection();
+        await connection.ExecuteAsync(
+            "UPDATE `user_statistics` SET `groupid` = 0 WHERE `id` = @userId LIMIT 1",
+            new { userId = habbo.Id });
+
         var currentRoom = habbo.CurrentRoom;
         if (habbo.InRoom && currentRoom != null)
         {
@@ -186,56 +204,58 @@ internal class GroupService : IGroupService
         {
             session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
         }
-
-        return Task.CompletedTask;
     }
 
-    public Task GiveAdminRights(GameClient session, int groupId, int userId)
+    public async Task GiveAdminRights(GameClient session, int groupId, int userId)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)
-            return Task.CompletedTask;
+            return;
 
         if (!_groupManager.TryGetGroup(groupId, out var group))
-            return Task.CompletedTask;
+            return;
         if (habbo.Id != group.CreatorId || !group.IsMember(userId))
-            return Task.CompletedTask;
+            return;
 
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
             session.SendNotification("Oops, an error occurred whilst finding this user.");
-            return Task.CompletedTask;
+            return;
         }
 
         group.MakeAdmin(userId);
+        using var connection = _database.Connection();
+        await connection.ExecuteAsync("UPDATE group_memberships SET `rank` = '1' WHERE `user_id` = @uid AND `group_id` = @gid LIMIT 1", new { gid = group.Id, uid = userId });
+
         UpdateGroupAdminRoomPermissions(group, userId, true);
         session.Send(new GroupMemberUpdatedComposer(groupId, targetHabbo, 1));
-        return Task.CompletedTask;
     }
 
-    public Task TakeAdminRights(GameClient session, int groupId, int userId)
+    public async Task TakeAdminRights(GameClient session, int groupId, int userId)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)
-            return Task.CompletedTask;
+            return;
 
         if (!_groupManager.TryGetGroup(groupId, out var group))
-            return Task.CompletedTask;
+            return;
         if (habbo.Id != group.CreatorId || !group.IsMember(userId))
-            return Task.CompletedTask;
+            return;
 
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
             session.SendNotification("Oops, an error occurred whilst finding this user.");
-            return Task.CompletedTask;
+            return;
         }
 
         group.TakeAdmin(userId);
+        using var connection = _database.Connection();
+        await connection.ExecuteAsync("UPDATE group_memberships SET `rank` = '0' WHERE user_id = @uid AND group_id = @gid", new { gid = group.Id, uid = userId });
+
         UpdateGroupAdminRoomPermissions(group, userId, false);
         session.Send(new GroupMemberUpdatedComposer(groupId, targetHabbo, 2));
-        return Task.CompletedTask;
     }
 
     public async Task RemoveMember(GameClient session, int groupId, int userId)
@@ -268,6 +288,9 @@ internal class GroupService : IGroupService
             group.TakeAdmin(userId);
         if (group.IsMember(userId))
             group.DeleteMember(userId);
+
+        using var connection = _database.Connection();
+        await connection.ExecuteAsync("DELETE FROM group_memberships WHERE user_id=@uid AND group_id=@gid LIMIT 1", new { gid = group.Id, uid = userId });
 
         var members = new List<CachedUser>();
         foreach (var id in group.GetAllMembers)
@@ -306,14 +329,15 @@ internal class GroupService : IGroupService
             _ => GroupType.Open
         };
 
+        using var connection = _database.Connection();
         if (group.Type != GroupType.Locked && group.GetRequests.Count > 0)
         {
             foreach (var userId in group.GetRequests.ToList())
                 group.HandleRequest(userId, false);
             group.ClearRequests();
+            await connection.ExecuteAsync("DELETE FROM group_requests WHERE group_id=@gid", new { gid = group.Id });
         }
 
-        using var connection = _database.Connection();
         await connection.ExecuteAsync(
             "UPDATE `groups` SET `state` = @groupState, `admindeco` = @adminDeco WHERE `id` = @groupId LIMIT 1",
             new
@@ -346,7 +370,7 @@ internal class GroupService : IGroupService
             }
         }
 
-        session.Send(new GroupInfoComposer(group, session));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory));
     }
 
     public async Task UpdateIdentity(GameClient session, int groupId, string name, string description)
@@ -369,7 +393,7 @@ internal class GroupService : IGroupService
 
         group.Name = filteredName;
         group.Description = filteredDescription;
-        session.Send(new GroupInfoComposer(group, session));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory));
     }
 
     public async Task UpdateBadge(GameClient session, int groupId, IReadOnlyCollection<(int baseId, int firstPart, int secondPart)> parts)
@@ -397,7 +421,7 @@ internal class GroupService : IGroupService
             "UPDATE `groups` SET `badge` = @badge WHERE `id` = @groupId LIMIT 1",
             new { badge = group.Badge, groupId = group.Id });
 
-        session.Send(new GroupInfoComposer(group, session));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory));
     }
 
     public async Task UpdateColours(GameClient session, int groupId, int mainColour, int secondaryColour)
@@ -418,7 +442,7 @@ internal class GroupService : IGroupService
 
         group.Colour1 = mainColour;
         group.Colour2 = secondaryColour;
-        session.Send(new GroupInfoComposer(group, session));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory));
 
         var currentRoom = habbo.CurrentRoom;
         if (currentRoom == null)
@@ -464,7 +488,7 @@ internal class GroupService : IGroupService
 
         if (!_roomManager.TryGetRoom(group.RoomId, out var room))
             return;
-        if (!RoomFactory.TryGetData(group.RoomId, out _))
+        if (!_roomFactory.TryGetData(group.RoomId, out _))
             return;
 
         room.Group = null;
@@ -497,7 +521,7 @@ internal class GroupService : IGroupService
             return Task.CompletedTask;
         }
 
-        if (!RoomFactory.TryGetData(roomId, out var room) || room == null || room.OwnerId != habbo.Id || room.Group != null)
+        if (!_roomFactory.TryGetData(roomId, out var room) || room == null || room.OwnerId != habbo.Id || room.Group != null)
             return Task.CompletedTask;
 
         var badge = string.Empty;
@@ -518,9 +542,11 @@ internal class GroupService : IGroupService
         }
 
         session.Send(new PurchaseOkComposer());
-        room.Group = group;
-        if (habbo.CurrentRoom != room)
-            session.Send(new RoomForwardComposer(room.Id));
+        if (_roomManager.TryGetRoom(roomId, out var roomInstance))
+            roomInstance.Group = group;
+            
+        if (habbo.CurrentRoom?.Id != roomId)
+            session.Send(new RoomForwardComposer(roomId));
         session.Send(new NewGroupInfoComposer(roomId, group.Id));
         return Task.CompletedTask;
     }
@@ -540,7 +566,7 @@ internal class GroupService : IGroupService
             "DELETE FROM `group_memberships` WHERE `group_id` = @groupId AND `user_id` = @userId",
             new { groupId = group.Id, userId });
 
-        session.Send(new GroupInfoComposer(group, session));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory));
         if (habbo.HabboStats?.FavouriteGroupId != group.Id)
             return;
 

@@ -1,7 +1,8 @@
-﻿namespace Plus.HabboHotel.Catalog.Vouchers;
+namespace Plus.HabboHotel.Catalog.Vouchers;
 
 public interface IVoucherManager
 {
     void Init();
     bool TryGetVoucher(string code, out Voucher? voucher);
+    void UpdateUses(Voucher voucher);
 }

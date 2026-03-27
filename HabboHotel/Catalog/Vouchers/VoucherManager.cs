@@ -33,4 +33,13 @@ public class VoucherManager : IVoucherManager
     }
 
     public bool TryGetVoucher(string code, out Voucher? voucher) => _vouchers.TryGetValue(code, out voucher);
+
+    public void UpdateUses(Voucher voucher)
+    {
+        voucher.IncrementUses();
+        using var db = _database.Connection();
+        db.Execute(
+            "UPDATE `catalog_vouchers` SET `current_uses` = `current_uses` + 1 WHERE `voucher` = @code LIMIT 1",
+            new { code = voucher.Code });
+    }
 }

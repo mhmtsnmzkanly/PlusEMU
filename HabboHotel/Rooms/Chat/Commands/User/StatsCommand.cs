@@ -12,7 +12,7 @@ internal class StatsCommand : IChatCommand
 
     public string Description => "View your current statistics.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         if (habbo?.HabboStats == null)

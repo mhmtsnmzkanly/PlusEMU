@@ -1,26 +1,27 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
-using Plus.HabboHotel.Users;
 using Plus.Utilities;
 
 namespace Plus.Communication.Packets.Outgoing.Moderation;
 
 public class ModeratorUserRoomVisitsComposer : IServerPacket
 {
-    private readonly Habbo _data;
+    private readonly int _userId;
+    private readonly string _username;
     private readonly Dictionary<double, RoomData> _visits;
     public uint MessageId => ServerPacketHeader.ModeratorUserRoomVisitsComposer;
 
-    public ModeratorUserRoomVisitsComposer(Habbo data, Dictionary<double, RoomData> visits)
+    public ModeratorUserRoomVisitsComposer(int userId, string username, Dictionary<double, RoomData> visits)
     {
-        _data = data;
+        _userId = userId;
+        _username = username;
         _visits = visits;
     }
 
     public void Compose(IOutgoingPacket packet)
     {
-        packet.WriteInteger(_data.Id);
-        packet.WriteString(_data.Username);
+        packet.WriteInteger(_userId);
+        packet.WriteString(_username);
         packet.WriteInteger(_visits.Count);
         foreach (var (key, roomData) in _visits)
         {

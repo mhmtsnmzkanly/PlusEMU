@@ -2,6 +2,7 @@ using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Bots;
 using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.Catalog;
+using Plus.HabboHotel.Catalog.Utilities;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Games;
 using Plus.HabboHotel.Groups;
@@ -44,6 +45,12 @@ public interface IGame
 
     [Obsolete("Use dependency injection instead.")] IGameDataManager GameDataManager { get; }
 
+    [Obsolete("Use dependency injection instead.")] IRoomService RoomService { get; }
+    [Obsolete("Use dependency injection instead.")] IRoomFactory RoomFactory { get; }
+    [Obsolete("Use dependency injection instead.")] IRoomAppender RoomAppender { get; }
+    [Obsolete("Use dependency injection instead.")] IItemService ItemService { get; }
+    [Obsolete("Use dependency injection instead.")] IBotUtility BotUtility { get; }
+    [Obsolete("Use dependency injection instead.")] IPetUtility PetUtility { get; }
     [Obsolete("Use dependency injection instead.")] IBotManager BotManager { get; }
 
     [Obsolete("Use dependency injection instead.")] ICacheManager CacheManager { get; }

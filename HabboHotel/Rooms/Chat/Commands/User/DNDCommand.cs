@@ -11,7 +11,7 @@ internal class DndCommand : IChatCommand
 
     public string Description => "Allows you to chose the option to enable or disable console messages.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)

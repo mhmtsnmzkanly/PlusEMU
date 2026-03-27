@@ -11,7 +11,7 @@ internal class DisableDiagonalCommand : IChatCommand
 
     public string Description => "Want to disable diagonal walking in your room? Type this command!";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         if (!room.CheckRights(session, true))
         {

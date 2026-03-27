@@ -11,7 +11,7 @@ internal class MoonwalkCommand : IChatCommand
 
     public string Description => "Wear the shoes of Michael Jackson.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)

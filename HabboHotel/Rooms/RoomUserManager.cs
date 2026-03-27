@@ -1,6 +1,7 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Plus.Communication.Packets.Outgoing.Handshake;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
+using Plus.Database;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Permissions;
 using Plus.Communication.Packets.Outgoing.Rooms.Session;
@@ -27,13 +28,17 @@ public class RoomUserManager
     private Room _room;
     private int _secondaryPrivateUserId;
     private ConcurrentDictionary<int, RoomUser> _users;
+    private readonly IGameClientManager _clientManager;
+    private readonly IDatabase _database;
 
     public int UserCount;
 
 
-    public RoomUserManager(Room room)
+    public RoomUserManager(Room room, IGameClientManager clientManager, IDatabase database)
     {
         _room = room;
+        _clientManager = clientManager;
+        _database = database;
         _users = new();
         _pets = new();
         _bots = new();
@@ -286,7 +291,7 @@ public class RoomUserManager
                         trade?.EndTrade(user.TradeId);
                 }
                 habbo.Messenger?.NotifyChangesToFriends();
-                using (var dbClient = PlusEnvironment.DatabaseManager.Connection())
+                using (var dbClient = _database.Connection())
                 {
                     dbClient.Execute("UPDATE user_roomvisits SET exit_timestamp = @exitTimestamp WHERE room_id = @roomId AND user_id = @userId ORDER BY exit_timestamp DESC LIMIT 1",
                         new
@@ -405,7 +410,7 @@ public class RoomUserManager
     {
         UserCount = count;
         _room.UsersNow = count;
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _database.Connection();
         connection.Execute("UPDATE `rooms` SET `users_now` = @count WHERE `id` = @roomId LIMIT 1", new { count = count, roomId = _room.RoomId });
     }
 
@@ -431,7 +436,7 @@ public class RoomUserManager
 
     public void UpdatePets()
     {
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _database.Connection();
         foreach (var pet in GetPets().ToList())
         {
             if (pet == null)
@@ -462,7 +467,7 @@ public class RoomUserManager
 
     private void UpdateBots()
     {
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _database.Connection();
         foreach (var user in GetRoomUsers().ToList())
         {
             if (user == null || !user.IsBot)
@@ -815,7 +820,7 @@ public class RoomUserManager
             }
             foreach (var userToRemove in toRemove.ToList())
             {
-                var client = PlusEnvironment.Game.ClientManager.GetClientByUserId(userToRemove.HabboId);
+                var client = _clientManager.GetClientByUserId(userToRemove.HabboId);
                 if (client != null)
                     RemoveUserFromRoom(client, true);
                 else
@@ -1063,7 +1068,7 @@ public class RoomUserManager
                                             habbo.IsTeleporting = true;
                                             habbo.TeleportingRoomId = teleRoomId;
                                             habbo.TeleporterId = linkedTele;
-                                            habbo.PrepareRoom(teleRoomId, "");
+                                            _ = PlusEnvironment.Game.RoomService.PrepareRoom(user.GetClient()!, teleRoomId, "");
                                         }
                                     }
                                     else if (_room.GetRoomItemHandler().GetItem(linkedTele) != null)
@@ -1175,7 +1180,7 @@ public class RoomUserManager
         UpdatePets();
         UpdateBots();
         _room.UsersNow = 0;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = _database.Connection())
         {
             connection.Execute("UPDATE `rooms` SET `users_now` = '0' WHERE `id` = @roomId LIMIT 1", new { roomId = _room.Id });
         }

@@ -11,7 +11,7 @@ internal class SetSpeedCommand : IChatCommand
 
     public string Description => "Set the speed of the rollers in the current room.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var currentRoom = habbo?.CurrentRoom;

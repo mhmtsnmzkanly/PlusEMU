@@ -1,11 +1,11 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User.Fun;
 
 internal class FollowCommand : ITargetChatCommand
 {
-    private readonly IGameClientManager _gameClientManager;
+    private readonly IRoomService _roomService;
     public string Key => "follow";
     public string PermissionRequired => "command_follow";
 
@@ -15,42 +15,46 @@ internal class FollowCommand : ITargetChatCommand
 
     public bool MustBeInSameRoom => false;
 
-    public FollowCommand(IGameClientManager gameClientManager)
+    public FollowCommand(IRoomService roomService)
     {
-        _gameClientManager = gameClientManager;
+        _roomService = roomService;
     }
 
-    public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
+    public async Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var permissions = habbo?.Permissions;
         if (habbo == null)
-            return Task.CompletedTask;
+            return;
 
         if (target.CurrentRoom == habbo.CurrentRoom)
         {
             session.SendWhisper($"Hey you, open your eyes! {target.Username} is in this room!");
-            return Task.CompletedTask;
+            return;
         }
+
         if (target.Username == habbo.Username)
         {
             session.SendWhisper("* Windows shutdown noise *");
-            return Task.CompletedTask;
+            return;
         }
+
         if (!target.InRoom)
         {
             session.SendWhisper("That user currently isn't in a room!");
-            return Task.CompletedTask;
+            return;
         }
+
         var targetRoom = target.CurrentRoom;
         if (targetRoom == null)
-            return Task.CompletedTask;
+            return;
+
         if (targetRoom.Access != RoomAccess.Open && !(permissions?.HasRight("mod_tool") ?? false))
         {
             session.SendWhisper("Oops, the room that user is either locked, passworded or invisible. You cannot follow!");
-            return Task.CompletedTask;
+            return;
         }
-        habbo.PrepareRoom(targetRoom.RoomId, "");
-        return Task.CompletedTask;
+
+        await _roomService.PrepareRoom(session, targetRoom.RoomId, "");
     }
 }

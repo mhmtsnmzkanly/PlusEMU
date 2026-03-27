@@ -12,7 +12,7 @@ internal class DanceCommand : IChatCommand
 
     public string Description => "Too lazy to dance the proper way? Do it like this!";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var currentRoom = habbo?.CurrentRoom;

@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Plus.Communication.Packets.Incoming.Rooms;
 using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
@@ -15,12 +15,14 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
 {
     private readonly IDatabase _database;
     private readonly IItemDataManager _itemDataManager;
+    private readonly IPetUtility _petUtility;
     private readonly IItemFactory _itemFactory;
 
-    public CheckGnomeNameEvent(IDatabase database, IItemDataManager itemDataManager, IItemFactory itemFactory)
+    public CheckGnomeNameEvent(IDatabase database, IItemDataManager itemDataManager, IPetUtility petUtility, IItemFactory itemFactory)
     {
         _database = database;
         _itemDataManager = itemDataManager;
+        _petUtility = petUtility;
         _itemFactory = itemFactory;
     }
 
@@ -41,7 +43,7 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
             session.Send(new CheckGnomeNameComposer(petName, 1));
             return Task.CompletedTask;
         }
-        if (!PetUtility.CheckPetName(petName))
+        if (!_petUtility.CheckPetName(petName))
         {
             session.Send(new CheckGnomeNameComposer(petName, 1));
             return Task.CompletedTask;
@@ -62,7 +64,7 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
         session.Send(new CheckGnomeNameComposer(petName, 0));
 
         //Create the pet here.
-        var pet = PetUtility.CreatePet(habbo.Id, petName, 26, "30", "ffffff");
+        var pet = _petUtility.CreatePet(habbo.Id, petName, 26, "30", "ffffff");
         if (pet == null)
         {
             session.SendNotification("Oops, an error occoured. Please report this!");

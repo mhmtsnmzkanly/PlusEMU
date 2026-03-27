@@ -23,7 +23,7 @@ internal class UserInfoCommand : IChatCommand
         _gameClientManager = gameClientManager;
     }
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         if (parameters.Length == 1)
         {

@@ -11,7 +11,7 @@ internal class CarryCommand : IChatCommand
 
     public string Description => "Allows you to carry a hand item";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var itemId = 0;
         if (!int.TryParse(Convert.ToString(parameters[0]), out itemId))

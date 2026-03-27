@@ -11,7 +11,7 @@ internal class RegenMaps : IChatCommand
 
     public string Description => "Is the game map of your room broken? Fix it with this command!";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         if (!room.CheckRights(session, true))
         {

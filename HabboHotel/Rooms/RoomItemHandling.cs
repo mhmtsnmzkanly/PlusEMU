@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Drawing;
 using Dapper;
 using Plus.Communication.Packets;
@@ -15,7 +15,6 @@ namespace Plus.HabboHotel.Rooms;
 public class RoomItemHandling
 {
     private readonly ConcurrentDictionary<uint, Item> _floorItems;
-
     private readonly ConcurrentDictionary<uint, Item> _movedItems;
     private readonly List<uint> _rollerItemsMoved;
     private readonly List<IServerPacket> _rollerMessages;
@@ -24,16 +23,19 @@ public class RoomItemHandling
     private readonly List<int> _rollerUsersMoved;
     private readonly Room _room;
     private readonly ConcurrentDictionary<uint, Item> _wallItems;
+    private readonly IItemLoader _itemLoader;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
     private ConcurrentQueue<Item> _roomItemUpdateQueue;
 
     public int HopperCount;
+    public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room)
+    public RoomItemHandling(Room room, IItemLoader itemLoader)
     {
         _room = room;
+        _itemLoader = itemLoader;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -48,12 +50,8 @@ public class RoomItemHandling
         _roomItemUpdateQueue = new();
     }
 
-    public bool GotRollers { get; set; }
-
     public ICollection<Item> GetFloor => _floorItems.Values;
-
     public ICollection<Item> GetWall => _wallItems.Values;
-
     public IEnumerable<Item> GetWallAndFloor => _floorItems.Values.Concat(_wallItems.Values);
 
     public void TryAddRoller(uint itemId, Item roller)
@@ -105,7 +103,7 @@ public class RoomItemHandling
             _floorItems.Clear();
         if (_wallItems.Count > 0)
             _wallItems.Clear();
-        var items = ItemLoader.GetItemsForRoom(_room.Id, _room);
+        var items = _itemLoader.GetItemsForRoom(_room.Id, _room);
         foreach (var item in items.ToList())
         {
             if (item == null)

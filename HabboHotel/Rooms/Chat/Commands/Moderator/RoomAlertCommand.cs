@@ -11,7 +11,7 @@ internal class RoomAlertCommand : IChatCommand
 
     public string Description => "Send a message to the users in this room.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         if (habbo?.Permissions == null)

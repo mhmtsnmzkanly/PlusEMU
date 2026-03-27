@@ -11,7 +11,7 @@ internal class RoomMuteCommand : IChatCommand
 
     public string Description => "Mute the room with a reason.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var username = habbo?.Username;

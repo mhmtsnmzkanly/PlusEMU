@@ -12,7 +12,7 @@ internal class MassDanceCommand : IChatCommand
 
     public string Description => "Force everyone in the room to dance to a dance of your choice.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         if (!parameters.Any())
         {

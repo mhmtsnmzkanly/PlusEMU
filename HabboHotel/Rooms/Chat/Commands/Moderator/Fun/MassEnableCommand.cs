@@ -11,7 +11,7 @@ internal class MassEnableCommand : IChatCommand
 
     public string Description => "Give every user in the room a specific enable ID.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)

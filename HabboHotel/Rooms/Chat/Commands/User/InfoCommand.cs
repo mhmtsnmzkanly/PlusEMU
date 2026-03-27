@@ -19,7 +19,7 @@ internal class InfoCommand : IChatCommand
         _gameClientManager = gameClientManager;
         _roomManager = roomManager;
     }
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var uptime = DateTime.Now - PlusEnvironment.ServerStarted;
         var onlineUsers = _gameClientManager.Count;

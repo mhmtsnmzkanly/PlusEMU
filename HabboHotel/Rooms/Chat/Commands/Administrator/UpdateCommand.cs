@@ -93,7 +93,7 @@ internal class UpdateCommand : IChatCommand
         _chatStyleManager = chatStyleManager;
     }
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var permissions = habbo?.Permissions;
@@ -114,7 +114,7 @@ internal class UpdateCommand : IChatCommand
                     session.SendWhisper("Oops, you do not have the 'command_update_catalog' permission.");
                     break;
                 }
-                _catalogManager.Init();
+                await _catalogManager.Init();
                 _clientManager.SendPacket(new CatalogUpdatedComposer());
                 session.SendWhisper("Catalogue successfully updated.");
                 break;
@@ -150,7 +150,7 @@ internal class UpdateCommand : IChatCommand
                     session.SendWhisper("Oops, you do not have the 'command_update_promotions' permission.");
                     break;
                 }
-                _landingViewManager.Reload();
+                await _landingViewManager.Reload();
                 session.SendWhisper("Landing view promotions successfully updated.");
                 break;
             }
@@ -216,7 +216,7 @@ internal class UpdateCommand : IChatCommand
                     session.SendWhisper("Oops, you do not have the 'command_update_configuration' permission.");
                     break;
                 }
-                _settingsManager.Reload();
+                await _settingsManager.Reload();
                 session.SendWhisper("Server configuration successfully updated.");
                 break;
             }
@@ -249,7 +249,7 @@ internal class UpdateCommand : IChatCommand
                     session.SendWhisper("Oops, you do not have the 'command_update_achievements' permission.");
                     break;
                 }
-                _achievementManager.Init();
+                await _achievementManager.Init();
                 session.SendWhisper("Achievement definitions bans successfully updated.");
                 break;
             }
@@ -307,7 +307,7 @@ internal class UpdateCommand : IChatCommand
                     session.SendWhisper("Oops, you do not have the 'command_update_locale' permission.");
                     break;
                 }
-                PlusEnvironment.LanguageManager.Reload();
+                await PlusEnvironment.LanguageManager.Reload();
                 session.SendWhisper("Locale cache successfully updated.");
                 break;
             }
@@ -362,7 +362,7 @@ internal class UpdateCommand : IChatCommand
                     session.SendWhisper("Oops, you do not have the 'command_update_badge_definitions' permission.");
                     break;
                 }
-                _badgeManager.Init();
+                await _badgeManager.Init();
                 session.SendWhisper("Badge definitions successfully reloaded.");
                 break;
             }

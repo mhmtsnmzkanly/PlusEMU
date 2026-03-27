@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
@@ -36,6 +36,7 @@ public class GroupManager : IGroupManager
 
     private readonly ILogger<GroupManager> _logger;
     private readonly IDatabase _database;
+    private readonly IRoomFactory _roomFactory;
     private readonly Dictionary<int, GroupColours> _backgroundColours;
     private readonly List<GroupColours> _baseColours;
 
@@ -46,10 +47,11 @@ public class GroupManager : IGroupManager
     private readonly Dictionary<int, GroupColours> _symbolColours;
     private readonly List<GroupBadgeParts> _symbols;
 
-    public GroupManager(ILogger<GroupManager> logger, IDatabase database)
+    public GroupManager(ILogger<GroupManager> logger, IDatabase database, IRoomFactory roomFactory)
     {
         _logger = logger;
         _database = database;
+        _roomFactory = roomFactory;
         _groupLoadingSync = new();
         _groups = new();
         _bases = new();
@@ -149,6 +151,7 @@ public class GroupManager : IGroupManager
                     row.OwnerId,
                     row.Created, row.State, row.Colour1, row.Colour2, row.AdminDeco,
                     row.ForumEnabled == 1);
+                group.InitMembers(connection);
                 _groups.TryAdd(group.Id, group);
                 return true;
             }
@@ -178,8 +181,10 @@ public class GroupManager : IGroupManager
                 colour1 = group.Colour1,
                 colour2 = group.Colour2
             }));
-        group.AddMember(player.Id);
-        group.MakeAdmin(player.Id);
+
+        connection.Execute("INSERT INTO `group_memberships` (user_id, group_id, rank) VALUES (@uid, @gid, '1')", new { gid = group.Id, uid = player.Id });
+        group.InitMembers(connection);
+        
         if (!_groups.TryAdd(group.Id, group))
             return false;
         connection.Execute(

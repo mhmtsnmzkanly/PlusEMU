@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Data;
 using Dapper;
 using Microsoft.Extensions.Logging;
@@ -6,6 +6,8 @@ using Plus.Core;
 using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Items;
+using Plus.HabboHotel.Rooms;
 using Plus.Utilities;
 
 namespace Plus.HabboHotel.Rooms;
@@ -15,6 +17,9 @@ public class RoomManager : IRoomManager
     private readonly ILogger<RoomManager> _logger;
     private readonly IDatabase _database;
     private readonly ILanguageManager _languageManager;
+    private readonly IGameClientManager _clientManager;
+    private readonly IItemLoader _itemLoader;
+    private readonly IRoomFactory _roomFactory;
 
     private readonly object _roomLoadingSync;
 
@@ -25,14 +30,17 @@ public class RoomManager : IRoomManager
     private DateTime _cycleLastExecution;
 
 
-    public RoomManager(ILogger<RoomManager> logger, IDatabase database, ILanguageManager languageManager)
+    public RoomManager(ILogger<RoomManager> logger, IDatabase database, ILanguageManager languageManager, IGameClientManager clientManager, IItemLoader itemLoader, IRoomFactory roomFactory)
     {
         _logger = logger;
         _database = database;
         _languageManager = languageManager;
+        _clientManager = clientManager;
+        _itemLoader = itemLoader;
         _roomModels = new();
         _rooms = new();
         _roomLoadingSync = new();
+        _roomFactory = roomFactory;
     }
 
     public int Count => _rooms.Count;
@@ -168,12 +176,12 @@ public class RoomManager : IRoomManager
                 room = null!;
                 return false;
             }
-            if (!RoomFactory.TryGetData(roomId, out var data))
+            if (!_roomFactory.TryGetData(roomId, out var data))
             {
                 room = null!;
                 return false;
             }
-            var myInstance = new Room(data);
+            var myInstance = new Room(data, _clientManager, _database, _itemLoader);
             if (_rooms.TryAdd(roomId, myInstance))
             {
                 room = myInstance;

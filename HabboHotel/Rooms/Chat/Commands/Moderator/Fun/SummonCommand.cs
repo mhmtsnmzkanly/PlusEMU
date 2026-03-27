@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Session;
+using Plus.Communication.Packets.Outgoing.Rooms.Session;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Users;
 
@@ -6,7 +6,7 @@ namespace Plus.HabboHotel.Rooms.Chat.Commands.Moderator.Fun;
 
 internal class SummonCommand : ITargetChatCommand
 {
-    private readonly IGameClientManager _gameClientManager;
+    private readonly IRoomService _roomService;
     public string Key => "summon";
     public string PermissionRequired => "command_summon";
 
@@ -16,34 +16,32 @@ internal class SummonCommand : ITargetChatCommand
 
     public bool MustBeInSameRoom => false;
 
-    public SummonCommand(IGameClientManager gameClientManager)
+    public SummonCommand(IRoomService roomService)
     {
-        _gameClientManager = gameClientManager;
+        _roomService = roomService;
     }
 
-    public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
+    public async Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
-        var targetClient = target.Client;
-        if (currentRoom == null)
-            return Task.CompletedTask;
-
-        if (habbo == null)
-            return Task.CompletedTask;
+        if (habbo == null || target.Client == null)
+            return;
 
         if (target.Username == habbo.Username)
         {
             session.SendWhisper("Get a life.");
-            return Task.CompletedTask;
+            return;
         }
-        if (targetClient == null)
-            return Task.CompletedTask;
-        targetClient.SendNotification($"You have been summoned to {habbo.Username}!");
+
+        target.Client.SendNotification($"You have been summoned to {habbo.Username}!");
+        
         if (!target.InRoom)
-            targetClient.Send(new RoomForwardComposer(currentRoom.Id));
+        {
+            target.Client.Send(new RoomForwardComposer(room.Id));
+        }
         else
-            target.PrepareRoom(currentRoom.Id, "");
-        return Task.CompletedTask;
+        {
+            await _roomService.PrepareRoom(target.Client, room.Id, "");
+        }
     }
 }

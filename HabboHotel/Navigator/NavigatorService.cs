@@ -14,6 +14,8 @@ internal class NavigatorService : INavigatorService
     private readonly INavigatorManager _navigatorManager;
     private readonly INavigatorQueryService _navigatorQueryService;
     private readonly IRoomManager _roomManager;
+    private readonly IRoomFactory _roomFactory;
+    private readonly IRoomAppender _roomAppender;
     private readonly IWordFilterManager _wordFilterManager;
     private readonly IDatabase _database;
 
@@ -21,12 +23,16 @@ internal class NavigatorService : INavigatorService
         INavigatorManager navigatorManager,
         INavigatorQueryService navigatorQueryService,
         IRoomManager roomManager,
+        IRoomFactory roomFactory,
+        IRoomAppender roomAppender,
         IWordFilterManager wordFilterManager,
         IDatabase database)
     {
         _navigatorManager = navigatorManager;
         _navigatorQueryService = navigatorQueryService;
         _roomManager = roomManager;
+        _roomFactory = roomFactory;
+        _roomAppender = roomAppender;
         _wordFilterManager = wordFilterManager;
         _database = database;
     }
@@ -74,10 +80,10 @@ internal class NavigatorService : INavigatorService
 
     public Task GetGuestRoom(GameClient session, uint roomId, bool enter, bool forward)
     {
-        if (!RoomFactory.TryGetData(roomId, out var data))
+        if (!_roomFactory.TryGetData(roomId, out var data))
             return Task.CompletedTask;
 
-        session.Send(new GetGuestRoomResultComposer(session, data, enter, forward));
+        session.Send(new GetGuestRoomResultComposer(session, data!, enter, forward));
         return Task.CompletedTask;
     }
 
@@ -97,13 +103,13 @@ internal class NavigatorService : INavigatorService
                 categories = _navigatorManager.GetResultByIdentifier(category).ToList();
                 if (categories.Count > 0)
                 {
-                    session.Send(new NavigatorSearchResultSetComposer(category, search, categories, session, _navigatorQueryService, 2, 100));
+                    session.Send(new NavigatorSearchResultSetComposer(category, search, categories, session, _navigatorQueryService, _roomAppender, 2, 100));
                     return Task.CompletedTask;
                 }
             }
         }
 
-        session.Send(new NavigatorSearchResultSetComposer(category, search, categories, session, _navigatorQueryService));
+        session.Send(new NavigatorSearchResultSetComposer(category, search, categories, session, _navigatorQueryService, _roomAppender));
         return Task.CompletedTask;
     }
 
@@ -113,7 +119,7 @@ internal class NavigatorService : INavigatorService
         if (habbo == null)
             return Task.CompletedTask;
 
-        var rooms = RoomFactory.GetRoomsDataByOwnerSortByName(habbo.Id);
+        var rooms = _roomFactory.GetRoomsDataByOwnerSortByName(habbo.Id);
         if (rooms.Count >= 500)
         {
             session.Send(new CanCreateRoomComposer(true, 500));
@@ -152,7 +158,7 @@ internal class NavigatorService : INavigatorService
         if (habbo == null)
             return;
 
-        if (!RoomFactory.TryGetData(roomId, out var data) || data == null)
+        if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
             return;
 
         if (habbo.FavoriteRooms.Count >= 30 || habbo.FavoriteRooms.Contains(roomId))
@@ -191,9 +197,9 @@ internal class NavigatorService : INavigatorService
         var filteredName = _wordFilterManager.CheckMessage(name);
         var filteredDescription = _wordFilterManager.CheckMessage(description);
 
-        if (!RoomFactory.TryGetData(roomId, out var data))
+        if (!_roomFactory.TryGetData(roomId, out var data))
             return;
-        if (data.OwnerId != habbo.Id)
+        if (data!.OwnerId != habbo.Id)
             return;
         if (data.Promotion == null)
         {

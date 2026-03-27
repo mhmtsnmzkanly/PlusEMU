@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Notifications;
 using Plus.Core;
@@ -422,7 +422,7 @@ public class Item
                                         {
                                             habbo.IsHopping = true;
                                             habbo.HopperId = nextHopperId;
-                                            habbo.PrepareRoom(roomHopId, "");
+                                            _ = PlusEnvironment.Game.RoomService.PrepareRoom(user.GetClient()!, roomHopId, "");
                                             //User.GetClient().SendMessage(new RoomForwardComposer(RoomHopId));
                                             InteractingUser = 0;
                                         }
@@ -572,7 +572,7 @@ public class Item
                                                         habbo.IsTeleporting = true;
                                                         habbo.TeleportingRoomId = roomId;
                                                         habbo.TeleporterId = teleId;
-                                                        habbo.PrepareRoom(roomId, "");
+                                                        _ = PlusEnvironment.Game.RoomService.PrepareRoom(user.GetClient()!, roomId, "");
                                                         //User.GetClient().SendMessage(new RoomForwardComposer(RoomId));
                                                         InteractingUser = 0;
                                                     }

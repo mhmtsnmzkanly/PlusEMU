@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Inventory.Furni;
+using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 
@@ -9,11 +9,19 @@ internal class EmptyItems : IChatCommand
     public string Key => "emptyitems";
     public string PermissionRequired => "command_empty_items";
 
+    private readonly IItemLoader _itemLoader;
+
+    public EmptyItems(IItemLoader itemLoader)
+    {
+        _itemLoader = itemLoader;
+    }
+
+
     public string Parameters => "%yes%";
 
     public string Description => "Is your inventory full? You can remove all items by typing this command.";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var furniture = habbo?.Inventory?.Furniture;
@@ -29,7 +37,7 @@ internal class EmptyItems : IChatCommand
         }
         if (parameters.Length == 1 && parameters[0] == "yes")
         {
-            ItemLoader.DeleteAllInventoryItemsForUser(habbo.Id);
+            _itemLoader.DeleteAllInventoryItemsForUser(habbo.Id);
             furniture.ClearItems();
             session.Send(new FurniListUpdateComposer());
             session.SendNotification("Your inventory has been cleared!");

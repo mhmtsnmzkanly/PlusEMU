@@ -16,6 +16,7 @@ using Plus.HabboHotel.Quests;
 using Plus.HabboHotel.Rewards;
 using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Rooms.Chat;
+using Plus.HabboHotel.Catalog.Utilities;
 using Plus.HabboHotel.Subscriptions;
 using Plus.HabboHotel.Talents;
 
@@ -37,6 +38,12 @@ public class Game : IGame
     private readonly ICatalogService _catalogService;
     private readonly IAchievementService _achievementService;
     private readonly IAchievementManager _achievementManager;
+    private readonly IRoomService _roomService;
+    private readonly IRoomFactory _roomFactory;
+    private readonly IRoomAppender _roomAppender;
+    private readonly IItemService _itemService;
+    private readonly IBotUtility _botUtility;
+    private readonly IPetUtility _petUtility;
 
     private IBadgeManager _badgeManager;
     private IBotManager _botManager;
@@ -76,7 +83,13 @@ public class Game : IGame
         IRewardManager rewardManager,
         IBadgeManager badgeManager,
         ISubscriptionManager subscriptionManager,
-        IPermissionManager permissionManager)
+        IPermissionManager permissionManager,
+        IRoomService roomService,
+        IRoomFactory roomFactory,
+        IRoomAppender roomAppender,
+        IItemService itemService,
+        IBotUtility botUtility,
+        IPetUtility petUtility)
     {
         _clientManager = gameClientManager;
         _moderationManager = moderationManager;
@@ -101,6 +114,12 @@ public class Game : IGame
         _badgeManager = badgeManager;
         _subscriptionManager = subscriptionManager;
         _permissionManager = permissionManager;
+        _roomService = roomService;
+        _roomFactory = roomFactory;
+        _roomAppender = roomAppender;
+        _itemService = itemService;
+        _botUtility = botUtility;
+        _petUtility = petUtility;
     }
 
     public Task Init()
@@ -165,4 +184,10 @@ public class Game : IGame
     public IGameDataManager GameDataManager => _gameDataManager;
     public IBotManager BotManager => _botManager;
     public ICacheManager CacheManager => _cacheManager;
+    public IRoomService RoomService => _roomService;
+    public IRoomFactory RoomFactory => _roomFactory;
+    public IRoomAppender RoomAppender => _roomAppender;
+    public IItemService ItemService => _itemService;
+    public IBotUtility BotUtility => _botUtility;
+    public IPetUtility PetUtility => _petUtility;
 }

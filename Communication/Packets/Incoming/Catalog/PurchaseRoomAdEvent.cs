@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Catalog;
+using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
@@ -17,13 +17,15 @@ public class PurchaseRoomAdEvent : IPacketEvent
     private readonly IDatabase _database;
     private readonly IBadgeManager _badgeManager;
     private readonly IMessengerDataLoader _messengerDataLoader;
+    private readonly IRoomFactory _roomFactory;
 
-    public PurchaseRoomAdEvent(IWordFilterManager wordFilterManager, IDatabase database, IBadgeManager badgeManager, IMessengerDataLoader messengerDataLoader)
+    public PurchaseRoomAdEvent(IWordFilterManager wordFilterManager, IDatabase database, IBadgeManager badgeManager, IMessengerDataLoader messengerDataLoader, IRoomFactory roomFactory)
     {
         _wordFilterManager = wordFilterManager;
         _database = database;
         _badgeManager = badgeManager;
         _messengerDataLoader = messengerDataLoader;
+        _roomFactory = roomFactory;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -40,9 +42,9 @@ public class PurchaseRoomAdEvent : IPacketEvent
         packet.ReadBool(); //junk
         var desc = _wordFilterManager.CheckMessage(packet.ReadString());
         var categoryId = packet.ReadInt();
-        if (!RoomFactory.TryGetData(roomId, out var data))
+        if (!_roomFactory.TryGetData(roomId, out var data))
             return;
-        if (data.OwnerId != habbo.Id)
+        if (data!.OwnerId != habbo.Id)
             return;
         if (data.Promotion == null)
             data.Promotion = new(name, desc, categoryId);

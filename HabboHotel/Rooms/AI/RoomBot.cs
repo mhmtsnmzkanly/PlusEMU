@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using Plus.HabboHotel.Catalog.Utilities;
 using Plus.HabboHotel.Rooms.AI.Speech;
 using Plus.HabboHotel.Rooms.AI.Types;
@@ -52,7 +52,7 @@ public class RoomBot
         Motto = motto;
         Look = look;
         Gender = gender.ToUpper();
-        AiType = BotUtility.GetAiFromString(type);
+        AiType = BotUtility.GetAiTypeFromString(type);
         WalkingMode = walkingMode;
         X = x;
         Y = y;

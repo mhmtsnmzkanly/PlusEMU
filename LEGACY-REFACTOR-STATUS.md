@@ -44,6 +44,11 @@ These packet-heavy domains were already moved into dedicated services:
 - Quests — `HabboHotel/Quests/QuestService.cs`
 - Achievements — `HabboHotel/Achievements/AchievementService.cs` (Phase 1, 2, 3 complete)
 - Chat — `HabboHotel/Rooms/Chat/ChatService.cs` (Phase 4 complete)
+- Rooms — `HabboHotel/Rooms/RoomService.cs`
+    *   [x] Phase 5: Room Modernization & DI (RoomService, async commands).
+    *   [x] Phase 6: Item/Furniture Modernization (IItemService, IItemLoader, Dapper).
+    *   [x] Phase 7: Catalog Modernization (ICatalogService, IBotUtility, IPetUtility, Dapper).
+    *   [x] Phase 8: Navigator & Room System Modernization (IRoomFactory, IRoomAppender, DI).
 
 ## Completed Legacy DB Wrapper Migration
 
@@ -52,6 +57,8 @@ All files below have been migrated off `GetQueryReactor()`.
 ### Core / Infrastructure
 - `PlusEnvironment.cs`
 - `Core/ServerStatusUpdater.cs`
+- `HabboHotel/Items/ItemFactory.cs` (Phase 6 complete)
+- `HabboHotel/Items/ItemLoader.cs` (Phase 6 complete)
 
 ### GameClients / Users
 - `HabboHotel/GameClients/GameClientManager.cs`

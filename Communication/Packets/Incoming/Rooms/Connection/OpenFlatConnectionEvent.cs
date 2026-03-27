@@ -1,9 +1,17 @@
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Rooms;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Connection;
 
 public class OpenFlatConnectionEvent : IPacketEvent
 {
+    private readonly IRoomService _roomService;
+
+    public OpenFlatConnectionEvent(IRoomService roomService)
+    {
+        _roomService = roomService;
+    }
+
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
@@ -12,7 +20,6 @@ public class OpenFlatConnectionEvent : IPacketEvent
 
         var roomId = packet.ReadUInt();
         var password = packet.ReadString();
-        habbo.PrepareRoom(roomId, password);
-        return Task.CompletedTask;
+        return _roomService.PrepareRoom(session, roomId, password);
     }
 }

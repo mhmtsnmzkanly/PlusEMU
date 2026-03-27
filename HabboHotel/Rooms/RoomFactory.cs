@@ -1,8 +1,10 @@
-﻿using Dapper;
+using Dapper;
+using Plus.Database;
+using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Rooms;
 
-public static class RoomFactory
+public class RoomFactory : IRoomFactory
 {
     private sealed class RoomFactoryRow
     {
@@ -50,10 +52,19 @@ public static class RoomFactory
         public string LayEnabled { get; init; } = "0";
     }
 
-    public static List<RoomData> GetRoomsDataByOwnerSortByName(int ownerId)
+    private readonly IDatabase _database;
+    private readonly IRoomManager _roomManager;
+
+    public RoomFactory(IDatabase database, IRoomManager roomManager)
+    {
+        _database = database;
+        _roomManager = roomManager;
+    }
+
+    public List<RoomData> GetRoomsDataByOwnerSortByName(int ownerId)
     {
         var data = new List<RoomData>();
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _database.Connection();
         var rooms = connection.Query<RoomFactoryRow>(
             """
             SELECT
@@ -107,25 +118,25 @@ public static class RoomFactory
             new { ownerId });
         foreach (var row in rooms)
         {
-            if (PlusEnvironment.Game.RoomManager.TryGetRoom(row.Id, out var room))
+            if (_roomManager.TryGetRoom(row.Id, out var room))
                 data.Add(room);
             else
             {
-                if (string.IsNullOrEmpty(row.ModelName) || !PlusEnvironment.Game.RoomManager.TryGetModel(row.ModelName, out var model)) continue;
+                if (string.IsNullOrEmpty(row.ModelName) || !_roomManager.TryGetModel(row.ModelName, out var model)) continue;
                 data.Add(CreateRoomData(row, model));
             }
         }
         return data;
     }
 
-    public static bool TryGetData(uint roomId, out RoomData data)
+    public bool TryGetData(uint roomId, out RoomData? data)
     {
-        if (PlusEnvironment.Game.RoomManager.TryGetRoom(roomId, out var room))
+        if (_roomManager.TryGetRoom(roomId, out var room))
         {
             data = room;
             return true;
         }
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = _database.Connection())
         {
             var row = connection.QueryFirstOrDefault<RoomFactoryRow>(
                 """
@@ -180,8 +191,7 @@ public static class RoomFactory
                 new { id = roomId });
             if (row != null)
             {
-                RoomModel? model = null;
-                if (string.IsNullOrEmpty(row.ModelName) || !PlusEnvironment.Game.RoomManager.TryGetModel(row.ModelName, out model))
+                if (string.IsNullOrEmpty(row.ModelName) || !_roomManager.TryGetModel(row.ModelName, out var model))
                 {
                     data = null!;
                     return false;

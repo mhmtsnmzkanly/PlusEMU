@@ -1,10 +1,19 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Navigator;
+using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Rooms;
 
-internal static class RoomAppender
+public class RoomAppender : IRoomAppender
 {
-    public static void WriteRoom(IOutgoingPacket packet, RoomData data, RoomPromotion? promotion)
+    private readonly INavigatorManager _navigator;
+
+    public RoomAppender(INavigatorManager navigator)
+    {
+        _navigator = navigator;
+    }
+
+    public void WriteRoom(IOutgoingPacket packet, RoomData data, RoomPromotion? promotion)
     {
         packet.WriteUInteger(data.Id);
         packet.WriteString(data.Name);
@@ -29,7 +38,7 @@ internal static class RoomAppender
             roomType += 8;
         if (data.AllowPets)
             roomType += 16;
-        if (PlusEnvironment.Game.Navigator.TryGetFeaturedRoom(data.Id, out var item)) roomType += 1;
+        if (_navigator.TryGetFeaturedRoom(data.Id, out var item)) roomType += 1;
         packet.WriteInteger(roomType);
         if (item != null) packet.WriteString(item.Image);
         if (data.Group != null)

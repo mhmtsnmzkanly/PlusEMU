@@ -19,7 +19,7 @@ internal class SellRoomCommand : IChatCommand
         _database = database;
     }
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         if (!room.CheckRights(session, true))
             return;

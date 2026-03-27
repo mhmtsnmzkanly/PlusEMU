@@ -1,0 +1,238 @@
+using Dapper;
+using Plus.Communication.Packets.Outgoing.Navigator;
+using Plus.Communication.Packets.Outgoing.Rooms.Engine;
+using Plus.Communication.Packets.Outgoing.Rooms.Session;
+using Plus.Communication.Packets.Outgoing.Rooms.Settings;
+using Plus.Communication.Packets.Outgoing.Handshake;
+using Plus.Communication.Packets.Outgoing.Notifications;
+using Plus.Core.Language;
+using Plus.Database;
+using Plus.HabboHotel.Achievements;
+using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Navigator;
+using Plus.HabboHotel.Rooms.Chat.Filter;
+using Plus.Utilities;
+
+namespace Plus.HabboHotel.Rooms;
+
+public class RoomService : IRoomService
+{
+    private readonly IRoomManager _roomManager;
+    private readonly IRoomFactory _roomFactory;
+    private readonly INavigatorManager _navigatorManager;
+    private readonly IWordFilterManager _wordFilterManager;
+    private readonly ILanguageManager _languageManager;
+    private readonly IAchievementService _achievementService;
+    private readonly IDatabase _database;
+
+    public RoomService(
+        IRoomManager roomManager,
+        IRoomFactory roomFactory,
+        INavigatorManager navigatorManager,
+        IWordFilterManager wordFilterManager,
+        ILanguageManager languageManager,
+        IAchievementService achievementService,
+        IDatabase database)
+    {
+        _roomManager = roomManager;
+        _roomFactory = roomFactory;
+        _navigatorManager = navigatorManager;
+        _wordFilterManager = wordFilterManager;
+        _languageManager = languageManager;
+        _achievementService = achievementService;
+        _database = database;
+    }
+
+    public async Task PrepareRoom(GameClient session, uint roomId, string password)
+    {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return;
+
+        if (habbo.InRoom)
+        {
+            var oldRoom = habbo.CurrentRoom;
+            oldRoom?.GetRoomUserManager().RemoveUserFromRoom(session, false);
+        }
+
+        if (habbo.IsTeleporting && habbo.TeleportingRoomId != roomId)
+        {
+            session.Send(new CloseConnectionComposer());
+            return;
+        }
+
+        if (!_roomManager.TryLoadRoom(roomId, out var room))
+        {
+            session.Send(new CloseConnectionComposer());
+            return;
+        }
+
+        if (room.IsCrashed)
+        {
+            session.SendNotification("This room has crashed! :(");
+            session.Send(new CloseConnectionComposer());
+            return;
+        }
+
+        if (room.GetRoomUserManager().UserCount >= room.UsersMax && !(habbo.Permissions?.HasRight("room_enter_full") ?? false) && habbo.Id != room.OwnerId)
+        {
+            session.Send(new CantConnectComposer(1));
+            session.Send(new CloseConnectionComposer());
+            return;
+        }
+
+        if (!(habbo.Permissions?.HasRight("room_ban_override") ?? false) && room.GetBans().IsBanned(habbo.Id))
+        {
+            habbo.RoomAuthOk = false;
+            session.Send(new CantConnectComposer(4));
+            session.Send(new CloseConnectionComposer());
+            return;
+        }
+
+        habbo.RoomAuthOk = false;
+
+        if (room.Type == "public")
+        {
+            if (room.Access == RoomAccess.Doorbell && !(habbo.Permissions?.HasRight("room_enter_any_room") ?? false))
+            {
+                session.Send(new CantConnectComposer(1));
+                session.Send(new CloseConnectionComposer());
+                return;
+            }
+            habbo.RoomAuthOk = true;
+            session.Send(new OpenConnectionComposer());
+            return;
+        }
+
+        if (habbo.Id == room.OwnerId || (habbo.Permissions?.HasRight("room_enter_any_room") ?? false) || (habbo.Permissions?.HasRight("room_any_owner") ?? false))
+        {
+            habbo.RoomAuthOk = true;
+            session.Send(new OpenConnectionComposer());
+            return;
+        }
+
+        if (room.Access == RoomAccess.Doorbell)
+        {
+            if (room.GetRoomUserManager().GetRoomUserByRank(2).Count > 0)
+            {
+                session.Send(new DoorbellComposer(""));
+                room.SendPacket(new DoorbellComposer(habbo.Username), true);
+            }
+            else
+            {
+                session.Send(new CantConnectComposer(2));
+                session.Send(new CloseConnectionComposer());
+            }
+            return;
+        }
+
+        if (room.Access == RoomAccess.Password)
+        {
+            if (password.ToLower() == room.Password.ToLower() || habbo.RoomAuthOk)
+            {
+                habbo.RoomAuthOk = true;
+                session.Send(new OpenConnectionComposer());
+            }
+            else
+            {
+                session.Send(new GenericErrorComposer(-100002));
+                session.Send(new CloseConnectionComposer());
+            }
+            return;
+        }
+
+        habbo.RoomAuthOk = true;
+        session.Send(new OpenConnectionComposer());
+    }
+
+    public async Task<RoomData?> CreateRoom(GameClient session, string name, string description, string modelName, int category, int maxVisitors, int tradeSettings)
+    {
+        var habbo = session.GetHabbo();
+        if (habbo == null)
+            return null;
+
+        var rooms = _roomFactory.GetRoomsDataByOwnerSortByName(habbo.Id);
+        if (rooms.Count >= 500)
+        {
+            session.Send(new CanCreateRoomComposer(true, 500));
+            return null;
+        }
+
+        var filteredName = _wordFilterManager.CheckMessage(name);
+        var filteredDescription = _wordFilterManager.CheckMessage(description);
+        if (filteredName.Length is < 3 or > 25)
+            return null;
+
+        if (!_roomManager.TryGetModel(modelName, out var model))
+            return null;
+
+        if (!_navigatorManager.TryGetSearchResultList(category, out var searchResultList))
+            category = 36;
+        else if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank)
+            category = 36;
+
+        if (maxVisitors is < 10 or > 25)
+            maxVisitors = 10;
+        if (tradeSettings is < 0 or > 2)
+            tradeSettings = 0;
+
+        var newRoom = _roomManager.CreateRoom(session, filteredName, filteredDescription, category, maxVisitors, tradeSettings, model);
+        if (newRoom != null)
+        {
+            session.Send(new FlatCreatedComposer(newRoom.Id, filteredName));
+            habbo.Messenger?.NotifyChangesToFriends();
+        }
+
+        return newRoom;
+    }
+
+    public async Task EnterRoom(GameClient session)
+    {
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.InRoom)
+            return;
+
+        var room = habbo.CurrentRoom;
+        if (room == null)
+            return;
+
+        session.Send(new RoomReadyComposer(room.RoomId, room.ModelName));
+        if (room.Wallpaper != "0.0")
+            session.Send(new RoomPropertyComposer("wallpaper", room.Wallpaper));
+        if (room.Floor != "0.0")
+            session.Send(new RoomPropertyComposer("floor", room.Floor));
+
+        session.Send(new RoomPropertyComposer("landscape", room.Landscape));
+        session.Send(new RoomRatingComposer(room.Score, !(habbo.RatedRooms.Contains(room.RoomId) || room.OwnerId == habbo.Id)));
+
+        using (var connection = _database.Connection())
+        {
+            await connection.ExecuteAsync(
+                "INSERT INTO user_roomvisits (user_id, room_id, entry_timestamp, exit_timestamp) VALUES (@userId, @roomId, @entryTimestamp, @exitTimestamp)",
+                new
+                {
+                    userId = habbo.Id,
+                    roomId = room.RoomId,
+                    entryTimestamp = UnixTimestamp.GetNow(),
+                    exitTimestamp = 0
+                });
+        }
+
+        if (room.OwnerId != habbo.Id)
+        {
+            habbo.HabboStats.RoomVisits += 1;
+            await _achievementService.ProgressAchievement(session, "ACH_RoomEntry", 1);
+        }
+    }
+
+    public Task LeaveRoom(GameClient session)
+    {
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.InRoom)
+            return Task.CompletedTask;
+
+        var room = habbo.CurrentRoom;
+        room?.GetRoomUserManager().RemoveUserFromRoom(session, true);
+        return Task.CompletedTask;
+    }
+}

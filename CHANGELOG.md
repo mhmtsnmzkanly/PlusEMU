@@ -1,11 +1,30 @@
 # Changelog
 
-## 2026-03-27
+### [0.7.0] - 2026-03-27
+#### Added
+- `IBotUtility` and `IPetUtility` services to replace static `BotUtility` and `PetUtility` helpers.
+- `UpdateUses` to `IVoucherManager` to centralize voucher usage persistence.
 
-### Complete GetQueryReactor() Elimination (Batch 2–7)
+#### Changed
+- Refactored `CatalogService` to use injected utilities instead of static classes.
+- Modernized `CheckGnomeNameEvent`, `CheckPetNameEvent`, and `PurchaseFromCatalogAsGiftEvent` to support DI.
+- Moved inventory-related database logic out of the `Voucher` data model into the service layer.
+- Cleaned up remaining `PlusEnvironment.DatabaseManager` calls in the Catalog domain.
 
-Replaced every remaining `GetQueryReactor()` call in the codebase with `DatabaseManager.Connection()` / Dapper.
-All SQL injection risks from string interpolation have been eliminated. Build is clean at `0 Warning(s), 0 Error(s)`.
+### [0.6.0] - 2026-03-27
+
+### [0.6.0] - 2026-03-27
+#### Added
+- `IItemService` and `ItemService` for centralized furniture interaction logic (Place, Move, Pickup).
+- `IItemLoader` and `ItemLoader` service-based implementation (non-static) with Dapper.
+
+#### Changed
+- Refactored `PlaceObjectEvent`, `MoveObjectEvent`, `PickupObjectEvent`, and `MoveWallItemEvent` to utilize `IItemService`.
+- Modernized `ItemFactory` to use injected `IDatabase` instead of static `PlusEnvironment`.
+- Updated `Room`, `RoomManager`, and `RoomItemHandling` to receive `IItemLoader` via dependency injection.
+- Refactored `EmptyItems` chat command to use `IItemLoader` and support DI.
+
+### [0.5.0] - 2026-03-26
 
 #### Batch 2 — Loader / Finder Helpers
 - `HabboHotel/Users/Inventory/Bots/BotLoader.cs` — Dapper `Query`, parameterized.
@@ -86,6 +105,17 @@ All SQL injection risks from string interpolation have been eliminated. Build is
 - Refactored `IModerationManager` and `ModerationManager` into pure caching repositories.
 - Moved ban-writing implementation into `IModerationActionService` to decouple data and business logic.
 - Modernized `BanCommand`, `IpBanCommand`, and `MipCommand` to use `IModerationActionService` and `async/await`.
+- Added support for offline user banning via database lookups.
+
+#### Phase 5 — Room Service & Entity Management
+- Created `IRoomService` and `RoomService` to centralize room lifecycle, entry, and creation logic.
+- Migrated legacy `Habbo.PrepareRoom` and `Habbo.EnterRoom` methods to the new service layer.
+- Refactored `OpenFlatConnectionEvent.cs` and `GoToFlatEvent.cs` to use the modernized service via Dependency Injection.
+- Centralized room access checks, doorbell handling, and occupancy verification.
+- Integrated `IRoomService` into `Item.cs` (Teleport/Hopper) and `RoomUserManager.cs` (Wired Teleport) for consistent room switching.
+- Modernized all `IChatCommand` implementations to return `Task` and support `async/await` execution.
+- Updated `GOTOCommand`, `SummonCommand`, and `FollowCommand` to use the new service katmanı.
+- Reduced the burden on the `Habbo` entity by removing 200+ lines of business logic.
 
 ## 2026-03-26
 

@@ -23,7 +23,7 @@ internal class FacelessCommand : IChatCommand
         _database = database;
     }
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         if (habbo?.Clothing == null)

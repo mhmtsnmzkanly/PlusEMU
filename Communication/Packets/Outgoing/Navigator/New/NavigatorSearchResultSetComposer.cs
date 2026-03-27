@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Navigator;
 using Plus.HabboHotel.Rooms;
 
@@ -7,6 +7,7 @@ namespace Plus.Communication.Packets.Outgoing.Navigator.New;
 public class NavigatorSearchResultSetComposer : IServerPacket
 {
     private readonly INavigatorQueryService _navigatorQueryService;
+    private readonly IRoomAppender _roomAppender;
     private readonly string _category;
     private readonly string _data;
     private readonly ICollection<SearchResultList> _searchResultLists;
@@ -16,13 +17,14 @@ public class NavigatorSearchResultSetComposer : IServerPacket
     public uint MessageId => ServerPacketHeader.NavigatorSearchResultSetComposer;
 
     public NavigatorSearchResultSetComposer(string category, string data,
-        ICollection<SearchResultList> searchResultLists, GameClient session, INavigatorQueryService navigatorQueryService, int goBack = 1, int fetchLimit = 12)
+        ICollection<SearchResultList> searchResultLists, GameClient session, INavigatorQueryService navigatorQueryService, IRoomAppender roomAppender, int goBack = 1, int fetchLimit = 12)
     {
         _category = category;
         _data = data;
         _searchResultLists = searchResultLists;
         _session = session;
         _navigatorQueryService = navigatorQueryService;
+        _roomAppender = roomAppender;
         _goBack = goBack;
         _fetchLimit = fetchLimit;
     }
@@ -47,7 +49,7 @@ public class NavigatorSearchResultSetComposer : IServerPacket
             var rooms = _navigatorQueryService.GetSearchResults(searchResult, _data, _session, _fetchLimit);
             packet.WriteInteger(rooms.Count);
             foreach (var room in rooms)
-                RoomAppender.WriteRoom(packet, room, room.Promotion);
+                _roomAppender.WriteRoom(packet, room, room.Promotion);
         }
     }
 }

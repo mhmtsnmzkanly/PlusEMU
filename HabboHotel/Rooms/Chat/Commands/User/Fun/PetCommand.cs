@@ -12,7 +12,7 @@ internal class PetCommand : IChatCommand
 
     public string Description => "Allows you to transform into a pet..";
 
-    public void Execute(GameClient session, Room room, string[] parameters)
+    public async Task Execute(GameClient session, Room room, string[] parameters)
     {
         var habbo = session.GetHabbo();
         var currentRoom = habbo?.CurrentRoom;

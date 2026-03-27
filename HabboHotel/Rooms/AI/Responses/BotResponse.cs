@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.Catalog.Utilities;
+using Plus.HabboHotel.Catalog.Utilities;
 
 namespace Plus.HabboHotel.Rooms.AI.Responses;
 
@@ -6,7 +6,7 @@ public class BotResponse
 {
     public BotResponse(string botAi, string keywords, string responseText, string responseMode, string responseBeverages)
     {
-        AiType = BotUtility.GetAiFromString(botAi);
+        AiType = BotUtility.GetAiTypeFromString(botAi);
         Keywords = new();
         foreach (var keyword in keywords.Split(',')) Keywords.Add(keyword.ToLower());
         ResponseText = responseText;

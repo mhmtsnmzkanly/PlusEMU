@@ -1,5 +1,6 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Groups;
+using Plus.HabboHotel.Rooms;
 
 namespace Plus.Communication.Packets.Outgoing.Groups;
 
@@ -7,14 +8,16 @@ public class GroupInfoComposer : IServerPacket
 {
     private readonly Group _group;
     private readonly GameClient _session;
+    private readonly IRoomFactory _roomFactory;
     private readonly bool _newWindow;
 
     public uint MessageId => ServerPacketHeader.GroupInfoComposer;
 
-    public GroupInfoComposer(Group group, GameClient session, bool newWindow = false)
+    public GroupInfoComposer(Group group, GameClient session, IRoomFactory roomFactory, bool newWindow = false)
     {
         _group = @group;
         _session = session;
+        _roomFactory = roomFactory;
         _newWindow = newWindow;
     }
 
@@ -30,7 +33,7 @@ public class GroupInfoComposer : IServerPacket
         packet.WriteString(_group.Description);
         packet.WriteString(_group.Badge);
         packet.WriteUInteger(_group.RoomId);
-        var room = _group.GetRoom();
+        var room = _group.GetRoom(_roomFactory);
         packet.WriteString(room?.Name ?? "No room found.."); // room name
         packet.WriteInteger(_group.CreatorId == habboId ? 3 : _group.HasRequest(habboId) ? 2 : _group.IsMember(habboId) ? 1 : 0);
         packet.WriteInteger(_group.MemberCount); // Members

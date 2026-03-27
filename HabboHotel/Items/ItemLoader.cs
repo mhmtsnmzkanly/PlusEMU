@@ -1,23 +1,33 @@
 using Dapper;
+using Plus.Database;
 using Plus.HabboHotel.Items.DataFormat;
 using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Users.Inventory.Furniture;
 
 namespace Plus.HabboHotel.Items;
 
-public static class ItemLoader
+public class ItemLoader : IItemLoader
 {
-    public static List<Item> GetItemsForRoom(uint roomId, Room room)
+    private readonly IDatabase _database;
+    private readonly IItemDataManager _itemDataManager;
+
+    public ItemLoader(IDatabase database, IItemDataManager itemDataManager)
+    {
+        _database = database;
+        _itemDataManager = itemDataManager;
+    }
+
+    public List<Item> GetItemsForRoom(uint roomId, Room room)
     {
         var items = new List<Item>();
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         var rows = db.Query(
             "SELECT `items`.*, COALESCE(`items_groups`.`group_id`, 0) AS `group_id` FROM `items` LEFT OUTER JOIN `items_groups` ON `items`.`id` = `items_groups`.`id` WHERE `items`.`room_id` = @rid",
             new { rid = roomId });
         foreach (var row in rows)
         {
             var baseItemId = Convert.ToUInt32(row.base_item);
-            if (PlusEnvironment.Game.ItemManager.Items.TryGetValue(baseItemId, out ItemDefinition? data))
+            if (_itemDataManager.Items.TryGetValue(baseItemId, out ItemDefinition? data))
             {
                 items.Add(new()
                 {
@@ -39,24 +49,24 @@ public static class ItemLoader
         return items;
     }
 
-    public static List<InventoryItem> GetItemsForUser(uint userId)
+    public List<InventoryItem> GetItemsForUser(uint userId)
     {
         var items = new List<InventoryItem>();
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         var rows = db.Query(
             "SELECT `items`.*, COALESCE(`items_groups`.`group_id`, 0) AS `group_id` FROM `items` LEFT OUTER JOIN `items_groups` ON `items`.`id` = `items_groups`.`id` WHERE `items`.`room_id` = 0 AND `items`.`user_id` = @uid",
             new { uid = userId });
         foreach (var row in rows)
         {
             var baseItemId = Convert.ToUInt32(row.base_item);
-            if (PlusEnvironment.Game.ItemManager.Items.TryGetValue(baseItemId, out ItemDefinition? data))
+            if (_itemDataManager.Items.TryGetValue(baseItemId, out ItemDefinition? data))
             {
                 items.Add(new()
                 {
                     Id = Convert.ToUInt32(row.id),
                     OwnerId = userId,
                     Definition = data!,
-                    ExtraData = FurniObjectData.Empty, // TODO @80O: Load object data based on interaction type.
+                    ExtraData = FurniObjectData.Empty,
                     UniqueNumber = Convert.ToUInt32(row.limited_number),
                     UniqueSeries = Convert.ToUInt32(row.limited_stack)
                 });
@@ -65,9 +75,9 @@ public static class ItemLoader
         return items;
     }
 
-    public static void DeleteAllInventoryItemsForUser(int userId)
+    public void DeleteAllInventoryItemsForUser(int userId)
     {
-        using var db = PlusEnvironment.DatabaseManager.Connection();
-        db.Execute("DELETE FROM `items` WHERE `room_id` = '0' AND `user_id` = @userId", new { userId }); //Do join
+        using var db = _database.Connection();
+        db.Execute("DELETE FROM `items` WHERE `room_id` = '0' AND `user_id` = @userId", new { userId });
     }
 }
