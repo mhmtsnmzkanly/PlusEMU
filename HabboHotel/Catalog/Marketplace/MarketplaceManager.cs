@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Database;
 using Plus.HabboHotel.Items;
@@ -23,22 +23,21 @@ public class MarketplaceManager : IMarketplaceManager
         _itemDataManager = itemDataManager;
         _itemFactory = itemFactory;
     }
+
     public int AvgPriceForSprite(int spriteId)
     {
-        var num = 0;
-        var num2 = 0;
         if (MarketAverages.ContainsKey(spriteId) && MarketCounts.ContainsKey(spriteId))
         {
             if (MarketCounts[spriteId] > 0) return MarketAverages[spriteId] / MarketCounts[spriteId];
             return 0;
         }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery($"SELECT `avgprice` FROM `catalog_marketplace_data` WHERE `sprite` = '{spriteId}' LIMIT 1");
-            num = dbClient.GetInteger();
-            dbClient.SetQuery($"SELECT `sold` FROM `catalog_marketplace_data` WHERE `sprite` = '{spriteId}' LIMIT 1");
-            num2 = dbClient.GetInteger();
-        }
+        using var db = _database.Connection();
+        var num = db.QueryFirstOrDefault<int>(
+            "SELECT `avgprice` FROM `catalog_marketplace_data` WHERE `sprite` = @spriteId LIMIT 1",
+            new { spriteId });
+        var num2 = db.QueryFirstOrDefault<int>(
+            "SELECT `sold` FROM `catalog_marketplace_data` WHERE `sprite` = @spriteId LIMIT 1",
+            new { spriteId });
         MarketAverages.Add(spriteId, num);
         MarketCounts.Add(spriteId, num2);
         if (num2 > 0)
@@ -90,7 +89,7 @@ public class MarketplaceManager : IMarketplaceManager
         _itemDataManager.Items.TryGetValue(offer.ItemId, out var item);
         if (item == null) return false;
 
-        var giveItem = _itemFactory.CreateSingleItem(item, habbo, offer.ExtraData, offer.ExtraData, offer.FurniId,offer.LimitedNumber, offer.LimitedStack);
+        var giveItem = _itemFactory.CreateSingleItem(item, habbo, offer.ExtraData, offer.ExtraData, offer.FurniId, offer.LimitedNumber, offer.LimitedStack);
         if (giveItem == null) return false;
         var client = habbo.Client;
         if (client == null) return false;

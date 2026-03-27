@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+using Dapper;
+using Microsoft.Extensions.Logging;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
@@ -25,10 +26,8 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
 
     public void Dispose()
     {
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
-        }
+        using var db = _database.Connection();
+        db.Execute("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
         _timer?.Dispose();
         GC.SuppressFinalize(this);
     }
@@ -51,10 +50,9 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
         var usersOnline = _gameClientManager.Count;
         var roomCount = _roomManager.Count;
         Console.Title = $"Plus Emulator - {usersOnline} users online - {roomCount} rooms loaded - {uptime.Days} day(s) {uptime.Hours} hour(s) uptime";
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("UPDATE `server_status` SET `users_online` = @users, `loaded_rooms` = @loadedRooms LIMIT 1;");
-        dbClient.AddParameter("users", usersOnline);
-        dbClient.AddParameter("loadedRooms", roomCount);
-        dbClient.RunQuery();
+        using var db = _database.Connection();
+        db.Execute(
+            "UPDATE `server_status` SET `users_online` = @users, `loaded_rooms` = @loadedRooms LIMIT 1",
+            new { users = usersOnline, loadedRooms = roomCount });
     }
 }

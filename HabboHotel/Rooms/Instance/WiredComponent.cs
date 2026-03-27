@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
+using Dapper;
+using System.Collections.Concurrent;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Items.Wired;
 using Plus.HabboHotel.Items.Wired.Boxes;
@@ -47,57 +47,54 @@ public class WiredComponent
     public IWiredItem LoadWiredBox(Item item)
     {
         var newBox = GenerateNewBox(item);
-        DataRow? row = null;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using var db = PlusEnvironment.DatabaseManager.Connection();
+        dynamic? row = db.QueryFirstOrDefault(
+            "SELECT `string`, `bool`, `items`, `delay` FROM `wired_items` WHERE `id` = @id LIMIT 1",
+            new { id = item.Id });
+        if (row != null)
         {
-            dbClient.SetQuery("SELECT * FROM wired_items WHERE id=@id LIMIT 1");
-            dbClient.AddParameter("id", item.Id);
-            row = dbClient.GetRow();
-            if (row != null)
+            if (string.IsNullOrEmpty((string?)row.@string))
             {
-                if (string.IsNullOrEmpty(Convert.ToString(row["string"])))
+                if (newBox.Type == WiredBoxType.ConditionMatchStateAndPosition || newBox.Type == WiredBoxType.ConditionDontMatchStateAndPosition)
+                    newBox.StringData = "0;0;0";
+                else if (newBox.Type == WiredBoxType.ConditionUserCountInRoom || newBox.Type == WiredBoxType.ConditionUserCountDoesntInRoom)
+                    newBox.StringData = "0;0";
+                else if (newBox.Type == WiredBoxType.ConditionFurniHasNoFurni)
+                    newBox.StringData = "0";
+                else if (newBox.Type == WiredBoxType.EffectMatchPosition)
+                    newBox.StringData = "0;0;0";
+                else if (newBox.Type == WiredBoxType.EffectMoveAndRotate)
+                    newBox.StringData = "0;0";
+            }
+            newBox.StringData = ((string?)row.@string) ?? newBox.StringData;
+            newBox.BoolData = (int)row.@bool == 1;
+            newBox.ItemsData = ((string?)row.items) ?? string.Empty;
+            if (newBox is IWiredCycle)
+            {
+                var box = (IWiredCycle)newBox;
+                box.Delay = (int)row.delay;
+            }
+            foreach (var str in (((string?)row.items) ?? string.Empty).Split(';'))
+            {
+                var id = 0;
+                var sId = "0";
+                if (str.Contains(':'))
+                    sId = str.Split(':')[0];
+                if (int.TryParse(str, out id) || int.TryParse(sId, out id))
                 {
-                    if (newBox.Type == WiredBoxType.ConditionMatchStateAndPosition || newBox.Type == WiredBoxType.ConditionDontMatchStateAndPosition)
-                        newBox.StringData = "0;0;0";
-                    else if (newBox.Type == WiredBoxType.ConditionUserCountInRoom || newBox.Type == WiredBoxType.ConditionUserCountDoesntInRoom)
-                        newBox.StringData = "0;0";
-                    else if (newBox.Type == WiredBoxType.ConditionFurniHasNoFurni)
-                        newBox.StringData = "0";
-                    else if (newBox.Type == WiredBoxType.EffectMatchPosition)
-                        newBox.StringData = "0;0;0";
-                    else if (newBox.Type == WiredBoxType.EffectMoveAndRotate)
-                        newBox.StringData = "0;0";
-                }
-                newBox.StringData = Convert.ToString(row["string"]) ?? newBox.StringData;
-                newBox.BoolData = Convert.ToInt32(row["bool"]) == 1;
-                newBox.ItemsData = Convert.ToString(row["items"]) ?? string.Empty;
-                if (newBox is IWiredCycle)
-                {
-                    var box = (IWiredCycle)newBox;
-                    box.Delay = Convert.ToInt32(row["delay"]);
-                }
-                foreach (var str in (Convert.ToString(row["items"]) ?? string.Empty).Split(';'))
-                {
-                    var id = 0;
-                    var sId = "0";
-                    if (str.Contains(':'))
-                        sId = str.Split(':')[0];
-                    if (int.TryParse(str, out id) || int.TryParse(sId, out id))
-                    {
-                        var selectedItem = _room.GetRoomItemHandler().GetItem(Convert.ToUInt32(id));
-                        if (selectedItem == null)
-                            continue;
-                        newBox.SetItems.TryAdd(selectedItem.Id, selectedItem);
-                    }
+                    var selectedItem = _room.GetRoomItemHandler().GetItem(Convert.ToUInt32(id));
+                    if (selectedItem == null)
+                        continue;
+                    newBox.SetItems.TryAdd(selectedItem.Id, selectedItem);
                 }
             }
-            else
-            {
-                newBox.ItemsData = "";
-                newBox.StringData = "";
-                newBox.BoolData = false;
-                SaveBox(newBox);
-            }
+        }
+        else
+        {
+            newBox.ItemsData = "";
+            newBox.StringData = "";
+            newBox.BoolData = false;
+            SaveBox(newBox);
         }
         if (!AddBox(newBox))
         {
@@ -150,14 +147,6 @@ public class WiredComponent
                 return new AddActorToTeamBox(_room, item);
             case WiredBoxType.EffectRemoveActorFromTeam:
                 return new RemoveActorFromTeamBox(_room, item);
-            /*
-            
-            case WiredBoxType.EffectMoveFurniToNearestUser:
-                return new MoveFurniToNearestUserBox(_room, Item);
-            case WiredBoxType.EffectMoveFurniFromNearestUser:
-                return new MoveFurniFromNearestUserBox(_room, Item);
-
-               */
             case WiredBoxType.ConditionFurniHasUsers:
                 return new FurniHasUsersBox(_room, item);
             case WiredBoxType.ConditionTriggererOnFurni:
@@ -194,16 +183,6 @@ public class WiredComponent
                 return new ActorHasHandItemBox(_room, item);
             case WiredBoxType.ConditionActorIsInTeamBox:
                 return new ActorIsInTeamBox(_room, item);
-            /*
-            case WiredBoxType.ConditionMatchStateAndPosition:
-                return new FurniMatchStateAndPositionBox(_room, Item);
-
-            case WiredBoxType.ConditionFurniTypeMatches:
-                return new FurniTypeMatchesBox(_room, Item);
-            case WiredBoxType.ConditionFurniTypeDoesntMatch:
-                return new FurniTypeDoesntMatchBox(_room, Item);
-            case WiredBoxType.ConditionFurniHasNoFurni:
-                return new FurniHasNoFurniBox(_room, Item);*/
             case WiredBoxType.AddonRandomEffect:
                 return new AddonRandomEffectBox(_room, item);
             case WiredBoxType.EffectMoveFurniToNearestUser:
@@ -392,14 +371,10 @@ public class WiredComponent
         }
         if (item.Type == WiredBoxType.EffectMatchPosition || item.Type == WiredBoxType.ConditionMatchStateAndPosition || item.Type == WiredBoxType.ConditionDontMatchStateAndPosition)
             item.ItemsData = items;
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery("REPLACE INTO `wired_items` VALUES (@id, @items, @delay, @string, @bool)");
-        dbClient.AddParameter("id", item.Item.Id);
-        dbClient.AddParameter("items", items);
-        dbClient.AddParameter("delay", cycle?.Delay ?? 0);
-        dbClient.AddParameter("string", item.StringData);
-        dbClient.AddParameter("bool", item.BoolData ? "1" : "0");
-        dbClient.RunQuery();
+        using var db = PlusEnvironment.DatabaseManager.Connection();
+        db.Execute(
+            "REPLACE INTO `wired_items` VALUES (@id, @items, @delay, @string, @bool)",
+            new { id = item.Item.Id, items, delay = cycle?.Delay ?? 0, @string = item.StringData, @bool = item.BoolData ? "1" : "0" });
     }
 
     public bool AddBox(IWiredItem item) => _wiredItems.TryAdd(item.Item.Id, item);
