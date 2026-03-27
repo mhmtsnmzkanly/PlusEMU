@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
@@ -49,11 +50,10 @@ internal class BotChangesClothesBox : IWiredItem
         Instance.SendPacket(userChangeComposer);
         user.BotData.Look = figure;
         user.BotData.Gender = "M";
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery($"UPDATE `bots` SET `look` = @look, `gender` = @gender WHERE `id` = '{user.BotData.Id}' LIMIT 1");
-        dbClient.AddParameter("look", user.BotData.Look);
-        dbClient.AddParameter("gender", user.BotData.Gender);
-        dbClient.RunQuery();
+        using var db = PlusEnvironment.DatabaseManager.Connection();
+        db.Execute(
+            "UPDATE `bots` SET `look` = @look, `gender` = @gender WHERE `id` = @id LIMIT 1",
+            new { look = user.BotData.Look, gender = user.BotData.Gender, id = user.BotData.Id });
         return true;
     }
 }

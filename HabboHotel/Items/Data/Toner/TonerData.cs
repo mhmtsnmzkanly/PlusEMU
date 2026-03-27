@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 
 namespace Plus.HabboHotel.Items.Data.Toner;
 
@@ -13,26 +13,25 @@ public class TonerData
     public TonerData(uint item)
     {
         ItemId = item;
-        DataRow? row;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
-        {
-            dbClient.SetQuery($"SELECT enabled,data1,data2,data3 FROM room_items_toner WHERE id={ItemId} LIMIT 1");
-            row = dbClient.GetRow();
-        }
+        using var db = PlusEnvironment.DatabaseManager.Connection();
+        dynamic? row = db.QueryFirstOrDefault(
+            "SELECT `enabled`, `data1`, `data2`, `data3` FROM `room_items_toner` WHERE `id` = @id LIMIT 1",
+            new { id = ItemId });
         if (row == null)
         {
-            //throw new NullReferenceException("No toner data found in the database for " + ItemId);
-            using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-            dbClient.RunQuery($"INSERT INTO `room_items_toner` VALUES ({ItemId},'0',0,0,0)");
-            dbClient.SetQuery($"SELECT enabled,data1,data2,data3 FROM room_items_toner WHERE id={ItemId} LIMIT 1");
-            row = dbClient.GetRow();
+            db.Execute(
+                "INSERT INTO `room_items_toner` (`id`, `enabled`, `data1`, `data2`, `data3`) VALUES (@id, '0', 0, 0, 0)",
+                new { id = ItemId });
+            row = db.QueryFirstOrDefault(
+                "SELECT `enabled`, `data1`, `data2`, `data3` FROM `room_items_toner` WHERE `id` = @id LIMIT 1",
+                new { id = ItemId });
         }
         if (row == null)
             return;
 
-        Enabled = int.Parse(row[0].ToString() ?? "0");
-        Hue = Convert.ToInt32(row[1]);
-        Saturation = Convert.ToInt32(row[2]);
-        Lightness = Convert.ToInt32(row[3]);
+        Enabled = int.Parse(((string?)row.enabled) ?? "0");
+        Hue = (int)row.data1;
+        Saturation = (int)row.data2;
+        Lightness = (int)row.data3;
     }
 }
