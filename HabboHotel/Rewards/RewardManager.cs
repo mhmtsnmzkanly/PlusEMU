@@ -1,5 +1,5 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
+using System.Collections.Concurrent;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Database;
 using Plus.HabboHotel.Badges;
@@ -24,34 +24,29 @@ public class RewardManager : IRewardManager
 
     public void Init()
     {
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("SELECT * FROM `server_rewards` WHERE enabled = '1'");
-        var dTable = dbClient.GetTable();
-        if (dTable != null)
+        using var db = _database.Connection();
+        var rewardRows = db.Query(
+            "SELECT `id`, `reward_start`, `reward_end`, `reward_type`, `reward_data`, `message` FROM `server_rewards` WHERE `enabled` = '1'");
+        foreach (var row in rewardRows)
         {
-            foreach (DataRow dRow in dTable.Rows)
-            {
-                _rewards.TryAdd((int)dRow["id"],
-                    new(
-                        Convert.ToDouble(dRow["reward_start"]),
-                        Convert.ToDouble(dRow["reward_end"]),
-                        Convert.ToString(dRow["reward_type"]) ?? string.Empty,
-                        Convert.ToString(dRow["reward_data"]) ?? string.Empty,
-                        Convert.ToString(dRow["message"]) ?? string.Empty));
-            }
+            _rewards.TryAdd(
+                (int)row.id,
+                new(
+                    Convert.ToDouble(row.reward_start),
+                    Convert.ToDouble(row.reward_end),
+                    ((string?)row.reward_type) ?? string.Empty,
+                    ((string?)row.reward_data) ?? string.Empty,
+                    ((string?)row.message) ?? string.Empty));
         }
-        dbClient.SetQuery("SELECT * FROM `server_reward_logs`");
-        dTable = dbClient.GetTable();
-        if (dTable != null)
+
+        var logRows = db.Query("SELECT `user_id`, `reward_id` FROM `server_reward_logs`");
+        foreach (var row in logRows)
         {
-            foreach (DataRow dRow in dTable.Rows)
-            {
-                var id = (int)dRow["user_id"];
-                var rewardId = (int)dRow["reward_id"];
-                var rewardLog = _rewardLogs.GetOrAdd(id, static _ => []);
-                if (!rewardLog.Contains(rewardId))
-                    rewardLog.Add(rewardId);
-            }
+            var id = (int)row.user_id;
+            var rewardId = (int)row.reward_id;
+            var rewardLog = _rewardLogs.GetOrAdd(id, static _ => []);
+            if (!rewardLog.Contains(rewardId))
+                rewardLog.Add(rewardId);
         }
     }
 
@@ -66,11 +61,10 @@ public class RewardManager : IRewardManager
         if (!rewardLog.Contains(rewardId))
             rewardLog.Add(rewardId);
 
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("INSERT INTO `server_reward_logs` VALUES ('', @userId, @rewardId)");
-        dbClient.AddParameter("userId", id);
-        dbClient.AddParameter("rewardId", rewardId);
-        dbClient.RunQuery();
+        using var db = _database.Connection();
+        db.Execute(
+            "INSERT INTO `server_reward_logs` VALUES ('', @userId, @rewardId)",
+            new { userId = id, rewardId });
     }
 
     public async Task CheckRewards(GameClient session)

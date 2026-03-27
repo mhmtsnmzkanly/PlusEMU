@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Communication.Packets.Incoming;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
@@ -32,37 +32,31 @@ public class QuestManager : IQuestManager
     {
         if (_quests.Count > 0)
             _quests.Clear();
-        using (var dbClient = _database.GetQueryReactor())
+        using var db = _database.Connection();
+        var rows = db.Query(
+            "SELECT `id`, `type`, `level_num`, `goal_type`, `goal_data`, `action`, `pixel_reward`, `data_bit`, `reward_type`, `timestamp_unlock`, `timestamp_lock` FROM `quests`");
+        foreach (var row in rows)
         {
-            dbClient.SetQuery("SELECT `id`,`type`,`level_num`,`goal_type`,`goal_data`,`action`,`pixel_reward`,`data_bit`,`reward_type`,`timestamp_unlock`,`timestamp_lock` FROM `quests`");
-            var dTable = dbClient.GetTable();
-            if (dTable != null)
-            {
-                foreach (DataRow dRow in dTable.Rows)
-                {
-                    var id = Convert.ToInt32(dRow["id"]);
-                    var category = Convert.ToString(dRow["type"]) ?? string.Empty;
-                    var num = Convert.ToInt32(dRow["level_num"]);
-                    var type = Convert.ToInt32(dRow["goal_type"]);
-                    var goalData = Convert.ToInt32(dRow["goal_data"]);
-                    var name = Convert.ToString(dRow["action"]) ?? string.Empty;
-                    var reward = Convert.ToInt32(dRow["pixel_reward"]);
-                    var dataBit = Convert.ToString(dRow["data_bit"]) ?? string.Empty;
-                    var rewardtype = Convert.ToInt32(dRow["reward_type"].ToString());
-                    var time = Convert.ToInt32(dRow["timestamp_unlock"]);
-                    var locked = Convert.ToInt32(dRow["timestamp_lock"]);
-                    _quests.Add(id, new(id, category, num, (QuestType)type, goalData, name, reward, dataBit, rewardtype, time, locked));
-                    AddToCounter(category);
-                }
-            }
+            var id = (int)row.id;
+            var category = ((string?)row.type) ?? string.Empty;
+            var num = (int)row.level_num;
+            var type = (int)row.goal_type;
+            var goalData = (int)row.goal_data;
+            var name = ((string?)row.action) ?? string.Empty;
+            var reward = (int)row.pixel_reward;
+            var dataBit = ((string?)row.data_bit) ?? string.Empty;
+            var rewardtype = Convert.ToInt32(((object)row.reward_type).ToString());
+            var time = (int)row.timestamp_unlock;
+            var locked = (int)row.timestamp_lock;
+            _quests.Add(id, new(id, category, num, (QuestType)type, goalData, name, reward, dataBit, rewardtype, time, locked));
+            AddToCounter(category);
         }
         _logger.LogInformation("Quest Manager -> LOADED");
     }
 
     private void AddToCounter(string category)
     {
-        var count = 0;
-        if (_questCount.TryGetValue(category, out count))
+        if (_questCount.TryGetValue(category, out var count))
             _questCount[category] = count + 1;
         else
             _questCount.Add(category, 1);
@@ -124,12 +118,14 @@ public class QuestManager : IQuestManager
                 completeQuest = true;
                 break;
         }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `user_quests` SET `progress` = '{totalProgress}' WHERE `user_id` = '{habbo.Id}' AND `quest_id` = '{quest.Id}' LIMIT 1");
-            if (completeQuest)
-                dbClient.RunQuery($"UPDATE `user_statistics` SET `quest_id` = '0' WHERE `id` = '{habbo.Id}' LIMIT 1");
-        }
+        using var db = _database.Connection();
+        db.Execute(
+            "UPDATE `user_quests` SET `progress` = @progress WHERE `user_id` = @userId AND `quest_id` = @questId LIMIT 1",
+            new { progress = totalProgress, userId = habbo.Id, questId = quest.Id });
+        if (completeQuest)
+            db.Execute(
+                "UPDATE `user_statistics` SET `quest_id` = '0' WHERE `id` = @id LIMIT 1",
+                new { id = habbo.Id });
         quests[stats.QuestId] = totalProgress;
         var activeQuest = quest;
         if (activeQuest == null)

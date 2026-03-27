@@ -1,4 +1,5 @@
-﻿using NLog;
+using Dapper;
+using NLog;
 using Plus.Communication.Packets.Outgoing.Handshake;
 
 namespace Plus.HabboHotel.Users.Process;
@@ -90,13 +91,13 @@ internal sealed class ProcessComponent
             if (_player.HabboStats.RespectsTimestamp != DateTime.Today.ToString("MM/dd"))
             {
                 _player.HabboStats.RespectsTimestamp = DateTime.Today.ToString("MM/dd");
-                using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
-                {
-                    dbClient.RunQuery(
-                        $"UPDATE `user_statistics` SET `dailyRespectPoints` = '{(_player.Rank == 1 && _player.VipRank == 0 ? 10 : _player.VipRank == 1 ? 15 : 20)}', `dailyPetRespectPoints` = '{(_player.Rank == 1 && _player.VipRank == 0 ? 10 : _player.VipRank == 1 ? 15 : 20)}', `respectsTimestamp` = '{DateTime.Today:MM/dd}' WHERE `id` = '{_player.Id}' LIMIT 1");
-                }
-                _player.HabboStats.DailyRespectPoints = _player.Rank == 1 && _player.VipRank == 0 ? 10 : _player.VipRank == 1 ? 15 : 20;
-                _player.HabboStats.DailyPetRespectPoints = _player.Rank == 1 && _player.VipRank == 0 ? 10 : _player.VipRank == 1 ? 15 : 20;
+                var respectPoints = _player.Rank == 1 && _player.VipRank == 0 ? 10 : _player.VipRank == 1 ? 15 : 20;
+                using var db = PlusEnvironment.DatabaseManager.Connection();
+                db.Execute(
+                    "UPDATE `user_statistics` SET `dailyRespectPoints` = @points, `dailyPetRespectPoints` = @points, `respectsTimestamp` = @ts WHERE `id` = @id LIMIT 1",
+                    new { points = respectPoints, ts = DateTime.Today.ToString("MM/dd"), id = _player.Id });
+                _player.HabboStats.DailyRespectPoints = respectPoints;
+                _player.HabboStats.DailyPetRespectPoints = respectPoints;
                 if (_player.Client != null) _player.Client.Send(new UserObjectComposer(_player));
             }
             if (_player.GiftPurchasingWarnings < 15)

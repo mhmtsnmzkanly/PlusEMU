@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 
@@ -20,21 +20,19 @@ public class TalentTrackManager : ITalentTrackManager
 
     public void Init()
     {
-        DataTable? data = null;
-        using (var dbClient = _database.GetQueryReactor())
+        using var db = _database.Connection();
+        var rows = db.Query("SELECT `type`, `level`, `data_actions`, `data_gifts` FROM `talents`");
+        foreach (var row in rows)
         {
-            dbClient.SetQuery("SELECT `type`,`level`,`data_actions`,`data_gifts` FROM `talents`");
-            data = dbClient.GetTable();
+            _citizenshipLevels.Add(
+                (int)row.level,
+                new(
+                    ((string?)row.type) ?? string.Empty,
+                    (int)row.level,
+                    ((string?)row.data_actions) ?? string.Empty,
+                    ((string?)row.data_gifts) ?? string.Empty));
         }
-        if (data != null)
-        {
-            foreach (DataRow row in data.Rows)
-            {
-                _citizenshipLevels.Add(Convert.ToInt32(row["level"]),
-                    new(Convert.ToString(row["type"]) ?? string.Empty, Convert.ToInt32(row["level"]), Convert.ToString(row["data_actions"]) ?? string.Empty, Convert.ToString(row["data_gifts"]) ?? string.Empty));
-            }
-        }
-        _logger.LogInformation("Loaded " + _citizenshipLevels.Count + " talent track levels");
+        _logger.LogInformation("Loaded {Count} talent track levels", _citizenshipLevels.Count);
     }
 
     public ICollection<TalentTrackLevel> GetLevels() => _citizenshipLevels.Values;

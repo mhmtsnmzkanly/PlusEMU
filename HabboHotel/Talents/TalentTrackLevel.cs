@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 
 namespace Plus.HabboHotel.Talents;
 
@@ -13,13 +13,9 @@ public class TalentTrackLevel
         Actions = new();
         Gifts = new();
         foreach (var str in dataActions.Split('|'))
-        {
             Actions.Add(str);
-        }
         foreach (var str in dataGifts.Split('|'))
-        {
             Gifts.Add(str);
-        }
         _subLevels = new();
         Init();
     }
@@ -33,20 +29,18 @@ public class TalentTrackLevel
 
     public void Init()
     {
-        DataTable? getTable = null;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
+        using var db = PlusEnvironment.DatabaseManager.Connection();
+        var rows = db.Query(
+            "SELECT `sub_level`, `badge_code`, `required_progress` FROM `talents_sub_levels` WHERE `talent_level` = @talentLevel",
+            new { talentLevel = Level });
+        foreach (var row in rows)
         {
-            dbClient.SetQuery("SELECT `sub_level`,`badge_code`,`required_progress` FROM `talents_sub_levels` WHERE `talent_level` = @TalentLevel");
-            dbClient.AddParameter("TalentLevel", Level);
-            getTable = dbClient.GetTable();
-        }
-        if (getTable != null)
-        {
-            foreach (DataRow row in getTable.Rows)
-            {
-                _subLevels.Add(Convert.ToInt32(row["sub_level"]),
-                    new(Convert.ToInt32(row["sub_level"]), Convert.ToString(row["badge_code"]) ?? string.Empty, Convert.ToInt32(row["required_progress"])));
-            }
+            _subLevels.Add(
+                (int)row.sub_level,
+                new(
+                    (int)row.sub_level,
+                    ((string?)row.badge_code) ?? string.Empty,
+                    (int)row.required_progress));
         }
     }
 
