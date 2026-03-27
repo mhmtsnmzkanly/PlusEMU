@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Plus.Database;
 
 namespace Plus.HabboHotel.Users.Inventory.Bots;
@@ -11,21 +11,24 @@ internal class BotLoader : IBotLoader
     {
         _database = database;
     }
+
     public List<Bot> GetBotsForUser(int userId)
     {
-        var b = new List<Bot>();
-        DataTable? dBots = null;
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery($"SELECT `id`,`user_id`,`name`,`motto`,`look`,`gender`FROM `bots` WHERE `user_id` = '{userId}' AND `room_id` = '0' AND `ai_type` != 'pet'");
-        dBots = dbClient.GetTable();
-        if (dBots != null)
+        using var db = _database.Connection();
+        var rows = db.Query(
+            "SELECT `id`, `user_id`, `name`, `motto`, `look`, `gender` FROM `bots` WHERE `user_id` = @userId AND `room_id` = '0' AND `ai_type` != 'pet'",
+            new { userId });
+        var bots = new List<Bot>();
+        foreach (var row in rows)
         {
-            foreach (DataRow dRow in dBots.Rows)
-            {
-                b.Add(new(Convert.ToInt32(dRow["id"]), Convert.ToInt32(dRow["user_id"]), Convert.ToString(dRow["name"]) ?? string.Empty,
-                    Convert.ToString(dRow["motto"]) ?? string.Empty, Convert.ToString(dRow["look"]) ?? string.Empty, Convert.ToString(dRow["gender"]) ?? string.Empty));
-            }
+            bots.Add(new(
+                (int)row.id,
+                (int)row.user_id,
+                ((string?)row.name) ?? string.Empty,
+                ((string?)row.motto) ?? string.Empty,
+                ((string?)row.look) ?? string.Empty,
+                ((string?)row.gender) ?? string.Empty));
         }
-        return b;
+        return bots;
     }
 }

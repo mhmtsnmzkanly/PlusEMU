@@ -1,4 +1,5 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Engine;
+using Dapper;
+using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.HabboHotel.GameClients;
 
 namespace Plus.HabboHotel.Items.Interactor;
@@ -46,13 +47,10 @@ internal class InteractorMannequin : IFurniInteractor
             var final = "";
             foreach (var str in newFig.Values) final += $"{str}.";
             habbo.Look = final.TrimEnd('.');
-            using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
-            {
-                dbClient.SetQuery($"UPDATE users SET look = @look, gender = @gender WHERE id = '{habbo.Id}' LIMIT 1");
-                dbClient.AddParameter("look", habbo.Look);
-                dbClient.AddParameter("gender", habbo.Gender);
-                dbClient.RunQuery();
-            }
+            using var db = PlusEnvironment.DatabaseManager.Connection();
+            db.Execute(
+                "UPDATE `users` SET `look` = @look, `gender` = @gender WHERE `id` = @id LIMIT 1",
+                new { look = habbo.Look, gender = habbo.Gender, id = habbo.Id });
             var room = habbo.CurrentRoom;
             if (room == null)
                 return;
