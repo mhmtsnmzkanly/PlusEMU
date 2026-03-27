@@ -1,5 +1,62 @@
 # Changelog
 
+## 2026-03-27
+
+### Complete GetQueryReactor() Elimination (Batch 2–7)
+
+Replaced every remaining `GetQueryReactor()` call in the codebase with `DatabaseManager.Connection()` / Dapper.
+All SQL injection risks from string interpolation have been eliminated. Build is clean at `0 Warning(s), 0 Error(s)`.
+
+#### Batch 2 — Loader / Finder Helpers
+- `HabboHotel/Users/Inventory/Bots/BotLoader.cs` — Dapper `Query`, parameterized.
+- `HabboHotel/Users/Inventory/Pets/PetLoader.cs` — N+1 query optimized to single JOIN.
+- `HabboHotel/Items/ItemTeleporterFinder.cs` — `QueryFirstOrDefault`, `System.Data` removed.
+- `HabboHotel/Items/ItemHopperFinder.cs` — `QueryFirstOrDefault`.
+- `HabboHotel/Items/Interactor/InteractorHopper.cs` — `Execute`, parameterized DELETE.
+- `HabboHotel/Items/Interactor/InteractorMannequin.cs` — `Execute`, parameterized UPDATE.
+
+#### Batch 3 — Talent / Quest / Reward / Process
+- `HabboHotel/Talents/TalentTrackManager.cs` — `Query`, `System.Data` removed.
+- `HabboHotel/Talents/TalentTrackLevel.cs` — `Query` with parameters.
+- `HabboHotel/Quests/QuestManager.cs` — `Query`/`Execute`, all string-interpolated SQL injection risks fixed.
+- `HabboHotel/Rewards/RewardManager.cs` — split single `dbClient` into multiple `Connection()` scopes.
+- `HabboHotel/Users/Process/ProcessComponent.cs` — `Execute`, respect-points calculation optimized.
+
+#### Batch 4 — Catalog / Permissions
+- `HabboHotel/Permissions/PermissionManager.cs` — 5 separate connections consolidated to 1.
+- `HabboHotel/Catalog/Pets/PetRaceManager.cs` — `SELECT *` → explicit columns.
+- `HabboHotel/Catalog/Utilities/BotUtility.cs` — `InsertQuery()` → `ExecuteScalar<long>` + `LAST_INSERT_ID()`.
+- `HabboHotel/Catalog/Utilities/PetUtility.cs` — same pattern; parameter names cleaned.
+- `HabboHotel/Catalog/Vouchers/Voucher.cs` — `Execute`, parameterized.
+- `HabboHotel/Catalog/Vouchers/VoucherManager.cs` — `Query`.
+
+#### Batch 5 — Items
+- `HabboHotel/Items/ItemFactory.cs` — 7 `GetQueryReactor` blocks, all `InsertQuery()` → `ExecuteScalar<long>` + `LAST_INSERT_ID()`.
+- `HabboHotel/Items/ItemLoader.cs` — `Query`; `out var` → `out ItemDefinition?` to fix CS8197; `data!` null-forgiving.
+- `HabboHotel/Items/Data/Toner/TonerData.cs` — single `Connection()` with `QueryFirstOrDefault` + `Execute`; ordinal indexing → named columns.
+- `HabboHotel/Items/Wired/Boxes/Effects/BotChangesClothesBox.cs` — `Execute`, parameterized UPDATE.
+
+#### Batch 6 — Marketplace / Wired / Server Status
+- `HabboHotel/Catalog/Marketplace/MarketplaceManager.cs` — `AvgPriceForSprite` 2×`QueryFirstOrDefault<int>`, `@spriteId`.
+- `Communication/Packets/Outgoing/Marketplace/MarketPlaceOwnOffersComposer.cs` — `Query` + `QueryFirstOrDefault`; `DataTable` → `List<dynamic>`; `System.Data` removed.
+- `HabboHotel/Rooms/Instance/WiredComponent.cs` — `LoadWiredBox`: `QueryFirstOrDefault<dynamic?>`; `SaveBox`: `Execute` + anonymous object; `SELECT *` → explicit columns; `System.Data` removed.
+- `Core/ServerStatusUpdater.cs` — both `Dispose` and `UpdateOnlineUsers` → `Execute` + anonymous object.
+
+#### Batch 7 — RCON Commands + Packet Handlers
+- RCON: `GiveUserCurrencyCommand`, `TakeUserCurrencyCommand`, `ReloadUserCurrencyCommand`, `SyncUserCurrencyCommand` — 4 separate connections each → single `Connection()` per command with switch-case `Execute`/`QueryFirstOrDefault<int>`.
+- RCON: `ReloadUserMottoCommand`, `ReloadUserRankCommand`, `ReloadUserVIPRankCommand` — `GetString`/`GetInteger` → `QueryFirstOrDefault<string/int>`.
+- Packets: `OpenGiftEvent` — 5 reactors → `QueryFirstOrDefault<dynamic>` + `Execute`; `DataRow` ordinal → named columns; string-interpolated DELETEs → parameterized.
+- Packets: `DeleteRoomEvent` — 6 string-interpolated `RunQuery` → `Execute` + `@params`.
+- Packets: `RedeemVoucherEvent` — `DataRow` null-check → `QueryFirstOrDefault`; `System.Data` removed.
+- Packets: `FriendFurniConfirmLockEvent`, `GetMarketplaceItemStatsEvent` — `Execute`/`QueryFirstOrDefault<int?>`.
+- Packets: `CancelQuestEvent`, `StartQuestEvent`, `GetCurrentQuestEvent` — compound interpolated queries → separate `Execute` + `@params`.
+- Packets: `GiveRoomScoreEvent`, `ModifyWhoCanRideHorseEvent`, `ChangeMottoEvent` — interpolation → `Execute` + `@params`.
+- Packets: `ApplyDecorationEvent`, `UseFurnitureEvent` — `Execute`; column-name interpolation retained with enum safety comment.
+- Packets: `SaveFloorPlanModelEvent` — `GetRow`+`AddParameter` chain → `QueryFirstOrDefault` + 2×`Execute`.
+- Packets: `CreditFurniRedeemEvent`, `SetTonerEvent`, `DeleteStickyNoteEvent` — `Execute` + `@id`.
+- Packets: `SaveRoomSettingsEvent` — 22-parameter `AddParameter` chain → single anonymous object.
+- Packets: `SetUserFocusPreferenceEvent`, `UpdateFigureDataEvent` — `Execute` + anonymous object; string interpolation removed.
+
 ## 2026-03-26
 
 ### Legacy Database Wrapper Migration
