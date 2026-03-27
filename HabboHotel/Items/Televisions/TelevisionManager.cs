@@ -1,5 +1,5 @@
-﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 using Plus.Utilities;
@@ -19,26 +19,23 @@ public class TelevisionManager : ITelevisionManager
 
     public Dictionary<int, TelevisionItem> Televisions { get; } = new();
 
-
     public ICollection<TelevisionItem> TelevisionList => Televisions.Values;
 
     public void Init()
     {
         if (Televisions.Count > 0)
             Televisions.Clear();
-        using (var dbClient = _database.GetQueryReactor())
+        using var db = _database.Connection();
+        var rows = db.Query("SELECT `id`, `youtube_id`, `title`, `description`, `enabled` FROM `items_youtube` ORDER BY `id` DESC");
+        foreach (var row in rows)
         {
-            dbClient.SetQuery("SELECT * FROM `items_youtube` ORDER BY `id` DESC");
-            var getData = dbClient.GetTable();
-            if (getData != null)
-            {
-                foreach (DataRow row in getData.Rows)
-                {
-                    Televisions.Add(Convert.ToInt32(row["id"]),
-                        new(Convert.ToInt32(row["id"]), row["youtube_id"].ToString() ?? string.Empty, row["title"].ToString() ?? string.Empty, row["description"].ToString() ?? string.Empty,
-                            ConvertExtensions.EnumToBool(row["enabled"].ToString() ?? "0")));
-                }
-            }
+            Televisions.Add((int)row.id,
+                new(
+                    (int)row.id,
+                    ((string?)row.youtube_id) ?? string.Empty,
+                    ((string?)row.title) ?? string.Empty,
+                    ((string?)row.description) ?? string.Empty,
+                    ConvertExtensions.EnumToBool(((string?)row.enabled) ?? "0")));
         }
         _logger.LogInformation("Television Items -> LOADED");
     }

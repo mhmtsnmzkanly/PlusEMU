@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Moderation;
+using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.Rooms.Chat.Commands;
 using Plus.Core.Settings;
@@ -20,7 +20,7 @@ public class WhisperEvent : IPacketEvent
     private readonly ICommandManager _commandManager;
     private readonly IModerationManager _moderationManager;
     private readonly ISettingsManager _settingsManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
 
     public WhisperEvent(
         IChatStyleManager chatStyleManager,
@@ -29,7 +29,7 @@ public class WhisperEvent : IPacketEvent
         ICommandManager commandManager,
         IModerationManager moderationManager,
         ISettingsManager settingsManager,
-        IQuestManager questManager)
+        IQuestService questService)
     {
         _chatStyleManager = chatStyleManager;
         _chatlogManager = chatlogManager;
@@ -37,40 +37,40 @@ public class WhisperEvent : IPacketEvent
         _commandManager = commandManager;
         _moderationManager = moderationManager;
         _settingsManager = settingsManager;
-        _questManager = questManager;
+        _questService = questService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         if (habbo?.Permissions == null || habbo.HabboStats == null || !habbo.InRoom)
-            return Task.CompletedTask;
+            return;
         var room = habbo.CurrentRoom;
         if (room == null)
-            return Task.CompletedTask;
-        if (!habbo.Permissions.HasRight("mod_tool") && room.CheckMute(session))
+            return;
+        if (!habbo.Permissions.HasRight("room_ignore_mute") && room.CheckMute(session))
         {
             session.SendWhisper("Oops, you're currently muted.");
-            return Task.CompletedTask;
+            return;
         }
         if (UnixTimestamp.GetNow() < habbo.FloodTime && habbo.FloodTime != 0)
-            return Task.CompletedTask;
+            return;
         var @params = packet.ReadString();
         if (string.IsNullOrWhiteSpace(@params) || !@params.Contains(' '))
-            return Task.CompletedTask;
+            return;
         var toUser = @params.Split(' ')[0];
         var message = @params.Substring(toUser.Length + 1);
         var colour = packet.ReadInt();
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
-            return Task.CompletedTask;
+            return;
         var user2 = room.GetRoomUserManager().GetRoomUserByHabbo(toUser);
         if (user2 == null)
-            return Task.CompletedTask;
+            return;
         if (habbo.TimeMuted > 0)
         {
             session.Send(new MutedComposer(habbo.TimeMuted));
-            return Task.CompletedTask;
+            return;
         }
         if (!habbo.Permissions.HasRight("word_filter_override"))
             message = _wordFilterManager.CheckMessage(message);
@@ -83,17 +83,17 @@ public class WhisperEvent : IPacketEvent
             if (user.IncrementAndCheckFlood(out var muteTime))
             {
                 session.Send(new FloodControlComposer(muteTime));
-                return Task.CompletedTask;
+                return;
             }
         }
         var targetClient = user2.GetClient();
         var targetHabbo = targetClient?.GetHabbo();
         if (targetHabbo == null)
-            return Task.CompletedTask;
+            return;
         if (!targetHabbo.ReceiveWhispers && !habbo.Permissions.HasRight("room_whisper_override"))
         {
             session.SendWhisper("Oops, this user has their whispers disabled!");
-            return Task.CompletedTask;
+            return;
         }
         _chatlogManager.StoreChatlog(new(habbo.Id, room.Id, $"<Whisper to {toUser}>: {message}", UnixTimestamp.GetNow(), habbo, room));
         if (_wordFilterManager.CheckBannedWords(message))
@@ -104,16 +104,16 @@ public class WhisperEvent : IPacketEvent
                 _moderationManager.BanUser("System", ModerationBanType.Username, habbo.Username, $"Spamming banned phrases ({message})",
                     UnixTimestamp.GetNow() + 78892200);
                 session.Disconnect($"Auto-ban for banned phrase spam in whisper: {message}");
-                return Task.CompletedTask;
+                return;
             }
             session.Send(new WhisperComposer(user.VirtualId, message, 0, user.LastBubble));
-            return Task.CompletedTask;
+            return;
         }
-        _questManager.ProgressUserQuest(session, QuestType.SocialChat);
+        await _questService.ProgressUserQuest(session, QuestType.SocialChat);
         user.UnIdle();
         var userClient = user.GetClient();
         if (userClient == null)
-            return Task.CompletedTask;
+            return;
         userClient.Send(new WhisperComposer(user.VirtualId, message, 0, user.LastBubble));
         if (!user2.IsBot && user2.UserId != user.UserId)
         {
@@ -134,6 +134,5 @@ public class WhisperEvent : IPacketEvent
                 }
             }
         }
-        return Task.CompletedTask;
     }
 }

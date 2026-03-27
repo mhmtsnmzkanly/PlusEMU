@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Plus.Database;
 
 namespace Plus.HabboHotel.Rooms.Chat.Pets.Commands;
@@ -23,23 +23,16 @@ public class PetCommandManager : IPetCommandManager
         _petCommands.Clear();
         _commandRegister.Clear();
         _commandDatabase.Clear();
-        DataTable? table = null;
-        using (var dbClient = _database.GetQueryReactor())
+        using var db = _database.Connection();
+        var rows = db.Query("SELECT `id`, `input_title`, `input` FROM `bots_pet_commands`");
+        foreach (var row in rows)
         {
-            dbClient.SetQuery("SELECT * FROM `bots_pet_commands`");
-            table = dbClient.GetTable();
-            if (table != null)
-            {
-                foreach (DataRow row in table.Rows)
-                {
-                    var commandKey = row[1].ToString();
-                    var commandInput = row[2].ToString();
-                    if (string.IsNullOrEmpty(commandKey) || string.IsNullOrEmpty(commandInput))
-                        continue;
-                    _commandRegister.Add(Convert.ToInt32(row[0]), commandKey);
-                    _commandDatabase.Add($"{commandKey}.input", commandInput);
-                }
-            }
+            var commandKey = (string?)row.input_title;
+            var commandInput = (string?)row.input;
+            if (string.IsNullOrEmpty(commandKey) || string.IsNullOrEmpty(commandInput))
+                continue;
+            _commandRegister.Add((int)row.id, commandKey);
+            _commandDatabase.Add($"{commandKey}.input", commandInput);
         }
         foreach (var (commandId, commandStringedId) in _commandRegister)
         {

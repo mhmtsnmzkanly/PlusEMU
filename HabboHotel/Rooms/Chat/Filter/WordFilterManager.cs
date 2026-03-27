@@ -1,5 +1,5 @@
-﻿using System.Data;
 using System.Text.RegularExpressions;
+using Dapper;
 using Plus.Database;
 using Plus.Utilities;
 
@@ -20,27 +20,20 @@ public sealed class WordFilterManager : IWordFilterManager
     {
         if (_filteredWords.Count > 0)
             _filteredWords.Clear();
-        DataTable? data = null;
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("SELECT * FROM `wordfilter`");
-        data = dbClient.GetTable();
-        if (data != null)
+        using var db = _database.Connection();
+        var rows = db.Query("SELECT `word`, `replacement`, `strict`, `bannable` FROM `wordfilter`");
+        foreach (var row in rows)
         {
-            foreach (DataRow row in data.Rows)
-            {
-                var strictValue = row["strict"].ToString() ?? "0";
-                var bannableValue = row["bannable"].ToString() ?? "0";
-                var word = row["word"].ToString() ?? string.Empty;
-                var replacement = row["replacement"].ToString() ?? string.Empty;
-                var isStrict = ConvertExtensions.EnumToBool(strictValue);
-                var isBannable = ConvertExtensions.EnumToBool(bannableValue);
-                _filteredWords.Add(new(
-                    word,
-                    replacement,
-                    isStrict,
-                    isBannable)
-                );
-            }
+            var strictValue = ((string?)row.strict) ?? "0";
+            var bannableValue = ((string?)row.bannable) ?? "0";
+            var word = ((string?)row.word) ?? string.Empty;
+            var replacement = ((string?)row.replacement) ?? string.Empty;
+            _filteredWords.Add(new(
+                word,
+                replacement,
+                ConvertExtensions.EnumToBool(strictValue),
+                ConvertExtensions.EnumToBool(bannableValue))
+            );
         }
     }
 

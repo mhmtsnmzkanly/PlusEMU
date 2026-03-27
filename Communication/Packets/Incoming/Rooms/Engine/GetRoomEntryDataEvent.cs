@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Chat;
+using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items.Wired;
@@ -9,28 +9,31 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
 
 internal class GetRoomEntryDataEvent : IPacketEvent
 {
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
 
-    public GetRoomEntryDataEvent(IQuestManager questManager)
+    public GetRoomEntryDataEvent(IQuestService questService)
     {
-        _questManager = questManager;
+        _questService = questService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         var room = habbo?.CurrentRoom;
         if (room == null)
-            return Task.CompletedTask;
+            return;
         if (!room.GetRoomUserManager().AddAvatarToRoom(session))
         {
             room.GetRoomUserManager().RemoveUserFromRoom(session, false);
-            return Task.CompletedTask; //TODO: Remove?
+            return; //TODO: Remove?
         }
         room.SendObjects(session);
-        habbo?.Messenger?.NotifyChangesToFriends();
+        if (habbo?.Messenger != null)
+            habbo.Messenger.NotifyChangesToFriends();
+            
         if (habbo?.HabboStats != null && habbo.HabboStats.QuestId > 0)
-            _questManager.QuestReminder(session, habbo.HabboStats.QuestId);
+            await _questService.QuestReminder(session, habbo.HabboStats.QuestId);
+            
         session.Send(new RoomEntryInfoComposer(room.RoomId, room.CheckRights(session, true)));
         session.Send(new RoomVisualizationSettingsComposer(room.WallThickness, room.FloorThickness, Convert.ToBoolean(room.Hidewall)));
         var user = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
@@ -40,6 +43,5 @@ internal class GetRoomEntryDataEvent : IPacketEvent
             room.GetWired()?.TriggerEvent(WiredBoxType.TriggerRoomEnter, habbo);
         if (habbo != null && UnixTimestamp.GetNow() < habbo.FloodTime && habbo.FloodTime != 0)
             session.Send(new FloodControlComposer((int)habbo.FloodTime - (int)UnixTimestamp.GetNow()));
-        return Task.CompletedTask;
     }
 }

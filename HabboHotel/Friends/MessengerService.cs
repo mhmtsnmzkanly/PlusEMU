@@ -14,7 +14,7 @@ namespace Plus.HabboHotel.Friends;
 internal class MessengerService : IMessengerService
 {
     private readonly IMessengerDataLoader _messengerDataLoader;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
     private readonly IWordFilterManager _wordFilterManager;
     private readonly IGameClientManager _gameClientManager;
     private readonly ISearchResultFactory _searchResultFactory;
@@ -22,14 +22,14 @@ internal class MessengerService : IMessengerService
 
     public MessengerService(
         IMessengerDataLoader messengerDataLoader,
-        IQuestManager questManager,
+        IQuestService questService,
         IWordFilterManager wordFilterManager,
         IGameClientManager gameClientManager,
         ISearchResultFactory searchResultFactory,
         IRoomManager roomManager)
     {
         _messengerDataLoader = messengerDataLoader;
-        _questManager = questManager;
+        _questService = questService;
         _wordFilterManager = wordFilterManager;
         _gameClientManager = gameClientManager;
         _searchResultFactory = searchResultFactory;
@@ -79,7 +79,7 @@ internal class MessengerService : IMessengerService
             return;
 
         messenger.SendFriendRequest(userId);
-        _questManager.ProgressUserQuest(session, QuestType.SocialFriend);
+        await _questService.ProgressUserQuest(session, QuestType.SocialFriend);
     }
 
     public Task AcceptFriendRequests(GameClient session, IReadOnlyCollection<int> requestIds)

@@ -1,4 +1,4 @@
-﻿using Dapper;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
@@ -10,13 +10,13 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
 internal class PickupObjectEvent : IPacketEvent
 {
     private readonly IGameClientManager _clientManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
     private readonly IDatabase _database;
 
-    public PickupObjectEvent(IGameClientManager clientManager, IQuestManager questManager, IDatabase database)
+    public PickupObjectEvent(IGameClientManager clientManager, IQuestService questService, IDatabase database)
     {
         _clientManager = clientManager;
-        _questManager = questManager;
+        _questService = questService;
         _database = database;
     }
 
@@ -80,7 +80,7 @@ internal class PickupObjectEvent : IPacketEvent
 
             await connection.ExecuteAsync("UPDATE `items` SET `room_id` = '0' WHERE `id` = @id LIMIT 1", new { id = item.Id });
 
-            _questManager.ProgressUserQuest(session, QuestType.FurniPick);
+            await _questService.ProgressUserQuest(session, QuestType.FurniPick);
         }
     }
 }

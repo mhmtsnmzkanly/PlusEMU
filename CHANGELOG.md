@@ -62,6 +62,15 @@ All SQL injection risks from string interpolation have been eliminated. Build is
 - `RedeemVoucherEvent.cs` -> Moved voucher redemption logic to `CatalogService.RedeemVoucher`.
 - Added strict null-safety checks to internal service methods.
 
+#### Phase 2 — Quest Service
+- Defined `IQuestService` and implemented `QuestService` to centralize quest business logic.
+- `QuestManager.cs` simplified to be a data-only manager (Repository pattern).
+- Refactored 15+ Packet Handlers to use `IQuestService` via Dependency Injection.
+- Migrated all quest progress triggers (Furni interaction, Room entry, Respect, etc.) to the new service layer.
+- Added support for async/await in quest progress tracking.
+- Maintained legacy compatibility via `IGame.QuestService` for non-DI classes.
+- Fixed `CS8602` and `CS4032` build errors during migration.
+
 ## 2026-03-26
 
 ### Legacy Database Wrapper Migration

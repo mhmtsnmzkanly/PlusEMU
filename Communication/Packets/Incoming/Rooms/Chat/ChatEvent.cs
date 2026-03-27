@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Moderation;
+using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.Core.Settings;
 using Plus.HabboHotel.GameClients;
@@ -20,7 +20,7 @@ public class ChatEvent : IPacketEvent
     private readonly ICommandManager _commandManager;
     private readonly IModerationManager _moderationManager;
     private readonly ISettingsManager _settingsManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
 
     public ChatEvent(
         IChatStyleManager chatStyleManager,
@@ -29,7 +29,7 @@ public class ChatEvent : IPacketEvent
         ICommandManager commandManager,
         IModerationManager moderationManager,
         ISettingsManager settingsManager,
-        IQuestManager questManager)
+        IQuestService questService)
     {
         _chatStyleManager = chatStyleManager;
         _chatlogManager = chatlogManager;
@@ -37,7 +37,7 @@ public class ChatEvent : IPacketEvent
         _commandManager = commandManager;
         _moderationManager = moderationManager;
         _settingsManager = settingsManager;
-        _questManager = questManager;
+        _questService = questService;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -102,7 +102,7 @@ public class ChatEvent : IPacketEvent
         }
         if (!habbo.Permissions.HasRight("word_filter_override"))
             message = _wordFilterManager.CheckMessage(message);
-        _questManager.ProgressUserQuest(session, QuestType.SocialChat);
+        await _questService.ProgressUserQuest(session, QuestType.SocialChat);
         user.OnChat(user.LastBubble, message, false);
         return;
     }

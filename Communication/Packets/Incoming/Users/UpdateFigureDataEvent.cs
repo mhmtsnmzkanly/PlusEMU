@@ -14,31 +14,31 @@ internal class UpdateFigureDataEvent : IPacketEvent
 {
     private readonly IFigureDataManager _figureManager;
     private readonly IAchievementManager _achievementManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
     private readonly IDatabase _database;
 
-    public UpdateFigureDataEvent(IFigureDataManager figureDataManager, IAchievementManager achievementManager, IQuestManager questManager, IDatabase database)
+    public UpdateFigureDataEvent(IFigureDataManager figureDataManager, IAchievementManager achievementManager, IQuestService questService, IDatabase database)
     {
         _figureManager = figureDataManager;
         _achievementManager = achievementManager;
-        _questManager = questManager;
+        _questService = questService;
         _database = database;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         var clothing = habbo?.Clothing;
-        if (habbo == null || clothing == null) return Task.CompletedTask;
+        if (habbo == null || clothing == null) return;
         var gender = packet.ReadString().ToUpper();
         var look = _figureManager.ProcessFigure(packet.ReadString(), gender, clothing.GetClothingParts, true);
-        if (look == habbo.Look) return Task.CompletedTask;
-        if ((DateTime.Now - habbo.LastClothingUpdateTime).TotalSeconds <= 2.0) { habbo.ClothingUpdateWarnings += 1; if (habbo.ClothingUpdateWarnings >= 25) habbo.SessionClothingBlocked = true; return Task.CompletedTask; }
-        if (habbo.SessionClothingBlocked) return Task.CompletedTask;
+        if (look == habbo.Look) return;
+        if ((DateTime.Now - habbo.LastClothingUpdateTime).TotalSeconds <= 2.0) { habbo.ClothingUpdateWarnings += 1; if (habbo.ClothingUpdateWarnings >= 25) habbo.SessionClothingBlocked = true; return; }
+        if (habbo.SessionClothingBlocked) return;
         habbo.LastClothingUpdateTime = DateTime.Now;
         string[] allowedGenders = { "M", "F" };
-        if (!allowedGenders.Contains(gender)) { session.Send(new BroadcastMessageAlertComposer("Sorry, you chose an invalid gender.")); return Task.CompletedTask; }
-        _questManager.ProgressUserQuest(session, QuestType.ProfileChangeLook);
+        if (!allowedGenders.Contains(gender)) { session.Send(new BroadcastMessageAlertComposer("Sorry, you chose an invalid gender.")); return; }
+        await _questService.ProgressUserQuest(session, QuestType.ProfileChangeLook);
         habbo.Look = _figureManager.FilterFigure(look);
         habbo.Gender = gender.ToLower();
         using var db = _database.Connection();
@@ -46,14 +46,13 @@ internal class UpdateFigureDataEvent : IPacketEvent
             new { look, gender, id = habbo.Id });
         _achievementManager.ProgressAchievement(session, "ACH_AvatarLooks", 1);
         session.Send(new AvatarAspectUpdateComposer(look, gender));
-        if (habbo.Look.Contains("ha-1006")) _questManager.ProgressUserQuest(session, QuestType.WearHat);
+        if (habbo.Look.Contains("ha-1006")) await _questService.ProgressUserQuest(session, QuestType.WearHat);
         if (habbo.InRoom)
         {
             var currentRoom = habbo.CurrentRoom;
-            if (currentRoom == null) return Task.CompletedTask;
+            if (currentRoom == null) return;
             var roomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (roomUser != null) { session.Send(new UserChangeComposer(roomUser, true)); currentRoom.SendPacket(new UserChangeComposer(roomUser, false)); }
         }
-        return Task.CompletedTask;
     }
 }

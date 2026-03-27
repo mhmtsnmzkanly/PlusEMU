@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 
@@ -22,33 +22,24 @@ public sealed class ChatStyleManager : IChatStyleManager
     {
         if (_styles.Count > 0)
             _styles.Clear();
-        DataTable? table = null;
-        using (var dbClient = _database.GetQueryReactor())
+        using var db = _database.Connection();
+        var rows = db.Query("SELECT `id`, `name`, `required_right` FROM `room_chat_styles`");
+        foreach (var row in rows)
         {
-            dbClient.SetQuery("SELECT * FROM `room_chat_styles`;");
-            table = dbClient.GetTable();
-            if (table != null)
+            try
             {
-                foreach (DataRow row in table.Rows)
-                {
-                    try
-                    {
-                        if (!_styles.ContainsKey(Convert.ToInt32(row["id"])))
-                            _styles.Add(
-                                Convert.ToInt32(row["id"]),
-                                new(
-                                    Convert.ToInt32(row["id"]),
-                                    Convert.ToString(row["name"]) ?? string.Empty,
-                                    Convert.ToString(row["required_right"]) ?? string.Empty));
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError("Unable to load ChatBubble for ID [" + Convert.ToInt32(row["id"]) + "]", ex);
-                    }
-                }
+                int id = (int)row.id;
+                if (!_styles.ContainsKey(id))
+                    _styles.Add(id, new(id, ((string?)row.name) ?? string.Empty, ((string?)row.required_right) ?? string.Empty));
+            }
+            catch (Exception ex)
+            {
+                int safeId = 0;
+                try { safeId = (int)row.id; } catch { /* ignored */ }
+                _logger.LogError(ex, "Unable to load ChatBubble for ID [{Id}]", safeId);
             }
         }
-        _logger.LogInformation("Loaded " + _styles.Count + " chat styles.");
+        _logger.LogInformation("Loaded {Count} chat styles.", _styles.Count);
     }
 
     public bool TryGetStyle(int id, out ChatStyle style) => _styles.TryGetValue(id, out style!);

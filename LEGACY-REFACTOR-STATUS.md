@@ -41,6 +41,7 @@ These packet-heavy domains were already moved into dedicated services:
 - Wardrobe / clothing — `HabboHotel/Users/Clothing/AvatarClothingService.cs`
 - Pets / bots — `HabboHotel/Rooms/AI/RoomCreatureService.cs`
 - Catalog — `HabboHotel/Catalog/CatalogService.cs`
+- Quests — `HabboHotel/Quests/QuestService.cs`
 
 ## Completed Legacy DB Wrapper Migration
 

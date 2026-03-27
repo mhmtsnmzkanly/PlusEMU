@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Engine;
+using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Quests;
@@ -9,19 +9,19 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
 internal class MoveObjectEvent : RoomPacketEvent
 {
     private readonly IRoomManager _roomManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
 
-    public MoveObjectEvent(IRoomManager roomManager, IQuestManager questManager)
+    public MoveObjectEvent(IRoomManager roomManager, IQuestService questService)
     {
         _roomManager = roomManager;
-        _questManager = questManager;
+        _questService = questService;
     }
 
-    public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
+    public override async Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
         var itemId = packet.ReadUInt();
         if (itemId == 0)
-            return Task.CompletedTask;
+            return;
         Item item;
         if (room.Group != null)
         {
@@ -29,32 +29,33 @@ internal class MoveObjectEvent : RoomPacketEvent
             {
                 item = room.GetRoomItemHandler().GetItem(itemId);
                 if (item == null)
-                    return Task.CompletedTask;
+                    return;
                 session.Send(new ObjectUpdateComposer(item));
-                return Task.CompletedTask;
+                return;
             }
         }
         else
         {
-            if (!room.CheckRights(session)) return Task.CompletedTask;
+            if (!room.CheckRights(session)) return;
         }
         item = room.GetRoomItemHandler().GetItem(itemId);
         if (item == null)
-            return Task.CompletedTask;
+            return;
         var x = packet.ReadInt();
         var y = packet.ReadInt();
         var rotation = packet.ReadInt();
+        
         if (x != item.GetX || y != item.GetY)
-            _questManager.ProgressUserQuest(session, QuestType.FurniMove);
+            await _questService.ProgressUserQuest(session, QuestType.FurniMove);
         if (rotation != item.Rotation)
-            _questManager.ProgressUserQuest(session, QuestType.FurniRotate);
+            await _questService.ProgressUserQuest(session, QuestType.FurniRotate);
+            
         if (!room.GetRoomItemHandler().SetFloorItem(session, item, x, y, rotation, false, false, true))
         {
             room.SendPacket(new ObjectUpdateComposer(item));
-            return Task.CompletedTask;
+            return;
         }
         if (item.GetZ >= 0.1)
-            _questManager.ProgressUserQuest(session, QuestType.FurniStack);
-        return Task.CompletedTask;
+            await _questService.ProgressUserQuest(session, QuestType.FurniStack);
     }
 }

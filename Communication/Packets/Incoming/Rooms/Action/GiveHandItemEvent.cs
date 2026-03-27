@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Quests;
 using Plus.HabboHotel.Rooms;
 
@@ -6,36 +6,35 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Action;
 
 internal class GiveHandItemEvent : RoomPacketEvent
 {
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
 
-    public GiveHandItemEvent(IQuestManager questManager)
+    public GiveHandItemEvent(IQuestService questService)
     {
-        _questManager = questManager;
+        _questService = questService;
     }
 
-    public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
+    public override async Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)
-            return Task.CompletedTask;
+            return;
 
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
-            return Task.CompletedTask;
+            return;
         var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(packet.ReadInt());
         if (targetUser == null)
-            return Task.CompletedTask;
+            return;
         if (!(Math.Abs(user.X - targetUser.X) >= 3 || Math.Abs(user.Y - targetUser.Y) >= 3) || (habbo.Permissions?.HasRight("mod_tool") ?? false))
         {
             if (user.CarryItemId > 0 && user.CarryTimer > 0)
             {
                 if (user.CarryItemId == 8)
-                    _questManager.ProgressUserQuest(session, QuestType.GiveCoffee);
+                    await _questService.ProgressUserQuest(session, QuestType.GiveCoffee);
                 targetUser.CarryItem(user.CarryItemId);
                 user.CarryItem(0);
                 targetUser.DanceId = 0;
             }
         }
-        return Task.CompletedTask;
     }
 }

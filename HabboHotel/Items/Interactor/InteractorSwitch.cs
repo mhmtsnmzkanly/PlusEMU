@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Quests;
 using Plus.HabboHotel.Rooms;
 
@@ -26,7 +26,7 @@ internal class InteractorSwitch : IFurniInteractor
             var modes = item.Definition.Modes - 1;
             if (modes <= 0)
                 return;
-            PlusEnvironment.Game.QuestManager.ProgressUserQuest(session, QuestType.FurniSwitch);
+            PlusEnvironment.Game.QuestService.ProgressUserQuest(session, QuestType.FurniSwitch);
             var currentMode = 0;
             var newMode = 0;
             if (!int.TryParse(item.LegacyDataString, out currentMode)) { }

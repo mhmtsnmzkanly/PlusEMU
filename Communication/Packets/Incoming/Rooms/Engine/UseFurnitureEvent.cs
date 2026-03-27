@@ -12,33 +12,33 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
 
 internal class UseFurnitureEvent : RoomPacketEvent
 {
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
     private readonly IDatabase _database;
 
-    public UseFurnitureEvent(IQuestManager questManager, IDatabase database)
+    public UseFurnitureEvent(IQuestService questService, IDatabase database)
     {
-        _questManager = questManager;
+        _questService = questService;
         _database = database;
     }
 
-    public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
+    public override async Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         var itemId = packet.ReadUInt();
         var item = room.GetRoomItemHandler().GetItem(itemId);
-        if (item == null) return Task.CompletedTask;
+        if (item == null) return;
         var hasRights = room.CheckRights(session, false, true);
-        if (item.Definition.InteractionType == InteractionType.Banzaitele) return Task.CompletedTask;
+        if (item.Definition.InteractionType == InteractionType.Banzaitele) return;
         if (item.Definition.InteractionType == InteractionType.Toner)
         {
-            if (!room.CheckRights(session, true)) return Task.CompletedTask;
+            if (!room.CheckRights(session, true)) return;
             room.TonerData ??= new(item.Id);
             room.TonerData.Enabled = room.TonerData.Enabled == 0 ? 1 : 0;
             room.SendPacket(new ObjectUpdateComposer(item));
             item.UpdateState();
             using var db = _database.Connection();
             db.Execute("UPDATE `room_items_toner` SET `enabled` = @enabled LIMIT 1", new { enabled = room.TonerData.Enabled });
-            return Task.CompletedTask;
+            return;
         }
         if (item.Definition.InteractionType == InteractionType.GnomeBox && item.UserId == habbo?.Id)
             session.Send(new GnomeBoxComposer(item.Id));
@@ -46,14 +46,13 @@ internal class UseFurnitureEvent : RoomPacketEvent
         if (item.Definition.InteractionType == InteractionType.WfFloorSwitch1 || item.Definition.InteractionType == InteractionType.WfFloorSwitch2)
         {
             var user = habbo == null ? null : item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user == null) return Task.CompletedTask;
+            if (user == null) return;
             if (!Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y)) toggle = false;
         }
         var request = packet.ReadInt();
         item.Interactor.OnTrigger(session, item, request, hasRights);
         if (toggle && habbo != null)
             item.GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerStateChanges, habbo, item);
-        _questManager.ProgressUserQuest(session, QuestType.ExploreFindItem, (int)item.Definition.Id);
-        return Task.CompletedTask;
+        await _questService.ProgressUserQuest(session, QuestType.ExploreFindItem, (int)item.Definition.Id);
     }
 }

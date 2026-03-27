@@ -48,7 +48,7 @@ internal class RoomCreatureService : IRoomCreatureService
     private readonly IGameClientManager _clientManager;
     private readonly IDatabase _database;
     private readonly IAchievementManager _achievementManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
     private readonly IPetLocale _petLocale;
     private readonly IItemDataManager _itemDataManager;
     private readonly IItemFactory _itemFactory;
@@ -60,7 +60,7 @@ internal class RoomCreatureService : IRoomCreatureService
         IGameClientManager clientManager,
         IDatabase database,
         IAchievementManager achievementManager,
-        IQuestManager questManager,
+        IQuestService questService,
         IPetLocale petLocale,
         IItemDataManager itemDataManager,
         IItemFactory itemFactory)
@@ -71,7 +71,7 @@ internal class RoomCreatureService : IRoomCreatureService
         _clientManager = clientManager;
         _database = database;
         _achievementManager = achievementManager;
-        _questManager = questManager;
+        _questService = questService;
         _petLocale = petLocale;
         _itemDataManager = itemDataManager;
         _itemFactory = itemFactory;
@@ -206,15 +206,15 @@ internal class RoomCreatureService : IRoomCreatureService
         return Task.CompletedTask;
     }
 
-    public Task RespectPet(Room room, GameClient session, int petId)
+    public async Task RespectPet(Room room, GameClient session, int petId)
     {
         var habbo = session.GetHabbo();
         if (habbo?.HabboStats == null || !habbo.InRoom || habbo.HabboStats.DailyPetRespectPoints == 0)
-            return Task.CompletedTask;
+            return;
         var currentRoom = habbo.CurrentRoom;
         var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (currentRoom == null || thisUser == null)
-            return Task.CompletedTask;
+            return;
 
         if (!currentRoom.GetRoomUserManager().TryGetPet(petId, out var pet))
         {
@@ -222,14 +222,14 @@ internal class RoomCreatureService : IRoomCreatureService
             var targetClient = targetUser?.GetClient();
             var targetHabbo = targetClient?.GetHabbo();
             if (targetUser == null || targetHabbo?.HabboStats == null)
-                return Task.CompletedTask;
+                return;
             if (targetHabbo.Id == habbo.Id)
             {
                 session.SendWhisper("Oops, you cannot use this on yourself! (You haven't lost a point, simply reload!)");
-                return Task.CompletedTask;
+                return;
             }
 
-            _questManager.ProgressUserQuest(session, QuestType.SocialRespect);
+            await _questService.ProgressUserQuest(session, QuestType.SocialRespect);
             _achievementManager.ProgressAchievement(session, "ACH_RespectGiven", 1);
             _achievementManager.ProgressAchievement(targetClient!, "ACH_RespectEarned", 1);
             habbo.HabboStats.DailyPetRespectPoints -= 1;
@@ -240,11 +240,11 @@ internal class RoomCreatureService : IRoomCreatureService
             if (room.RespectNotificationsEnabled)
                 room.SendPacket(new RespectPetNotificationComposer(targetHabbo, targetUser));
             room.SendPacket(new CarryObjectComposer(thisUser.VirtualId, thisUser.CarryItemId));
-            return Task.CompletedTask;
+            return;
         }
 
         if (pet.PetData == null || pet.RoomId != currentRoom.RoomId)
-            return Task.CompletedTask;
+            return;
 
         habbo.HabboStats.DailyPetRespectPoints -= 1;
         _achievementManager.ProgressAchievement(session, "ACH_PetRespectGiver", 1);
@@ -252,7 +252,6 @@ internal class RoomCreatureService : IRoomCreatureService
         thisUser.CarryTimer = 5;
         pet.PetData.OnRespect();
         room.SendPacket(new CarryObjectComposer(thisUser.VirtualId, thisUser.CarryItemId));
-        return Task.CompletedTask;
     }
 
     public Task GetPetInformation(GameClient session, int petId)

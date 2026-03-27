@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Plus.HabboHotel.Groups;
 using Plus.Utilities;
 
@@ -155,7 +155,6 @@ public class RoomData
     public bool ReverseRollers { get; set; }
     public bool LayEnabled { get; set; }
 
-
     public RoomModel Model { get; set; }
 
     public RoomPromotion? Promotion { get; set; }
@@ -170,17 +169,20 @@ public class RoomData
 
     public void LoadPromotions()
     {
-        DataRow? getPromotion = null;
-        using var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor();
-        dbClient.SetQuery($"SELECT * FROM `room_promotions` WHERE `room_id` = {Id} LIMIT 1;");
-        getPromotion = dbClient.GetRow();
-        if (getPromotion != null)
+        using var db = PlusEnvironment.DatabaseManager.Connection();
+        dynamic? row = db.QueryFirstOrDefault(
+            "SELECT `title`, `description`, `timestamp_start`, `timestamp_expire`, `category_id` FROM `room_promotions` WHERE `room_id` = @roomId LIMIT 1",
+            new { roomId = Id });
+        if (row == null)
+            return;
+        if (Convert.ToDouble(row.timestamp_expire) > UnixTimestamp.GetNow())
         {
-            if (Convert.ToDouble(getPromotion["timestamp_expire"]) > UnixTimestamp.GetNow())
-            {
-                Promotion = new(Convert.ToString(getPromotion["title"]) ?? string.Empty, Convert.ToString(getPromotion["description"]) ?? string.Empty, Convert.ToDouble(getPromotion["timestamp_start"]),
-                    Convert.ToDouble(getPromotion["timestamp_expire"]), Convert.ToInt32(getPromotion["category_id"]));
-            }
+            Promotion = new(
+                ((string?)row.title) ?? string.Empty,
+                ((string?)row.description) ?? string.Empty,
+                Convert.ToDouble(row.timestamp_start),
+                Convert.ToDouble(row.timestamp_expire),
+                Convert.ToInt32(row.category_id));
         }
     }
 

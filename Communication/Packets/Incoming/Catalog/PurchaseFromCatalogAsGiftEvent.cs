@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
@@ -24,7 +24,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
     private readonly IDatabase _database;
     private readonly IAchievementManager _achievementManager;
     private readonly IGameClientManager _gameClientManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
     private readonly IItemFactory _itemFactory;
 
     public PurchaseFromCatalogAsGiftEvent(ICatalogManager catalogManager,
@@ -33,7 +33,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         IDatabase database,
         IAchievementManager achievementManager,
         IGameClientManager gameClientManager,
-        IQuestManager questManager,
+        IQuestService questService,
         IItemFactory itemFactory)
     {
         _catalogManager = catalogManager;
@@ -42,16 +42,16 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         _database = database;
         _achievementManager = achievementManager;
         _gameClientManager = gameClientManager;
-        _questManager = questManager;
+        _questService = questService;
         _itemFactory = itemFactory;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var sender = session.GetHabbo();
         var senderBadges = sender?.Inventory?.Badges;
         if (sender == null || senderBadges == null)
-            return Task.CompletedTask;
+            return;
 
         var pageId = packet.ReadInt();
         var itemId = packet.ReadInt();
@@ -65,47 +65,47 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         if (_settingsManager.TryGetValue("room.item.gifts.enabled") != "1")
         {
             session.SendNotification("The hotel managers have disabled gifting");
-            return Task.CompletedTask;
+            return;
         }
         if (!_catalogManager.TryGetPage(pageId, out var page))
-            return Task.CompletedTask;
+            return;
         if (!page.Enabled || !page.Visible || page.MinimumRank > sender.Rank || page.MinimumVip > sender.VipRank && sender.Rank == 1)
-            return Task.CompletedTask;
+            return;
         if (!page.Items.TryGetValue(itemId, out var item))
         {
             if (page.ItemOffers.ContainsKey(itemId))
             {
                 item = page.ItemOffers[itemId];
                 if (item == null)
-                    return Task.CompletedTask;
+                    return;
             }
             else
-                return Task.CompletedTask;
+                return;
         }
         if (!ItemUtility.CanGiftItem(item))
-            return Task.CompletedTask;
+            return;
         if (!_itemManager.Gifts.TryGetValue(spriteId, out var presentId) || !_itemManager.Items.TryGetValue(presentId, out var presentData) || presentData.InteractionType != InteractionType.Gift)
-            return Task.CompletedTask;
+            return;
         if (sender.Credits < item.CostCredits)
         {
             session.Send(new PresentDeliverErrorComposer(true, false));
-            return Task.CompletedTask;
+            return;
         }
         if (sender.Duckets < item.CostPixels)
         {
             session.Send(new PresentDeliverErrorComposer(false, true));
-            return Task.CompletedTask;
+            return;
         }
-        var habbo = _gameClientManager.GetClientByUsername(giftUser)?.GetHabbo();
-        if (habbo == null)
+        var receiverHabbo = _gameClientManager.GetClientByUsername(giftUser)?.GetHabbo();
+        if (receiverHabbo == null)
         {
             session.Send(new GiftWrappingErrorComposer());
-            return Task.CompletedTask;
+            return;
         }
-        if (!habbo.AllowGifts)
+        if (!receiverHabbo.AllowGifts)
         {
             session.SendNotification("Oops, this user doesn't allow gifts to be sent to them!");
-            return Task.CompletedTask;
+            return;
         }
         if ((DateTime.Now - sender.LastGiftPurchaseTime).TotalSeconds <= 15.0)
         {
@@ -113,18 +113,18 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
             sender.GiftPurchasingWarnings += 1;
             if (sender.GiftPurchasingWarnings >= 25)
                 sender.SessionGiftBlocked = true;
-            return Task.CompletedTask;
+            return;
         }
         if (sender.SessionGiftBlocked)
-            return Task.CompletedTask;
+            return;
         var extra_data = giftUser + Convert.ToChar(5) + giftMessage + Convert.ToChar(5) + sender.Id + Convert.ToChar(5) + item.Definition.Id + Convert.ToChar(5) + spriteId + Convert.ToChar(5) + ribbon +
                  Convert.ToChar(5) + colour;
         int newItemId;
         using (var connection = _database.Connection())
         {
             //Insert the dummy item.
-            var InsertQuery = connection.Execute("INSERT INTO `items` (`base_item`,`user_id`,`extra_data`) VALUES (@baseId, @habboId, @extra_data)",
-                new { baseId = presentData.Id, habboId = habbo.Id, extra_data = extra_data });
+            var InsertQuery = await connection.ExecuteAsync("INSERT INTO `items` (`base_item`,`user_id`,`extra_data`) VALUES (@baseId, @habboId, @extra_data)",
+                new { baseId = presentData.Id, habboId = receiverHabbo.Id, extra_data = extra_data });
             newItemId = Convert.ToInt32(InsertQuery);
             string? itemExtraData = null;
             switch (item.Definition.InteractionType)
@@ -140,16 +140,16 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                         var race = bits[1];
                         var color = bits[2];
                         if (PetUtility.CheckPetName(petName))
-                            return Task.CompletedTask;
+                            return;
                         if (race.Length > 2)
-                            return Task.CompletedTask;
+                            return;
                         if (color.Length != 6)
-                            return Task.CompletedTask;
+                            return;
                         _achievementManager.ProgressAchievement(session, "ACH_PetLover", 1);
                     }
                     catch
                     {
-                        return Task.CompletedTask;
+                        return;
                     }
                     break;
                 case InteractionType.Floor:
@@ -182,7 +182,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                     if (!senderBadges.HasBadge(data))
                     {
                         session.Send(new BroadcastMessageAlertComposer("Oops, it appears that you do not own this badge."));
-                        return Task.CompletedTask;
+                        return;
                     }
                     itemExtraData = $"{data}{Convert.ToChar(9)}{sender.Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}";
                     break;
@@ -192,21 +192,21 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
             }
 
             //Insert the present, forever.
-            connection.Execute("INSERT INTO `user_presents` (`item_id`,`base_id`,`extra_data`) VALUES (@itemId, @baseId, @extra_data)",
+            await connection.ExecuteAsync("INSERT INTO `user_presents` (`item_id`,`base_id`,`extra_data`) VALUES (@itemId, @baseId, @extra_data)",
                 new {itemId = newItemId, baseId = item.Definition.Id, extra_data = string.IsNullOrEmpty(itemExtraData) ? "" : itemExtraData });
 
             //Here we're clearing up a record, this is dumb, but okay.
-            connection.Execute("DELETE FROM `items` WHERE `id` = @deleteId LIMIT 1", new { deleteId = newItemId});
+            await connection.ExecuteAsync("DELETE FROM `items` WHERE `id` = @deleteId LIMIT 1", new { deleteId = newItemId});
         }
-        var giveItem = _itemFactory.CreateGiftItem(presentData, habbo, extra_data, extra_data, newItemId).ToInventoryItem();
+        var giveItem = _itemFactory.CreateGiftItem(presentData, receiverHabbo, extra_data, extra_data, newItemId).ToInventoryItem();
         if (giveItem != null)
         {
-            var receiver = _gameClientManager.GetClientByUserId(habbo.Id);
+            var receiver = _gameClientManager.GetClientByUserId(receiverHabbo.Id);
             var receiverFurniture = receiver?.GetHabbo()?.Inventory?.Furniture;
             if (receiver != null)
             {
                 if (receiverFurniture == null)
-                    return Task.CompletedTask;
+                    return;
                 receiverFurniture.AddItem(giveItem);
                 receiver.Send(new FurniListNotificationComposer(giveItem.Id, 1));
                 receiver.Send(new PurchaseOkComposer());
@@ -214,12 +214,12 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                 receiver.Send(new FurniListUpdateComposer());
             }
 
-            if (habbo.Id != sender.Id)
+            if (receiverHabbo.Id != sender.Id)
             {
                 _achievementManager.ProgressAchievement(session, "ACH_GiftGiver", 1);
                 if (receiver != null)
                     _achievementManager.ProgressAchievement(receiver, "ACH_GiftReceiver", 1);
-                _questManager.ProgressUserQuest(session, QuestType.GiftOthers);
+                await _questService.ProgressUserQuest(session, QuestType.GiftOthers);
             }
         }
         session.Send(new PurchaseOkComposer(item, presentData));
@@ -234,6 +234,5 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
             session.Send(new HabboActivityPointNotificationComposer(sender.Duckets, sender.Duckets));
         }
         sender.LastGiftPurchaseTime = DateTime.Now;
-        return Task.CompletedTask;
     }
 }

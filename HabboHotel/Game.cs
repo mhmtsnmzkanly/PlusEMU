@@ -1,4 +1,4 @@
-﻿using Plus.Core;
+using Plus.Core;
 using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Badges;
 using Plus.HabboHotel.Bots;
@@ -21,21 +21,20 @@ using Plus.HabboHotel.Talents;
 
 namespace Plus.HabboHotel;
 
-// Game services need to be implemented behind an interface.
-// Dependency inject the required services in the IPacketEvent
-// This class will be obsolete. Do not reference to Game().<Service> but inject it instead.
 public class Game : IGame
 {
     private readonly IGameClientManager _clientManager;
     private readonly IModerationManager _moderationManager;
     private readonly IItemDataManager _itemDataManager;
     private readonly ICatalogManager _catalogManager;
-    private readonly ITelevisionManager _televisionManager; //TODO: Initialize from the item manager.
+    private readonly ITelevisionManager _televisionManager;
     private readonly INavigatorManager _navigatorManager;
     private readonly IRoomManager _roomManager;
     private readonly IChatManager _chatManager;
     private readonly IGroupManager _groupManager;
     private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
+    private readonly ICatalogService _catalogService;
     private readonly IAchievementManager _achievementManager;
 
     private IBadgeManager _badgeManager;
@@ -64,6 +63,8 @@ public class Game : IGame
         IChatManager chatManager,
         IGroupManager groupManager,
         IQuestManager questManager,
+        IQuestService questService,
+        ICatalogService catalogService,
         IAchievementManager achievementManager,
         ITalentTrackManager talentTrackManager,
         IGameDataManager gameDataManager,
@@ -85,6 +86,8 @@ public class Game : IGame
         _chatManager = chatManager;
         _groupManager = groupManager;
         _questManager = questManager;
+        _questService = questService;
+        _catalogService = catalogService;
         _achievementManager = achievementManager;
         _talentTrackManager = talentTrackManager;
         _gameDataManager = gameDataManager;
@@ -144,28 +147,18 @@ public class Game : IGame
     }
 
     public IGameClientManager ClientManager => _clientManager;
-
     public ICatalogManager Catalog => _catalogManager;
-
     public INavigatorManager Navigator => _navigatorManager;
-
     public IItemDataManager ItemManager => _itemDataManager;
-
     public IRoomManager RoomManager => _roomManager;
-
     public IAchievementManager AchievementManager => _achievementManager;
-
     public ISubscriptionManager SubscriptionManager => _subscriptionManager;
-
     public IQuestManager QuestManager => _questManager;
-
+    public IQuestService QuestService => _questService;
+    public ICatalogService CatalogService => _catalogService;
     public IGroupManager GroupManager => _groupManager;
-
     public IChatManager ChatManager => _chatManager;
-
     public IGameDataManager GameDataManager => _gameDataManager;
-
     public IBotManager BotManager => _botManager;
-
     public ICacheManager CacheManager => _cacheManager;
 }

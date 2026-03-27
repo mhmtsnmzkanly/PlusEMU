@@ -13,42 +13,41 @@ internal class ChangeMottoEvent : IPacketEvent
 {
     private readonly IWordFilterManager _wordFilterManager;
     private readonly IAchievementManager _achievementManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
     private readonly IDatabase _database;
 
-    public ChangeMottoEvent(IWordFilterManager wordFilterManager, IAchievementManager achievementManager, IQuestManager questManager, IDatabase database)
+    public ChangeMottoEvent(IWordFilterManager wordFilterManager, IAchievementManager achievementManager, IQuestService questService, IDatabase database)
     {
         _wordFilterManager = wordFilterManager;
         _achievementManager = achievementManager;
-        _questManager = questManager;
+        _questService = questService;
         _database = database;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        if (habbo?.Permissions == null) return Task.CompletedTask;
-        if (habbo.TimeMuted > 0) { session.SendNotification("Oops, you're currently muted - you cannot change your motto."); return Task.CompletedTask; }
-        if ((DateTime.Now - habbo.LastMottoUpdateTime).TotalSeconds <= 2.0) { habbo.MottoUpdateWarnings += 1; if (habbo.MottoUpdateWarnings >= 25) habbo.SessionMottoBlocked = true; return Task.CompletedTask; }
-        if (habbo.SessionMottoBlocked) return Task.CompletedTask;
+        if (habbo?.Permissions == null) return;
+        if (habbo.TimeMuted > 0) { session.SendNotification("Oops, you're currently muted - you cannot change your motto."); return; }
+        if ((DateTime.Now - habbo.LastMottoUpdateTime).TotalSeconds <= 2.0) { habbo.MottoUpdateWarnings += 1; if (habbo.MottoUpdateWarnings >= 25) habbo.SessionMottoBlocked = true; return; }
+        if (habbo.SessionMottoBlocked) return;
         habbo.LastMottoUpdateTime = DateTime.Now;
         var newMotto = StringCharFilter.Escape(packet.ReadString().Trim());
         if (newMotto.Length > 38) newMotto = newMotto.Substring(0, 38);
-        if (newMotto == habbo.Motto) return Task.CompletedTask;
+        if (newMotto == habbo.Motto) return;
         if (!habbo.Permissions.HasRight("word_filter_override")) newMotto = _wordFilterManager.CheckMessage(newMotto);
         habbo.Motto = newMotto;
         using var db = _database.Connection();
         db.Execute("UPDATE `users` SET `motto` = @motto WHERE `id` = @userId LIMIT 1", new { motto = newMotto, userId = habbo.Id });
-        _questManager.ProgressUserQuest(session, QuestType.ProfileChangeMotto);
+        await _questService.ProgressUserQuest(session, QuestType.ProfileChangeMotto);
         _achievementManager.ProgressAchievement(session, "ACH_Motto", 1);
         if (habbo.InRoom)
         {
             var room = habbo.CurrentRoom;
-            if (room == null) return Task.CompletedTask;
+            if (room == null) return;
             var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user == null || user.GetClient() == null) return Task.CompletedTask;
+            if (user == null || user.GetClient() == null) return;
             room.SendPacket(new UserChangeComposer(user, false));
         }
-        return Task.CompletedTask;
     }
 }

@@ -14,24 +14,24 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
 internal class ApplyDecorationEvent : RoomPacketEvent
 {
     private readonly IAchievementManager _achievementManager;
-    private readonly IQuestManager _questManager;
+    private readonly IQuestService _questService;
     private readonly IDatabase _database;
 
-    public ApplyDecorationEvent(IAchievementManager achievementManager, IQuestManager questManager, IDatabase database)
+    public ApplyDecorationEvent(IAchievementManager achievementManager, IQuestService questService, IDatabase database)
     {
         _achievementManager = achievementManager;
-        _questManager = questManager;
+        _questService = questService;
         _database = database;
     }
 
-    public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
+    public override async Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         var furniture = habbo?.Inventory?.Furniture;
-        if (furniture == null) return Task.CompletedTask;
-        if (!room.CheckRights(session, true)) return Task.CompletedTask;
+        if (furniture == null) return;
+        if (!room.CheckRights(session, true)) return;
         var item = furniture.GetItem(packet.ReadUInt());
-        if (item == null || item.Definition == null) return Task.CompletedTask;
+        if (item == null || item.Definition == null) return;
         var decorationKey = string.Empty;
         switch (item.Definition.InteractionType)
         {
@@ -40,12 +40,23 @@ internal class ApplyDecorationEvent : RoomPacketEvent
             case InteractionType.Landscape: decorationKey = "landscape"; break;
         }
         var data = (item.ExtraData is LegacyDataFormat legacyData ? legacyData.Data : string.Empty);
-        if (string.IsNullOrWhiteSpace(data)) return Task.CompletedTask;
+        if (string.IsNullOrWhiteSpace(data)) return;
         switch (decorationKey)
         {
-            case "floor": room.Floor = data; _questManager.ProgressUserQuest(session, QuestType.FurniDecoFloor); _achievementManager.ProgressAchievement(session, "ACH_RoomDecoFloor", 1); break;
-            case "wallpaper": room.Wallpaper = data; _questManager.ProgressUserQuest(session, QuestType.FurniDecoWall); _achievementManager.ProgressAchievement(session, "ACH_RoomDecoWallpaper", 1); break;
-            case "landscape": room.Landscape = data; _achievementManager.ProgressAchievement(session, "ACH_RoomDecoLandscape", 1); break;
+            case "floor": 
+                room.Floor = data; 
+                await _questService.ProgressUserQuest(session, QuestType.FurniDecoFloor); 
+                _achievementManager.ProgressAchievement(session, "ACH_RoomDecoFloor", 1); 
+                break;
+            case "wallpaper": 
+                room.Wallpaper = data; 
+                await _questService.ProgressUserQuest(session, QuestType.FurniDecoWall); 
+                _achievementManager.ProgressAchievement(session, "ACH_RoomDecoWallpaper", 1); 
+                break;
+            case "landscape": 
+                room.Landscape = data; 
+                _achievementManager.ProgressAchievement(session, "ACH_RoomDecoLandscape", 1); 
+                break;
         }
         using var db = _database.Connection();
         // decorationKey is validated against enum values above (floor/wallpaper/landscape only) — column name is safe
@@ -55,6 +66,5 @@ internal class ApplyDecorationEvent : RoomPacketEvent
         furniture.RemoveItem(item.Id);
         session.Send(new FurniListRemoveComposer(item.Id));
         room.SendPacket(new RoomPropertyComposer(decorationKey, data));
-        return Task.CompletedTask;
     }
 }
