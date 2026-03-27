@@ -40,6 +40,7 @@ These packet-heavy domains were already moved into dedicated services:
 - Room rights / access — `HabboHotel/Rooms/RoomAccessService.cs`
 - Wardrobe / clothing — `HabboHotel/Users/Clothing/AvatarClothingService.cs`
 - Pets / bots — `HabboHotel/Rooms/AI/RoomCreatureService.cs`
+- Catalog — `HabboHotel/Catalog/CatalogService.cs`
 
 ## Completed Legacy DB Wrapper Migration
 

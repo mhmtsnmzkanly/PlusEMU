@@ -56,6 +56,11 @@ All SQL injection risks from string interpolation have been eliminated. Build is
 - Packets: `CreditFurniRedeemEvent`, `SetTonerEvent`, `DeleteStickyNoteEvent` — `Execute` + `@id`.
 - Packets: `SaveRoomSettingsEvent` — 22-parameter `AddParameter` chain → single anonymous object.
 - Packets: `SetUserFocusPreferenceEvent`, `UpdateFigureDataEvent` — `Execute` + anonymous object; string interpolation removed.
+#### Phase 1 — Catalog Service
+- Defined `ICatalogService` and implemented `CatalogService` to encapsulate complex business logic.
+- `PurchaseFromCatalogEvent.cs` (374 lines) -> Moved all logic to `CatalogService.PurchaseItem`, reducing packet handler to 29 lines. Logic split into maintainable methods.
+- `RedeemVoucherEvent.cs` -> Moved voucher redemption logic to `CatalogService.RedeemVoucher`.
+- Added strict null-safety checks to internal service methods.
 
 ## 2026-03-26
 
