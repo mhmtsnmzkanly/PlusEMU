@@ -42,7 +42,8 @@ public class ItemLoader : IItemLoader
                     UniqueNumber = Convert.ToUInt32(row.limited_number),
                     UniqueSeries = Convert.ToUInt32(row.limited_stack),
                     WallCoordinates = ((string?)row.wall_pos) ?? string.Empty,
-                    RoomId = roomId
+                    RoomId = roomId,
+                    Room = room
                 });
             }
         }

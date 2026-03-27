@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetCoreServer;
 using Plus.Communication.Packets;
@@ -14,16 +14,22 @@ public abstract class TcpGameServer<TGameServerOptions> : TcpServer, IGameServer
     private readonly IGameClientFactory<TcpSessionProxy, TcpServer> _clientFactory;
     private readonly IPacketManager _packetManager;
     private readonly ConcurrentDictionary<Guid, TcpSession> _connectedClients = new();
+    private readonly IGameClientManager _clientManager;
+    private readonly IDatabase _database;
     private readonly ILogger _logger;
 
     protected TcpGameServer(IOptions<TGameServerOptions> options,
         IGameClientFactory<TcpSessionProxy, TcpServer> clientFactory,
         IPacketManager packetManager,
+        IGameClientManager clientManager,
+        IDatabase database,
         ILogger logger) : base(options.Value.Hostname,
         options.Value.Port)
     {
         _clientFactory = clientFactory;
         _packetManager = packetManager;
+        _clientManager = clientManager;
+        _database = database;
         _logger = logger;
     }
 
@@ -50,6 +56,15 @@ public abstract class TcpGameServer<TGameServerOptions> : TcpServer, IGameServer
 
     protected override void OnDisconnected(TcpSession session)
     {
+        if (session is GameClient gameClient)
+        {
+            var habbo = gameClient.GetHabboOrNull();
+            if (habbo != null)
+            {
+                habbo.OnDisconnect(_database);
+                _clientManager.UnregisterClient(habbo.Id, habbo.Username);
+            }
+        }
         _connectedClients.TryRemove(session.Id, out _);
         _logger.LogDebug("TCP client disconnected {clientId} from {remoteEndPoint}.", session.Id, SocketLogging.TryGetRemoteEndPoint(session.Socket));
     }

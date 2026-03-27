@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetCoreServer;
@@ -14,16 +14,22 @@ public abstract class WebsocketGameServer<TGameServerOptions> : WsServer, IGameS
     private readonly IGameClientFactory<WsSessionProxy, WsServer> _clientFactory;
     private readonly IPacketManager _packetManager;
     private readonly ConcurrentDictionary<Guid, WsSessionProxy> _connectedClients = new();
+    private readonly IGameClientManager _clientManager;
+    private readonly IDatabase _database;
     private readonly ILogger _logger;
 
     protected WebsocketGameServer(IOptions<TGameServerOptions> options,
         IGameClientFactory<WsSessionProxy, WsServer> clientFactory,
         IPacketManager packetManager,
+        IGameClientManager clientManager,
+        IDatabase database,
         ILogger logger) : base(options.Value.Hostname,
         options.Value.Port)
     {
         _clientFactory = clientFactory;
         _packetManager = packetManager;
+        _clientManager = clientManager;
+        _database = database;
         _logger = logger;
     }
 
@@ -50,14 +56,22 @@ public abstract class WebsocketGameServer<TGameServerOptions> : WsServer, IGameS
 
     protected override void OnDisconnected(TcpSession session)
     {
-        _connectedClients.TryRemove(session.Id, out _);
         if (session is WsSessionProxy gameClient)
+        {
+            var habbo = gameClient.GetHabboOrNull();
+            if (habbo != null)
+            {
+                habbo.OnDisconnect(_database);
+                _clientManager.UnregisterClient(habbo.Id, habbo.Username);
+            }
             _logger.LogDebug("Websocket client disconnected {clientId} from {remoteEndPoint}. Build: {build}.",
                 session.Id,
                 SocketLogging.TryGetRemoteEndPoint(session.Socket),
                 gameClient.GetClientBuildDisplay());
+        }
         else
             _logger.LogDebug("Websocket client disconnected {clientId} from {remoteEndPoint}.", session.Id, SocketLogging.TryGetRemoteEndPoint(session.Socket));
+        _connectedClients.TryRemove(session.Id, out _);
     }
 
     protected override void OnError(System.Net.Sockets.SocketError error)

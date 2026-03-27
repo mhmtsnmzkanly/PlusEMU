@@ -1071,7 +1071,7 @@ public class RoomUserManager
                                             habbo.IsTeleporting = true;
                                             habbo.TeleportingRoomId = teleRoomId;
                                             habbo.TeleporterId = linkedTele;
-                                            _ = PlusEnvironment.Game.RoomService.PrepareRoom(user.GetClient()!, teleRoomId, "");
+                                            _ = _room.GetRoomService().PrepareRoom(user.GetClient()!, teleRoomId, "");
                                         }
                                     }
                                     else if (_room.GetRoomItemHandler().GetItem(linkedTele) != null)

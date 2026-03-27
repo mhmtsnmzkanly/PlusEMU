@@ -42,7 +42,7 @@ public class Item
 
 
     /// TODO @80O: Cleanup shit below
-    private Room? _room;
+    public Room? Room { get; set; }
     private bool _updateNeeded;
     [Obsolete]
     public int BaseItem;
@@ -418,13 +418,14 @@ public class Item
                                         var roomHopId = ItemHopperFinder.GetAHopper(user.RoomId); // TODO @80O: Remove cast
                                         var nextHopperId = ItemHopperFinder.GetHopperId(roomHopId);
                                         var habbo = GetHabbo(user);
-                                        if (!user.IsBot && habbo != null)
+                                        if (habbo != null)
                                         {
                                             habbo.IsHopping = true;
                                             habbo.HopperId = nextHopperId;
-                                            _ = PlusEnvironment.Game.RoomService.PrepareRoom(user.GetClient()!, roomHopId, "");
+                                            _ = GetRoom().GetRoomService().PrepareRoom(user.GetClient()!, roomHopId, "");
                                             //User.GetClient().SendMessage(new RoomForwardComposer(RoomHopId));
                                             InteractingUser = 0;
+                                        }
                                         }
                                     }
                                     else
@@ -566,16 +567,17 @@ public class Item
                                                 if (user.TeleDelay == 0)
                                                 {
                                                     // Let's run the teleport delegate to take futher care of this.. WHY DARIO?!
-                                                    var habbo = GetHabbo(user);
-                                                    if (!user.IsBot && habbo != null)
-                                                    {
-                                                        habbo.IsTeleporting = true;
-                                                        habbo.TeleportingRoomId = roomId;
-                                                        habbo.TeleporterId = teleId;
-                                                        _ = PlusEnvironment.Game.RoomService.PrepareRoom(user.GetClient()!, roomId, "");
-                                                        //User.GetClient().SendMessage(new RoomForwardComposer(RoomId));
-                                                        InteractingUser = 0;
-                                                    }
+                                                var habbo = GetHabbo(user);
+                                                if (habbo != null)
+                                                {
+                                                    habbo.IsTeleporting = true;
+                                                    habbo.TeleportingRoomId = roomId;
+                                                    habbo.TeleporterId = teleId;
+                                                    _ = GetRoom().GetRoomService().PrepareRoom(user.GetClient()!, roomId, "");
+                                                    //User.GetClient().SendMessage(new RoomForwardComposer(RoomId));
+                                                    InteractingUser = 0;
+                                                }
+                                                }
                                                 }
                                                 else
                                                 {
@@ -1093,13 +1095,10 @@ public class Item
         }
     }
 
-    [Obsolete]
     public Room GetRoom()
     {
-        if (_room != null)
-            return _room;
-        if (PlusEnvironment.Game.RoomManager.TryGetRoom(RoomId, out var room))
-            return room;
+        if (Room != null)
+            return Room;
         return null!;
     }
 
@@ -1139,7 +1138,7 @@ public class Item
 
     public void Destroy()
     {
-        _room = null;
+        Room = null;
         Definition = null!;
         GetAffectedTiles.Clear();
     }

@@ -104,6 +104,7 @@ public class Room : RoomData
     private readonly IDatabase _database;
     private readonly IGroupManager _groupManager;
     private readonly IItemLoader _itemLoader;
+    private readonly IRoomService _roomService;
     public bool MDisposed;
     public MoodlightData? MoodlightData;
 
@@ -119,13 +120,14 @@ public class Room : RoomData
 
     public List<int> UsersWithRights = new();
 
-    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager)
+    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager, IRoomService roomService)
         : base(data)
     {
         _clientManager = clientManager;
         _database = database;
         _itemLoader = itemLoader;
         _groupManager = groupManager;
+        _roomService = roomService;
         IsLagging = 0;
         Unloaded = false;
         IdleTime = 0;
@@ -148,6 +150,8 @@ public class Room : RoomData
         InitPets();
         LastRegeneration = DateTime.Now;
     }
+
+    public IRoomService GetRoomService() => _roomService;
 
     public int IsLagging { get; set; }
     public bool Unloaded { get; set; }
@@ -417,7 +421,7 @@ public class Room : RoomData
                 key = item.Definition.ItemName.Split(new[] { '_' })[2];
                 user.UnIdle();
                 user.DanceId = 0;
-                _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(user.GetClient(), "ACH_FootballGoalScored", 1);
+                _ = _achievementService.ProgressAchievement(user.GetClient(), "ACH_FootballGoalScored", 1);
                 SendPacket(new ActionComposer(user.VirtualId, 1));
             }
         }
@@ -452,7 +456,7 @@ public class Room : RoomData
             if (HasActivePromotion && Promotion?.HasExpired == true) EndPromotion();
             if (IdleTime >= 60 && !HasActivePromotion)
             {
-                PlusEnvironment.Game.RoomManager.UnloadRoom(Id);
+                _roomManager.UnloadRoom(Id);
                 return;
             }
             try
@@ -532,7 +536,7 @@ public class Room : RoomData
             ExceptionLogger.LogException(e3);
         }
         IsCrashed = true;
-        PlusEnvironment.Game.RoomManager.UnloadRoom(Id);
+        _roomManager.UnloadRoom(Id);
     }
 
 

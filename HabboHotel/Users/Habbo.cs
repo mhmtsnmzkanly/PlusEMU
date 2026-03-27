@@ -213,10 +213,10 @@ public class Habbo
         return span.TotalMinutes >= 30;
     }
 
-    public bool InitProcess()
+    public bool InitProcess(IDatabase database, ISettingsManager settingsManager, ISubscriptionManager subscriptionManager, IAchievementService achievementService)
     {
         Process = new();
-        return Process.Init(this);
+        return Process.Init(this, database, settingsManager, subscriptionManager, achievementService);
     }
 
     public bool InitFx()
@@ -245,7 +245,7 @@ public class Habbo
 
 
     public event EventHandler? Disconnected;
-    public void OnDisconnect()
+    public void OnDisconnect(IDatabase database)
     {
         if (_disconnected)
             return;
@@ -259,11 +259,10 @@ public class Habbo
         }
         catch { }
         _disconnected = true;
-        PlusEnvironment.Game.ClientManager.UnregisterClient(Id, Username);
         if (!_habboSaved)
         {
             _habboSaved = true;
-            using var connection = PlusEnvironment.DatabaseManager.Connection();
+            using var connection = database.Connection();
             connection.Execute(
                 """
                 UPDATE `users`
@@ -350,7 +349,7 @@ public class Habbo
             Permissions.Dispose();
     }
 
-    public void CheckCreditsTimer()
+    public void CheckCreditsTimer(ISettingsManager settingsManager, ISubscriptionManager subscriptionManager)
     {
         try
         {
@@ -361,10 +360,10 @@ public class Habbo
             CreditsUpdateTick--;
             if (CreditsUpdateTick <= 0)
             {
-                var creditUpdate = Convert.ToInt32(PlusEnvironment.SettingsManager.TryGetValue("user.currency_scheduler.credit_reward"));
-                var ducketUpdate = Convert.ToInt32(PlusEnvironment.SettingsManager.TryGetValue("user.currency_scheduler.ducket_reward"));
+                var creditUpdate = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.credit_reward"));
+                var ducketUpdate = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.ducket_reward"));
                 SubscriptionData? subData = null;
-                if (PlusEnvironment.Game.SubscriptionManager.TryGetSubscriptionData(VipRank, out subData) && subData != null)
+                if (subscriptionManager.TryGetSubscriptionData(VipRank, out subData) && subData != null)
                 {
                     creditUpdate += subData.Credits;
                     ducketUpdate += subData.Duckets;
@@ -373,7 +372,7 @@ public class Habbo
                 Duckets += ducketUpdate;
                 client.Send(new CreditBalanceComposer(Credits));
                 client.Send(new HabboActivityPointNotificationComposer(Duckets, ducketUpdate));
-                CreditsUpdateTick = Convert.ToInt32(PlusEnvironment.SettingsManager.TryGetValue("user.currency_scheduler.tick"));
+                CreditsUpdateTick = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.tick"));
             }
         }
         catch { }
@@ -392,19 +391,19 @@ public class Habbo
         return achievement;
     }
 
-    public void ChangeName(string username)
+    public void ChangeName(IDatabase database, string username)
     {
         LastNameChange = UnixTimestamp.GetNow();
         Username = username;
-        SaveKey("username", username);
-        SaveKey("last_change", LastNameChange.ToString());
+        SaveKey(database, "username", username);
+        SaveKey(database, "last_change", LastNameChange.ToString());
     }
 
-    public void SaveChatBubble(string customBubbleId) => SaveKey("bubble_id", customBubbleId);
+    public void SaveChatBubble(IDatabase database, string customBubbleId) => SaveKey(database, "bubble_id", customBubbleId);
 
-    public void SaveKey(string key, string value)
+    public void SaveKey(IDatabase database, string key, string value)
     {
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = database.Connection();
         connection.Execute(
             $"UPDATE `users` SET {key} = @value WHERE `id` = @id LIMIT 1",
             new { value, id = Id });

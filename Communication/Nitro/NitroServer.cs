@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetCoreServer;
 using Plus.Communication.Abstractions;
@@ -22,7 +22,7 @@ public interface INitroServer : IGameServer
 
 public class NitroServer : WebsocketGameServer<NitroServerConfiguration>, INitroServer
 {
-    public NitroServer(IOptions<NitroServerConfiguration> options, NitroClientFactory clientFactory, IPacketManager packetManager, ILogger<NitroServer> logger) : base(options, clientFactory, packetManager, logger) { }
+    public NitroServer(IOptions<NitroServerConfiguration> options, NitroClientFactory clientFactory, IPacketManager packetManager, IGameClientManager gameClientManager, IDatabase database, ILogger<NitroServer> logger) : base(options, clientFactory, packetManager, gameClientManager, database, logger) { }
 }
 
 

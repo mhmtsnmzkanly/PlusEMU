@@ -1,6 +1,11 @@
 using Dapper;
 using NLog;
 using Plus.Communication.Packets.Outgoing.Handshake;
+using Plus.HabboHotel.Achievements;
+using Plus.Core.Settings;
+using Plus.HabboHotel.Subscriptions;
+using Plus.Database;
+using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 
 namespace Plus.HabboHotel.Users.Process;
 
@@ -27,6 +32,10 @@ internal sealed class ProcessComponent
     /// Player to update, handle, change etc.
     /// </summary>
     private Habbo? _player;
+    private IDatabase? _database;
+    private ISettingsManager? _settingsManager;
+    private ISubscriptionManager? _subscriptionManager;
+    private IAchievementService? _achievementService;
 
     /// <summary>
     /// ThreadPooled Timer.
@@ -49,13 +58,17 @@ internal sealed class ProcessComponent
     /// Initializes the ProcessComponent.
     /// </summary>
     /// <param name="player">Player.</param>
-    public bool Init(Habbo player)
+    public bool Init(Habbo player, IDatabase database, ISettingsManager settingsManager, ISubscriptionManager subscriptionManager, IAchievementService achievementService)
     {
         if (player == null)
             return false;
         if (_player != null)
             return false;
         _player = player;
+        _database = database;
+        _settingsManager = settingsManager;
+        _subscriptionManager = subscriptionManager;
+        _achievementService = achievementService;
         _timer = new(Run, null, _runtimeInSec * 1000, _runtimeInSec * 1000);
         return true;
     }
@@ -92,7 +105,7 @@ internal sealed class ProcessComponent
             {
                 _player.HabboStats.RespectsTimestamp = DateTime.Today.ToString("MM/dd");
                 var respectPoints = _player.Rank == 1 && _player.VipRank == 0 ? 10 : _player.VipRank == 1 ? 15 : 20;
-                using var db = PlusEnvironment.DatabaseManager.Connection();
+                using var db = _database!.Connection();
                 db.Execute(
                     "UPDATE `user_statistics` SET `dailyRespectPoints` = @points, `dailyPetRespectPoints` = @points, `respectsTimestamp` = @ts WHERE `id` = @id LIMIT 1",
                     new { points = respectPoints, ts = DateTime.Today.ToString("MM/dd"), id = _player.Id });
@@ -107,8 +120,8 @@ internal sealed class ProcessComponent
             if (_player.ClothingUpdateWarnings < 15)
                 _player.ClothingUpdateWarnings = 0;
             if (_player.Client != null)
-                _ = PlusEnvironment.Game.AchievementService.ProgressAchievement(_player.Client, "ACH_AllTimeHotelPresence", 1);
-            _player.CheckCreditsTimer();
+                _ = _achievementService!.ProgressAchievement(_player.Client, "ACH_AllTimeHotelPresence", 1);
+            _player.CheckCreditsTimer(_settingsManager!, _subscriptionManager!);
             _player.Effects?.CheckEffectExpiry(_player);
 
             // END CODE

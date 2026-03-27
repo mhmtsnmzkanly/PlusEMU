@@ -38,6 +38,8 @@ public class SsoTicketEvent : IPacketEvent
     private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IRewardManager _rewardManager;
+    private readonly IDatabase _database;
+    private readonly IAchievementService _achievementService;
     private readonly ILogger<SsoTicketEvent> _logger;
 
     public SsoTicketEvent(IAuthenticator authenticate,
@@ -46,11 +48,13 @@ public class SsoTicketEvent : IPacketEvent
         IAchievementManager achievementManager,
         IPermissionManager permissionManager,
         ISubscriptionManager subscriptionManager,
+        IAchievementService achievementService,
         ICacheManager cacheManager,
         IFigureDataManager figureManager,
         ILanguageManager languageManager,
         ISettingsManager settingsManager,
         IRewardManager rewardManager,
+        IDatabase database,
         ILogger<SsoTicketEvent> logger)
     {
         _authenticate = authenticate;
@@ -59,11 +63,13 @@ public class SsoTicketEvent : IPacketEvent
         _achievementManager = achievementManager;
         _permissionManager = permissionManager;
         _subscriptionManager = subscriptionManager;
+        _achievementService = achievementService;
         _cacheManager = cacheManager;
         _figureManager = figureManager;
         _languageManager = languageManager;
         _settingsManager = settingsManager;
         _rewardManager = rewardManager;
+        _database = database;
         _logger = logger;
     }
 
@@ -124,7 +130,7 @@ public class SsoTicketEvent : IPacketEvent
             if (!_cacheManager.ContainsUser(habbo.Id))
                 _cacheManager.GenerateUser(habbo.Id);
             habbo.Look = _figureManager.ProcessFigure(habbo.Look, habbo.Gender, clothing?.GetClothingParts ?? Array.Empty<Plus.HabboHotel.Users.Clothing.Parts.ClothingParts>(), true);
-            habbo.InitProcess();
+            habbo.InitProcess(_database, _settingsManager, _subscriptionManager, _achievementService);
             if (habbo.Permissions?.HasRight("mod_tickets") == true)
             {
                 session.Send(new ModeratorInitComposer(
