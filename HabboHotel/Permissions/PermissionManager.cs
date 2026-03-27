@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
 using Plus.HabboHotel.Users;
@@ -11,13 +11,9 @@ public sealed class PermissionManager : IPermissionManager
     private readonly ILogger<PermissionManager> _logger;
 
     private readonly Dictionary<string, PermissionCommand> _commands = new();
-
     private readonly Dictionary<int, List<string>> _permissionGroupRights = new();
-
     private readonly Dictionary<int, PermissionGroup> _permissionGroups = new();
-
     private readonly Dictionary<int, Permission> _permissions = new();
-
     private readonly Dictionary<int, List<string>> _permissionSubscriptionRights = new();
 
     public PermissionManager(IDatabase database, ILogger<PermissionManager> logger)
@@ -32,95 +28,54 @@ public sealed class PermissionManager : IPermissionManager
         _commands.Clear();
         _permissionGroups.Clear();
         _permissionGroupRights.Clear();
-        using (var dbClient = _database.GetQueryReactor())
+
+        using var db = _database.Connection();
+
+        // Load permissions
+        foreach (var row in db.Query("SELECT `id`, `permission`, `description` FROM `permissions`"))
+            _permissions.Add((int)row.id, new((int)row.id, ((string?)row.permission) ?? string.Empty, ((string?)row.description) ?? string.Empty));
+
+        // Load commands
+        foreach (var row in db.Query("SELECT `command`, `group_id`, `subscription_id` FROM `permissions_commands`"))
         {
-            dbClient.SetQuery("SELECT * FROM `permissions`");
-            var getPermissions = dbClient.GetTable();
-            if (getPermissions != null)
-            {
-                foreach (DataRow row in getPermissions.Rows)
-                    _permissions.Add(Convert.ToInt32(row["id"]), new(Convert.ToInt32(row["id"]), Convert.ToString(row["permission"]) ?? string.Empty, Convert.ToString(row["description"]) ?? string.Empty));
-            }
+            var command = (string?)row.command;
+            if (string.IsNullOrEmpty(command)) continue;
+            _commands.Add(command, new(command, (int)row.group_id, (int)row.subscription_id));
         }
-        using (var dbClient = _database.GetQueryReactor())
+
+        // Load groups
+        foreach (var row in db.Query("SELECT `id`, `name`, `description`, `badge_code` FROM `permissions_groups`"))
+            _permissionGroups.Add((int)row.id, new(((string?)row.name) ?? string.Empty, ((string?)row.description) ?? string.Empty, ((string?)row.badge_code) ?? string.Empty));
+
+        // Load group rights
+        foreach (var row in db.Query("SELECT `group_id`, `permission_id` FROM `permissions_rights`"))
         {
-            dbClient.SetQuery("SELECT * FROM `permissions_commands`");
-            var getCommands = dbClient.GetTable();
-            if (getCommands != null)
-            {
-                foreach (DataRow row in getCommands.Rows)
-                {
-                    var command = Convert.ToString(row["command"]);
-                    if (string.IsNullOrEmpty(command))
-                        continue;
-                    _commands.Add(command, new(command, Convert.ToInt32(row["group_id"]), Convert.ToInt32(row["subscription_id"])));
-                }
-            }
+            var groupId = (int)row.group_id;
+            var permissionId = (int)row.permission_id;
+            if (!_permissionGroups.ContainsKey(groupId)) continue;
+            if (!_permissions.TryGetValue(permissionId, out var permission)) continue;
+            if (_permissionGroupRights.ContainsKey(groupId))
+                _permissionGroupRights[groupId].Add(permission.PermissionName);
+            else
+                _permissionGroupRights.Add(groupId, [permission.PermissionName]);
         }
-        using (var dbClient = _database.GetQueryReactor())
+
+        // Load subscription rights
+        foreach (var row in db.Query("SELECT `permission_id`, `subscription_id` FROM `permissions_subscriptions`"))
         {
-            dbClient.SetQuery("SELECT * FROM `permissions_groups`");
-            var getPermissionGroups = dbClient.GetTable();
-            if (getPermissionGroups != null)
-            {
-                foreach (DataRow row in getPermissionGroups.Rows)
-                    _permissionGroups.Add(Convert.ToInt32(row["id"]), new(Convert.ToString(row["name"]) ?? string.Empty, Convert.ToString(row["description"]) ?? string.Empty, Convert.ToString(row["badge_code"]) ?? string.Empty));
-            }
+            var permissionId = (int)row.permission_id;
+            var subscriptionId = (int)row.subscription_id;
+            if (!_permissions.TryGetValue(permissionId, out var permission)) continue;
+            if (_permissionSubscriptionRights.ContainsKey(subscriptionId))
+                _permissionSubscriptionRights[subscriptionId].Add(permission.PermissionName);
+            else
+                _permissionSubscriptionRights.Add(subscriptionId, [permission.PermissionName]);
         }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT * FROM `permissions_rights`");
-            var getPermissionRights = dbClient.GetTable();
-            if (getPermissionRights != null)
-            {
-                foreach (DataRow row in getPermissionRights.Rows)
-                {
-                    var groupId = Convert.ToInt32(row["group_id"]);
-                    var permissionId = Convert.ToInt32(row["permission_id"]);
-                    if (!_permissionGroups.ContainsKey(groupId)) continue; // permission group does not exist
-                    if (!_permissions.TryGetValue(permissionId, out var permission)) continue; // permission does not exist
-                    if (_permissionGroupRights.ContainsKey(groupId))
-                        _permissionGroupRights[groupId].Add(permission.PermissionName);
-                    else
-                    {
-                        var rightsSet = new List<string>
-                        {
-                            permission.PermissionName
-                        };
-                        _permissionGroupRights.Add(groupId, rightsSet);
-                    }
-                }
-            }
-        }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT * FROM `permissions_subscriptions`");
-            var getPermissionSubscriptions = dbClient.GetTable();
-            if (getPermissionSubscriptions != null)
-            {
-                foreach (DataRow row in getPermissionSubscriptions.Rows)
-                {
-                    var permissionId = Convert.ToInt32(row["permission_id"]);
-                    var subscriptionId = Convert.ToInt32(row["subscription_id"]);
-                    if (!_permissions.TryGetValue(permissionId, out var permission))
-                        continue; // permission does not exist
-                    if (_permissionSubscriptionRights.ContainsKey(subscriptionId))
-                        _permissionSubscriptionRights[subscriptionId].Add(permission.PermissionName);
-                    else
-                    {
-                        var rightsSet = new List<string>
-                        {
-                            permission.PermissionName
-                        };
-                        _permissionSubscriptionRights.Add(subscriptionId, rightsSet);
-                    }
-                }
-            }
-        }
-        _logger.LogInformation("Loaded " + _permissions.Count + " permissions.");
-        _logger.LogInformation("Loaded " + _permissionGroups.Count + " permissions groups.");
-        _logger.LogInformation("Loaded " + _permissionGroupRights.Count + " permissions group rights.");
-        _logger.LogInformation("Loaded " + _permissionSubscriptionRights.Count + " permissions subscription rights.");
+
+        _logger.LogInformation("Loaded {PermCount} permissions.", _permissions.Count);
+        _logger.LogInformation("Loaded {GroupCount} permissions groups.", _permissionGroups.Count);
+        _logger.LogInformation("Loaded {RightCount} permissions group rights.", _permissionGroupRights.Count);
+        _logger.LogInformation("Loaded {SubRightCount} permissions subscription rights.", _permissionSubscriptionRights.Count);
     }
 
     public bool TryGetGroup(int id, out PermissionGroup? group) => _permissionGroups.TryGetValue(id, out group);
@@ -128,10 +83,8 @@ public sealed class PermissionManager : IPermissionManager
     public List<string> GetPermissionsForPlayer(Habbo player)
     {
         var permissionSet = new List<string>();
-        List<string>? permRights = null;
-        if (_permissionGroupRights.TryGetValue(player.Rank, out permRights)) permissionSet.AddRange(permRights);
-        List<string>? subscriptionRights = null;
-        if (_permissionSubscriptionRights.TryGetValue(player.VipRank, out subscriptionRights)) permissionSet.AddRange(subscriptionRights);
+        if (_permissionGroupRights.TryGetValue(player.Rank, out var permRights)) permissionSet.AddRange(permRights);
+        if (_permissionSubscriptionRights.TryGetValue(player.VipRank, out var subscriptionRights)) permissionSet.AddRange(subscriptionRights);
         return permissionSet;
     }
 

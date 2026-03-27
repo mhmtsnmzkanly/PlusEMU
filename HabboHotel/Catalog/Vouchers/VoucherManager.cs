@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Plus.Database;
 
 namespace Plus.HabboHotel.Catalog.Vouchers;
@@ -18,21 +18,17 @@ public class VoucherManager : IVoucherManager
     {
         if (_vouchers.Count > 0)
             _vouchers.Clear();
-        DataTable? data = null;
-        using (var dbClient = _database.GetQueryReactor())
+        using var db = _database.Connection();
+        var rows = db.Query("SELECT `voucher`, `type`, `value`, `current_uses`, `max_uses` FROM `catalog_vouchers` WHERE `enabled` = '1'");
+        foreach (var row in rows)
         {
-            dbClient.SetQuery("SELECT `voucher`,`type`,`value`,`current_uses`,`max_uses` FROM `catalog_vouchers` WHERE `enabled` = '1'");
-            data = dbClient.GetTable();
-        }
-        if (data != null)
-        {
-            foreach (DataRow row in data.Rows)
-            {
-                var code = Convert.ToString(row["voucher"]) ?? string.Empty;
-                _vouchers.Add(code,
-                    new(code, Convert.ToString(row["type"]) ?? string.Empty, Convert.ToInt32(row["value"]), Convert.ToInt32(row["current_uses"]),
-                        Convert.ToInt32(row["max_uses"])));
-            }
+            var code = ((string?)row.voucher) ?? string.Empty;
+            _vouchers.Add(code, new(
+                code,
+                ((string?)row.type) ?? string.Empty,
+                (int)row.value,
+                (int)row.current_uses,
+                (int)row.max_uses));
         }
     }
 

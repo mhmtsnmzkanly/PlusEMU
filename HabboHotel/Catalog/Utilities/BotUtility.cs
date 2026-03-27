@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Rooms.AI;
 using Plus.HabboHotel.Users.Inventory.Bots;
@@ -9,23 +9,25 @@ public static class BotUtility
 {
     public static Bot? CreateBot(ItemDefinition itemDefinition, int ownerId)
     {
-        DataRow? bot = null;
         if (!PlusEnvironment.Game.Catalog.TryGetBot(itemDefinition.Id, out var cataBot))
             return null;
-        using (var dbClient = PlusEnvironment.DatabaseManager.GetQueryReactor())
-        {
-            dbClient.SetQuery(
-                $"INSERT INTO bots (`user_id`,`name`,`motto`,`look`,`gender`,`ai_type`) VALUES ('{ownerId}', '{cataBot.Name}', '{cataBot.Motto}', '{cataBot.Figure}', '{cataBot.Gender}', '{cataBot.AiType}')");
-            var id = Convert.ToInt32(dbClient.InsertQuery());
-            dbClient.SetQuery($"SELECT `id`,`user_id`,`name`,`motto`,`look`,`gender` FROM `bots` WHERE `user_id` = '{ownerId}' AND `id` = '{id}' LIMIT 1");
-            bot = dbClient.GetRow();
-        }
+        using var db = PlusEnvironment.DatabaseManager.Connection();
+        var newId = db.ExecuteScalar<int>(
+            "INSERT INTO `bots` (`user_id`, `name`, `motto`, `look`, `gender`, `ai_type`) VALUES (@ownerId, @name, @motto, @figure, @gender, @aiType); SELECT LAST_INSERT_ID();",
+            new { ownerId, name = cataBot.Name, motto = cataBot.Motto, figure = cataBot.Figure, gender = cataBot.Gender, aiType = cataBot.AiType });
+        var bot = db.QueryFirstOrDefault(
+            "SELECT `id`, `user_id`, `name`, `motto`, `look`, `gender` FROM `bots` WHERE `user_id` = @ownerId AND `id` = @id LIMIT 1",
+            new { ownerId, id = newId });
         if (bot == null)
             return null;
-        return new(Convert.ToInt32(bot["id"]), Convert.ToInt32(bot["user_id"]), Convert.ToString(bot["name"]) ?? string.Empty, Convert.ToString(bot["motto"]) ?? string.Empty, Convert.ToString(bot["look"]) ?? string.Empty,
-            Convert.ToString(bot["gender"]) ?? string.Empty);
+        return new(
+            (int)bot.id,
+            (int)bot.user_id,
+            ((string?)bot.name) ?? string.Empty,
+            ((string?)bot.motto) ?? string.Empty,
+            ((string?)bot.look) ?? string.Empty,
+            ((string?)bot.gender) ?? string.Empty);
     }
-
 
     public static BotAiType GetAiFromString(string type)
     {

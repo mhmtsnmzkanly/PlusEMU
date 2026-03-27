@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Plus.Database;
 
 namespace Plus.HabboHotel.Catalog.Pets;
@@ -12,22 +12,23 @@ public class PetRaceManager : IPetRaceManager
     {
         _database = database;
     }
+
     public void Init()
     {
         if (_races.Count > 0)
             _races.Clear();
-        using var dbClient = _database.GetQueryReactor();
-        dbClient.SetQuery("SELECT * FROM `catalog_pet_races`");
-        var data = dbClient.GetTable();
-        if (data != null)
+        using var db = _database.Connection();
+        var rows = db.Query("SELECT `raceid`, `color1`, `color2`, `has1color`, `has2color` FROM `catalog_pet_races`");
+        foreach (var row in rows)
         {
-            foreach (DataRow row in data.Rows)
-            {
-                var race = new PetRace(Convert.ToInt32(row["raceid"]), Convert.ToInt32(row["color1"]), Convert.ToInt32(row["color2"]), Convert.ToString(row["has1color"]) == "1",
-                    Convert.ToString(row["has2color"]) == "1");
-                if (!_races.Contains(race))
-                    _races.Add(race);
-            }
+            var race = new PetRace(
+                (int)row.raceid,
+                (int)row.color1,
+                (int)row.color2,
+                ((string?)row.has1color) == "1",
+                ((string?)row.has2color) == "1");
+            if (!_races.Contains(race))
+                _races.Add(race);
         }
     }
 
