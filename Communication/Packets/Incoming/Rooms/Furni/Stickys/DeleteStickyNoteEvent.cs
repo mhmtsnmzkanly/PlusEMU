@@ -1,4 +1,5 @@
-﻿using Plus.Database;
+using Dapper;
+using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Rooms;
@@ -16,16 +17,14 @@ internal class DeleteStickyNoteEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        if (!room.CheckRights(session))
-            return Task.CompletedTask;
+        if (!room.CheckRights(session)) return Task.CompletedTask;
         var item = room.GetRoomItemHandler().GetItem(packet.ReadUInt());
-        if (item == null)
-            return Task.CompletedTask;
+        if (item == null) return Task.CompletedTask;
         if (item.Definition.InteractionType == InteractionType.Postit || item.Definition.InteractionType == InteractionType.CameraPicture)
         {
             room.GetRoomItemHandler().RemoveFurniture(session, item.Id);
-            using var dbClient = _database.GetQueryReactor();
-            dbClient.RunQuery($"DELETE FROM `items` WHERE `id` = '{item.Id}' LIMIT 1");
+            using var db = _database.Connection();
+            db.Execute("DELETE FROM `items` WHERE `id` = @id LIMIT 1", new { id = item.Id });
         }
         return Task.CompletedTask;
     }

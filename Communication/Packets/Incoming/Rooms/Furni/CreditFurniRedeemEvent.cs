@@ -1,4 +1,5 @@
-﻿using Plus.Communication.Packets.Outgoing.Inventory.Furni;
+using Dapper;
+using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Core.Settings;
 using Plus.Database;
@@ -23,33 +24,24 @@ internal class CreditFurniRedeemEvent : RoomPacketEvent
     {
         var habbo = session.GetHabbo();
         var furniture = habbo?.Inventory?.Furniture;
-        if (habbo == null || furniture == null)
-            return Task.CompletedTask;
-
-        if (!room.CheckRights(session, true))
-            return Task.CompletedTask;
+        if (habbo == null || furniture == null) return Task.CompletedTask;
+        if (!room.CheckRights(session, true)) return Task.CompletedTask;
         if (_settingsManager.TryGetValue("room.item.exchangeables.enabled") != "1")
         {
             session.SendNotification("The hotel managers have temporarilly disabled exchanging!");
             return Task.CompletedTask;
         }
         var exchange = room.GetRoomItemHandler().GetItem(packet.ReadUInt());
-        if (exchange == null)
-            return Task.CompletedTask;
-        if (exchange.Definition.InteractionType != InteractionType.Exchange)
-            return Task.CompletedTask;
+        if (exchange == null) return Task.CompletedTask;
+        if (exchange.Definition.InteractionType != InteractionType.Exchange) return Task.CompletedTask;
         var value = exchange.Definition.BehaviourData;
         if (value > 0)
         {
             habbo.Credits += value;
             session.Send(new CreditBalanceComposer(habbo.Credits));
         }
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("DELETE FROM `items` WHERE `id` = @exchangeId LIMIT 1");
-            dbClient.AddParameter("exchangeId", exchange.Id);
-            dbClient.RunQuery();
-        }
+        using var db = _database.Connection();
+        db.Execute("DELETE FROM `items` WHERE `id` = @id LIMIT 1", new { id = exchange.Id });
         session.Send(new FurniListUpdateComposer());
         room.GetRoomItemHandler().RemoveFurniture(null, exchange.Id);
         furniture.RemoveItem(exchange.Id);

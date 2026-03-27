@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Database;
@@ -21,9 +21,7 @@ public class RedeemVoucherEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        if (habbo == null)
-            return Task.CompletedTask;
-
+        if (habbo == null) return Task.CompletedTask;
         var code = packet.ReadString().Replace("\r", "");
         if (!_voucherManager.TryGetVoucher(code, out var voucher) || voucher == null)
         {
@@ -35,26 +33,16 @@ public class RedeemVoucherEvent : IPacketEvent
             session.SendNotification("Oops, this voucher has reached the maximum usage limit!");
             return Task.CompletedTask;
         }
-        DataRow row;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT * FROM `user_vouchers` WHERE `user_id` = @userId AND `voucher` = @Voucher LIMIT 1");
-            dbClient.AddParameter("userId", habbo.Id);
-            dbClient.AddParameter("Voucher", code);
-            row = dbClient.GetRow();
-        }
-        if (row != null)
+        using var db = _database.Connection();
+        var already = db.QueryFirstOrDefault(
+            "SELECT `user_id` FROM `user_vouchers` WHERE `user_id` = @userId AND `voucher` = @voucher LIMIT 1",
+            new { userId = habbo.Id, voucher = code });
+        if (already != null)
         {
             session.SendNotification("You've already used this voucher code, one per each user, sorry!");
             return Task.CompletedTask;
         }
-        {
-            using var dbClient = _database.GetQueryReactor();
-            dbClient.SetQuery("INSERT INTO `user_vouchers` (`user_id`,`voucher`) VALUES (@userId, @Voucher)");
-            dbClient.AddParameter("userId", habbo.Id);
-            dbClient.AddParameter("Voucher", code);
-            dbClient.RunQuery();
-        }
+        db.Execute("INSERT INTO `user_vouchers` (`user_id`, `voucher`) VALUES (@userId, @voucher)", new { userId = habbo.Id, voucher = code });
         voucher.UpdateUses();
         if (voucher.Type == VoucherType.Credit)
         {

@@ -1,4 +1,5 @@
-﻿using Plus.Communication.Packets.Outgoing.Moderation;
+using Dapper;
+using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Moderation;
@@ -11,7 +12,6 @@ internal class ReloadUserRankCommand : IRconCommand
     private readonly IGameClientManager _gameClientManager;
     private readonly IModerationManager _moderationManager;
     public string Description => "This command is used to reload a users rank and permissions.";
-
     public string Key => "reload_user_rank";
     public string Parameters => "%userId%";
 
@@ -24,18 +24,12 @@ internal class ReloadUserRankCommand : IRconCommand
 
     public Task<bool> TryExecute(string[] parameters)
     {
-        if (!int.TryParse(parameters[0], out var userId))
-            return Task.FromResult(false);
+        if (!int.TryParse(parameters[0], out var userId)) return Task.FromResult(false);
         var client = _gameClientManager.GetClientByUserId(userId);
         var habbo = client?.GetHabbo();
-        if (habbo == null)
-            return Task.FromResult(false);
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT `rank` FROM `users` WHERE `id` = @userId LIMIT 1");
-            dbClient.AddParameter("userId", userId);
-            habbo.Rank = dbClient.GetInteger();
-        }
+        if (habbo == null) return Task.FromResult(false);
+        using var db = _database.Connection();
+        habbo.Rank = db.QueryFirstOrDefault<int>("SELECT `rank` FROM `users` WHERE `id` = @userId LIMIT 1", new { userId });
         habbo.Permissions?.Init(habbo);
         if (habbo.Permissions?.HasRight("mod_tickets") == true)
         {

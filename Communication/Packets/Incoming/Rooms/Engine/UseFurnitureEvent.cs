@@ -1,4 +1,5 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Engine;
+using Dapper;
+using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Furni;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
@@ -25,21 +26,18 @@ internal class UseFurnitureEvent : RoomPacketEvent
         var habbo = session.GetHabbo();
         var itemId = packet.ReadUInt();
         var item = room.GetRoomItemHandler().GetItem(itemId);
-        if (item == null)
-            return Task.CompletedTask;
+        if (item == null) return Task.CompletedTask;
         var hasRights = room.CheckRights(session, false, true);
-        if (item.Definition.InteractionType == InteractionType.Banzaitele)
-            return Task.CompletedTask;
+        if (item.Definition.InteractionType == InteractionType.Banzaitele) return Task.CompletedTask;
         if (item.Definition.InteractionType == InteractionType.Toner)
         {
-            if (!room.CheckRights(session, true))
-                return Task.CompletedTask;
+            if (!room.CheckRights(session, true)) return Task.CompletedTask;
             room.TonerData ??= new(item.Id);
             room.TonerData.Enabled = room.TonerData.Enabled == 0 ? 1 : 0;
             room.SendPacket(new ObjectUpdateComposer(item));
             item.UpdateState();
-            using var dbClient = _database.GetQueryReactor();
-            dbClient.RunQuery($"UPDATE `room_items_toner` SET `enabled` = '{room.TonerData.Enabled}' LIMIT 1");
+            using var db = _database.Connection();
+            db.Execute("UPDATE `room_items_toner` SET `enabled` = @enabled LIMIT 1", new { enabled = room.TonerData.Enabled });
             return Task.CompletedTask;
         }
         if (item.Definition.InteractionType == InteractionType.GnomeBox && item.UserId == habbo?.Id)
@@ -48,15 +46,14 @@ internal class UseFurnitureEvent : RoomPacketEvent
         if (item.Definition.InteractionType == InteractionType.WfFloorSwitch1 || item.Definition.InteractionType == InteractionType.WfFloorSwitch2)
         {
             var user = habbo == null ? null : item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user == null)
-                return Task.CompletedTask;
+            if (user == null) return Task.CompletedTask;
             if (!Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y)) toggle = false;
         }
         var request = packet.ReadInt();
         item.Interactor.OnTrigger(session, item, request, hasRights);
         if (toggle && habbo != null)
             item.GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerStateChanges, habbo, item);
-        _questManager.ProgressUserQuest(session, QuestType.ExploreFindItem, (int)item.Definition.Id); 
+        _questManager.ProgressUserQuest(session, QuestType.ExploreFindItem, (int)item.Definition.Id);
         return Task.CompletedTask;
     }
 }

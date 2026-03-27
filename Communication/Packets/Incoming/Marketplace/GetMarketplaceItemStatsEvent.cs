@@ -1,4 +1,4 @@
-﻿using System.Data;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Marketplace;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
@@ -18,14 +18,11 @@ internal class GetMarketplaceItemStatsEvent : IPacketEvent
     {
         var itemId = packet.ReadInt();
         var spriteId = packet.ReadUInt();
-        DataRow row;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.SetQuery("SELECT `avgprice` FROM `catalog_marketplace_data` WHERE `sprite` = @SpriteId LIMIT 1");
-            dbClient.AddParameter("SpriteId", spriteId);
-            row = dbClient.GetRow();
-        }
-        session.Send(new MarketplaceItemStatsComposer(itemId, spriteId, row != null ? Convert.ToInt32(row["avgprice"]) : 0));
+        using var db = _database.Connection();
+        var avgPrice = db.QueryFirstOrDefault<int?>(
+            "SELECT `avgprice` FROM `catalog_marketplace_data` WHERE `sprite` = @spriteId LIMIT 1",
+            new { spriteId }) ?? 0;
+        session.Send(new MarketplaceItemStatsComposer(itemId, spriteId, avgPrice));
         return Task.CompletedTask;
     }
 }

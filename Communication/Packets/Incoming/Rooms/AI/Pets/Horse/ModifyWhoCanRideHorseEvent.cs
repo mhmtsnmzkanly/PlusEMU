@@ -1,4 +1,5 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.AI.Pets;
+using Dapper;
+using Plus.Communication.Packets.Outgoing.Rooms.AI.Pets;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
@@ -20,10 +21,9 @@ internal class ModifyWhoCanRideHorseEvent : RoomPacketEvent
         if (!room.GetRoomUserManager().TryGetPet(petId, out var pet))
             return Task.CompletedTask;
         pet.PetData.AnyoneCanRide = pet.PetData.AnyoneCanRide == 1 ? 0 : 1;
-        using (var dbClient = _database.GetQueryReactor())
-        {
-            dbClient.RunQuery($"UPDATE `bots_petdata` SET `anyone_ride` = '{pet.PetData.AnyoneCanRide}' WHERE `id` = '{petId}' LIMIT 1");
-        }
+        using var db = _database.Connection();
+        db.Execute("UPDATE `bots_petdata` SET `anyone_ride` = @ride WHERE `id` = @id LIMIT 1",
+            new { ride = pet.PetData.AnyoneCanRide, id = petId });
         room.SendPacket(new PetInformationComposer(pet.PetData));
         return Task.CompletedTask;
     }
