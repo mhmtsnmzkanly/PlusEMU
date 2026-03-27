@@ -8,17 +8,21 @@ using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Rooms.Chat.Filter;
 using Plus.HabboHotel.Users.Messenger;
 using Plus.Utilities;
+using Plus.HabboHotel.Cache;
+using Plus.Core.Settings;
 
 namespace Plus.HabboHotel.Friends;
 
 internal class MessengerService : IMessengerService
 {
+    private readonly ISettingsManager _settingsManager;
     private readonly IMessengerDataLoader _messengerDataLoader;
     private readonly IQuestService _questService;
     private readonly IWordFilterManager _wordFilterManager;
     private readonly IGameClientManager _gameClientManager;
     private readonly ISearchResultFactory _searchResultFactory;
     private readonly IRoomManager _roomManager;
+    private readonly ICacheManager _cacheManager;
 
     public MessengerService(
         IMessengerDataLoader messengerDataLoader,
@@ -26,7 +30,9 @@ internal class MessengerService : IMessengerService
         IWordFilterManager wordFilterManager,
         IGameClientManager gameClientManager,
         ISearchResultFactory searchResultFactory,
-        IRoomManager roomManager)
+        IRoomManager roomManager,
+        ICacheManager cacheManager,
+        ISettingsManager settingsManager)
     {
         _messengerDataLoader = messengerDataLoader;
         _questService = questService;
@@ -34,6 +40,8 @@ internal class MessengerService : IMessengerService
         _gameClientManager = gameClientManager;
         _searchResultFactory = searchResultFactory;
         _roomManager = roomManager;
+        _cacheManager = cacheManager;
+        _settingsManager = settingsManager;
     }
 
     public async Task Initialize(GameClient session)
@@ -44,7 +52,7 @@ internal class MessengerService : IMessengerService
             return;
 
         var friends = messenger.Friends.Values.ToList();
-        session.Send(new MessengerInitComposer());
+        session.Send(new MessengerInitComposer(_settingsManager));
 
         if (!friends.Any())
         {
@@ -214,7 +222,7 @@ internal class MessengerService : IMessengerService
                 otherUsers.Add(result);
         }
 
-        session.Send(new HabboSearchResultComposer(friends, otherUsers));
+        session.Send(new HabboSearchResultComposer(friends, otherUsers, _gameClientManager));
         return Task.CompletedTask;
     }
 
@@ -224,7 +232,7 @@ internal class MessengerService : IMessengerService
         if (messenger == null)
             return Task.CompletedTask;
 
-        session.Send(new BuddyRequestsComposer(messenger.Requests.Values.ToList()));
+        session.Send(new BuddyRequestsComposer(messenger.Requests.Values.ToList(), _cacheManager));
         return Task.CompletedTask;
     }
 

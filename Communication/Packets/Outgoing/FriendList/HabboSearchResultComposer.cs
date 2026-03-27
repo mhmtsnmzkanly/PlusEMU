@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Users.Messenger;
 
 namespace Plus.Communication.Packets.Outgoing.FriendList;
@@ -7,12 +7,14 @@ public class HabboSearchResultComposer : IServerPacket
 {
     private readonly List<SearchResult> _friends;
     private readonly List<SearchResult> _otherUsers;
+    private readonly IGameClientManager _gameClientManager;
     public uint MessageId => ServerPacketHeader.HabboSearchResultComposer;
 
-    public HabboSearchResultComposer(List<SearchResult> friends, List<SearchResult> otherUsers)
+    public HabboSearchResultComposer(List<SearchResult> friends, List<SearchResult> otherUsers, IGameClientManager gameClientManager)
     {
         _friends = friends;
         _otherUsers = otherUsers;
+        _gameClientManager = gameClientManager;
     }
 
     public void Compose(IOutgoingPacket packet)
@@ -20,7 +22,7 @@ public class HabboSearchResultComposer : IServerPacket
         packet.WriteInteger(_friends.Count);
         foreach (var friend in _friends.ToList())
         {
-            var online = PlusEnvironment.Game.ClientManager.GetClientByUserId(friend.UserId) != null;
+            var online = _gameClientManager.GetClientByUserId(friend.UserId) != null;
             packet.WriteInteger(friend.UserId);
             packet.WriteString(friend.Username);
             packet.WriteString(friend.Motto);
@@ -34,7 +36,7 @@ public class HabboSearchResultComposer : IServerPacket
         packet.WriteInteger(_otherUsers.Count);
         foreach (var otherUser in _otherUsers.ToList())
         {
-            var online = PlusEnvironment.Game.ClientManager.GetClientByUserId(otherUser.UserId) != null;
+            var online = _gameClientManager.GetClientByUserId(otherUser.UserId) != null;
             packet.WriteInteger(otherUser.UserId);
             packet.WriteString(otherUser.Username);
             packet.WriteString(otherUser.Motto);
@@ -45,6 +47,5 @@ public class HabboSearchResultComposer : IServerPacket
             packet.WriteString(online ? otherUser.Figure : "");
             packet.WriteString(otherUser.LastOnline);
         }
-
     }
 }

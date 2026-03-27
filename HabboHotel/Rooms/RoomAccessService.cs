@@ -134,7 +134,7 @@ internal class RoomAccessService : IRoomAccessService
             }
 
             session.Send(new FlatControllerRemovedComposer(room, userId));
-            session.Send(new RoomRightsListComposer(room));
+            session.Send(new RoomRightsListComposer(room, _cacheManager));
             session.Send(new UserUpdateComposer(room.GetRoomUserManager().GetUserList().ToList()));
         }
 
@@ -209,7 +209,7 @@ internal class RoomAccessService : IRoomAccessService
         if (room == null || !room.CheckRights(session, true))
             return Task.CompletedTask;
         if (room.GetBans().BannedUsers().Count > 0)
-            session.Send(new GetRoomBannedUsersComposer(room));
+            session.Send(new GetRoomBannedUsersComposer(room, _cacheManager));
         return Task.CompletedTask;
     }
 

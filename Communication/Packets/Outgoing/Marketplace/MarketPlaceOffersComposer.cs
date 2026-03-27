@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.Catalog.Marketplace;
+using Plus.HabboHotel.Catalog.Marketplace;
 using Plus.HabboHotel.GameClients;
 
 namespace Plus.Communication.Packets.Outgoing.Marketplace;
@@ -7,13 +7,14 @@ public class MarketPlaceOffersComposer : IServerPacket
 {
     private readonly Dictionary<uint, MarketOffer> _dictionary;
     private readonly Dictionary<uint, int> _dictionary2;
+    private readonly IMarketplaceManager _marketplaceManager;
     public uint MessageId => ServerPacketHeader.MarketPlaceOffersComposer;
 
-    public MarketPlaceOffersComposer(Dictionary<uint, MarketOffer> dictionary, Dictionary<uint, int> dictionary2)
-        : base()
+    public MarketPlaceOffersComposer(Dictionary<uint, MarketOffer> dictionary, Dictionary<uint, int> dictionary2, IMarketplaceManager marketplaceManager)
     {
         _dictionary = dictionary;
         _dictionary2 = dictionary2;
+        _marketplaceManager = marketplaceManager;
     }
 
     public void Compose(IOutgoingPacket packet)
@@ -31,7 +32,7 @@ public class MarketPlaceOffersComposer : IServerPacket
             packet.WriteUInteger(value.LimitedStack);
             packet.WriteInteger(value.TotalPrice);
             packet.WriteInteger(0);
-            packet.WriteInteger(PlusEnvironment.Game.Catalog.Marketplace.AvgPriceForSprite((int)value.SpriteId));
+            packet.WriteInteger(_marketplaceManager.AvgPriceForSprite((int)value.SpriteId));
             packet.WriteInteger(_dictionary2[value.SpriteId]);
         }
         packet.WriteInteger(_dictionary.Count); //Item count to show how many were found.

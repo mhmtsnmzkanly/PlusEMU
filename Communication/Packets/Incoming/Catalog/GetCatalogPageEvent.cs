@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Catalog;
+using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.HabboHotel.Catalog;
 using Plus.HabboHotel.GameClients;
 
@@ -26,7 +26,7 @@ public class GetCatalogPageEvent : IPacketEvent
             return Task.CompletedTask;
         if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || page.MinimumVip > habbo.VipRank && habbo.Rank == 1)
             return Task.CompletedTask;
-        session.Send(new CatalogPageComposer(page, cataMode));
+        session.Send(new CatalogPageComposer(page, cataMode, _catalogManager));
         return Task.CompletedTask;
     }
 }

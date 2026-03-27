@@ -1,4 +1,5 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Cache;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Users.Messenger;
 
 namespace Plus.Communication.Packets.Outgoing.FriendList;
@@ -6,11 +7,13 @@ namespace Plus.Communication.Packets.Outgoing.FriendList;
 public class BuddyRequestsComposer : IServerPacket
 {
     private readonly ICollection<MessengerRequest> _requests;
+    private readonly ICacheManager _cacheManager;
     public uint MessageId => ServerPacketHeader.BuddyRequestsComposer;
 
-    public BuddyRequestsComposer(ICollection<MessengerRequest> requests)
+    public BuddyRequestsComposer(ICollection<MessengerRequest> requests, ICacheManager cacheManager)
     {
         _requests = requests;
+        _cacheManager = cacheManager;
     }
 
     public void Compose(IOutgoingPacket packet)
@@ -21,7 +24,7 @@ public class BuddyRequestsComposer : IServerPacket
         {
             packet.WriteInteger(request.FromId);
             packet.WriteString(request.Username);
-            var user = PlusEnvironment.Game.CacheManager.GenerateUser(request.FromId);
+            var user = _cacheManager.GenerateUser(request.FromId);
             packet.WriteString(user != null ? user.Look : "");
         }
     }

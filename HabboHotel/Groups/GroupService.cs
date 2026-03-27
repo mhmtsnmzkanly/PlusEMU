@@ -90,7 +90,7 @@ internal class GroupService : IGroupService
             await connection.ExecuteAsync("INSERT INTO `group_memberships` (user_id, group_id) VALUES (@uid, @gid)", new { gid = group.Id, uid = habbo.Id });
         }
 
-        session.Send(new GroupFurniConfigComposer(_groupManager.GetGroupsForUser(habbo.Id)));
+        session.Send(new GroupFurniConfigComposer(_groupManager.GetGroupsForUser(habbo.Id), _groupManager));
         session.Send(new GroupInfoComposer(group, session, _roomFactory));
         var currentRoom = habbo.CurrentRoom;
         if (currentRoom != null)

@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.Catalog;
+using Plus.HabboHotel.Catalog;
 using Plus.HabboHotel.Catalog.Utilities;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
@@ -8,11 +8,13 @@ namespace Plus.Communication.Packets.Outgoing.Catalog;
 public class CatalogOfferComposer : IServerPacket
 {
     private readonly CatalogItem _item;
+    private readonly ICatalogManager _catalogManager;
     public uint MessageId => ServerPacketHeader.CatalogOfferComposer;
 
-    public CatalogOfferComposer(CatalogItem item)
+    public CatalogOfferComposer(CatalogItem item, ICatalogManager catalogManager)
     {
         _item = item;
+        _catalogManager = catalogManager;
     }
 
     public void Compose(IOutgoingPacket packet)
@@ -51,7 +53,7 @@ public class CatalogOfferComposer : IServerPacket
             else if (_item.PageId == 9) //Bots
             {
                 CatalogBot? cataBot = null;
-                if (!PlusEnvironment.Game.Catalog.TryGetBot(_item.ItemId, out cataBot))
+                if (!_catalogManager.TryGetBot(_item.ItemId, out cataBot))
                     packet.WriteString("hd-180-7.ea-1406-62.ch-210-1321.hr-831-49.ca-1813-62.sh-295-1321.lg-285-92");
                 else
                     packet.WriteString(cataBot.Figure ?? string.Empty);

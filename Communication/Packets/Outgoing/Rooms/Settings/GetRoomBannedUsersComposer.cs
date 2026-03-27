@@ -1,4 +1,5 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Cache;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
 
 namespace Plus.Communication.Packets.Outgoing.Rooms.Settings;
@@ -6,11 +7,13 @@ namespace Plus.Communication.Packets.Outgoing.Rooms.Settings;
 public class GetRoomBannedUsersComposer : IServerPacket
 {
     private readonly Room _instance;
+    private readonly ICacheManager _cacheManager;
     public uint MessageId => ServerPacketHeader.GetRoomBannedUsersComposer;
 
-    public GetRoomBannedUsersComposer(Room instance)
+    public GetRoomBannedUsersComposer(Room instance, ICacheManager cacheManager)
     {
         _instance = instance;
+        _cacheManager = cacheManager;
     }
 
     public void Compose(IOutgoingPacket packet)
@@ -19,7 +22,7 @@ public class GetRoomBannedUsersComposer : IServerPacket
         packet.WriteInteger(_instance.GetBans().BannedUsers().Count); //Count
         foreach (var id in _instance.GetBans().BannedUsers().ToList())
         {
-            var data = PlusEnvironment.Game.CacheManager.GenerateUser(id);
+            var data = _cacheManager.GenerateUser(id);
             if (data == null)
             {
                 packet.WriteInteger(0);

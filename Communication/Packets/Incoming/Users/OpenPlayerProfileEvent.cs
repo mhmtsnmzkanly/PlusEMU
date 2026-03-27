@@ -45,6 +45,6 @@ internal class OpenPlayerProfileEvent : IPacketEvent
 
         var groups = _groupManager.GetGroupsForUser(targetData.Id);
         var friendCount = await _messengerDataLoader.GetFriendCount(userId);
-        session.Send(new ProfileInformationComposer(targetData, session, groups, friendCount, habboStats));
+        session.Send(new ProfileInformationComposer(targetData, session, groups, friendCount, habboStats, _gameClientManager, _groupManager));
     }
 }

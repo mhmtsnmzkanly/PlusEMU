@@ -222,7 +222,7 @@ internal class MarketplaceService : IMarketplaceService
     {
         var habbo = session.GetHabbo();
         if (habbo != null)
-            session.Send(new MarketPlaceOwnOffersComposer(habbo.Id));
+            session.Send(new MarketPlaceOwnOffersComposer(habbo.Id, _database));
 
         return Task.CompletedTask;
     }
@@ -334,7 +334,7 @@ internal class MarketplaceService : IMarketplaceService
             }
         }
 
-        session.Send(new MarketPlaceOffersComposer(offers, offerCounts));
+        session.Send(new MarketPlaceOffersComposer(offers, offerCounts, _marketplaceManager));
         return Task.CompletedTask;
     }
 }

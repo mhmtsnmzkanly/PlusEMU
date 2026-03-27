@@ -49,6 +49,7 @@ These packet-heavy domains were already moved into dedicated services:
     *   [x] Phase 6: Item/Furniture Modernization (IItemService, IItemLoader, Dapper).
     *   [x] Phase 7: Catalog Modernization (ICatalogService, IBotUtility, IPetUtility, Dapper).
     *   [x] Phase 8: Navigator & Room System Modernization (IRoomFactory, IRoomAppender, DI).
+    *   [x] Phase 9a: Dependency Injection Modernization (Outgoing Packet Composers & Incoming Event Handlers).
 
 ## Completed Legacy DB Wrapper Migration
 
@@ -156,6 +157,18 @@ All files below have been migrated off `GetQueryReactor()`.
 - `Communication/Packets/Incoming/Rooms/Settings/SaveRoomSettingsEvent.cs`
 - `Communication/Packets/Incoming/Users/SetUserFocusPreferenceEvent.cs`
 - `Communication/Packets/Incoming/Users/UpdateFigureDataEvent.cs`
+- `Communication/Packets/Outgoing/Rooms/Engine/UsersComposer.cs`
+- `Communication/Packets/Outgoing/FriendList/MessengerInitComposer.cs`
+- `Communication/Packets/Outgoing/Groups/GroupCreationWindowComposer.cs`
+- `Communication/Packets/Outgoing/Rooms/Settings/GetRoomBannedUsersComposer.cs`
+- `Communication/Packets/Outgoing/Rooms/Settings/RoomRightsListComposer.cs`
+- `Communication/Packets/Outgoing/Users/ProfileInformationComposer.cs`
+- `Communication/Packets/Incoming/Rooms/Settings/GetRoomRightsEvent.cs`
+- `Communication/Packets/Incoming/Groups/GetGroupCreationWindowEvent.cs`
+- `Communication/Packets/Incoming/Game/Lobby/GetGameListEvent.cs`
+- `Communication/Packets/Incoming/Marketplace/GetMarketplaceItemStatsEvent.cs`
+- `Communication/Packets/Incoming/Rooms/AI/Pets/Horse/ModifyWhoCanRideHorseEvent.cs`
+- `Communication/Packets/Incoming/Users/OpenPlayerProfileEvent.cs`
 
 ## Startup Fixes Already Applied
 

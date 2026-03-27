@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Quests;
 
 namespace Plus.Communication.Packets.Outgoing.Quests;
@@ -7,13 +7,15 @@ public class QuestCompletedComposer : IServerPacket
 {
     private readonly GameClient _session;
     private readonly Quest _quest;
+    private readonly IQuestManager _questManager;
 
     public uint MessageId => ServerPacketHeader.QuestCompletedComposer;
 
-    public QuestCompletedComposer(GameClient session, Quest quest)
+    public QuestCompletedComposer(GameClient session, Quest quest, IQuestManager questManager)
     {
         _session = session;
         _quest = quest;
+        _questManager = questManager;
     }
 
     public void Compose(IOutgoingPacket packet)
@@ -22,7 +24,7 @@ public class QuestCompletedComposer : IServerPacket
         if (habbo?.HabboStats == null || _quest == null)
             return;
 
-        var amountInCat = PlusEnvironment.Game.QuestManager.GetAmountOfQuestsInCategory(_quest.Category);
+        var amountInCat = _questManager.GetAmountOfQuestsInCategory(_quest.Category);
         var number = _quest.Number;
         var userProgress = habbo.GetQuestProgress(_quest.Id);
         packet.WriteString(_quest.Category);

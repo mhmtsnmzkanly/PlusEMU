@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Plus.Communication.Packets.Outgoing.Handshake;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
+using Plus.HabboHotel.Groups;
 using Plus.Database;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Permissions;
@@ -30,15 +31,17 @@ public class RoomUserManager
     private ConcurrentDictionary<int, RoomUser> _users;
     private readonly IGameClientManager _clientManager;
     private readonly IDatabase _database;
+    private readonly IGroupManager _groupManager;
 
     public int UserCount;
 
 
-    public RoomUserManager(Room room, IGameClientManager clientManager, IDatabase database)
+    public RoomUserManager(Room room, IGameClientManager clientManager, IDatabase database, IGroupManager groupManager)
     {
         _room = room;
         _clientManager = clientManager;
         _database = database;
+        _groupManager = groupManager;
         _users = new();
         _pets = new();
         _bots = new();
@@ -81,7 +84,7 @@ public class RoomUserManager
         else
             user.BotAi.Init(bot.BotId, user.VirtualId, _room.RoomId, user, _room);
         user.UpdateNeeded = true;
-        _room.SendPacket(new UsersComposer(user));
+        _room.SendPacket(new UsersComposer(user, _groupManager));
         if (user.IsPet)
         {
             if (_pets.ContainsKey(user.PetData.PetId))
@@ -197,7 +200,7 @@ public class RoomUserManager
                 user.SetRot(model.DoorOrientation, false);
             }
         }
-        _room.SendPacket(new UsersComposer(user));
+        _room.SendPacket(new UsersComposer(user, _groupManager));
         if (_room.CheckRights(session, true))
         {
             user.SetStatus("flatctrl", "useradmin");

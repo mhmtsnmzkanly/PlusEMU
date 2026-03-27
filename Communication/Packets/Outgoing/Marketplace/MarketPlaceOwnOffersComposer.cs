@@ -1,4 +1,5 @@
 using Dapper;
+using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.Utilities;
 
@@ -7,16 +8,18 @@ namespace Plus.Communication.Packets.Outgoing.Marketplace;
 public class MarketPlaceOwnOffersComposer : IServerPacket
 {
     private readonly int _userId;
+    private readonly IDatabase _database;
     public uint MessageId => ServerPacketHeader.MarketPlaceOwnOffersComposer;
 
-    public MarketPlaceOwnOffersComposer(int userId)
+    public MarketPlaceOwnOffersComposer(int userId, IDatabase database)
     {
         _userId = userId;
+        _database = database;
     }
 
     public void Compose(IOutgoingPacket packet)
     {
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _database.Connection();
         var rows = db.Query(
             "SELECT `timestamp`, `state`, `offer_id`, `item_type`, `sprite_id`, `total_price`, `limited_number`, `limited_stack` FROM `catalog_marketplace_offers` WHERE `user_id` = @userId",
             new { userId = _userId }).AsList();

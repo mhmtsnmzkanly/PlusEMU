@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.Catalog;
+using Plus.HabboHotel.Catalog;
 using Plus.HabboHotel.Catalog.Utilities;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
@@ -10,12 +10,14 @@ public class CatalogPageComposer : IServerPacket
 {
     private readonly CatalogPage _page;
     private readonly string _mode;
+    private readonly ICatalogManager _catalogManager;
     public uint MessageId => ServerPacketHeader.CatalogPageComposer;
 
-    public CatalogPageComposer(CatalogPage page, string mode)
+    public CatalogPageComposer(CatalogPage page, string mode, ICatalogManager catalogManager)
     {
         _page = page;
         _mode = mode;
+        _catalogManager = catalogManager;
     }
 
     public void Compose(IOutgoingPacket packet)
@@ -50,7 +52,7 @@ public class CatalogPageComposer : IServerPacket
                 if (item.Definition.InteractionType == InteractionType.Deal || item.Definition.InteractionType == InteractionType.Roomdeal)
                 {
                     CatalogDeal? deal = null;
-                    if (!PlusEnvironment.Game.Catalog.TryGetDeal(item.Definition.BehaviourData, out deal))
+                    if (!_catalogManager.TryGetDeal(item.Definition.BehaviourData, out deal))
                         packet.WriteInteger(0); //Count
                     else
                     {
@@ -87,7 +89,7 @@ public class CatalogPageComposer : IServerPacket
                         else if (item.Definition.InteractionType == InteractionType.Bot) //Bots
                         {
                             CatalogBot? catalogBot = null;
-                            if (!PlusEnvironment.Game.Catalog.TryGetBot(item.ItemId, out catalogBot))
+                            if (!_catalogManager.TryGetBot(item.ItemId, out catalogBot))
                                 packet.WriteString("hd-180-7.ea-1406-62.ch-210-1321.hr-831-49.ca-1813-62.sh-295-1321.lg-285-92");
                             else
                                 packet.WriteString(catalogBot.Figure ?? string.Empty);
@@ -113,8 +115,8 @@ public class CatalogPageComposer : IServerPacket
             packet.WriteInteger(0);
         packet.WriteInteger(-1);
         packet.WriteBoolean(false);
-        packet.WriteInteger(PlusEnvironment.Game.Catalog.Promotions.ToList().Count); //Count
-        foreach (var promotion in PlusEnvironment.Game.Catalog.Promotions.ToList())
+        packet.WriteInteger(_catalogManager.Promotions.ToList().Count); //Count
+        foreach (var promotion in _catalogManager.Promotions.ToList())
         {
             packet.WriteInteger(promotion.Id);
             packet.WriteString(promotion.Title ?? string.Empty);

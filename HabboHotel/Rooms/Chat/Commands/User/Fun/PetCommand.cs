@@ -1,16 +1,22 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Engine;
+using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Groups;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands.User.Fun;
 
 internal class PetCommand : IChatCommand
 {
+    private readonly IGroupManager _groupManager;
+
     public string Key => "pet";
     public string PermissionRequired => "command_pet";
-
     public string Parameters => "";
-
     public string Description => "Allows you to transform into a pet..";
+
+    public PetCommand(IGroupManager groupManager)
+    {
+        _groupManager = groupManager;
+    }
 
     public async Task Execute(GameClient session, Room room, string[] parameters)
     {
@@ -35,7 +41,7 @@ internal class PetCommand : IChatCommand
                 room.SendPacket(new UserRemoveComposer(roomUser.VirtualId));
 
                 //Add the new one, they won't even notice a thing!!11 8-)
-                room.SendPacket(new UsersComposer(roomUser));
+                room.SendPacket(new UsersComposer(roomUser, _groupManager));
             }
             return;
         }
@@ -63,7 +69,7 @@ internal class PetCommand : IChatCommand
         room.SendPacket(new UserRemoveComposer(roomUser.VirtualId));
 
         //Add the new one, they won't even notice a thing!!11 8-)
-        room.SendPacket(new UsersComposer(roomUser));
+        room.SendPacket(new UsersComposer(roomUser, _groupManager));
 
         //Tell them a quick message.
         if (habbo.PetId > 0)

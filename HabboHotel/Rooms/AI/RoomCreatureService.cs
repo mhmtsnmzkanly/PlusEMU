@@ -20,6 +20,7 @@ using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Quests;
 using Plus.HabboHotel.Rooms.AI.Speech;
 using Plus.HabboHotel.Rooms.Chat.Pets.Locale;
+using Plus.HabboHotel.Groups;
 using Plus.Utilities;
 
 namespace Plus.HabboHotel.Rooms.AI;
@@ -52,6 +53,7 @@ internal class RoomCreatureService : IRoomCreatureService
     private readonly IPetLocale _petLocale;
     private readonly IItemDataManager _itemDataManager;
     private readonly IItemFactory _itemFactory;
+    private readonly IGroupManager _groupManager;
 
     public RoomCreatureService(
         IRoomManager roomManager,
@@ -63,7 +65,8 @@ internal class RoomCreatureService : IRoomCreatureService
         IQuestService questService,
         IPetLocale petLocale,
         IItemDataManager itemDataManager,
-        IItemFactory itemFactory)
+        IItemFactory itemFactory,
+        IGroupManager groupManager)
     {
         _roomManager = roomManager;
         _settingsManager = settingsManager;
@@ -75,6 +78,7 @@ internal class RoomCreatureService : IRoomCreatureService
         _petLocale = petLocale;
         _itemDataManager = itemDataManager;
         _itemFactory = itemFactory;
+        _groupManager = groupManager;
     }
 
     public Task PlacePet(Room room, GameClient session, int petId, int x, int y)
@@ -142,7 +146,7 @@ internal class RoomCreatureService : IRoomCreatureService
 
             targetHabbo.PetId = 0;
             room.SendPacket(new UserRemoveComposer(targetUser.VirtualId));
-            room.SendPacket(new UsersComposer(targetUser));
+            room.SendPacket(new UsersComposer(targetUser, _groupManager));
             return Task.CompletedTask;
         }
 
@@ -264,12 +268,12 @@ internal class RoomCreatureService : IRoomCreatureService
         {
             var userHabbo = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(petId)?.GetClient()?.GetHabbo();
             if (userHabbo != null)
-                session.Send(new PetInformationComposer(userHabbo));
+                session.Send(new PetInformationComposer(userHabbo, _roomManager));
             return Task.CompletedTask;
         }
 
         if (pet.RoomId == currentRoom.RoomId && pet.PetData != null)
-            session.Send(new PetInformationComposer(pet.PetData));
+            session.Send(new PetInformationComposer(pet.PetData, _roomManager));
         return Task.CompletedTask;
     }
 
@@ -405,7 +409,7 @@ internal class RoomCreatureService : IRoomCreatureService
             UpdateHorsePetAndConsumeItem(petUser.PetData.PetId, item.Id, room, session, item, "race", petUser.PetData.Race);
         }
 
-        room.SendPacket(new UsersComposer(petUser));
+        room.SendPacket(new UsersComposer(petUser, _groupManager));
         room.SendPacket(new PetHorseFigureInformationComposer(petUser));
         return Task.CompletedTask;
     }
@@ -438,7 +442,7 @@ internal class RoomCreatureService : IRoomCreatureService
             session.Send(new FurniListUpdateComposer());
         }
 
-        room.SendPacket(new UsersComposer(petUser));
+        room.SendPacket(new UsersComposer(petUser, _groupManager));
         room.SendPacket(new PetHorseFigureInformationComposer(petUser));
         return Task.CompletedTask;
     }
@@ -617,7 +621,7 @@ internal class RoomCreatureService : IRoomCreatureService
                     connection.Execute(
                         "UPDATE `bots` SET `name` = @name WHERE `id` = @id LIMIT 1",
                         new { name = dataString, id = roomBot.Id });
-                room.SendPacket(new UsersComposer(bot));
+                room.SendPacket(new UsersComposer(bot, _groupManager));
                 break;
         }
         return Task.CompletedTask;

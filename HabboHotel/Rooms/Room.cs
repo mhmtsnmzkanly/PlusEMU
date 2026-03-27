@@ -7,6 +7,7 @@ using Plus.Communication.Packets.Outgoing.Rooms.Session;
 using Plus.Core;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
+using Plus.HabboHotel.Groups;
 using Plus.HabboHotel.Items.Data.Moodlight;
 using Plus.HabboHotel.Items.Data.Toner;
 using Plus.HabboHotel.Rooms.AI;
@@ -101,6 +102,7 @@ public class Room : RoomData
     public DateTime LastTimerReset;
     private readonly IGameClientManager _clientManager;
     private readonly IDatabase _database;
+    private readonly IGroupManager _groupManager;
     private readonly IItemLoader _itemLoader;
     public bool MDisposed;
     public MoodlightData? MoodlightData;
@@ -117,12 +119,13 @@ public class Room : RoomData
 
     public List<int> UsersWithRights = new();
 
-    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader)
+    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager)
         : base(data)
     {
         _clientManager = clientManager;
         _database = database;
         _itemLoader = itemLoader;
+        _groupManager = groupManager;
         IsLagging = 0;
         Unloaded = false;
         IdleTime = 0;
@@ -131,7 +134,7 @@ public class Room : RoomData
         _tents = new();
         _gamemap = new(this, data.Model);
         _roomItemHandling = new(this, _itemLoader);
-        _roomUserManager = new(this, clientManager, database);
+        _roomUserManager = new(this, clientManager, database, groupManager);
         _filterComponent = new(this);
         _wiredComponent = new(this);
         _bansComponent = new(this);
@@ -565,7 +568,7 @@ public class Room : RoomData
         {
             if (user == null)
                 continue;
-            session.Send(new UsersComposer(user));
+            session.Send(new UsersComposer(user, _groupManager));
             if (user.IsBot && user.BotData.DanceId > 0)
                 session.Send(new DanceComposer(user, user.BotData.DanceId));
             else if (!user.IsBot && !user.IsPet && user.IsDancing)

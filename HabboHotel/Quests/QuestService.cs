@@ -64,7 +64,7 @@ internal class QuestService : IQuestService
             }
         }
         
-        session.Send(new QuestListComposer(session, isFromEvent, userQuests!));
+        session.Send(new QuestListComposer(session, isFromEvent, userQuests!, _questManager));
     }
 
     public async Task GetCurrentQuest(GameClient session)
@@ -86,7 +86,7 @@ internal class QuestService : IQuestService
 
         habbo.HabboStats.QuestId = nextQuest.Id;
         await GetQuestList(session, false);
-        session.Send(new QuestStartedComposer(session, nextQuest));
+        session.Send(new QuestStartedComposer(session, nextQuest, _questManager));
     }
 
     public async Task StartQuest(GameClient session, int questId)
@@ -103,7 +103,7 @@ internal class QuestService : IQuestService
 
         habbo.HabboStats.QuestId = quest.Id;
         await GetQuestList(session, false);
-        session.Send(new QuestStartedComposer(session, quest));
+        session.Send(new QuestStartedComposer(session, quest, _questManager));
     }
 
     public async Task CancelQuest(GameClient session)
@@ -122,7 +122,7 @@ internal class QuestService : IQuestService
     public Task QuestReminder(GameClient session, int questId)
     {
         if (_questManager.TryGetQuest(questId, out var quest))
-            session.Send(new QuestStartedComposer(session, quest));
+            session.Send(new QuestStartedComposer(session, quest, _questManager));
         return Task.CompletedTask;
     }
 
@@ -166,14 +166,14 @@ internal class QuestService : IQuestService
             connection.Execute("UPDATE `user_statistics` SET `quest_id` = '0' WHERE `id` = @id LIMIT 1", new { id = habbo.Id });
 
         quests[stats.QuestId] = totalProgress;
-        session.Send(new QuestStartedComposer(session, quest));
+        session.Send(new QuestStartedComposer(session, quest, _questManager));
 
         if (completeQuest)
         {
             _messengerDataLoader.BroadcastStatusUpdate(habbo, MessengerEventTypes.QuestCompleted, $"{quest.Category}.{quest.Name}");
             stats.QuestId = 0;
             habbo.QuestLastCompleted = quest.Id;
-            session.Send(new QuestCompletedComposer(session, quest));
+            session.Send(new QuestCompletedComposer(session, quest, _questManager));
             habbo.Duckets += quest.Reward;
             session.Send(new HabboActivityPointNotificationComposer(habbo.Duckets, quest.Reward));
             await GetQuestList(session, false);
