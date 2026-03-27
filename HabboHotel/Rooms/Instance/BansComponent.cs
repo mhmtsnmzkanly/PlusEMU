@@ -30,7 +30,7 @@ public class BansComponent
     {
         _instance = instance;
         _bans = new();
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _instance.GetDatabase().Connection();
         var getBans = connection.Query<RoomBanRow>(
             "SELECT `user_id` AS UserId, `expire` AS Expire FROM `room_bans` WHERE `room_id` = @roomId AND `expire` > UNIX_TIMESTAMP();",
             new { roomId = _instance.Id });
@@ -47,7 +47,7 @@ public class BansComponent
         var banTime = UnixTimestamp.GetNow() + time;
         if (!_bans.TryAdd(avatar.UserId, banTime))
             _bans[avatar.UserId] = banTime;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = _instance.GetDatabase().Connection())
         {
             connection.Execute("REPLACE INTO `room_bans` (`user_id`,`room_id`,`expire`) VALUES (@uid, @rid, @expire);",
                 new { rid = _instance.Id, uid = avatar.UserId, expire = banTime });
@@ -63,7 +63,7 @@ public class BansComponent
         if (banTime <= 0)
         {
             _bans.TryRemove(userId, out var time);
-            using var connection = PlusEnvironment.DatabaseManager.Connection();
+            using var connection = _instance.GetDatabase().Connection();
             connection.Execute("DELETE FROM `room_bans` WHERE `room_id` = @rid AND `user_id` = @uid;",
                 new { rid = _instance.Id, uid = userId });
             return false;
@@ -77,7 +77,7 @@ public class BansComponent
             return false;
         if (_bans.TryRemove(userId, out var time))
         {
-            using var connection = PlusEnvironment.DatabaseManager.Connection();
+            using var connection = _instance.GetDatabase().Connection();
             connection.Execute("DELETE FROM `room_bans` WHERE `room_id` = @rid AND `user_id` = @uid;",
                 new { rid = _instance.Id, uid = userId });
             return true;
@@ -90,7 +90,7 @@ public class BansComponent
         if (_instance == null)
             return new List<int>();
 
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _instance.GetDatabase().Connection();
         return connection.Query<int>(
             "SELECT `user_id` FROM `room_bans` WHERE `room_id` = @roomId AND `expire` > UNIX_TIMESTAMP();",
             new { roomId = _instance.Id })

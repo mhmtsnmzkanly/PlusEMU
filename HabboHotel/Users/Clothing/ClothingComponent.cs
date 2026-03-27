@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+using Plus.Database;
+using System.Collections.Concurrent;
 using Dapper;
 using Plus.HabboHotel.Users.Clothing.Parts;
 
@@ -20,6 +21,7 @@ public sealed class ClothingComponent
     /// </summary>
     private readonly ConcurrentDictionary<int, ClothingParts> _allClothing = new();
     private Habbo? _habbo;
+    private IDatabase? _database;
 
     public ICollection<ClothingParts> GetClothingParts => _allClothing.Values;
 
@@ -27,11 +29,12 @@ public sealed class ClothingComponent
     /// Initializes the EffectsComponent.
     /// </summary>
     /// <param name="UserId"></param>
-    public bool Init(Habbo habbo)
+    public bool Init(Habbo habbo, IDatabase database)
     {
         if (_allClothing.Count > 0)
             return false;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        _database = database;
+        using (var connection = _database.Connection())
         {
             var getClothing = connection.Query<UserClothingRow>("SELECT `id`,`part_id` AS PartId,`part` FROM `user_clothing` WHERE `user_id` = @id;",
                 new { id = habbo.Id });
@@ -57,7 +60,7 @@ public sealed class ClothingComponent
         {
             if (!_allClothing.ContainsKey(partId))
             {
-                using (var connection = PlusEnvironment.DatabaseManager.Connection())
+                using (var connection = _database!.Connection())
                 {
                     var newId = Convert.ToInt32(connection.ExecuteScalar<long>(
                         "INSERT INTO `user_clothing` (`user_id`,`part_id`,`part`) VALUES (@UserId, @PartId, @Part); SELECT LAST_INSERT_ID();",

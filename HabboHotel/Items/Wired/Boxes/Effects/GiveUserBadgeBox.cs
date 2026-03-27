@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
@@ -40,7 +40,8 @@ internal class GiveUserBadgeBox : IWiredItem
     {
         if (@params == null || @params.Length == 0)
             return false;
-        var owner = PlusEnvironment.GetHabboById(Item.UserId);
+        var owner = Instance.GetClientManager().GetClientByUserId(Item.UserId)?.GetHabbo() ?? 
+                    Instance.GetUserDataFactory().GetUserDataByIdAsync(Item.UserId).GetAwaiter().GetResult();
         var ownerPermissions = owner?.Permissions;
         if (ownerPermissions == null || !ownerPermissions.HasRight("room_item_wired_rewards"))
             return false;
@@ -59,8 +60,8 @@ internal class GiveUserBadgeBox : IWiredItem
             playerClient.Send(new WhisperComposer(user.VirtualId, "Oops, it appears you have already recieved this badge!", 0, user.LastBubble));
         else
         {
-            //player.Inventory.Badges.GiveBadge(StringData, true, player.GetClient());
-            // TODO @80O: Inject BadgeManager
+            var badgeManager = Instance.GetBadgeManager();
+            Task.Run(() => badgeManager.GiveBadge(player, StringData));
             playerClient.SendNotification("You have recieved a badge!");
         }
         return true;

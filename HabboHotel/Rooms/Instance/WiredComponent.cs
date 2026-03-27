@@ -47,7 +47,7 @@ public class WiredComponent
     public IWiredItem LoadWiredBox(Item item)
     {
         var newBox = GenerateNewBox(item);
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _room.GetDatabase().Connection();
         dynamic? row = db.QueryFirstOrDefault(
             "SELECT `string`, `bool`, `items`, `delay` FROM `wired_items` WHERE `id` = @id LIMIT 1",
             new { id = item.Id });
@@ -371,7 +371,7 @@ public class WiredComponent
         }
         if (item.Type == WiredBoxType.EffectMatchPosition || item.Type == WiredBoxType.ConditionMatchStateAndPosition || item.Type == WiredBoxType.ConditionDontMatchStateAndPosition)
             item.ItemsData = items;
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = _room.GetDatabase().Connection();
         db.Execute(
             "REPLACE INTO `wired_items` VALUES (@id, @items, @delay, @string, @bool)",
             new { id = item.Item.Id, items, delay = cycle?.Delay ?? 0, @string = item.StringData, @bool = item.BoolData ? "1" : "0" });

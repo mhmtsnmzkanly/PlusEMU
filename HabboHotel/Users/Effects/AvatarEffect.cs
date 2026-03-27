@@ -1,4 +1,5 @@
-﻿using Dapper;
+using Plus.Database;
+using Dapper;
 using Plus.Communication.Packets.Outgoing.Inventory.AvatarEffects;
 using Plus.Utilities;
 
@@ -48,10 +49,10 @@ public sealed class AvatarEffect
     /// <summary>
     /// Activates the AvatarEffect
     /// </summary>
-    public bool Activate()
+    public bool Activate(IDatabase database)
     {
         var tsNow = UnixTimestamp.GetNow();
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = database.Connection();
         connection.Execute(
             "UPDATE `user_effects` SET `is_activated` = '1', `activated_stamp` = @ts WHERE `id` = @id",
             new { ts = tsNow, id = Id });
@@ -60,12 +61,12 @@ public sealed class AvatarEffect
         return true;
     }
 
-    public void HandleExpiration(Habbo habbo)
+    public void HandleExpiration(Habbo habbo, IDatabase database)
     {
         Quantity--;
         Activated = false;
         TimestampActivated = 0;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = database.Connection())
         {
             if (Quantity < 1)
             {
@@ -84,10 +85,10 @@ public sealed class AvatarEffect
         // reset fx if in room?
     }
 
-    public void AddToQuantity()
+    public void AddToQuantity(IDatabase database)
     {
         Quantity++;
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = database.Connection();
         connection.Execute(
             "UPDATE `user_effects` SET `quantity` = @qt WHERE `id` = @id",
             new { qt = Quantity, id = Id });

@@ -59,9 +59,6 @@ public class RoomData
         SalePrice = salePrice;
         ReverseRollers = false;
         LayEnabled = layEnabled;
-        if (groupId > 0)
-            PlusEnvironment.Game.GroupManager.TryGetGroup(groupId, out _group);
-        LoadPromotions();
         Model = model;
     }
 
@@ -167,9 +164,9 @@ public class RoomData
 
     public bool HasActivePromotion => Promotion != null;
 
-    public void LoadPromotions()
+    public void LoadPromotions(IDatabase database)
     {
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = database.Connection();
         dynamic? row = db.QueryFirstOrDefault(
             "SELECT `title`, `description`, `timestamp_start`, `timestamp_expire`, `category_id` FROM `room_promotions` WHERE `room_id` = @roomId LIMIT 1",
             new { roomId = Id });

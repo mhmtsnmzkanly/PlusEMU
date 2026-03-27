@@ -54,11 +54,13 @@ public class RoomFactory : IRoomFactory
 
     private readonly IDatabase _database;
     private readonly IRoomManager _roomManager;
-
-    public RoomFactory(IDatabase database, IRoomManager roomManager)
+    private readonly IGroupManager _groupManager;
+ 
+    public RoomFactory(IDatabase database, IRoomManager roomManager, IGroupManager groupManager)
     {
         _database = database;
         _roomManager = roomManager;
+        _groupManager = groupManager;
     }
 
     public List<RoomData> GetRoomsDataByOwnerSortByName(int ownerId)
@@ -123,7 +125,7 @@ public class RoomFactory : IRoomFactory
             else
             {
                 if (string.IsNullOrEmpty(row.ModelName) || !_roomManager.TryGetModel(row.ModelName, out var model)) continue;
-                data.Add(CreateRoomData(row, model));
+                data.Add(CreateRoomData(row, model, _database, _groupManager));
             }
         }
         return data;
@@ -197,7 +199,7 @@ public class RoomFactory : IRoomFactory
                     return false;
                 }
 
-                data = CreateRoomData(row, model);
+                data = CreateRoomData(row, model, _database, _groupManager);
                 return true;
             }
         }
@@ -205,8 +207,9 @@ public class RoomFactory : IRoomFactory
         return false;
     }
 
-    private static RoomData CreateRoomData(RoomFactoryRow row, RoomModel model) =>
-        new(row.Id, row.Caption, row.ModelName, string.IsNullOrEmpty(row.Username) ? "Habboon" : row.Username, row.Owner,
+    private static RoomData CreateRoomData(RoomFactoryRow row, RoomModel model, IDatabase database, IGroupManager groupManager)
+    {
+        var data = new RoomData(row.Id, row.Caption, row.ModelName, string.IsNullOrEmpty(row.Username) ? "Habboon" : row.Username, row.Owner,
             row.Password, row.Score, row.RoomType, row.State, row.UsersNow,
             row.UsersMax, row.Category, row.Description, row.Tags, row.Floor,
             row.Landscape, row.AllowPets == "1", row.AllowPetsEat == "1", row.RoomBlockingDisabled == "1",
@@ -219,4 +222,12 @@ public class RoomFactory : IRoomFactory
             row.SpushEnabled == "1", row.SpullEnabled == "1", row.EnablesEnabled == "1",
             row.RespectNotificationsEnabled == "1",
             row.PetMorphsAllowed == "1", row.GroupId, row.SalePrice, row.LayEnabled == "1", model);
+        if (row.GroupId > 0)
+        {
+            if (groupManager.TryGetGroup(row.GroupId, out var group))
+                data.Group = group;
+        }
+        data.LoadPromotions(database);
+        return data;
+    }
 }

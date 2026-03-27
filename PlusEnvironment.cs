@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -219,7 +219,7 @@ public class PlusEnvironment : IPlusEnvironment
         var user = Game.CacheManager.GenerateUser(userId);
         if (user != null)
             return user.Username;
-        using var connection = DatabaseManager.Connection();
+        using var connection = _database.Connection();
         var nameResult = connection.QuerySingleOrDefault<string>("SELECT `username` FROM `users` WHERE `id` = @id LIMIT 1", new { id = userId });
         if (!string.IsNullOrEmpty(nameResult))
             name = nameResult;
@@ -279,7 +279,7 @@ public class PlusEnvironment : IPlusEnvironment
     {
         try
         {
-            using var connection = DatabaseManager.Connection();
+            using var connection = _database.Connection();
             var id = connection.QuerySingleOrDefault<int>("SELECT `id` FROM `users` WHERE `username` = @user LIMIT 1", new { user = userName });
             if (id > 0)
                 return GetHabboById(id);

@@ -168,6 +168,7 @@ public class Game : IGame
         while (!_cycleEnded) Thread.Sleep(_cycleSleepTime);
     }
 
+    public IBadgeManager BadgeManager => _badgeManager;
     public IGameClientManager ClientManager => _clientManager;
     public ICatalogManager Catalog => _catalogManager;
     public INavigatorManager Navigator => _navigatorManager;

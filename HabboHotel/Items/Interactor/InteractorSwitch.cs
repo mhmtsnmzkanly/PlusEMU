@@ -26,7 +26,7 @@ internal class InteractorSwitch : IFurniInteractor
             var modes = item.Definition.Modes - 1;
             if (modes <= 0)
                 return;
-            PlusEnvironment.Game.QuestService.ProgressUserQuest(session, QuestType.FurniSwitch);
+            item.GetRoom().GetQuestService().ProgressUserQuest(session, QuestType.FurniSwitch);
             var currentMode = 0;
             var newMode = 0;
             if (!int.TryParse(item.LegacyDataString, out currentMode)) { }

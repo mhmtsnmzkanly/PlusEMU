@@ -1048,12 +1048,12 @@ public class RoomUserManager
                                 var room = habbo.CurrentRoom;
                                 if (room == null)
                                     return;
-                                if (!ItemTeleporterFinder.IsTeleLinked(item.Id, room))
+                                if (!_room.GetItemTeleporterFinder().IsTeleLinked(item.Id, room))
                                     user.UnlockWalking();
                                 else
                                 {
-                                    var linkedTele = ItemTeleporterFinder.GetLinkedTele(item.Id);
-                                    var teleRoomId = ItemTeleporterFinder.GetTeleRoomId(linkedTele, room);
+                                    var linkedTele = _room.GetItemTeleporterFinder().GetLinkedTele(item.Id);
+                                    var teleRoomId = _room.GetItemTeleporterFinder().GetTeleRoomId(linkedTele, room);
                                     if (teleRoomId == room.RoomId)
                                     {
                                         var targetItem = room.GetRoomItemHandler().GetItem(linkedTele);

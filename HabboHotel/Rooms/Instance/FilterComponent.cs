@@ -16,7 +16,7 @@ public class FilterComponent
     {
         if (_instance == null || _instance.WordFilterList.Contains(word))
             return false;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = _instance.GetDatabase().Connection())
         {
             connection.Execute("INSERT INTO `room_filter` (`room_id`,`word`) VALUES(@rid,@word);",
                 new { rid = _instance.Id, word });
@@ -29,7 +29,7 @@ public class FilterComponent
     {
         if (_instance == null || !_instance.WordFilterList.Contains(word))
             return false;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = _instance.GetDatabase().Connection())
         {
             connection.Execute("DELETE FROM `room_filter` WHERE `room_id` = @rid AND `word` = @word;",
                 new { rid = _instance.Id, word });

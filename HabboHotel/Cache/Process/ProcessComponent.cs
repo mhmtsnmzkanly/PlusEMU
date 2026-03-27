@@ -1,3 +1,4 @@
+using Plus.HabboHotel.Cache;
 ﻿using Microsoft.Extensions.Logging;
 using Plus.Core;
 using Plus.HabboHotel.Users;
@@ -7,10 +8,12 @@ namespace Plus.HabboHotel.Cache.Process;
 public sealed class ProcessComponent : IProcessComponent
 {
     private readonly ILogger<ProcessComponent> _logger;
+    private readonly ICacheManager _cacheManager;
 
-    public ProcessComponent(ILogger<ProcessComponent> logger)
+    public ProcessComponent(ILogger<ProcessComponent> logger, ICacheManager cacheManager)
     {
         _logger = logger;
+        _cacheManager = cacheManager;
     }
 
     /// <summary>
@@ -64,7 +67,7 @@ public sealed class ProcessComponent : IProcessComponent
             _resetEvent.Reset();
 
             // BEGIN CODE
-            var cacheList = PlusEnvironment.Game.CacheManager.GetUserCache().ToList();
+            var cacheList = _cacheManager.GetUserCache().ToList();
             if (cacheList.Count > 0)
             {
                 foreach (var cache in cacheList)
@@ -74,7 +77,7 @@ public sealed class ProcessComponent : IProcessComponent
                         if (cache == null)
                             continue;
                         if (cache.IsExpired)
-                            PlusEnvironment.Game.CacheManager.TryRemoveUser(cache.Id, out _);
+                            _cacheManager.TryRemoveUser(cache.Id, out _);
                     }
                     catch (Exception e)
                     {

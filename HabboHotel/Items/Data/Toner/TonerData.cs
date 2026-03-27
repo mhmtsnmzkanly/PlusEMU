@@ -1,3 +1,4 @@
+using Plus.Database;
 using Dapper;
 
 namespace Plus.HabboHotel.Items.Data.Toner;
@@ -13,7 +14,7 @@ public class TonerData
     public TonerData(uint item)
     {
         ItemId = item;
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = database.Connection();
         dynamic? row = db.QueryFirstOrDefault(
             "SELECT `enabled`, `data1`, `data2`, `data3` FROM `room_items_toner` WHERE `id` = @id LIMIT 1",
             new { id = ItemId });

@@ -71,10 +71,10 @@ All files below have been migrated off `GetQueryReactor()`.
 - `HabboHotel/Subscriptions/SubscriptionManager.cs`
 - `HabboHotel/Users/Effects/EffectsComponent.cs`
 - `HabboHotel/Users/Effects/AvatarEffect.cs`
-- `HabboHotel/Users/Effects/AvatarEffectFactory.cs`
 - `HabboHotel/Users/Clothing/ClothingComponent.cs`
 - `HabboHotel/Users/Clothing/AvatarClothingService.cs`
-- `HabboHotel/Users/Calendar/CalendarComponent.cs`
+- `HabboHotel/Users/Calendar/CalendarComponent.cs` (Modernized + DI)
+- `HabboHotel/Users/Calendar/LoadUserCalendarTask.cs` (New)
 
 ### Rooms
 - `HabboHotel/Rooms/RoomManager.cs`
@@ -87,19 +87,22 @@ All files below have been migrated off `GetQueryReactor()`.
 - `HabboHotel/Rooms/Instance/WiredComponent.cs`
 - `HabboHotel/Rooms/AI/RoomCreatureService.cs`
 - `HabboHotel/Rooms/Chat/Commands/*` (all user, fun, mod, admin commands)
-- `HabboHotel/Rooms/Chat/Pets/Locale/PetLocale.cs`
+- `HabboHotel/Rooms/Chat/Pets/Locale/PetLocale.cs` (Modernized + DI)
 
 ### Items
 - `HabboHotel/Items/ItemDataManager.cs`
 - `HabboHotel/Items/ItemFactory.cs`
 - `HabboHotel/Items/ItemLoader.cs`
-- `HabboHotel/Items/ItemTeleporterFinder.cs`
-- `HabboHotel/Items/ItemHopperFinder.cs`
+- `HabboHotel/Items/ItemTeleporterFinder.cs` (Modernized + DI)
+- `HabboHotel/Items/ItemHopperFinder.cs` (Modernized + DI)
+- `HabboHotel/Items/IItemTeleporterFinder.cs` (New)
+- `HabboHotel/Items/IItemHopperFinder.cs` (New)
 - `HabboHotel/Items/Interactor/InteractorHopper.cs`
 - `HabboHotel/Items/Interactor/InteractorMannequin.cs`
 - `HabboHotel/Items/Data/Moodlight/MoodlightData.cs`
 - `HabboHotel/Items/Data/Toner/TonerData.cs`
 - `HabboHotel/Items/Wired/Boxes/Effects/BotChangesClothesBox.cs`
+- `HabboHotel/Items/Wired/Boxes/Effects/GiveUserBadgeBox.cs`
 
 ### Catalog
 - `HabboHotel/Catalog/Marketplace/MarketplaceManager.cs`
@@ -121,8 +124,9 @@ All files below have been migrated off `GetQueryReactor()`.
 - `HabboHotel/Games/GameDataManager.cs`
 
 ### Talents / Quests / Rewards
-- `HabboHotel/Talents/TalentTrackManager.cs`
-- `HabboHotel/Talents/TalentTrackLevel.cs`
+- `HabboHotel/Talents/TalentTrackManager.cs` (Modernized + DI)
+- `HabboHotel/Talents/TalentTrackLevel.cs` (Modernized + DI)
+- `HabboHotel/Talents/TalentTrackSubLevel.cs`
 - `HabboHotel/Quests/QuestManager.cs`
 - `HabboHotel/Rewards/RewardManager.cs`
 
@@ -134,6 +138,7 @@ All files below have been migrated off `GetQueryReactor()`.
 - `Communication/RCON/Commands/User/ReloadUserMottoCommand.cs`
 - `Communication/RCON/Commands/User/ReloadUserRankCommand.cs`
 - `Communication/RCON/Commands/User/ReloadUserVIPRankCommand.cs`
+- `Communication/RCON/Commands/Hotel/ReloadServerSettingsCommand.cs` (Modernized + DI)
 
 ### Packet Handlers
 - `Communication/Packets/Outgoing/Marketplace/MarketPlaceOwnOffersComposer.cs`
@@ -144,6 +149,7 @@ All files below have been migrated off `GetQueryReactor()`.
 - `Communication/Packets/Incoming/Quests/StartQuestEvent.cs`
 - `Communication/Packets/Incoming/Quests/GetCurrentQuestEvent.cs`
 - `Communication/Packets/Incoming/Rooms/Action/GiveRoomScoreEvent.cs`
+- `Communication/Packets/Incoming/Rooms/Action/AmbassadorAlertEvent.cs` (Modernized + DI)
 - `Communication/Packets/Incoming/Rooms/AI/Pets/Horse/ModifyWhoCanRideHorseEvent.cs`
 - `Communication/Packets/Incoming/Rooms/Avatar/ChangeMottoEvent.cs`
 - `Communication/Packets/Incoming/Rooms/Engine/ApplyDecorationEvent.cs`

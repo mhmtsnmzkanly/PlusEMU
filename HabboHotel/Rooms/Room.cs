@@ -5,8 +5,12 @@ using Plus.Database;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Session;
 using Plus.Core;
+using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
+using Plus.HabboHotel.Quests;
+using Plus.HabboHotel.Rooms.Chat;
+using Plus.HabboHotel.Rooms.AI;
 using Plus.HabboHotel.Groups;
 using Plus.HabboHotel.Items.Data.Moodlight;
 using Plus.HabboHotel.Items.Data.Toner;
@@ -105,6 +109,14 @@ public class Room : RoomData
     private readonly IGroupManager _groupManager;
     private readonly IItemLoader _itemLoader;
     private readonly IRoomService _roomService;
+    private readonly IChatManager _chatManager;
+    private readonly IBotManager _botManager;
+    private readonly IQuestService _questService;
+    private readonly ICacheManager _cacheManager;
+    private readonly IItemTeleporterFinder _itemTeleporterFinder;
+    private readonly IItemHopperFinder _itemHopperFinder;
+    private readonly IBadgeManager _badgeManager;
+    private readonly IUserDataFactory _userDataFactory;
     public bool MDisposed;
     public MoodlightData? MoodlightData;
 
@@ -119,8 +131,9 @@ public class Room : RoomData
     public TonerData? TonerData;
 
     public List<int> UsersWithRights = new();
+    private readonly ILanguageManager _languageManager;
 
-    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager, IRoomService roomService)
+    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory)
         : base(data)
     {
         _clientManager = clientManager;
@@ -128,6 +141,16 @@ public class Room : RoomData
         _itemLoader = itemLoader;
         _groupManager = groupManager;
         _roomService = roomService;
+        _chatManager = chatManager;
+        _botManager = botManager;
+        _achievementService = achievementService;
+        _questService = questService;
+        _cacheManager = cacheManager;
+        _languageManager = languageManager;
+        _itemTeleporterFinder = itemTeleporterFinder;
+        _itemHopperFinder = itemHopperFinder;
+        _badgeManager = badgeManager;
+        _userDataFactory = userDataFactory;
         IsLagging = 0;
         Unloaded = false;
         IdleTime = 0;
@@ -152,6 +175,18 @@ public class Room : RoomData
     }
 
     public IRoomService GetRoomService() => _roomService;
+    public IChatManager GetChatManager() => _chatManager;
+    public IBotManager GetBotManager() => _botManager;
+    public IGameClientManager GetClientManager() => _clientManager;
+    public IDatabase GetDatabase() => _database;
+    public IAchievementService GetAchievementService() => _achievementService;
+    public IQuestService GetQuestService() => _questService;
+    public ICacheManager GetCacheManager() => _cacheManager;
+    public IBadgeManager GetBadgeManager() => _badgeManager;
+    public IUserDataFactory GetUserDataFactory() => _userDataFactory;
+    public IGroupManager GetGroupManager() => _groupManager;
+    public IItemTeleporterFinder GetItemTeleporterFinder() => _itemTeleporterFinder;
+    public IItemHopperFinder GetItemHopperFinder() => _itemHopperFinder;
 
     public int IsLagging { get; set; }
     public bool Unloaded { get; set; }
@@ -246,7 +281,7 @@ public class Room : RoomData
         if (roomUserManager == null)
             return;
 
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _database.Connection();
         var bots = connection.Query<BotRow>(
             """
             SELECT
@@ -292,7 +327,7 @@ public class Room : RoomData
         if (roomUserManager == null)
             return;
 
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _database.Connection();
         var pets = connection.Query<PetBotRow>(
             "SELECT `id` AS Id, `user_id` AS UserId, `room_id` AS RoomId, `name` AS Name, `x` AS X, `y` AS Y, `z` AS Z FROM `bots` WHERE `room_id` = @roomId AND `ai_type` = 'pet'",
             new { roomId = RoomId });
@@ -327,6 +362,8 @@ public class Room : RoomData
                 mRow.CreateStamp, row.X, row.Y,
                 row.Z, mRow.HaveSaddle, mRow.AnyoneRide, mRow.HairDye, mRow.PetHair,
                 mRow.GnomeClothing);
+            pet.Room = this;
+            pet.OwnerName = _clientManager.GetNameById(pet.OwnerId).Result;
             var rndSpeechList = new List<RandomSpeech>();
             roomUserManager.DeployBot(
                 new(pet.PetId, RoomId, "pet", "freeroam", pet.Name, "", pet.Look, pet.X, pet.Y, Convert.ToInt32(pet.Z), 0, 0, 0, 0, 0, ref rndSpeechList, "", 0, pet.OwnerId, false, 0, false,
@@ -347,7 +384,7 @@ public class Room : RoomData
         UsersWithRights = new();
         if (Group != null)
             return;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = _database.Connection())
         {
             foreach (var userId in connection.Query<int>(
                          "SELECT `user_id` FROM `room_rights` WHERE `room_id` = @roomId",
@@ -359,7 +396,7 @@ public class Room : RoomData
     private void LoadFilter()
     {
         WordFilterList = new();
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = _database.Connection())
         {
             foreach (var word in connection.Query<string>(
                          "SELECT `word` FROM `room_filter` WHERE `room_id` = @roomId",

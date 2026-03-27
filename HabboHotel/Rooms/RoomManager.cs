@@ -1,15 +1,18 @@
 using System.Collections.Concurrent;
-using System.Data;
-using Dapper;
-using Microsoft.Extensions.Logging;
-using Plus.Core;
+using Plus.HabboHotel.Badges;
+using Plus.HabboHotel.Bots;
+using Plus.HabboHotel.Cache;
+using Plus.HabboHotel.Chat;
+using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Groups;
+using Plus.HabboHotel.Items;
+using Plus.HabboHotel.Achievements;
+using Plus.HabboHotel.Quests;
 using Plus.Core.Language;
 using Plus.Database;
-using Plus.HabboHotel.GameClients;
-using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Rooms;
-using Plus.HabboHotel.Groups;
-using Plus.Utilities;
+using Plus.HabboHotel.Users.UserData;
+using Microsoft.Extensions.Logging;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -20,291 +23,150 @@ public class RoomManager : IRoomManager
     private readonly ILanguageManager _languageManager;
     private readonly IGameClientManager _clientManager;
     private readonly IItemLoader _itemLoader;
+    private readonly IChatManager _chatManager;
+    private readonly IBotManager _botManager;
+    private readonly IRoomService _roomService;
+    private readonly IAchievementService _achievementService;
+    private readonly IQuestService _questService;
+    private readonly ICacheManager _cacheManager;
     private readonly IRoomFactory _roomFactory;
     private readonly IGroupManager _groupManager;
+    private readonly IItemTeleporterFinder _itemTeleporterFinder;
+    private readonly IItemHopperFinder _itemHopperFinder;
+    private readonly IBadgeManager _badgeManager;
+    private readonly IUserDataFactory _userDataFactory;
 
     private readonly object _roomLoadingSync;
-
     private readonly Dictionary<string, RoomModel> _roomModels;
-
     private readonly ConcurrentDictionary<uint, Room> _rooms;
 
     private DateTime _cycleLastExecution;
 
-
-    public RoomManager(ILogger<RoomManager> logger, IDatabase database, ILanguageManager languageManager, IGameClientManager clientManager, IItemLoader itemLoader, IRoomFactory roomFactory, IGroupManager groupManager)
+    public RoomManager(IDatabase database,
+        IRoomFactory roomFactory,
+        IItemLoader itemLoader,
+        IGameClientManager gameClientManager,
+        IGroupManager groupManager,
+        IRoomService roomService,
+        IChatManager chatManager,
+        IBotManager botManager,
+        IAchievementService achievementService,
+        IQuestService questService,
+        ICacheManager cacheManager,
+        ILanguageManager languageManager,
+        IItemTeleporterFinder itemTeleporterFinder,
+        IItemHopperFinder itemHopperFinder,
+        IBadgeManager badgeManager,
+        IUserDataFactory userDataFactory,
+        ILogger<RoomManager> logger)
     {
-        _logger = logger;
         _database = database;
-        _languageManager = languageManager;
-        _clientManager = clientManager;
-        _itemLoader = itemLoader;
-        _roomModels = new();
-        _rooms = new();
-        _roomLoadingSync = new();
         _roomFactory = roomFactory;
+        _itemLoader = itemLoader;
+        _clientManager = gameClientManager;
         _groupManager = groupManager;
+        _roomService = roomService;
+        _chatManager = chatManager;
+        _botManager = botManager;
+        _achievementService = achievementService;
+        _questService = questService;
+        _cacheManager = cacheManager;
+        _languageManager = languageManager;
+        _itemTeleporterFinder = itemTeleporterFinder;
+        _itemHopperFinder = itemHopperFinder;
+        _badgeManager = badgeManager;
+        _userDataFactory = userDataFactory;
+        _logger = logger;
+        _rooms = new();
+        _roomModels = new();
+        _roomLoadingSync = new();
     }
 
     public int Count => _rooms.Count;
 
     public void OnCycle()
     {
-        try
+        var start = DateTime.Now;
+        var roomsToCycle = _rooms.Values.ToList();
+        foreach (var room in roomsToCycle)
         {
-            var sinceLastTime = DateTime.Now - _cycleLastExecution;
-            if (sinceLastTime.TotalMilliseconds >= 500)
-            {
-                _cycleLastExecution = DateTime.Now;
-                foreach (var room in _rooms.Values.ToList())
-                {
-                    if (room.IsCrashed)
-                        continue;
-                    if (room.ProcessTask == null || room.ProcessTask.IsCompleted)
-                    {
-                        room.ProcessTask?.Dispose();
-                        room.ProcessTask = new(room.ProcessRoom);
-                        room.ProcessTask.Start();
-                        room.IsLagging = 0;
-                    }
-                    else
-                    {
-                        room.IsLagging++;
-                        if (room.IsLagging >= 30)
-                        {
-                            room.IsCrashed = true;
-                            UnloadRoom(room.Id);
-                        }
-                    }
-                }
-            }
+            if (room == null || room.Unloaded)
+                continue;
+
+            if (room.GetRoomUserManager().GetUserCount() > 0)
+                room.OnCycle();
+            else if (room.IdleTime >= 60) // 1 minute
+                UnloadRoom(room.RoomId);
+            else
+                room.IdleTime++;
         }
-        catch (Exception e)
+        var span = DateTime.Now - start;
+        if (span.TotalMilliseconds > 500)
         {
-            ExceptionLogger.LogException(e);
+            _logger.LogWarning("RoomManager.OnCycle took {span}ms to execute - Rooms lagging behind", span.TotalMilliseconds);
         }
     }
 
     public void LoadModels()
     {
-        if (_roomModels.Count > 0)
-            _roomModels.Clear();
+        _roomModels.Clear();
         using var connection = _database.Connection();
-        var models = connection.Query("SELECT id,door_x,door_y,door_z,door_dir,heightmap,club_only,poolmap,`wall_height` FROM `room_models` WHERE `custom` = '0'");
-        
-        foreach (var row in models)
+        var models = connection.Query<RoomModel>("SELECT `id`, `door_x`, `door_y`, `door_z`, `door_dir`, `heightmap`, `public_room` = '1' as `is_public` FROM `room_models` WHERE `custom` = '0'");
+        foreach (var model in models)
         {
-            var model = Convert.ToString(row.id) ?? string.Empty;
-            _roomModels.Add(model, new RoomModel(model, Convert.ToInt32(row.door_x), Convert.ToInt32(row.door_y), Convert.ToDouble(row.door_z), Convert.ToInt32(row.door_dir),
-                Convert.ToString(row.heightmap) ?? string.Empty, ConvertExtensions.EnumToBool(Convert.ToString(row.club_only) ?? "0"), Convert.ToInt32(row.wall_height), false));
+            _roomModels.Add(model.Id, model);
         }
     }
 
-    public bool LoadModel(string id)
-    {
-        using var connection = _database.Connection();
-        var row = connection.QuerySingleOrDefault("SELECT id,door_x,door_y,door_z,door_dir,heightmap,club_only,poolmap,`wall_height` FROM `room_models` WHERE `custom` = '1' AND `id` = @modelId LIMIT 1", new { modelId = id });
-        
-        if (row == null)
-            return false;
-            
-        var model = Convert.ToString(row.id) ?? string.Empty;
-        if (!_roomModels.ContainsKey(model))
-        {
-            _roomModels.Add(model, new RoomModel(model, Convert.ToInt32(row.door_x), Convert.ToInt32(row.door_y), Convert.ToDouble(row.door_z), Convert.ToInt32(row.door_dir),
-                Convert.ToString(row.heightmap) ?? string.Empty, ConvertExtensions.EnumToBool(Convert.ToString(row.club_only) ?? "0"), Convert.ToInt32(row.wall_height), true));
-        }
-        return true;
-    }
+    public bool TryGetModel(string id, out RoomModel model) => _roomModels.TryGetValue(id, out model!);
 
-    public void ReloadModel(string id)
-    {
-        if (!_roomModels.ContainsKey(id))
-        {
-            LoadModel(id);
-            return;
-        }
-        _roomModels.Remove(id);
-        LoadModel(id);
-    }
+    public bool TryGetRoom(uint roomId, out Room room) => _rooms.TryGetValue(roomId, out room!);
 
-    public bool TryGetModel(string id, out RoomModel model)
-    {
-        if (_roomModels.ContainsKey(id))
-        {
-            model = _roomModels[id];
-            return true;
-        }
-
-        // Try to load this model.
-        if (LoadModel(id))
-        {
-            if (TryGetModel(id, out var customModel))
-            {
-                model = customModel;
-                return true;
-            }
-        }
-        model = null!;
-        return false;
-    }
+    public ICollection<Room> GetRooms() => _rooms.Values;
 
     public void UnloadRoom(uint roomId)
     {
-        if (_rooms.TryRemove(roomId, out var room)) room.Dispose();
+        if (_rooms.TryRemove(roomId, out var room))
+        {
+            room.Dispose();
+        }
     }
 
     public bool TryLoadRoom(uint roomId, out Room room)
     {
-        Room? inst = null;
-        if (_rooms.TryGetValue(roomId, out inst))
-        {
-            if (!inst.Unloaded)
-            {
-                room = inst;
-                return true;
-            }
-            room = null!;
-            return false;
-        }
+        if (_rooms.TryGetValue(roomId, out room!))
+            return true;
+
         lock (_roomLoadingSync)
         {
-            if (_rooms.TryGetValue(roomId, out inst))
-            {
-                if (!inst.Unloaded)
-                {
-                    room = inst;
-                    return true;
-                }
-                room = null!;
-                return false;
-            }
-            if (!_roomFactory.TryGetData(roomId, out var data))
+            if (_rooms.TryGetValue(roomId, out room!))
+                return true;
+
+            var data = _roomFactory.CreateRoomData(roomId);
+            if (data == null)
             {
                 room = null!;
                 return false;
             }
-            var myInstance = new Room(data, _clientManager, _database, _itemLoader, _groupManager);
+
+            var myInstance = new Room(data, _clientManager, _database, _itemLoader, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory);
             if (_rooms.TryAdd(roomId, myInstance))
             {
                 room = myInstance;
                 return true;
             }
-            room = null!;
-            return false;
         }
-    }
 
-
-    public List<Room> SearchGroupRooms(string query)
-    {
-        return _rooms.Values.Where(x => x.Group != null && x.Group.Name.ToLower().Contains(query.ToLower()) && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.UsersNow).Take(50).ToList();
-    }
-
-    public List<Room> SearchTaggedRooms(string query)
-    {
-        return _rooms.Values.Where(x => x.Tags.Contains(query) && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.UsersNow).Take(50).ToList();
-    }
-
-    public List<Room> GetPopularRooms(int category, int amount = 50)
-    {
-        return _rooms.Values.Where(x => x.UsersNow > 0 && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.UsersNow).Take(amount).ToList();
-    }
-
-    public List<Room> GetRecommendedRooms(int amount = 50, int currentRoomId = 0)
-    {
-        return _rooms.Values.Where(x => x.Id != currentRoomId && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.UsersNow).OrderByDescending(x => x.Score).Take(amount).ToList();
-    }
-
-    public List<Room> GetPopularRatedRooms(int amount = 50)
-    {
-        return _rooms.Values.Where(x => x.Access != RoomAccess.Invisible).OrderByDescending(x => x.Score).OrderByDescending(x => x.UsersNow).Take(amount).ToList();
-    }
-
-    public List<Room> GetRoomsByCategory(int category, int amount = 50)
-    {
-        return _rooms.Values.Where(x => x.Category == category && x.Access != RoomAccess.Invisible && x.UsersNow > 0).OrderByDescending(x => x.UsersNow).Take(amount).ToList();
-    }
-
-    public List<Room> GetOnGoingRoomPromotions(int mode, int amount = 50)
-    {
-        if (mode == 17) return _rooms.Values.Where(x => x.HasActivePromotion && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.Promotion!.TimestampStarted).Take(amount).ToList();
-        return _rooms.Values.Where(x => x.HasActivePromotion && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.UsersNow).Take(amount).ToList();
-    }
-
-    public List<Room> GetPromotedRooms(int categoryId, int amount = 50)
-    {
-        return _rooms.Values.Where(x => x.HasActivePromotion && x.Promotion!.CategoryId == categoryId && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.Promotion!.TimestampStarted)
-            .Take(amount).ToList();
-    }
-
-    public List<Room> GetGroupRooms(int amount = 50)
-    {
-        return _rooms.Values.Where(x => x.Group != null && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.Score).Take(amount).ToList();
-    }
-
-    public List<Room> GetRoomsByIds(List<uint> ids, int amount = 50)
-    {
-        return _rooms.Values.Where(x => ids.Contains(x.Id) && x.Access != RoomAccess.Invisible).OrderByDescending(x => x.UsersNow).Take(amount).ToList();
-    }
-
-    public Room TryGetRandomLoadedRoom()
-    {
-        return _rooms.Values.Where(x => x.UsersNow > 0 && x.Access != RoomAccess.Invisible && x.UsersNow < x.UsersMax).OrderByDescending(x => x.UsersNow).FirstOrDefault()!;
-    }
-
-
-    public bool TryGetRoom(uint roomId, out Room room)
-    {
-        if (_rooms.TryGetValue(roomId, out var foundRoom))
-        {
-            room = foundRoom;
-            return true;
-        }
         room = null!;
         return false;
     }
 
-    public RoomData CreateRoom(GameClient session, string name, string description, int category, int maxVisitors, int tradeSettings, RoomModel model, string wallpaper = "0.0", string floor = "0.0",
-        string landscape = "0.0", int wallthick = 0, int floorthick = 0)
-    {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
-            return null!;
-
-        if (name.Length < 3)
-        {
-            session.SendNotification(_languageManager.TryGetValue("room.creation.name.too_short"));
-            return null!;
-        }
-        var roomId = 0u;
-        using (var connection = _database.Connection())
-        {
-            ulong insertId = connection.QuerySingle<ulong>(
-                "INSERT INTO `rooms` (`roomtype`,`caption`,`description`,`owner`,`model_name`,`category`,`users_max`,`trade_settings`) VALUES ('private',@caption,@description,@UserId,@model,@category,@usersmax,@tradesettings); SELECT LAST_INSERT_ID();",
-                new { caption = name, description = description, UserId = habbo.Id, model = model.Id, category = category, usersmax = maxVisitors, tradesettings = tradeSettings });
-            roomId = Convert.ToUInt32(insertId);
-        }
-        var data = new RoomData(roomId, name, model.Id, habbo.Username, habbo.Id, "", 0, "public", "open", 0, maxVisitors, category, description, string.Empty,
-            floor, landscape, true, true, false, false, wallthick, floorthick, wallpaper, 1, 1, 1, 1, 1, 1, 1, 8, tradeSettings, true, true, true, true, true, true, true, 0, 0, true, model);
-        return data;
-    }
-
-    public ICollection<Room> GetRooms() => _rooms.Values;
-
     public void Dispose()
     {
-        var length = _rooms.Count;
-        var i = 0;
-        foreach (var room in _rooms.Values.ToList())
+        foreach (var room in _rooms.Values)
         {
-            if (room == null)
-                continue;
-            UnloadRoom(room.Id);
-            Console.Clear();
-            _logger.LogInformation("<<- SERVER SHUTDOWN ->> ROOM ITEM SAVE: " + string.Format("{0:0.##}", (double)i / length * 100) + "%");
-            i++;
+            room.Dispose();
         }
-        _logger.LogInformation("Done disposing rooms!");
+        _rooms.Clear();
     }
 }

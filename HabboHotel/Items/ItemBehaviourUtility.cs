@@ -78,7 +78,7 @@ internal static class ItemBehaviourUtility
             case InteractionType.GuildItem:
             case InteractionType.GuildGate:
             case InteractionType.GuildForum:
-                if (!PlusEnvironment.Game.GroupManager.TryGetGroup(item.GroupId, out var group))
+                if (!item.GetRoom().GetGroupManager().TryGetGroup(item.GroupId, out var group))
                 {
                     packet.WriteInteger(1);
                     packet.WriteInteger(0);
@@ -92,8 +92,8 @@ internal static class ItemBehaviourUtility
                     packet.WriteString(item.LegacyDataString);
                     packet.WriteString(group.Id.ToString());
                     packet.WriteString(group.Badge);
-                    packet.WriteString(PlusEnvironment.Game.GroupManager.GetColourCode(group.Colour1, true));
-                    packet.WriteString(PlusEnvironment.Game.GroupManager.GetColourCode(group.Colour2, false));
+                    packet.WriteString(item.GetRoom().GetGroupManager().GetColourCode(group.Colour1, true));
+                    packet.WriteString(item.GetRoom().GetGroupManager().GetColourCode(group.Colour2, false));
                 }
                 break;
             case InteractionType.Background:
@@ -119,7 +119,7 @@ internal static class ItemBehaviourUtility
                 else
                 {
                     var style = int.Parse(extraData[6]) * 1000 + int.Parse(extraData[6]);
-                    var purchaser = PlusEnvironment.Game.CacheManager.GenerateUser(Convert.ToInt32(extraData[2]));
+                    var purchaser = item.GetRoom().GetCacheManager().GenerateUser(Convert.ToInt32(extraData[2]));
                     if (purchaser == null)
                     {
                         packet.WriteInteger(0);
@@ -175,7 +175,7 @@ internal static class ItemBehaviourUtility
                 if (item.RoomId != 0)
                 {
                     var room = item.GetRoom();
-                    room.TonerData ??= new(item.Id);
+                    room.TonerData ??= new(item.Id, room.GetDatabase());
                     var tonerData = room.TonerData;
                     packet.WriteInteger(0);
                     packet.WriteInteger(5);

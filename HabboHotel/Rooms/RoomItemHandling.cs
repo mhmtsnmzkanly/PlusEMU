@@ -110,7 +110,7 @@ public class RoomItemHandling
                 continue;
             if (item.UserId == 0)
             {
-                using var connection = PlusEnvironment.DatabaseManager.Connection();
+                using var connection = _room.GetDatabase().Connection();
                 connection.Execute(
                     "UPDATE `items` SET `user_id` = @userId WHERE `id` = @itemId LIMIT 1",
                     new { itemId = item.Id, userId = _room.OwnerId });
@@ -119,11 +119,11 @@ public class RoomItemHandling
             {
                 if (!_room.GetGameMap().ValidTile(item.GetX, item.GetY))
                 {
-                    using (var connection = PlusEnvironment.DatabaseManager.Connection())
+                    using (var connection = _room.GetDatabase().Connection())
                         connection.Execute(
                             "UPDATE `items` SET `room_id` = 0 WHERE `id` = @id LIMIT 1",
                             new { id = item.Id });
-                    var client = PlusEnvironment.Game.ClientManager.GetClientByUserId(item.UserId);
+                    var client = _room.GetClientManager().GetClientByUserId(item.UserId);
                     var clientHabbo = client?.GetHabbo();
                     var furniture = clientHabbo?.Inventory?.Furniture;
                     if (client != null && furniture != null)
@@ -140,7 +140,7 @@ public class RoomItemHandling
             {
                 if (string.IsNullOrWhiteSpace(item.WallCoordinates))
                 {
-                    using (var connection = PlusEnvironment.DatabaseManager.Connection())
+                    using (var connection = _room.GetDatabase().Connection())
                         connection.Execute(
                             "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
                             new { wallPosition = ":w=0,2 l=11,53 l", id = item.Id });
@@ -155,7 +155,7 @@ public class RoomItemHandling
                 }
                 catch
                 {
-                    using (var connection = PlusEnvironment.DatabaseManager.Connection())
+                    using (var connection = _room.GetDatabase().Connection())
                         connection.Execute(
                             "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
                             new { wallPosition = ":w=0,2 l=11,53 l", id = item.Id });
@@ -172,12 +172,12 @@ public class RoomItemHandling
             else if (item.Definition.InteractionType == InteractionType.Moodlight)
             {
                 if (_room != null && _room.MoodlightData == null)
-                    _room.MoodlightData = new(item.Id);
+                    _room.MoodlightData = new(item.Id, _room.GetDatabase());
             }
             else if (item.Definition.InteractionType == InteractionType.Toner)
             {
                 if (_room != null && _room.TonerData == null)
-                    _room.TonerData = new(item.Id);
+                    _room.TonerData = new(item.Id, _room.GetDatabase());
             }
             else if (item.IsWired)
             {
@@ -369,7 +369,7 @@ public class RoomItemHandling
         {
             if (_movedItems.Count > 0)
             {
-                using var connection = PlusEnvironment.DatabaseManager.Connection();
+                using var connection = _room.GetDatabase().Connection();
                 foreach (var item in _movedItems.Values.ToList())
                 {
                     if (!string.IsNullOrEmpty(item.LegacyDataString))
@@ -567,7 +567,7 @@ public class RoomItemHandling
             _room.RemoveTent(item.Id);
             _room.AddTent(item.Id);
         }
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = _room.GetDatabase().Connection();
         connection.Execute(
             "UPDATE `items` SET `room_id` = @roomId, `x` = @x, `y` = @y, `z` = @z, `rot` = @rot WHERE `id` = @id LIMIT 1",
             new { roomId = _room.RoomId, x = item.GetX, y = item.GetY, z = item.GetZ, rot = item.Rotation, id = item.Id });
@@ -585,7 +585,7 @@ public class RoomItemHandling
         item.SetState(newX, newY, newZ, Gamemap.GetAffectedTiles(item.Definition.Length, item.Definition.Width, newX, newY, item.Rotation));
         if (item.Definition.InteractionType == InteractionType.Toner)
             if (_room.TonerData == null)
-                _room.TonerData = new(item.Id);
+                _room.TonerData = new(item.Id, _room.GetDatabase());
         UpdateItem(item);
         _room.GetGameMap().AddItemToMap(item);
         return true;
@@ -605,11 +605,11 @@ public class RoomItemHandling
         {
             if (_room.MoodlightData == null)
             {
-                _room.MoodlightData = new(item.Id);
+                _room.MoodlightData = new(item.Id, _room.GetDatabase());
                 item.LegacyDataString = _room.MoodlightData.GenerateExtraData();
             }
         }
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = _room.GetDatabase().Connection())
         {
             connection.Execute(
                 "UPDATE `items` SET `room_id` = @roomId, `x` = @x, `y` = @y, `z` = @z, `rot` = @rot, `wall_pos` = @wallPos WHERE `id` = @id LIMIT 1",

@@ -50,7 +50,7 @@ internal class BotChangesClothesBox : IWiredItem
         Instance.SendPacket(userChangeComposer);
         user.BotData.Look = figure;
         user.BotData.Gender = "M";
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = Instance.GetDatabase().Connection();
         db.Execute(
             "UPDATE `bots` SET `look` = @look, `gender` = @gender WHERE `id` = @id LIMIT 1",
             new { look = user.BotData.Look, gender = user.BotData.Gender, id = user.BotData.Id });

@@ -219,28 +219,28 @@ public class Habbo
         return Process.Init(this, database, settingsManager, subscriptionManager, achievementService);
     }
 
-    public bool InitFx()
+    public bool InitFx(IDatabase database)
     {
         Effects = new();
-        return Effects.Init(this);
+        return Effects.Init(this, database);
     }
 
-    public bool InitClothing()
+    public bool InitClothing(IDatabase database)
     {
         Clothing = new();
-        return Clothing.Init(this);
+        return Clothing.Init(this, database);
     }
 
     [Obsolete("Each loading task should be moved to their own IUserDataLoadingTask")]
-    public void Init(GameClient client)
+    public void Init(GameClient client, IDatabase database)
     {
         // Move each of these loading tasks to their own IUserDataLoadingTask implementation.
         //foreach (var id in data.FavouritedRooms) FavoriteRooms.Add(id);
         Client = client;
         //Quests = data.Quests;
         _disconnected = false;
-        InitFx();
-        InitClothing();
+        InitFx(database);
+        InitClothing(database);
     }
 
 

@@ -1,3 +1,4 @@
+using Plus.Database;
 ﻿using Dapper;
 using System.Text;
 using Plus.Utilities;
@@ -21,11 +22,11 @@ public class MoodlightData
 
     public List<MoodlightPreset> Presets = [];
 
-    public MoodlightData(uint itemId)
+    public MoodlightData(uint itemId, IDatabase database)
     {
         ItemId = itemId;
         MoodlightRow? row;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = database.Connection())
         {
             row = connection.QueryFirstOrDefault<MoodlightRow>(
                 """
@@ -43,7 +44,7 @@ public class MoodlightData
         }
         if (row == null)
         {
-            using var connection = PlusEnvironment.DatabaseManager.Connection();
+            using var connection = database.Connection();
             connection.Execute(
                 """
                 INSERT INTO `room_items_moodlight` (item_id, enabled, current_preset, preset_one, preset_two, preset_three)
@@ -75,25 +76,25 @@ public class MoodlightData
         Presets.Add(GeneratePreset(row.PresetThree));
     }
 
-    public void Enable()
+    public void Enable(IDatabase database)
     {
         Enabled = true;
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = database.Connection();
         connection.Execute(
             "UPDATE `room_items_moodlight` SET `enabled` = 1 WHERE `item_id` = @itemId LIMIT 1",
             new { itemId = ItemId });
     }
 
-    public void Disable()
+    public void Disable(IDatabase database)
     {
         Enabled = false;
-        using var connection = PlusEnvironment.DatabaseManager.Connection();
+        using var connection = database.Connection();
         connection.Execute(
             "UPDATE `room_items_moodlight` SET `enabled` = 0 WHERE `item_id` = @itemId LIMIT 1",
             new { itemId = ItemId });
     }
 
-    public void UpdatePreset(int preset, string color, int intensity, bool bgOnly, bool hax = false)
+    public void UpdatePreset(int preset, string color, int intensity, bool bgOnly, IDatabase database, bool hax = false)
     {
         if (!IsValidColor(color) || !IsValidIntensity(intensity) && !hax) return;
         string pr;
@@ -110,7 +111,7 @@ public class MoodlightData
                 pr = "one";
                 break;
         }
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = database.Connection())
         {
             connection.Execute(
                 $"UPDATE `room_items_moodlight` SET `preset_{pr}` = CONCAT(@color, ',', @intensity, ',', @bgOnly) WHERE `item_id` = @itemId LIMIT 1",

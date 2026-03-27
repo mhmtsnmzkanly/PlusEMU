@@ -8,7 +8,7 @@ public class InteractorHopper : IFurniInteractor
     public void OnPlace(GameClient session, Item item)
     {
         item.GetRoom().GetRoomItemHandler().HopperCount++;
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = item.GetRoom().GetDatabase().Connection();
         db.Execute(
             "INSERT INTO `items_hopper` (`hopper_id`, `room_id`) VALUES (@hopperid, @roomid)",
             new { hopperid = item.Id, roomid = item.RoomId });
@@ -28,9 +28,9 @@ public class InteractorHopper : IFurniInteractor
     public void OnRemove(GameClient session, Item item)
     {
         item.GetRoom().GetRoomItemHandler().HopperCount--;
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        using var db = item.GetRoom().GetDatabase().Connection();
         db.Execute(
-            "DELETE FROM `items_hopper` WHERE `item_id` = @hid OR `room_id` = @roomId LIMIT 1",
+            "DELETE FROM `items_hopper` WHERE `hopper_id` = @hid OR `room_id` = @roomId LIMIT 1",
             new { hid = item.Id, roomId = item.GetRoom().RoomId });
         if (item.InteractingUser != 0)
         {

@@ -6,8 +6,13 @@ namespace Plus.HabboHotel.Users.UserData;
 internal class LoadStatisticsLoginTask : IUserDataLoadingTask
 {
     private readonly IHabboStatsService _habboStatsService;
+    private readonly IGroupManager _groupManager;
 
-    public LoadStatisticsLoginTask(IHabboStatsService habboStatsService) => _habboStatsService = habboStatsService ?? throw new ArgumentNullException(nameof(habboStatsService));
+    public LoadStatisticsLoginTask(IHabboStatsService habboStatsService, IGroupManager groupManager)
+    {
+        _habboStatsService = habboStatsService ?? throw new ArgumentNullException(nameof(habboStatsService));
+        _groupManager = groupManager;
+    }
 
     public async Task Load(Habbo habbo)
     {
@@ -27,7 +32,7 @@ internal class LoadStatisticsLoginTask : IUserDataLoadingTask
                 await _habboStatsService.UpdateDailyRespectsAndTimestamp(habbo.Id, dailyRespects, stats.RespectsTimestamp);
             }
 
-            if (!PlusEnvironment.Game.GroupManager.TryGetGroup(stats.FavouriteGroupId, out Group g))
+            if (!_groupManager.TryGetGroup(stats.FavouriteGroupId, out Group g))
             {
                 stats.FavouriteGroupId = 0;
             }

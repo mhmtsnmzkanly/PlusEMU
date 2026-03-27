@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Pets;
+using Plus.Communication.Packets.Outgoing.Pets;
 using Plus.Communication.Packets.Outgoing.Rooms.AI.Pets;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.Utilities;
@@ -62,21 +62,10 @@ public class Pet
         HairDye = dye;
         GnomeClothing = gnomeClothing;
 
-        /// TODO: pass by constructor
-        OwnerName = PlusEnvironment.Game.ClientManager.GetNameById(OwnerId).Result;
+        OwnerName = string.Empty;
     }
 
-    public Room? Room
-    {
-        get
-        {
-            if (!IsInRoom)
-                return null;
-            if (PlusEnvironment.Game.RoomManager.TryGetRoom(RoomId, out var room))
-                return room;
-            return null;
-        }
-    }
+    public Room? Room { get; set; }
 
     public bool IsInRoom => RoomId > 0;
 
@@ -96,7 +85,6 @@ public class Pet
     public static int MaxLevel => 20;
 
     public int ExperienceGoal =>
-        //will error index out of range (need to look into this sometime)
         ExperienceLevels[Level - 1];
 
     public static int MaxEnergy => 100;

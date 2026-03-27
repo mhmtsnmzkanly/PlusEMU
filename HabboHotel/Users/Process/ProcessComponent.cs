@@ -122,7 +122,7 @@ internal sealed class ProcessComponent
             if (_player.Client != null)
                 _ = _achievementService!.ProgressAchievement(_player.Client, "ACH_AllTimeHotelPresence", 1);
             _player.CheckCreditsTimer(_settingsManager!, _subscriptionManager!);
-            _player.Effects?.CheckEffectExpiry(_player);
+            _player.Effects?.CheckEffectExpiry(_player, _database!);
 
             // END CODE
 

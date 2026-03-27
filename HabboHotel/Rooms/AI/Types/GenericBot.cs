@@ -37,7 +37,7 @@ public class GenericBot : BotAi
                 if (GetBotData().AutomaticChat == false)
                     return;
                 var speech = GetBotData().GetRandomSpeech();
-                var @string = PlusEnvironment.Game.ChatManager.GetFilter().CheckMessage(speech.Message);
+                var @string = GetRoom().GetChatManager().GetFilter().CheckMessage(speech.Message);
                 if (@string.Contains("<img src") || @string.Contains("<font ") || @string.Contains("</font>") || @string.Contains("</a>") || @string.Contains("<i>"))
                     @string = "I really shouldn't be using HTML within bot speeches.";
                 GetRoomUser().Chat(@string, GetBotData().ChatBubble);

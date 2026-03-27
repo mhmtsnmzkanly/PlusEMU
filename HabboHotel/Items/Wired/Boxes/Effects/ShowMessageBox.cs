@@ -56,7 +56,7 @@ internal class ShowMessageBox : IWiredItem
         if (StringData.Contains("%USERCOUNT%"))
             message = message.Replace("%USERCOUNT%", currentRoom.UserCount.ToString());
         if (StringData.Contains("%USERSONLINE%"))
-            message = message.Replace("%USERSONLINE%", PlusEnvironment.Game.ClientManager.Count.ToString());
+            message = message.Replace("%USERSONLINE%", Instance.GetClientManager().Count.ToString());
         playerClient.Send(new WhisperComposer(user.VirtualId, message, 0, 34));
         return true;
     }

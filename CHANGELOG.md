@@ -1,5 +1,16 @@
 # Changelog
 
+### [0.8.0] - 2026-03-28
+#### Added
+- `IItemTeleporterFinder` and `IItemHopperFinder` interfaces for modernize item discovery.
+- Injected `IBadgeManager` and `IUserDataFactory` into `Room` and `RoomManager` for improved service access.
+
+#### Changed
+- Modernized `ItemTeleporterFinder` and `ItemHopperFinder` to use DI and Dapper.
+- Refactored `GiveUserBadgeBox` and `BotChangesClothesBox` to remove static `PlusEnvironment` dependencies.
+- Moved avatar effect creation logic from static factory to `EffectsComponent` instance method.
+- Decoupled `AmbassadorAlertEvent` and `PetLocale` from static global state.
+
 ### [0.7.0] - 2026-03-27
 #### Added
 - `IBotUtility` and `IPetUtility` services to replace static `BotUtility` and `PetUtility` helpers.

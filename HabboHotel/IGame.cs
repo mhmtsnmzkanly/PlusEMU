@@ -20,6 +20,7 @@ public interface IGame
     void StartGameLoop();
     void StopGameLoop();
 
+    [Obsolete("Use dependency injection instead.")] IBadgeManager BadgeManager { get; }
     [Obsolete("Use dependency injection instead.")] IGameClientManager ClientManager { get; }
 
     [Obsolete("Use dependency injection instead.")] ICatalogManager Catalog { get; }

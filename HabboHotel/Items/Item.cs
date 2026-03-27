@@ -415,8 +415,8 @@ public class Item
                                     user.AllowOverride = false;
                                     if (user.TeleDelay == 0)
                                     {
-                                        var roomHopId = ItemHopperFinder.GetAHopper(user.RoomId); // TODO @80O: Remove cast
-                                        var nextHopperId = ItemHopperFinder.GetHopperId(roomHopId);
+                                        var roomHopId = GetRoom().GetItemHopperFinder().GetAHopper(user.RoomId);
+                                        var nextHopperId = GetRoom().GetItemHopperFinder().GetHopperId(roomHopId);
                                         var habbo = GetHabbo(user);
                                         if (habbo != null)
                                         {
@@ -531,14 +531,14 @@ public class Item
                                 {
                                     //Remove the user from the square
                                     user.AllowOverride = false;
-                                    if (ItemTeleporterFinder.IsTeleLinked(Id, GetRoom()))
+                                    if (GetRoom().GetItemTeleporterFinder().IsTeleLinked(Id, GetRoom()))
                                     {
                                         showTeleEffect = true;
                                         if (true)
                                         {
                                             // Woop! No more delay.
-                                            var teleId = ItemTeleporterFinder.GetLinkedTele(Id);
-                                            var roomId = ItemTeleporterFinder.GetTeleRoomId(teleId, GetRoom());
+                                            var teleId = GetRoom().GetItemTeleporterFinder().GetLinkedTele(Id);
+                                            var roomId = GetRoom().GetItemTeleporterFinder().GetTeleRoomId(teleId, GetRoom());
 
                                             // Do we need to tele to the same room or gtf to another?
                                             if (roomId == RoomId)

@@ -1,38 +1,46 @@
 using Dapper;
+using Plus.Database;
 using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items;
 
-public static class ItemTeleporterFinder
+public class ItemTeleporterFinder : IItemTeleporterFinder
 {
-    public static uint GetLinkedTele(uint teleId)
+    private readonly IDatabase _database;
+
+    public ItemTeleporterFinder(IDatabase database)
     {
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        _database = database;
+    }
+
+    public uint GetLinkedTele(uint teleId)
+    {
+        using var db = _database.Connection();
         var result = db.QueryFirstOrDefault<uint?>(
             "SELECT `tele_two_id` FROM `room_items_tele_links` WHERE `tele_one_id` = @teleId LIMIT 1",
             new { teleId });
         return result ?? 0;
     }
 
-    public static uint GetTeleRoomId(uint teleId, Room pRoom)
+    public uint GetTeleRoomId(uint teleId, Room room)
     {
-        if (pRoom.GetRoomItemHandler().GetItem(teleId) != null)
-            return pRoom.RoomId;
-        using var db = PlusEnvironment.DatabaseManager.Connection();
+        if (room.GetRoomItemHandler().GetItem(teleId) != null)
+            return room.RoomId;
+        using var db = _database.Connection();
         var result = db.QueryFirstOrDefault<uint?>(
             "SELECT `room_id` FROM `items` WHERE `id` = @teleId LIMIT 1",
             new { teleId });
         return result ?? 0;
     }
 
-    public static bool IsTeleLinked(uint teleId, Room pRoom)
+    public bool IsTeleLinked(uint teleId, Room room)
     {
         var linkId = GetLinkedTele(teleId);
         if (linkId == 0) return false;
-        var item = pRoom.GetRoomItemHandler().GetItem(linkId);
+        var item = room.GetRoomItemHandler().GetItem(linkId);
         if (item != null && item.Definition.InteractionType == InteractionType.Teleport)
             return true;
-        var roomId = GetTeleRoomId(linkId, pRoom);
+        var roomId = GetTeleRoomId(linkId, room);
         if (roomId == 0) return false;
         return true;
     }

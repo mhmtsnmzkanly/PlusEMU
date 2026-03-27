@@ -47,7 +47,7 @@ internal class InteractorMannequin : IFurniInteractor
             var final = "";
             foreach (var str in newFig.Values) final += $"{str}.";
             habbo.Look = final.TrimEnd('.');
-            using var db = PlusEnvironment.DatabaseManager.Connection();
+            using var db = item.GetRoom().GetDatabase().Connection();
             db.Execute(
                 "UPDATE `users` SET `look` = @look, `gender` = @gender WHERE `id` = @id LIMIT 1",
                 new { look = habbo.Look, gender = habbo.Gender, id = habbo.Id });

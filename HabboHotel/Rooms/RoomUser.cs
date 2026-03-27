@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using Plus.Communication.Packets;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
@@ -260,7 +260,7 @@ public class RoomUser
         if (IsBot)
             return string.Empty;
         var habbo = GetHabbo();
-        return habbo?.Username ?? PlusEnvironment.GetUsernameById(HabboId);
+        return habbo?.Username ?? string.Empty;
     }
 
     public void UnIdle()
@@ -372,9 +372,9 @@ public class RoomUser
         if (room.WordFilterList.Count > 0 && habbo.Permissions != null && !habbo.Permissions.HasRight("word_filter_override")) message = room.GetFilter().CheckMessage(message);
         IServerPacket packet = null!;
         if (shout)
-            packet = new ShoutComposer(VirtualId, message, PlusEnvironment.Game.ChatManager.GetEmotions().GetEmotionsForText(message), colour);
+            packet = new ShoutComposer(VirtualId, message, room.GetChatManager().GetEmotions().GetEmotionsForText(message), colour);
         else
-            packet = new ChatComposer(VirtualId, message, PlusEnvironment.Game.ChatManager.GetEmotions().GetEmotionsForText(message), colour);
+            packet = new ChatComposer(VirtualId, message, room.GetChatManager().GetEmotions().GetEmotionsForText(message), colour);
         if (habbo.TentId > 0)
         {
             room.SendToTent(habbo.Id, habbo.TentId, packet);
@@ -561,8 +561,6 @@ public class RoomUser
     public GameClient GetClient()
     {
         if (IsBot) return null!;
-        if (_mClient == null)
-            _mClient = PlusEnvironment.Game.ClientManager.GetClientByUserId(HabboId) ?? null!;
         return _mClient;
     }
 
@@ -572,16 +570,5 @@ public class RoomUser
         return client?.GetHabbo() ?? null!;
     }
 
-    private Room GetRoom()
-    {
-        if (_mRoom == null)
-        {
-            if (PlusEnvironment.Game.RoomManager.TryGetRoom(RoomId, out var room))
-            {
-                _mRoom = room;
-                return room;
-            }
-        }
-        return _mRoom!;
-    }
+    private Room GetRoom() => _mRoom;
 }

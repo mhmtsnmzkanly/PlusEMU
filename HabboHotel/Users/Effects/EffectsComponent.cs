@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+using Plus.Database;
+using System.Collections.Concurrent;
 using Dapper;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
 using Plus.Utilities;
@@ -23,6 +24,7 @@ public sealed class EffectsComponent
     /// </summary>
     private readonly ConcurrentDictionary<int, AvatarEffect> _effects = new();
     private Habbo? _habbo;
+    private IDatabase? _database;
 
     public ICollection<AvatarEffect> GetAllEffects => _effects.Values;
 
@@ -31,11 +33,11 @@ public sealed class EffectsComponent
     /// <summary>
     /// Initializes the EffectsComponent.
     /// </summary>
-    public bool Init(Habbo habbo)
+    public bool Init(Habbo habbo, IDatabase database)
     {
         if (_effects.Count > 0)
             return false;
-        using (var connection = PlusEnvironment.DatabaseManager.Connection())
+        using (var connection = database.Connection())
         {
             foreach (var row in connection.Query<UserEffectRow>(
                          """
@@ -58,14 +60,34 @@ public sealed class EffectsComponent
             }
         }
         _habbo = habbo;
+        _database = database;
         CurrentEffect = 0;
         return true;
+    }
+
+    /// <summary>
+    /// Creates a new AvatarEffect with the specified details.
+    /// </summary>
+    /// <param name="spriteId"></param>
+    /// <param name="duration"></param>
+    /// <returns></returns>
+    public AvatarEffect? CreateEffect(int spriteId, double duration)
+    {
+        if (_habbo == null || _database == null)
+            return null;
+        using var connection = _database.Connection();
+        var id = Convert.ToInt32(connection.ExecuteScalar<long>(
+            "INSERT INTO `user_effects` (`user_id`,`effect_id`,`total_duration`,`is_activated`,`activated_stamp`,`quantity`) VALUES(@uid,@sid,@dur,'0',0,1); SELECT LAST_INSERT_ID();",
+            new { uid = _habbo.Id, sid = spriteId, dur = duration }));
+        var effect = new AvatarEffect(id, _habbo.Id, spriteId, duration, false, 0, 1);
+        _effects.TryAdd(id, effect);
+        return effect;
     }
 
     public bool TryAdd(AvatarEffect effect) => _effects.TryAdd(effect.Id, effect);
 
     /// <summary>
-    /// 
+    /// Checks if the user has an effect with the specified sprite ID.
     /// </summary>
     /// <param name="spriteId"></param>
     /// <param name="activatedOnly"></param>
@@ -74,7 +96,7 @@ public sealed class EffectsComponent
     public bool HasEffect(int spriteId, bool activatedOnly = false, bool unactivatedOnly = false) => GetEffectNullable(spriteId, activatedOnly, unactivatedOnly) != null;
 
     /// <summary>
-    /// 
+    /// Retrieves an AvatarEffect by its sprite ID, with optional filtering for activation status.
     /// </summary>
     /// <param name="spriteId"></param>
     /// <param name="activatedOnly"></param>
@@ -89,14 +111,15 @@ public sealed class EffectsComponent
     }
 
     /// <summary>
-    /// 
+    /// Checks effect expiration and handles it.
     /// </summary>
     /// <param name="habbo"></param>
-    public void CheckEffectExpiry(Habbo habbo)
+    /// <param name="database"></param>
+    public void CheckEffectExpiry(Habbo habbo, IDatabase database)
     {
         foreach (var effect in _effects.Values.ToList())
             if (effect.HasExpired)
-                effect.HandleExpiration(habbo);
+                effect.HandleExpiration(habbo, database);
     }
 
     public void ApplyEffect(int effectId)

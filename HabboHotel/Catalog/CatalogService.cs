@@ -208,7 +208,7 @@ internal class CatalogService : ICatalogService
                 await DeliverFurniture(session, item, habbo, extraData, amountPurchase, limitedEditionSells, limitedEditionStack);
                 break;
             case "e": // Effect
-                var effect = habbo.Effects.HasEffect(item.Definition.SpriteId) ? habbo.Effects.GetEffectNullable(item.Definition.SpriteId) : AvatarEffectFactory.CreateNullable(habbo, item.Definition.SpriteId, 3600);
+                var effect = habbo.Effects.HasEffect(item.Definition.SpriteId) ? habbo.Effects.GetEffectNullable(item.Definition.SpriteId) : habbo.Effects.CreateEffect(item.Definition.SpriteId, 3600);
                 effect?.AddToQuantity();
                 session.Send(new AvatarEffectAddedComposer(item.Definition.SpriteId, 3600));
                 break;
