@@ -43,6 +43,7 @@ These packet-heavy domains were already moved into dedicated services:
 - Catalog — `HabboHotel/Catalog/CatalogService.cs`
 - Quests — `HabboHotel/Quests/QuestService.cs`
 - Achievements — `HabboHotel/Achievements/AchievementService.cs` (Phase 1, 2, 3 complete)
+- Chat — `HabboHotel/Rooms/Chat/ChatService.cs` (Phase 4 complete)
 
 ## Completed Legacy DB Wrapper Migration
 

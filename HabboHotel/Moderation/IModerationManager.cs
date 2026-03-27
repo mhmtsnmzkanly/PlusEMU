@@ -1,4 +1,4 @@
-﻿namespace Plus.HabboHotel.Moderation;
+namespace Plus.HabboHotel.Moderation;
 
 public interface IModerationManager
 {
@@ -8,7 +8,7 @@ public interface IModerationManager
     Dictionary<string, List<ModerationPresetActions>> UserActionPresets { get; }
     void Init();
     void ReCacheBans();
-    void BanUser(string mod, ModerationBanType type, string banValue, string reason, double expireTimestamp);
+    void AddBan(ModerationBan ban);
     bool TryAddTicket(ModerationTicket ticket);
     bool TryGetTicket(int ticketId, out ModerationTicket? ticket);
     bool UserHasTickets(int userId);

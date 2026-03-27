@@ -1,22 +1,20 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Rooms.Chat;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Chat;
 
 public class CancelTypingEvent : IPacketEvent
 {
+    private readonly IChatService _chatService;
+
+    public CancelTypingEvent(IChatService chatService)
+    {
+        _chatService = chatService;
+    }
+
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
-            return Task.CompletedTask;
-        var room = habbo.CurrentRoom;
-        if (room == null)
-            return Task.CompletedTask;
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
-        if (user == null)
-            return Task.CompletedTask;
-        room.SendPacket(new UserTypingComposer(user.VirtualId, false));
+        _chatService.ApplyTypingStatus(session, false);
         return Task.CompletedTask;
     }
 }

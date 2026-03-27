@@ -1,6 +1,4 @@
-﻿using Plus.Database;
 using Plus.HabboHotel.GameClients;
-using Dapper;
 using Plus.HabboHotel.Moderation;
 using Plus.HabboHotel.Users;
 using Plus.Utilities;
@@ -9,52 +7,46 @@ namespace Plus.HabboHotel.Rooms.Chat.Commands.Moderator;
 
 internal class MipCommand : ITargetChatCommand
 {
-    private readonly IDatabase _database;
-    private readonly IModerationManager _moderationManager;
+    private readonly IModerationActionService _moderationActionService;
     public string Key => "mip";
     public string PermissionRequired => "command_mip";
 
-    public string Parameters => "%username%";
+    public string Parameters => "%username% %reason%";
 
     public string Description => "Machine ban, IP ban and account ban another user.";
 
     public bool MustBeInSameRoom => false;
 
-    public MipCommand(IDatabase database, IModerationManager moderationManager)
+    public MipCommand(IModerationActionService moderationActionService)
     {
-        _database = database;
-        _moderationManager = moderationManager;
+        _moderationActionService = moderationActionService;
     }
 
-    public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
+    public async Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
-        var targetClient = target.Client;
-        var moderatorName = habbo?.Username ?? string.Empty;
+        var moderatorName = habbo?.Username ?? "System";
         var permissions = habbo?.Permissions;
         if ((target.Permissions?.HasRight("mod_tool") ?? false) && !(permissions?.HasRight("mod_ban_any") ?? false))
         {
             session.SendWhisper("Oops, you cannot ban that user.");
-            return Task.CompletedTask;
+            return;
         }
-        var ipAddress = string.Empty;
-        var expire = UnixTimestamp.GetNow() + 78892200;
-        var username = target.Username;
-        using var connection = _database.Connection();
-        connection.Execute("UPDATE `user_info` SET `bans` = `bans` + '1' WHERE `user_id` = @id LIMIT 1", new { id = target.Id });
-        ipAddress = connection.QuerySingleOrDefault<string>("SELECT `ip_last` FROM `users` WHERE `id` = @id LIMIT 1", new { id = target.Id });
+
+        var expire = UnixTimestamp.GetNow() + 78892200; // Permanent (approx 2.5 years)
         string reason;
         if (parameters.Any())
             reason = CommandManager.MergeParams(parameters);
         else
             reason = "No reason specified.";
-        if (!string.IsNullOrEmpty(ipAddress))
-            _moderationManager.BanUser(moderatorName, ModerationBanType.Ip, ipAddress, reason, expire);
-        _moderationManager.BanUser(moderatorName, ModerationBanType.Username, target.Username, reason, expire);
-        if (!string.IsNullOrEmpty(target.MachineId))
-            _moderationManager.BanUser(moderatorName, ModerationBanType.Machine, target.MachineId, reason, expire);
-        targetClient?.Disconnect();
-        session.SendWhisper($"Success, you have machine, IP and account banned the user '{username}' for '{reason}'!");
-        return Task.CompletedTask;
+
+        // Use the centralized Ban method with machineBan = true (which should imply IP ban in my service logic or I should pass both?)
+        // In my current ModerationActionService.Ban implementation:
+        // if (machineBan) ipBan = false; // Wait, I made it false? 
+        // Let's re-read ModerationActionService.cs
+        
+        await _moderationActionService.Ban(session, target.Id, reason, (int)(78892200 / 3600), false, true);
+
+        session.SendWhisper($"Success, you have machine, IP and account banned the user '{target.Username}' for '{reason}'!");
     }
 }

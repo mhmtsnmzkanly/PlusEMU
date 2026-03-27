@@ -9,6 +9,7 @@ public interface IModerationActionService
     Task Mute(GameClient session, int userId, int durationMinutes);
     Task Kick(GameClient session, int userId);
     Task Ban(GameClient session, int userId, string message, int durationHours, bool ipBan, bool machineBan);
+    Task Ban(string moderatorName, ModerationBanType type, string value, string reason, double expiresAt);
     Task TradeLock(GameClient session, int userId, string message, int durationMinutes);
     Task BroadcastRoomAction(GameClient session, int alertMode, string alertMessage);
 }

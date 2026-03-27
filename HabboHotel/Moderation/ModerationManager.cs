@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
@@ -207,30 +207,15 @@ public sealed class ModerationManager : IModerationManager
         _logger.LogInformation("Cached " + _bans.Count + " username and machine bans.");
     }
 
-    public void BanUser(string mod, ModerationBanType type, string banValue, string reason, double expireTimestamp)
+    public void AddBan(ModerationBan ban)
     {
-        var banType = type == ModerationBanType.Ip ? "ip" : type == ModerationBanType.Machine ? "machine" : "user";
-        using (var connection = _database.Connection())
-            connection.Execute(
-                """
-                REPLACE INTO `bans` (`bantype`, `value`, `reason`, `expire`, `added_by`, `added_date`)
-                VALUES (@banType, @banValue, @reason, @expireTimestamp, @mod, @addedDate)
-                """,
-                new
-                {
-                    banType,
-                    banValue,
-                    reason,
-                    expireTimestamp,
-                    mod,
-                    addedDate = UnixTimestamp.GetNow()
-                });
-        if (type == ModerationBanType.Machine || type == ModerationBanType.Username)
+        if (ban.Type == ModerationBanType.Machine || ban.Type == ModerationBanType.Username)
         {
-            if (!_bans.ContainsKey(banValue))
-                _bans.Add(banValue, new(type, banValue, reason, expireTimestamp));
+            if (!_bans.ContainsKey(ban.Value))
+                _bans.Add(ban.Value, ban);
         }
     }
+
 
     public bool TryAddTicket(ModerationTicket ticket)
     {

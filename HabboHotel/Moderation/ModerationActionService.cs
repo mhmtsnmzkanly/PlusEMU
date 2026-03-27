@@ -38,10 +38,12 @@ internal class ModerationActionService : IModerationActionService
         if (targetHabbo == null)
             return;
 
-        using var connection = _database.Connection();
-        await connection.ExecuteAsync(
-            "UPDATE `user_info` SET `cautions` = `cautions` + 1 WHERE `user_id` = @userId LIMIT 1",
-            new { userId = targetHabbo.Id });
+        using (var connection = _database.Connection())
+        {
+            await connection.ExecuteAsync(
+                "UPDATE `user_info` SET `cautions` = `cautions` + 1 WHERE `user_id` = @userId LIMIT 1",
+                new { userId = targetHabbo.Id });
+        }
 
         client.SendNotification(message);
     }
@@ -83,10 +85,12 @@ internal class ModerationActionService : IModerationActionService
         }
 
         var length = durationMinutes * 60.0;
-        using var connection = _database.Connection();
-        await connection.ExecuteAsync(
-            "UPDATE `users` SET `time_muted` = @length WHERE `id` = @userId LIMIT 1",
-            new { length, userId = targetHabbo.Id });
+        using (var connection = _database.Connection())
+        {
+            await connection.ExecuteAsync(
+                "UPDATE `users` SET `time_muted` = @length WHERE `id` = @userId LIMIT 1",
+                new { length, userId = targetHabbo.Id });
+        }
 
         targetHabbo.TimeMuted = length;
         client.SendNotification($"You have been muted by a moderator for {length} seconds!");
@@ -128,43 +132,105 @@ internal class ModerationActionService : IModerationActionService
 
         var client = _clientManager.GetClientByUserId(userId);
         var targetHabbo = client?.GetHabbo();
+        
+        string targetUsername;
+        string targetIp;
+        string targetMachine;
+
         if (targetHabbo == null)
         {
-            session.SendWhisper("An error occoured whilst finding that user in the database.");
-            return;
+            using (var connection = _database.Connection())
+            {
+                var targetData = await connection.QueryFirstOrDefaultAsync<dynamic>(
+                    "SELECT `username`, `ip_last`, `machine_id` FROM `users` WHERE `id` = @userId LIMIT 1",
+                    new { userId });
+                if (targetData == null)
+                {
+                    session.SendWhisper("An error occurred whilst finding that user in the database.");
+                    return;
+                }
+                targetUsername = targetData.username;
+                targetIp = targetData.ip_last;
+                targetMachine = targetData.machine_id;
+            }
         }
-
-        if ((targetHabbo.Permissions?.HasRight("mod_tool") ?? false) &&
-            !(moderator.Permissions?.HasRight("mod_ban_any") ?? false))
+        else
         {
-            session.SendWhisper("Oops, you cannot ban that user.");
-            return;
+            if ((targetHabbo.Permissions?.HasRight("mod_tool") ?? false) &&
+                !(moderator.Permissions?.HasRight("mod_ban_any") ?? false))
+            {
+                session.SendWhisper("Oops, you cannot ban that user.");
+                return;
+            }
+            targetUsername = targetHabbo.Username;
+            targetIp = client?.GetHabbo()?.Client?.MachineId ?? ""; // Wait, machineId is in Habbo. IP is in Socket usually.
+            // Let's just fetch from DB to be safe and consistent.
+            using (var connection = _database.Connection())
+            {
+                var targetData = await connection.QueryFirstOrDefaultAsync<dynamic>(
+                    "SELECT `ip_last`, `machine_id` FROM `users` WHERE `id` = @userId LIMIT 1",
+                    new { userId = targetHabbo.Id });
+                targetIp = targetData?.ip_last ?? "";
+                targetMachine = targetData?.machine_id ?? targetHabbo.MachineId;
+            }
         }
 
         var reason = message ?? "No reason specified.";
         var expiresAt = durationHours * 3600 + UnixTimestamp.GetNow();
 
-        using var connection = _database.Connection();
-        await connection.ExecuteAsync(
-            "UPDATE `user_info` SET `bans` = `bans` + 1 WHERE `user_id` = @userId LIMIT 1",
-            new { userId = targetHabbo.Id });
+        using (var connection = _database.Connection())
+        {
+            await connection.ExecuteAsync(
+                "UPDATE `user_info` SET `bans` = `bans` + 1 WHERE `user_id` = @userId LIMIT 1",
+                new { userId });
+        }
 
         if (!ipBan && !machineBan)
         {
-            _moderationManager.BanUser(moderator.Username, ModerationBanType.Username, targetHabbo.Username, reason, expiresAt);
+            await Ban(moderator.Username, ModerationBanType.Username, targetUsername, reason, expiresAt);
         }
         else if (ipBan)
         {
-            _moderationManager.BanUser(moderator.Username, ModerationBanType.Ip, targetHabbo.Username, reason, expiresAt);
+            await Ban(moderator.Username, ModerationBanType.Ip, targetIp, reason, expiresAt);
+            await Ban(moderator.Username, ModerationBanType.Username, targetUsername, reason, expiresAt);
         }
         else
         {
-            _moderationManager.BanUser(moderator.Username, ModerationBanType.Ip, targetHabbo.Username, reason, expiresAt);
-            _moderationManager.BanUser(moderator.Username, ModerationBanType.Username, targetHabbo.Username, reason, expiresAt);
-            _moderationManager.BanUser(moderator.Username, ModerationBanType.Machine, targetHabbo.Username, reason, expiresAt);
+            await Ban(moderator.Username, ModerationBanType.Ip, targetIp, reason, expiresAt);
+            await Ban(moderator.Username, ModerationBanType.Username, targetUsername, reason, expiresAt);
+            await Ban(moderator.Username, ModerationBanType.Machine, targetMachine, reason, expiresAt);
         }
 
         client?.Disconnect();
+    }
+
+    public async Task Ban(string moderatorName, ModerationBanType type, string value, string reason, double expiresAt)
+    {
+        if (string.IsNullOrEmpty(value)) return;
+
+        var banType = BanTypeUtility.FromModerationBanType(type);
+        using (var connection = _database.Connection())
+        {
+            await connection.ExecuteAsync(
+                """
+                REPLACE INTO `bans` (`bantype`, `value`, `reason`, `expire`, `added_by`, `added_date`)
+                VALUES (@banType, @value, @reason, @expiresAt, @moderatorName, @addedDate)
+                """,
+                new
+                {
+                    banType,
+                    value,
+                    reason,
+                    expiresAt,
+                    moderatorName,
+                    addedDate = UnixTimestamp.GetNow()
+                });
+        }
+
+        if (type == ModerationBanType.Machine || type == ModerationBanType.Username)
+        {
+            _moderationManager.AddBan(new(type, value, reason, expiresAt));
+        }
     }
 
     public async Task TradeLock(GameClient session, int userId, string message, int durationMinutes)
@@ -195,10 +261,12 @@ internal class ModerationActionService : IModerationActionService
             days = 365;
 
         var length = UnixTimestamp.GetNow() + days * 86400;
-        using var connection = _database.Connection();
-        await connection.ExecuteAsync(
-            "UPDATE `user_info` SET `trading_locked` = @length, `trading_locks_count` = `trading_locks_count` + 1 WHERE `user_id` = @userId LIMIT 1",
-            new { length, userId = targetHabbo.Id });
+        using (var connection = _database.Connection())
+        {
+            await connection.ExecuteAsync(
+                "UPDATE `user_info` SET `trading_locked` = @length, `trading_locks_count` = `trading_locks_count` + 1 WHERE `user_id` = @userId LIMIT 1",
+                new { length, userId = targetHabbo.Id });
+        }
 
         targetHabbo.TradingLockExpiry = length;
         client?.SendNotification($"You have been trade banned for {days} day(s)!\r\rReason:\r\r{message}");

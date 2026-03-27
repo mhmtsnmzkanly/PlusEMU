@@ -79,6 +79,14 @@ All SQL injection risks from string interpolation have been eliminated. Build is
 - Converted synchronous methods like `RoomAccessService.GetRoomFilterList` to asynchronous `Task` returning methods.
 - Cleared remaining static dependencies on `PlusEnvironment.Game.AchievementManager` in favor of Service-based access.
 
+#### Phase 4 — Chat Service & Moderation Cleanup
+- Created `IChatService` and `ChatService` to unify `Chat`, `Shout`, `Whisper`, and Typing status logic.
+- Centralized flood control, word filtering, and auto-ban logic into `ChatService.cs`.
+- Refactored `ChatEvent.cs`, `ShoutEvent.cs`, `WhisperEvent.cs`, `StartTypingEvent.cs`, and `CancelTypingEvent.cs` to thin packet handlers using DI.
+- Refactored `IModerationManager` and `ModerationManager` into pure caching repositories.
+- Moved ban-writing implementation into `IModerationActionService` to decouple data and business logic.
+- Modernized `BanCommand`, `IpBanCommand`, and `MipCommand` to use `IModerationActionService` and `async/await`.
+
 ## 2026-03-26
 
 ### Legacy Database Wrapper Migration
