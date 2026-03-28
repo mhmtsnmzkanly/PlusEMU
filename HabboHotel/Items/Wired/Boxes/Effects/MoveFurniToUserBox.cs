@@ -46,38 +46,14 @@ internal class MoveFurniToUserBox : IWiredItem, IWiredCycle, IWiredEmptyExecutab
                 if (!Instance.GetRoomItemHandler().GetFloor.Contains(item))
                     continue;
                 if (Instance.GetWired().OtherBoxHasItem(this, item.Id))
+                {
                     SetItems.TryRemove(item.Id, out _);
+                    continue;
+                }
                 var point = Instance.GetGameMap().GetChaseMovement(item);
                 Instance.GetWired().OnUserFurniCollision(Instance, item);
-                if (!Instance.GetGameMap().ItemCanMove(item, point))
-                    continue;
-                if (Instance.GetGameMap().CanRollItemHere(point.X, point.Y) && !Instance.GetGameMap().SquareHasUsers(point.X, point.Y))
-                {
-                    var newZ = item.GetZ;
-                    var canBePlaced = true;
-                    var coordinatedItems = Instance.GetGameMap().GetCoordinatedItems(point);
-                    foreach (var coordinateItem in coordinatedItems.ToList())
-                    {
-                        if (coordinateItem == null || coordinateItem.Id == item.Id)
-                            continue;
-                        if (!coordinateItem.Definition.Walkable)
-                        {
-                            _next = 0;
-                            canBePlaced = false;
-                            break;
-                        }
-                        if (coordinateItem.TotalHeight > newZ)
-                            newZ = coordinateItem.TotalHeight;
-                        if (canBePlaced && !coordinateItem.Definition.Stackable)
-                            canBePlaced = false;
-                    }
-                    if (canBePlaced && point != item.Coordinate)
-                    {
-                        Instance.SendPacket(new SlideObjectBundleComposer(item.GetX, item.GetY, item.GetZ, point.X,
-                            point.Y, newZ, 0, 0, item.Id));
-                        Instance.GetRoomItemHandler().SetFloorItem(item, point.X, point.Y, newZ);
-                    }
-                }
+                if (!WiredFloorMoveHelper.TryMoveFloorItem(Instance, item, point, out _))
+                    _next = 0;
             }
             _next = 0;
             return true;

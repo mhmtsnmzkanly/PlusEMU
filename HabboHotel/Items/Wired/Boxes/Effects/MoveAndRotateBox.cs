@@ -49,44 +49,26 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
                 if (!Instance.GetRoomItemHandler().GetFloor.Contains(item))
                     continue;
                 if (Instance.GetWired().OtherBoxHasItem(this, item.Id))
+                {
                     SetItems.TryRemove(item.Id, out _);
+                    continue;
+                }
                 var point = HandleMovement(movementMode, new(item.GetX, item.GetY));
                 var newRot = HandleRotation(rotationMode, item.Rotation);
                 Instance.GetWired().OnUserFurniCollision(Instance, item);
-                if (!Instance.GetGameMap().ItemCanMove(item, point))
-                    continue;
-                if (Instance.GetGameMap().CanRollItemHere(point.X, point.Y) && !Instance.GetGameMap().SquareHasUsers(point.X, point.Y))
+                if (newRot != item.Rotation)
                 {
-                    var newZ = Instance.GetGameMap().GetHeightForSquareFromData(point);
-                    var canBePlaced = true;
-                    var coordinatedItems = Instance.GetGameMap().GetCoordinatedItems(point);
-                    foreach (var coordinatedItem in coordinatedItems.ToList())
-                    {
-                        if (coordinatedItem == null || coordinatedItem.Id == item.Id)
-                            continue;
-                        if (!coordinatedItem.Definition.Walkable)
-                        {
-                            _next = 0;
-                            canBePlaced = false;
-                            break;
-                        }
-                        if (coordinatedItem.TotalHeight > newZ)
-                            newZ = coordinatedItem.TotalHeight;
-                        if (canBePlaced && !coordinatedItem.Definition.Stackable)
-                            canBePlaced = false;
-                    }
-                    if (newRot != item.Rotation)
-                    {
-                        item.Rotation = newRot;
-                        item.UpdateState(false, true);
-                    }
-                    if (canBePlaced && point != item.Coordinate)
-                    {
-                        Instance.SendPacket(new SlideObjectBundleComposer(item.GetX, item.GetY, item.GetZ, point.X,
-                            point.Y, newZ, 0, 0, item.Id));
-                        Instance.GetRoomItemHandler().SetFloorItem(item, point.X, point.Y, newZ);
-                    }
+                    item.Rotation = newRot;
+                    item.UpdateState(false, true);
                 }
+
+                if (!WiredFloorMoveHelper.TryMoveFloorItem(
+                        Instance,
+                        item,
+                        point,
+                        out _,
+                        () => Instance.GetGameMap().GetHeightForSquareFromData(point)))
+                    _next = 0;
             }
             _next = 0;
             return true;
