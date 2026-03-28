@@ -336,6 +336,7 @@
 - Reduced `TeamManager` gate-update coupling as well by moving its room resolution behind a shared `Habbo.TryGetCurrentRoom(...)` helper instead of re-reading raw `CurrentRoom` in each game branch.
 - Started the heavier `RoomCreatureService` helper migration too by moving the first pet/bot entry points off raw `CurrentRoom` reads and onto `TryGetCurrentRoom(...)` or the already-owned room instance.
 - Trimmed the broader Habbo-helper tail as well by dropping redundant `InRoom`/`CurrentRoom` checks in messenger follow, quests, chat, freeze-tile interaction, chat-trigger Wired boxes, and Banzai movement handling in favor of direct `TryGetCurrentRoom(...)` resolution.
+- Finished the navigator-side friend-room cleanup by adding a small `MessengerBuddy.TryGetCurrentRoom(...)` helper and routing the last remaining raw buddy-room lookup through it.
 - Started moving the post-packet Habbo cleanup into services by trimming `GroupService` room/client access repetition, routing favourite-group refresh through helpers, and swapping controller notifications onto `Habbo.TryGetClient(...)`.
 - Continued trimming the packet tail by tightening handshake/profile/gift guards, extracting the repeated room-settings broadcast path, and splitting the item-collection phase out of room deletion before deeper service cleanup.
 - Continued the stateful packet cleanup around room settings, room deletion, ignored users, and catalog room/group promotion entry points by removing duplicate null branches and simplifying the surrounding Habbo/component flow.

@@ -39,6 +39,12 @@ public class MessengerBuddy
 
     public Room? CurrentRoom { get; set; }
 
+    public bool TryGetCurrentRoom(out Room room)
+    {
+        room = CurrentRoom!;
+        return room != null;
+    }
+
     public void Serialize(IOutgoingPacket message)
     {
         message.WriteInteger(Id);

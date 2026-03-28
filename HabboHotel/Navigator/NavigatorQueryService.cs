@@ -140,10 +140,10 @@ internal class NavigatorQueryService : INavigatorQueryService
 
         foreach (var buddy in habbo.Messenger.Friends.Values)
         {
-            if (buddy == null || buddy.Id == habbo.Id || buddy.CurrentRoom == null)
+            if (buddy == null || buddy.Id == habbo.Id || !buddy.TryGetCurrentRoom(out var room))
                 continue;
-            if (!roomIds.Contains(buddy.CurrentRoom.Id))
-                roomIds.Add(buddy.CurrentRoom.Id);
+            if (!roomIds.Contains(room.Id))
+                roomIds.Add(room.Id);
         }
 
         return _roomManager.GetRoomsByIds(roomIds).Cast<RoomData>().ToList();
