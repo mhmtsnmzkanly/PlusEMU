@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class UserCountInRoomBox : IWiredItem
+internal class UserCountInRoomBox : IWiredItem, IWiredExecutable
 {
     public UserCountInRoomBox(Room instance, Item item)
     {
@@ -30,6 +30,11 @@ internal class UserCountInRoomBox : IWiredItem
     }
 
     public bool Execute(params object[] @params)
+    {
+        return ((IWiredExecutable)this).Execute(new(@params));
+    }
+
+    bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))
             return false;
