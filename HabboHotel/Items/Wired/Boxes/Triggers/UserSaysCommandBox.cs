@@ -46,15 +46,9 @@ internal class UserSaysCommandBox : IWiredItem
             return false;
         if (BoolData && Instance.OwnerId != player.Id || string.IsNullOrWhiteSpace(StringData))
             return false;
-        if (!Instance.GetChatManager().GetCommands().TryGetCommand(StringData.Replace(":", "").ToLower(), out var chatCommand))
-            return false;
-        if (player.ChatCommand == chatCommand)
-        {
-            player.WiredInteraction = true;
-            var wired = Instance.GetWired();
-            client.Send(new WhisperComposer(user.VirtualId, StringData, 0, 0));
-            return wired.ExecuteTriggerStack(this, player);
-        }
-        return false;
+        player.WiredInteraction = true;
+        var wired = Instance.GetWired();
+        client.Send(new WhisperComposer(user.VirtualId, StringData, 0, 0));
+        return wired.ExecuteTriggerStack(this, player);
     }
 }

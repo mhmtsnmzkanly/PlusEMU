@@ -46,13 +46,9 @@ internal class UserSaysBox : IWiredItem
         var message = Convert.ToString(@params[1]) ?? string.Empty;
         if (BoolData && Instance.OwnerId != player.Id || player == null || string.IsNullOrWhiteSpace(message) || string.IsNullOrWhiteSpace(StringData))
             return false;
-        if (message.Contains($" {StringData}") || message.Contains($"{StringData} ") || message == StringData)
-        {
-            player.WiredInteraction = true;
-            var wired = Instance.GetWired();
-            playerClient.Send(new WhisperComposer(user.VirtualId, message, 0, 0));
-            return wired.ExecuteTriggerStack(this, player);
-        }
-        return false;
+        player.WiredInteraction = true;
+        var wired = Instance.GetWired();
+        playerClient.Send(new WhisperComposer(user.VirtualId, message, 0, 0));
+        return wired.ExecuteTriggerStack(this, player);
     }
 }
