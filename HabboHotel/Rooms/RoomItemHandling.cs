@@ -9,6 +9,7 @@ using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Items.Wired;
 using Plus.HabboHotel.Rooms.PathFinding;
+using Plus.HabboHotel.Users.Inventory.Furniture;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -902,28 +903,51 @@ public class RoomItemHandling
 
         foreach (var item in GetWallAndFloor.ToList())
         {
-            if (item == null || item.UserId != habbo.Id)
+            if (!CanRemoveOwnedItem(item, habbo.Id))
                 continue;
-            if (item.IsFloorItem)
-            {
-                _floorItems.TryRemove(item.Id, out var I);
-                // TODO @80O: Items refactor
-                if (I != null)
-                    inventory.AddItem(I.ToInventoryItem());
-                _room.SendPacket(new ObjectRemoveComposer(item, item.UserId));
-            }
-            else if (item.IsWallItem)
-            {
-                _wallItems.TryRemove(item.Id, out var I);
-                // TODO @80O: Items refactor
-                if (I != null)
-                    inventory.AddItem(I.ToInventoryItem());
-                _room.SendPacket(new ItemRemoveComposer(item, item.UserId));
-            }
+
+            RemoveOwnedItem(item, inventory);
             session.Send(new FurniListAddComposer(item.ToInventoryItem()));
         }
+
         _rollers.Clear();
         return items;
+    }
+
+    private static bool CanRemoveOwnedItem(Item? item, int ownerId) =>
+        item != null && item.UserId == ownerId;
+
+    private void RemoveOwnedItem(Item item, FurnitureInventoryComponent inventory)
+    {
+        if (item.IsFloorItem)
+        {
+            RemoveOwnedFloorItem(item, inventory);
+            return;
+        }
+
+        if (item.IsWallItem)
+            RemoveOwnedWallItem(item, inventory);
+    }
+
+    private void RemoveOwnedFloorItem(Item item, FurnitureInventoryComponent inventory)
+    {
+        _floorItems.TryRemove(item.Id, out var removedItem);
+        AddRemovedItemToInventory(removedItem, inventory);
+        _room.SendPacket(new ObjectRemoveComposer(item, item.UserId));
+    }
+
+    private void RemoveOwnedWallItem(Item item, FurnitureInventoryComponent inventory)
+    {
+        _wallItems.TryRemove(item.Id, out var removedItem);
+        AddRemovedItemToInventory(removedItem, inventory);
+        _room.SendPacket(new ItemRemoveComposer(item, item.UserId));
+    }
+
+    private static void AddRemovedItemToInventory(Item? removedItem, FurnitureInventoryComponent inventory)
+    {
+        // TODO @80O: Items refactor
+        if (removedItem != null)
+            inventory.AddItem(removedItem.ToInventoryItem());
     }
 
 
