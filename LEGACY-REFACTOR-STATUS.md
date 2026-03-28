@@ -97,6 +97,7 @@ All files below have been migrated off `GetQueryReactor()`.
 - `HabboHotel/Items/ItemHopperFinder.cs` (Modernized + DI)
 - `HabboHotel/Items/IItemTeleporterFinder.cs` (New)
 - `HabboHotel/Items/IItemHopperFinder.cs` (New)
+- `HabboHotel/Items/ItemBehaviourUtility.cs`
 - `HabboHotel/Items/Interactor/InteractorHopper.cs`
 - `HabboHotel/Items/Interactor/InteractorMannequin.cs`
 - `HabboHotel/Items/Data/Moodlight/MoodlightData.cs`
@@ -181,6 +182,7 @@ All files below have been migrated off `GetQueryReactor()`.
 - `HabboHotel/Items/ItemDataManager.cs` — tolerant parsing for `vending_ids`, `height_adjustable`; handles `;`, empty tokens, `.25`, malformed values.
 - `HabboHotel/Rooms/Chat/Pets/Locale/PetLocale.cs` — fixed column mapping: `SELECT pet_id AS Key, responses AS Value FROM bots_pet_responses`
 - `HabboHotel/Permissions/PermissionManager.cs` — fixed `permissions_groups.badge_code` mapping.
+- `HabboHotel/Users/Calendar/LoadUserCalendarTask.cs` — separated advent calendar loading from the old all-in-one user bootstrap flow.
 
 ## Important Notes
 

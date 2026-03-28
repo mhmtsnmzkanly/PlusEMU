@@ -4,12 +4,14 @@
 #### Added
 - `IItemTeleporterFinder` and `IItemHopperFinder` interfaces for modernize item discovery.
 - Injected `IBadgeManager` and `IUserDataFactory` into `Room` and `RoomManager` for improved service access.
+- `LoadUserCalendarTask` to separate advent calendar loading from the legacy user bootstrap path.
 
 #### Changed
 - Modernized `ItemTeleporterFinder` and `ItemHopperFinder` to use DI and Dapper.
 - Refactored `GiveUserBadgeBox` and `BotChangesClothesBox` to remove static `PlusEnvironment` dependencies.
 - Moved avatar effect creation logic from static factory to `EffectsComponent` instance method.
 - Decoupled `AmbassadorAlertEvent` and `PetLocale` from static global state.
+- Modernized `ReloadServerSettingsCommand`, `MoodlightData`, `CalendarComponent`, and talent track loading to use injected services and Dapper-backed persistence paths.
 
 ### [0.7.0] - 2026-03-27
 #### Added
