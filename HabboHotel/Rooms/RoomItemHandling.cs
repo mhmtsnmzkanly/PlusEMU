@@ -40,6 +40,7 @@ public class RoomItemHandling
     private readonly IRoomItemStateService _roomItemStateService;
     private readonly IRoomItemPlacementApplyService _roomItemPlacementApplyService;
     private readonly IRoomItemTrackingService _roomItemTrackingService;
+    private readonly IRoomRollerApplyService _roomRollerApplyService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -48,7 +49,7 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService, IRoomItemPlacementApplyService roomItemPlacementApplyService, IRoomItemTrackingService roomItemTrackingService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService, IRoomItemPlacementApplyService roomItemPlacementApplyService, IRoomItemTrackingService roomItemTrackingService, IRoomRollerApplyService roomRollerApplyService)
     {
         _room = room;
         _itemLoader = itemLoader;
@@ -63,6 +64,7 @@ public class RoomItemHandling
         _roomItemStateService = roomItemStateService;
         _roomItemPlacementApplyService = roomItemPlacementApplyService;
         _roomItemTrackingService = roomItemTrackingService;
+        _roomRollerApplyService = roomRollerApplyService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -273,54 +275,10 @@ public class RoomItemHandling
     }
 
     public IServerPacket UpdateItemOnRoller(Item pItem, Point nextCoord, uint pRolledId, double nextZ)
-    {
-        var mMessage = new SlideObjectBundleComposer(pItem.GetX, pItem.GetY, pItem.GetZ, nextCoord.X, nextCoord.Y, nextZ, pRolledId, 0, pItem.Id);
-        SetFloorItem(pItem, nextCoord.X, nextCoord.Y, nextZ);
-        return mMessage;
-    }
+        => _roomRollerApplyService.CreateItemRollerUpdate(_room, this, pItem, nextCoord, pRolledId, nextZ);
 
     public IServerPacket UpdateUserOnRoller(RoomUser pUser, Point pNextCoord, uint pRollerId, double nextZ)
-    {
-        var mMessage = new SlideObjectBundleComposer(pUser.X, pUser.Y, pUser.Z, pNextCoord.X, pNextCoord.Y, nextZ, pRollerId, pUser.VirtualId, 0);
-        _room.GetGameMap().UpdateUserMovement(new(pUser.X, pUser.Y), new(pNextCoord.X, pNextCoord.Y), pUser);
-        _room.GetGameMap().GameMap[pUser.X, pUser.Y] = 1;
-        pUser.X = pNextCoord.X;
-        pUser.Y = pNextCoord.Y;
-        pUser.Z = nextZ;
-        _room.GetGameMap().GameMap[pUser.X, pUser.Y] = 0;
-        var client = pUser?.GetClient();
-        var habbo = client?.GetHabbo();
-        TriggerRollerUserWiredEvents(habbo, pNextCoord, pRollerId);
-        return mMessage;
-    }
-
-    private void TriggerRollerUserWiredEvents(Habbo? habbo, Point nextCoord, uint rollerId)
-    {
-        if (habbo == null)
-            return;
-
-        TriggerWalkOnEvents(habbo, nextCoord);
-        TriggerWalkOffRollerEvent(habbo, rollerId);
-    }
-
-    private void TriggerWalkOnEvents(Habbo habbo, Point nextCoord)
-    {
-        var items = _room.GetGameMap().GetRoomItemForSquare(nextCoord.X, nextCoord.Y);
-        foreach (var item in items.ToList())
-        {
-            if (item == null)
-                continue;
-
-            _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOnFurni, habbo, item);
-        }
-    }
-
-    private void TriggerWalkOffRollerEvent(Habbo habbo, uint rollerId)
-    {
-        var roller = _room.GetRoomItemHandler().GetItem(rollerId);
-        if (roller != null)
-            _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOffFurni, habbo, roller);
-    }
+        => _roomRollerApplyService.CreateUserRollerUpdate(_room, this, pUser, pNextCoord, pRollerId, nextZ);
 
     private void SaveFurniture()
     {

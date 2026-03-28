@@ -23,6 +23,7 @@
 - Extracted loaded-item state initialization into `RoomItemStateService`, so roller/hopper flags plus moodlight/toner/wired startup behavior are no longer owned directly by `RoomItemHandling`.
 - Extracted floor/wall placement apply orchestration into `RoomItemPlacementApplyService`, so `RoomItemHandling` no longer directly owns placement-side packet, map, tent, user-status, and persistence coordination.
 - Extracted loaded-item registration, lookup, remove-from-map, moved/roller tracking, and disposal cleanup into `RoomItemTrackingService`, so `RoomItemHandling` no longer owns most of the raw item-state bookkeeping.
+- Extracted roller item/user movement apply plus roller-triggered Wired fanout into `RoomRollerApplyService`, so `RoomItemHandling` no longer directly owns the slide-packet, avatar move, or post-roll Wired trigger application path.
 - Split `RoomItemHandling` furniture load/remove flow into explicit helper stages so invalid floor recovery, wall-position normalization, registration, and removal broadcast/state cleanup no longer live in one monolithic method.
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.
