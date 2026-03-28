@@ -47,10 +47,8 @@ internal class UpdateFigureDataEvent : IPacketEvent
         await _achievementService.ProgressAchievement(session, "ACH_AvatarLooks", 1);
         session.Send(new AvatarAspectUpdateComposer(look, gender));
         if (habbo.Look.Contains("ha-1006")) await _questService.ProgressUserQuest(session, QuestType.WearHat);
-        if (habbo.InRoom)
+        if (habbo.InRoom && habbo.TryGetCurrentRoom(out var currentRoom))
         {
-            var currentRoom = habbo.CurrentRoom;
-            if (currentRoom == null) return;
             var roomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (roomUser != null) { session.Send(new UserChangeComposer(roomUser, true)); currentRoom.SendPacket(new UserChangeComposer(roomUser, false)); }
         }

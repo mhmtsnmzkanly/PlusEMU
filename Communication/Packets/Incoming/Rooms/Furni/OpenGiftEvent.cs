@@ -30,8 +30,7 @@ internal class OpenGiftEvent : IPacketEvent
         var furniture = habbo?.Inventory?.Furniture;
         if (habbo == null || furniture == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
         var presentId = packet.ReadUInt();
         var present = room.GetRoomItemHandler().GetItem(presentId);
