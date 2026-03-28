@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class GiveRewardBox : IWiredItem, IWiredExecutable
+internal class GiveRewardBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
 {
     public GiveRewardBox(Room instance, Item item)
     {
@@ -34,5 +34,7 @@ internal class GiveRewardBox : IWiredItem, IWiredExecutable
         //this.StringData = Time + ";" + Message;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context) => true;
+    bool IWiredExecutable.Execute(WiredExecutionContext context) => ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
+
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context) => true;
 }

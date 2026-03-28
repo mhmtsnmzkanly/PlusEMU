@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class BotCommunicatesToAllBox : IWiredItem, IWiredExecutable
+internal class BotCommunicatesToAllBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
 {
     public BotCommunicatesToAllBox(Room instance, Item item)
     {
@@ -33,6 +33,11 @@ internal class BotCommunicatesToAllBox : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
+    }
+
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))
             return false;

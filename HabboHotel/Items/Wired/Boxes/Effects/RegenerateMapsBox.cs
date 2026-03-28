@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class RegenerateMapsBox : IWiredItem, IWiredExecutable
+internal class RegenerateMapsBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
 {
     public RegenerateMapsBox(Room instance, Item item)
     {
@@ -31,6 +31,11 @@ internal class RegenerateMapsBox : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
+    }
+
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (Instance == null)
             return false;

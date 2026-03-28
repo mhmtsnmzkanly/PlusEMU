@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes;
 
-internal class AddonRandomEffectBox : IWiredItem, IWiredExecutable
+internal class AddonRandomEffectBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
 {
     public AddonRandomEffectBox(Room instance, Item item)
     {
@@ -27,5 +27,7 @@ internal class AddonRandomEffectBox : IWiredItem, IWiredExecutable
 
     public void HandleSave(IIncomingPacket packet) { }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context) => true;
+    bool IWiredExecutable.Execute(WiredExecutionContext context) => ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
+
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context) => true;
 }

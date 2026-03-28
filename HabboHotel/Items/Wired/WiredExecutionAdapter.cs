@@ -15,11 +15,29 @@ internal static class WiredExecutionAdapter
         => item.Execute(new WiredExecutionContext(parameters));
 
     public static bool ExecuteWithChat(this IWiredItem item, WiredChatTriggerContext context)
-        => item.Execute(new WiredChatExecutionContext(context));
+    {
+        var executionContext = new WiredChatExecutionContext(context);
+        if (item is IWiredChatExecutable executable)
+            return executable.Execute(executionContext);
+
+        return item.Execute(executionContext);
+    }
 
     public static bool ExecuteWithActorItem(this IWiredItem item, WiredActorItemTriggerContext context)
-        => item.Execute(new WiredActorItemExecutionContext(context));
+    {
+        var executionContext = new WiredActorItemExecutionContext(context);
+        if (item is IWiredActorItemExecutable executable)
+            return executable.Execute(executionContext);
+
+        return item.Execute(executionContext);
+    }
 
     public static bool ExecuteWithoutContext(this IWiredItem item)
-        => item.Execute(new WiredEmptyExecutionContext());
+    {
+        var executionContext = new WiredEmptyExecutionContext();
+        if (item is IWiredEmptyExecutable executable)
+            return executable.Execute(executionContext);
+
+        return item.Execute(executionContext);
+    }
 }

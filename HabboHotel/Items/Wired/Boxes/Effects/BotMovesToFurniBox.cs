@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class BotMovesToFurniBox : IWiredItem, IWiredExecutable
+internal class BotMovesToFurniBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
 {
     public BotMovesToFurniBox(Room instance, Item item)
     {
@@ -38,6 +38,11 @@ internal class BotMovesToFurniBox : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
+    }
+
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))
             return false;

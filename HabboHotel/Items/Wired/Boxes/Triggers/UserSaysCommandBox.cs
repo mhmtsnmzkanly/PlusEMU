@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class UserSaysCommandBox : IWiredItem, IWiredExecutable
+internal class UserSaysCommandBox : IWiredItem, IWiredExecutable, IWiredChatExecutable
 {
     public UserSaysCommandBox(Room instance, Item item)
     {
@@ -35,6 +35,11 @@ internal class UserSaysCommandBox : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredChatExecutable)this).Execute((WiredChatExecutionContext)context);
+    }
+
+    bool IWiredChatExecutable.Execute(WiredChatExecutionContext context)
     {
         var player = context.Actor;
         if (player == null || player.CurrentRoom == null || !player.InRoom)

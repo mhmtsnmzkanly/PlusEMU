@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class UserFurniCollision : IWiredItem, IWiredExecutable
+internal class UserFurniCollision : IWiredItem, IWiredExecutable, IWiredActorItemExecutable
 {
     public UserFurniCollision(Room instance, Item item)
     {
@@ -33,6 +33,11 @@ internal class UserFurniCollision : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredActorItemExecutable)this).Execute((WiredActorItemExecutionContext)context);
+    }
+
+    bool IWiredActorItemExecutable.Execute(WiredActorItemExecutionContext context)
     {
         var player = context.Actor;
         var item = context.Item;
