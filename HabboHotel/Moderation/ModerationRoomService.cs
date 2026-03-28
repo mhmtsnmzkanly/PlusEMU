@@ -10,21 +10,23 @@ namespace Plus.HabboHotel.Moderation;
 internal class ModerationRoomService : IModerationRoomService
 {
     private readonly IRoomManager _roomManager;
+    private readonly IRoomService _roomService;
     private readonly IDatabase _database;
 
-    public ModerationRoomService(IRoomManager roomManager, IDatabase database)
+    public ModerationRoomService(IRoomManager roomManager, IRoomService roomService, IDatabase database)
     {
         _roomManager = roomManager;
+        _roomService = roomService;
         _database = database;
     }
 
-    public Task ModerateRoom(GameClient session, uint roomId, bool setLock, bool setName, bool kickAll)
+    public async Task ModerateRoom(GameClient session, uint roomId, bool setLock, bool setName, bool kickAll)
     {
         var moderator = session.GetHabbo();
         if (moderator?.Permissions == null || !moderator.Permissions.HasRight("mod_tool"))
-            return Task.CompletedTask;
+            return;
         if (!_roomManager.TryGetRoom(roomId, out var room) || room == null)
-            return Task.CompletedTask;
+            return;
 
         if (setName)
         {
@@ -67,7 +69,7 @@ internal class ModerationRoomService : IModerationRoomService
         room.SendPacket(new RoomInfoUpdatedComposer(room.RoomId));
 
         if (!kickAll)
-            return Task.CompletedTask;
+            return;
 
         foreach (var roomUser in room.GetRoomUserManager().GetUserList().ToList())
         {
@@ -81,9 +83,9 @@ internal class ModerationRoomService : IModerationRoomService
             if (targetHabbo.Rank >= moderator.Rank || targetHabbo.Id == moderator.Id)
                 continue;
 
-            room.GetRoomUserManager().RemoveUserFromRoom(client, true);
+            await _roomService.LeaveRoom(client);
         }
 
-        return Task.CompletedTask;
+        return;
     }
 }

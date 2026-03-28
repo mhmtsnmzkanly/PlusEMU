@@ -4,6 +4,13 @@ namespace Plus.HabboHotel.Rooms.Chat.Commands.Moderator;
 
 internal class RoomKickCommand : IChatCommand
 {
+    private readonly IRoomService _roomService;
+
+    public RoomKickCommand(IRoomService roomService)
+    {
+        _roomService = roomService;
+    }
+
     public string Key => "roomkick";
     public string PermissionRequired => "command_room_kick";
 
@@ -31,7 +38,7 @@ internal class RoomKickCommand : IChatCommand
                 (targetHabbo.Permissions?.HasRight("mod_tool") ?? false) || targetHabbo.Id == habbo.Id)
                 continue;
             targetClient.SendNotification($"You have been kicked by a moderator: {message}");
-            room.GetRoomUserManager().RemoveUserFromRoom(targetClient, true);
+            await _roomService.LeaveRoom(targetClient);
         }
         session.SendWhisper("Successfully kicked all users from the room.");
     }
