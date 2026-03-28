@@ -7,7 +7,7 @@ using Plus.HabboHotel.Rooms.Instance;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class TeleportUserBox : IWiredItem, IWiredCycle, IWiredExecutable
+internal class TeleportUserBox : IWiredItem, IWiredCycle, IWiredExecutable, IWiredActorExecutable
 {
     private readonly Queue<Habbo> _queue;
     private int _delay;
@@ -77,6 +77,11 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
+    }
+
+    bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;
         if (player == null)

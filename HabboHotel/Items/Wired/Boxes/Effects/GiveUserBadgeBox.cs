@@ -7,7 +7,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class GiveUserBadgeBox : IWiredItem, IWiredExecutable
+internal class GiveUserBadgeBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
 {
     public GiveUserBadgeBox(Room instance, Item item)
     {
@@ -38,6 +38,11 @@ internal class GiveUserBadgeBox : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
+    }
+
+    bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;
         var owner = Instance.GetClientManager().GetClientByUserId(Item.UserId)?.GetHabbo() ?? 

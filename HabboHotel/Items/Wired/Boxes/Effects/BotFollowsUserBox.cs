@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class BotFollowsUserBox : IWiredItem, IWiredExecutable
+internal class BotFollowsUserBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
 {
     public BotFollowsUserBox(Room instance, Item item)
     {
@@ -34,6 +34,11 @@ internal class BotFollowsUserBox : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
+    }
+
+    bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))
             return false;
