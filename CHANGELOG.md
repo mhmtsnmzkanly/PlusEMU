@@ -39,6 +39,7 @@
 - Removed the legacy variadic `IWiredItem.Execute(params object[])` contract entirely, leaving `IWiredExecutable.Execute(WiredExecutionContext)` as the sole Wired execution entry point.
 - Started splitting the broad typed execution context too: queued `UserSays` and `UserSaysCommand` execution now travels through a dedicated `WiredChatExecutionContext` instead of the generic parameter-based context path.
 - Continued that context split for actor+item triggers as well: queued walk/collision/state-change execution now uses a dedicated `WiredActorItemExecutionContext`.
+- Extended the split to actor-only paths too: queued actor triggers plus the shared trigger-stack / nested-stack actor execution flow now run through a dedicated `WiredActorExecutionContext`.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

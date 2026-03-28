@@ -9,7 +9,7 @@ internal static class WiredExecutionAdapter
         => item.Execute(new WiredExecutionContext(context));
 
     public static bool ExecuteWithActor(this IWiredItem item, Habbo actor)
-        => item.Execute(new WiredExecutionContext(actor));
+        => item.Execute(new WiredActorExecutionContext(new WiredActorTriggerContext(actor)));
 
     public static bool ExecuteWithParameters(this IWiredItem item, params object[] parameters)
         => item.Execute(new WiredExecutionContext(parameters));

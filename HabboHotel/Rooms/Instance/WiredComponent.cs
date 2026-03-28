@@ -395,6 +395,12 @@ public class WiredComponent
                 continue;
             }
 
+            if (execution.Parameters.Length == 1 && execution.Parameters[0] is WiredActorTriggerContext actorContext)
+            {
+                box.ExecuteWithActor(actorContext.Actor);
+                continue;
+            }
+
             if (execution.Parameters.Length == 1 && execution.Parameters[0] is WiredActorItemTriggerContext actorItemContext)
             {
                 box.ExecuteWithActorItem(actorItemContext);
@@ -442,17 +448,17 @@ public class WiredComponent
         return effects.OrderBy(x => Guid.NewGuid()).FirstOrDefault()!;
     }
 
-    public bool ExecuteTriggerStack(IWiredItem trigger, object actor)
+    public bool ExecuteTriggerStack(IWiredItem trigger, Habbo actor)
     {
         foreach (var condition in GetConditions(trigger).ToList())
         {
-            if (!condition.ExecuteWithContext(actor))
+            if (!condition.ExecuteWithActor(actor))
                 return false;
 
             OnEvent(condition.Item);
         }
 
-        return ExecuteTriggerEffects(trigger, effect => effect.ExecuteWithContext(actor));
+        return ExecuteTriggerEffects(trigger, effect => effect.ExecuteWithActor(actor));
     }
 
     public bool ExecuteTriggerEffectsForRoomUsers(IWiredItem trigger)
@@ -504,7 +510,7 @@ public class WiredComponent
         return true;
     }
 
-    public bool ExecuteNestedStackEffects(IWiredItem trigger, object actor)
+    public bool ExecuteNestedStackEffects(IWiredItem trigger, Habbo actor)
     {
         foreach (var item in trigger.SetItems.Values.ToList())
         {
@@ -520,7 +526,7 @@ public class WiredComponent
                     continue;
                 if (effectItem.Type == WiredBoxType.EffectExecuteWiredStacks)
                     continue;
-                if (!effectItem.ExecuteWithContext(actor))
+                if (!effectItem.ExecuteWithActor(actor))
                     return false;
             }
         }
