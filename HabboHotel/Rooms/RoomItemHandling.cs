@@ -19,13 +19,6 @@ public class RoomItemHandling
 {
     private const string DefaultWallPosition = ":w=0,2 l=11,53 l";
 
-    private sealed class RollerTargetState
-    {
-        public bool NextSquareIsRoller { get; init; }
-        public bool NextRollerClear { get; init; }
-        public double NextRollerHeight { get; init; }
-    }
-
     private readonly ConcurrentDictionary<uint, Item> _floorItems;
     private readonly ConcurrentDictionary<uint, Item> _movedItems;
     private readonly List<uint> _rollerItemsMoved;
@@ -39,6 +32,7 @@ public class RoomItemHandling
     private readonly IRoomItemPersistenceService _roomItemPersistenceService;
     private readonly IRoomItemPlacementValidatorService _roomItemPlacementValidatorService;
     private readonly IRoomItemPlacementPersistenceService _roomItemPlacementPersistenceService;
+    private readonly IRoomRollerService _roomRollerService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -47,13 +41,14 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService)
     {
         _room = room;
         _itemLoader = itemLoader;
         _roomItemPersistenceService = roomItemPersistenceService;
         _roomItemPlacementValidatorService = roomItemPlacementValidatorService;
         _roomItemPlacementPersistenceService = roomItemPlacementPersistenceService;
+        _roomRollerService = roomRollerService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -400,65 +395,22 @@ public class RoomItemHandling
     private void ProcessRoller(Item roller)
     {
         var nextSquare = roller.SquareInFront;
-        var itemsOnRoller = GetItemsOnRoller(roller);
+        var itemsOnRoller = _roomRollerService.GetItemsOnRoller(_room, roller);
         var itemsOnNext = _room.GetGameMap().GetAllRoomItemForSquare(nextSquare.X, nextSquare.Y).ToList();
-        var targetState = GetRollerTargetState(itemsOnNext);
+        var targetState = _roomRollerService.GetTargetState(itemsOnNext);
 
         MoveRollerItems(roller, nextSquare, itemsOnRoller, targetState);
         MoveRollerUser(roller, nextSquare, targetState);
     }
 
-    private List<Item> GetItemsOnRoller(Item roller)
-    {
-        var itemsOnRoller = _room.GetGameMap().GetRoomItemForSquare(roller.GetX, roller.GetY, roller.GetZ);
-        if (itemsOnRoller.Count > 10)
-            return itemsOnRoller.Take(10).ToList();
-
-        return itemsOnRoller;
-    }
-
-    private static RollerTargetState GetRollerTargetState(List<Item> itemsOnNext)
-    {
-        var nextRollerHeight = 0.0;
-        var nextSquareIsRoller = false;
-
-        foreach (var item in itemsOnNext.ToList())
-        {
-            if (!item.IsRoller)
-                continue;
-
-            if (item.TotalHeight > nextRollerHeight)
-                nextRollerHeight = item.TotalHeight;
-
-            nextSquareIsRoller = true;
-        }
-
-        var nextRollerClear = true;
-        if (nextSquareIsRoller)
-        {
-            foreach (var item in itemsOnNext.ToList())
-            {
-                if (item.TotalHeight > nextRollerHeight)
-                    nextRollerClear = false;
-            }
-        }
-
-        return new()
-        {
-            NextSquareIsRoller = nextSquareIsRoller,
-            NextRollerClear = nextRollerClear,
-            NextRollerHeight = nextRollerHeight
-        };
-    }
-
-    private void MoveRollerItems(Item roller, Point nextSquare, List<Item> itemsOnRoller, RollerTargetState targetState)
+    private void MoveRollerItems(Item roller, Point nextSquare, List<Item> itemsOnRoller, RoomRollerTargetState targetState)
     {
         if (itemsOnRoller.Count == 0)
             return;
 
         foreach (var rollerItem in itemsOnRoller.ToList())
         {
-            if (!CanMoveRollerItem(roller, rollerItem, nextSquare, targetState))
+            if (!_roomRollerService.CanMoveItem(_room, roller, rollerItem, nextSquare, targetState, _rollerItemsMoved))
                 continue;
 
             var nextZ = targetState.NextSquareIsRoller ? rollerItem.GetZ : rollerItem.GetZ - roller.Definition.Height;
@@ -467,22 +419,10 @@ public class RoomItemHandling
         }
     }
 
-    private bool CanMoveRollerItem(Item roller, Item? rollerItem, Point nextSquare, RollerTargetState targetState)
-    {
-        if (rollerItem == null)
-            return false;
-
-        return !_rollerItemsMoved.Contains(rollerItem.Id) &&
-               _room.GetGameMap().CanRollItemHere(nextSquare.X, nextSquare.Y) &&
-               targetState.NextRollerClear &&
-               roller.GetZ < rollerItem.GetZ &&
-               _room.GetRoomUserManager().GetUserForSquare(nextSquare.X, nextSquare.Y) == null;
-    }
-
-    private void MoveRollerUser(Item roller, Point nextSquare, RollerTargetState targetState)
+    private void MoveRollerUser(Item roller, Point nextSquare, RoomRollerTargetState targetState)
     {
         var rollerUser = _room.GetGameMap().GetRoomUsers(roller.Coordinate).FirstOrDefault();
-        if (!CanMoveRollerUser(roller, rollerUser, nextSquare, targetState))
+        if (!_roomRollerService.CanMoveUser(_room, roller, rollerUser, nextSquare, targetState, _rollerUsersMoved))
             return;
 
         var nextZ = targetState.NextSquareIsRoller ? rollerUser!.Z : rollerUser!.Z - roller.Definition.Height;
@@ -490,17 +430,6 @@ public class RoomItemHandling
         rollerUser.RollerDelay = 1;
         _rollerMessages.Add(UpdateUserOnRoller(rollerUser, nextSquare, roller.Id, nextZ));
         _rollerUsersMoved.Add(rollerUser.HabboId);
-    }
-
-    private bool CanMoveRollerUser(Item roller, RoomUser? rollerUser, Point nextSquare, RollerTargetState targetState)
-    {
-        if (rollerUser == null || rollerUser.IsWalking || _rollerUsersMoved.Contains(rollerUser.HabboId))
-            return false;
-
-        return targetState.NextRollerClear &&
-               _room.GetGameMap().IsValidStep(new(roller.GetX, roller.GetY), new(nextSquare.X, nextSquare.Y), true, false, true) &&
-               _room.GetGameMap().CanRollItemHere(nextSquare.X, nextSquare.Y) &&
-               _room.GetGameMap().GetFloorStatus(nextSquare) != 0;
     }
 
     public IServerPacket UpdateItemOnRoller(Item pItem, Point nextCoord, uint pRolledId, double nextZ)
