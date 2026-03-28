@@ -159,6 +159,8 @@ public class Room : RoomData
         _itemHopperFinder = itemHopperFinder;
         _badgeManager = badgeManager;
         _userDataFactory = userDataFactory;
+        _achievementService = achievementService;
+        _roomManager = roomManager;
         IsLagging = 0;
         Unloaded = false;
         IdleTime = 0;
@@ -172,8 +174,12 @@ public class Room : RoomData
         _wiredComponent = new(this, loggerFactory.CreateLogger<WiredComponent>());
         _bansComponent = new(this);
         _tradingComponent = new(this);
-        _achievementService = achievementService;
-        _roomManager = roomManager;
+        InitializeRoomContent(database);
+        LastRegeneration = DateTime.Now;
+    }
+
+    private void InitializeRoomContent(IDatabase database)
+    {
         GetRoomItemHandler().LoadFurniture();
         GetGameMap().GenerateMaps();
         LoadPromotions(database);
@@ -181,7 +187,6 @@ public class Room : RoomData
         LoadFilter();
         InitBots();
         InitPets();
-        LastRegeneration = DateTime.Now;
     }
 
     public void OnCycle() => ProcessRoom();
