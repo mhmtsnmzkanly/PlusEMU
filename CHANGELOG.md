@@ -41,6 +41,7 @@
 - Extended that packet sweep across additional users/catalog/furni/floorplan handlers too, reducing another batch of direct `CurrentRoom` reads in figure updates, room ads, wired save, gift open, room settings, and floorplan packet flows.
 - Continued the packet sweep across furni/action/inventory handlers as well, so one-way gate, dice, guild-furni settings, activated badges, and avatar-effect selection no longer open-code direct `CurrentRoom` reads.
 - Continued the same normalization into `RoomAccessService` and the YouTube television packet handlers too, so room-rights/mute/filter actions and TV interaction guards now rely on the shared active-room helper surface.
+- Tightened a smaller follow-up packet batch too by moving `KickUserEvent` and `GetRoomEntryDataEvent` onto the same helper path and by removing a few remaining nullable-guard redundancies once the active habbo/room is already established.
 - Split `RoomItemHandling` furniture load/remove flow into explicit helper stages so invalid floor recovery, wall-position normalization, registration, and removal broadcast/state cleanup no longer live in one monolithic method.
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.
