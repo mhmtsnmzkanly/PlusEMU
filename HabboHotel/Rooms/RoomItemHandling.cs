@@ -37,6 +37,7 @@ public class RoomItemHandling
     private readonly IRoomItemUpdateQueueService _roomItemUpdateQueueService;
     private readonly IRoomItemLoadService _roomItemLoadService;
     private readonly IRoomItemRemovalService _roomItemRemovalService;
+    private readonly IRoomItemStateService _roomItemStateService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -45,7 +46,7 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService)
     {
         _room = room;
         _itemLoader = itemLoader;
@@ -57,6 +58,7 @@ public class RoomItemHandling
         _roomItemUpdateQueueService = roomItemUpdateQueueService;
         _roomItemLoadService = roomItemLoadService;
         _roomItemRemovalService = roomItemRemovalService;
+        _roomItemStateService = roomItemStateService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -174,37 +176,11 @@ public class RoomItemHandling
 
     private void InitializeLoadedFloorItem(Item item)
     {
-        if (item.IsRoller)
-        {
+        var result = _roomItemStateService.InitializeLoadedFloorItem(_room, item);
+        if (result.HasRoller)
             GotRollers = true;
-            return;
-        }
-
-        if (item.Definition.InteractionType == InteractionType.Moodlight)
-        {
-            if (_room.MoodlightData == null)
-                _room.MoodlightData = new(item.Id, _room.GetDatabase());
-            return;
-        }
-
-        if (item.Definition.InteractionType == InteractionType.Toner)
-        {
-            if (_room.TonerData == null)
-                _room.TonerData = new(item.Id, _room.GetDatabase());
-            return;
-        }
-
-        if (item.IsWired)
-        {
-            if (_room.GetWired() == null)
-                return;
-
-            _room.GetWired().LoadWiredBox(item);
-            return;
-        }
-
-        if (item.Definition.InteractionType == InteractionType.Hopper)
-            HopperCount++;
+        if (result.HopperDelta != 0)
+            HopperCount += result.HopperDelta;
     }
 
     public Item GetItem(uint itemId)
@@ -489,19 +465,10 @@ public class RoomItemHandling
 
         _room.GetGameMap().RemoveFromMap(item);
         item.SetState(newX, newY, newZ, Gamemap.GetAffectedTiles(item.Definition.Length, item.Definition.Width, newX, newY, item.Rotation));
-        EnsureTonerData(item);
+        _roomItemStateService.EnsureTonerData(_room, item);
         UpdateItem(item);
         _room.GetGameMap().AddItemToMap(item);
         return true;
-    }
-
-    private void EnsureTonerData(Item item)
-    {
-        if (item.Definition.InteractionType != InteractionType.Toner)
-            return;
-
-        if (_room.TonerData == null)
-            _room.TonerData = new(item.Id, _room.GetDatabase());
     }
 
     public bool SetWallItem(GameClient session, Item item)
@@ -513,7 +480,7 @@ public class RoomItemHandling
             return true;
 
         PlaceWallItem(session, item);
-        InitializeWallItemState(item);
+        _roomItemStateService.InitializeWallItemState(_room, item);
         PersistWallItemPlacement(item);
         _wallItems.TryAdd(item.Id, item);
         _room.SendPacket(new ItemAddComposer(item));
@@ -535,18 +502,6 @@ public class RoomItemHandling
     private static void PlaceWallItem(GameClient session, Item item)
     {
         item.Interactor.OnPlace(session, item);
-    }
-
-    private void InitializeWallItemState(Item item)
-    {
-        if (item.Definition.InteractionType != InteractionType.Moodlight)
-            return;
-
-        if (_room.MoodlightData == null)
-        {
-            _room.MoodlightData = new(item.Id, _room.GetDatabase());
-            item.LegacyDataString = _room.MoodlightData.GenerateExtraData();
-        }
     }
 
     private void PersistWallItemPlacement(Item item)
