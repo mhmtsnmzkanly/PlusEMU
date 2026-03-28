@@ -3,6 +3,7 @@ using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items.Wired;
 using Plus.HabboHotel.Quests;
+using Plus.HabboHotel.Rooms;
 using Plus.Utilities;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
@@ -10,10 +11,12 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
 internal class GetRoomEntryDataEvent : IPacketEvent
 {
     private readonly IQuestService _questService;
+    private readonly IRoomService _roomService;
 
-    public GetRoomEntryDataEvent(IQuestService questService)
+    public GetRoomEntryDataEvent(IQuestService questService, IRoomService roomService)
     {
         _questService = questService;
+        _roomService = roomService;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -24,7 +27,7 @@ internal class GetRoomEntryDataEvent : IPacketEvent
             return;
         if (!room.GetRoomUserManager().AddAvatarToRoom(session))
         {
-            room.GetRoomUserManager().RemoveUserFromRoom(session, false);
+            await _roomService.LeaveRoom(session, false);
             return; //TODO: Remove?
         }
         room.SendObjects(session);

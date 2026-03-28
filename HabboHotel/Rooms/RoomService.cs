@@ -168,12 +168,12 @@ public class RoomService : IRoomService
         }
     }
 
-    public Task LeaveRoom(GameClient session)
+    public Task LeaveRoom(GameClient session, bool notifyUser = true)
     {
         if (!TryGetPreparingHabbo(session, out var habbo))
             return Task.CompletedTask;
 
-        LeaveCurrentRoomIfNeeded(session, habbo, true);
+        LeaveCurrentRoomIfNeeded(session, habbo, notifyUser);
         return Task.CompletedTask;
     }
 
