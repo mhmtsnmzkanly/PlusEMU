@@ -33,6 +33,7 @@
 - Routed moderator kick flows through `RoomService.LeaveRoom()` too, so `ModerationRoomService`, `:kick`, and `:roomkick` no longer bypass the shared room-exit coordinator with direct room-user removal calls.
 - Added `RoomService.KickFromRoom()` and moved the remaining room-owner kick packet, room-crash eviction, and cannonball-forced exit paths onto the shared room-exit service boundary so both normal leaves and kick-style removals no longer branch through ad hoc `RemoveUserFromRoom(...)` calls.
 - Routed `ModerationActionService.Kick()` through `RoomService.LeaveRoom()` as well, so the remaining moderation kick action no longer bypasses the shared room-exit lifecycle boundary.
+- Added packet observability in `GameClient` so unknown incoming packet headers and packet-handler exceptions now log revision, build, session, and user context instead of silently disappearing.
 - Split `RoomItemHandling` furniture load/remove flow into explicit helper stages so invalid floor recovery, wall-position normalization, registration, and removal broadcast/state cleanup no longer live in one monolithic method.
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.

@@ -92,12 +92,12 @@ public abstract class GameClient
                 }
                 else
                 {
-                    // TODO @80O: Add logging unknown packet received.
+                    LogUnknownIncomingPacket(messageId, length);
                 }
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                // TODO @80O: Add logging when ILogger interface has been implemented
+                LogPacketHandlingFailure(messageId, exception);
             }
             memory = memory.Slice(headerLength + length);
             _incompleteStream?.Advance(headerLength + length);
@@ -132,6 +132,34 @@ public abstract class GameClient
         SendCallback(args);
         Log.Debug($"Send Packet: {composer.GetType().Name} (EmuId: {composer.MessageId}, ClientId: {outgoingMessageId})");
         stream.Dispose();
+    }
+
+    private void LogUnknownIncomingPacket(uint messageId, int length)
+    {
+        var habbo = _habbo;
+        Log.Warn(
+            "Unknown incoming packet received. SessionId={SessionId}, UserId={UserId}, Username={Username}, Revision={Revision}, Build={Build}, ClientHeader={ClientHeader}, Length={Length}",
+            Id,
+            habbo?.Id,
+            habbo?.Username ?? "<unauthenticated>",
+            Revision.Name,
+            ClientBuild ?? "<unknown>",
+            messageId,
+            length);
+    }
+
+    private void LogPacketHandlingFailure(uint messageId, Exception exception)
+    {
+        var habbo = _habbo;
+        Log.Error(
+            exception,
+            "Incoming packet handling failed. SessionId={SessionId}, UserId={UserId}, Username={Username}, Revision={Revision}, Build={Build}, ClientHeader={ClientHeader}",
+            Id,
+            habbo?.Id,
+            habbo?.Username ?? "<unauthenticated>",
+            Revision.Name,
+            ClientBuild ?? "<unknown>",
+            messageId);
     }
 
     public abstract void CreateHeader(Memory<byte> memory, uint messageId);

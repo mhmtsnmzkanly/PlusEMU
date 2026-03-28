@@ -36,6 +36,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - Moderation-driven room exits are converging there as well: moderator room-kick flows now use `RoomService.LeaveRoom()` instead of calling `RoomUserManager.RemoveUserFromRoom()` directly from moderation services and commands.
 - Kick-style exits are converging there too: `RoomService.KickFromRoom()` now covers the built-in room kick packet, crash-driven room eviction, and cannonball forced exits, reducing the remaining direct `RemoveUserFromRoom()` call sites in room-facing code.
 - The remaining standalone moderation kick action now uses the same `RoomService` boundary too, leaving only `RoomUserManager`'s own internal lifecycle policing logic on direct removal calls.
+- Packet observability is also better now: `GameClient` logs unknown incoming packet headers and packet-handler exceptions with revision/build/session/user context instead of dropping both cases silently.
 - `RoomItemHandling` has started to be split into smaller load/remove helpers, but the broader room item lifecycle and roller/update logic is still legacy-heavy.
 - The first true `RoomItemHandling` extraction is now in place too: moved-item persistence lives in `RoomItemPersistenceService`, reducing direct database-write ownership inside the room item lifecycle class.
 - A second extraction is in place as well: floor-item placement and `CheckPosItem` validation now live in `RoomItemPlacementValidatorService`, pulling tile/user/stack/height rule evaluation out of `RoomItemHandling`.
