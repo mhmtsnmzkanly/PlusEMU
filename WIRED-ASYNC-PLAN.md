@@ -22,6 +22,7 @@ Phase 1 is now in place:
 - The first typed execution slice is now live as well: `IWiredExecutable` plus `WiredExecutionContext` sit beside the legacy interface, and a few representative boxes already execute through that new path.
 - That typed path now covers a wider actor-driven slice too, which means both trigger and effect boxes are starting to move off raw `params object[]` decoding and onto the new execution context.
 - The typed path now reaches into actor-item triggers and some representative condition/effect boxes as well, which confirms the bridge can scale beyond the first narrow sample.
+- The negative/paired actor conditions are now moving over too, which means the typed execution path is no longer limited to only a few hand-picked happy-path boxes.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.
