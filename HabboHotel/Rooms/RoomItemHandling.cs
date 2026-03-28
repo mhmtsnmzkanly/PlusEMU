@@ -423,34 +423,56 @@ public class RoomItemHandling
     {
         try
         {
-            if (_movedItems.Count > 0)
-            {
-                using var connection = _room.GetDatabase().Connection();
-                foreach (var item in _movedItems.Values.ToList())
-                {
-                    if (!string.IsNullOrEmpty(item.LegacyDataString))
-                    {
-                        connection.Execute(
-                            "UPDATE `items` SET `extra_data` = @extraData WHERE `id` = @id LIMIT 1",
-                            new { extraData = item.ExtraData.Serialize(), id = item.Id });
-                    }
-                    if (item.IsWallItem && (!item.Definition.ItemName.Contains("wallpaper_single") || !item.Definition.ItemName.Contains("floor_single") ||
-                                            !item.Definition.ItemName.Contains("landscape_single")))
-                    {
-                        connection.Execute(
-                            "UPDATE `items` SET `wall_pos` = @wallPos WHERE `id` = @id LIMIT 1",
-                            new { wallPos = item.WallCoordinates, id = item.Id });
-                    }
-                    connection.Execute(
-                        "UPDATE `items` SET `x` = @x, `y` = @y, `z` = @z, `rot` = @rot WHERE `id` = @id LIMIT 1",
-                        new { x = item.GetX, y = item.GetY, z = item.GetZ, rot = item.Rotation, id = item.Id });
-                }
-            }
+            if (_movedItems.Count == 0)
+                return;
+
+            using var connection = _room.GetDatabase().Connection();
+            foreach (var item in _movedItems.Values.ToList())
+                PersistMovedItem(connection, item);
         }
         catch (Exception e)
         {
             ExceptionLogger.LogCriticalException(e);
         }
+    }
+
+    private void PersistMovedItem(System.Data.IDbConnection connection, Item item)
+    {
+        PersistMovedItemExtraData(connection, item);
+        PersistMovedWallItemPosition(connection, item);
+        PersistMovedItemCoordinates(connection, item);
+    }
+
+    private static void PersistMovedItemExtraData(System.Data.IDbConnection connection, Item item)
+    {
+        if (string.IsNullOrEmpty(item.LegacyDataString))
+            return;
+
+        connection.Execute(
+            "UPDATE `items` SET `extra_data` = @extraData WHERE `id` = @id LIMIT 1",
+            new { extraData = item.ExtraData.Serialize(), id = item.Id });
+    }
+
+    private static void PersistMovedWallItemPosition(System.Data.IDbConnection connection, Item item)
+    {
+        if (!item.IsWallItem || IsRoomSurfaceDecoration(item))
+            return;
+
+        connection.Execute(
+            "UPDATE `items` SET `wall_pos` = @wallPos WHERE `id` = @id LIMIT 1",
+            new { wallPos = item.WallCoordinates, id = item.Id });
+    }
+
+    private static bool IsRoomSurfaceDecoration(Item item) =>
+        item.Definition.ItemName.Contains("wallpaper_single") ||
+        item.Definition.ItemName.Contains("floor_single") ||
+        item.Definition.ItemName.Contains("landscape_single");
+
+    private static void PersistMovedItemCoordinates(System.Data.IDbConnection connection, Item item)
+    {
+        connection.Execute(
+            "UPDATE `items` SET `x` = @x, `y` = @y, `z` = @z, `rot` = @rot WHERE `id` = @id LIMIT 1",
+            new { x = item.GetX, y = item.GetY, z = item.GetZ, rot = item.Rotation, id = item.Id });
     }
 
     public bool SetFloorItem(GameClient session, Item item, int newX, int newY, int newRot, bool newItem, bool onRoller, bool sendMessage, bool updateRoomUserStatuses = false, double height = -1)
