@@ -53,6 +53,7 @@
 - Added a shared `WiredEffectDataParser` for the remaining bot/mute/move-rotate string payloads too, which removes another pocket of repeated `Split(';')` / integer parsing logic from the effect boxes.
 - Added shared state/position snapshot enumeration for the `MatchPosition` and furni state/position condition family as well, so those boxes now reuse the same decoded snapshot stream and mode parser instead of each re-splitting the saved payloads on their own.
 - Added a `WiredBotDataParser` for the remaining bot-targeted effect boxes too, so simple bot-name and bot-clothing payload decoding no longer lives inline across `BotChangesClothes`, `BotMovesToFurni`, `TeleportBotToFurni`, and `BotCommunicatesToAll`.
+- Simplified `MatchPosition` execution flow as well by collapsing its per-mode apply/logging branches into one shared snapshot-application path, which trims another chunk of duplicated control flow from the cycle effect tail.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

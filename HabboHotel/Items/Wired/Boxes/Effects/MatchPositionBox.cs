@@ -52,30 +52,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
                 var targetItem = Instance.GetRoomItemHandler().GetItem(entry.ItemId);
                 if (targetItem == null)
                     continue;
-                if (stateMode == 1)
-                    SetState(targetItem, entry.Snapshot.State);
-                if (directionMode == 1)
-                {
-                    try
-                    {
-                        SetRotation(targetItem, entry.Snapshot.Rotation);
-                    }
-                    catch (Exception e)
-                    {
-                        ExceptionLogger.LogWiredException(e);
-                    }
-                }
-                if (positionMode == 1)
-                {
-                    try
-                    {
-                        SetPosition(targetItem, entry.Snapshot.X, entry.Snapshot.Y, entry.Snapshot.Z);
-                    }
-                    catch (Exception e)
-                    {
-                        ExceptionLogger.LogWiredException(e);
-                    }
-                }
+                ApplySnapshot(targetItem, entry.Snapshot, stateMode, directionMode, positionMode);
             }
         }
         _requested = false;
@@ -122,6 +99,30 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
             TickCount = Delay;
         }
         return true;
+    }
+
+    private void ApplySnapshot(Item item, WiredFurniSnapshot snapshot, int stateMode, int directionMode, int positionMode)
+    {
+        if (stateMode == 1)
+            SetState(item, snapshot.State);
+
+        if (directionMode == 1)
+            TryApply(() => SetRotation(item, snapshot.Rotation));
+
+        if (positionMode == 1)
+            TryApply(() => SetPosition(item, snapshot.X, snapshot.Y, snapshot.Z));
+    }
+
+    private static void TryApply(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception e)
+        {
+            ExceptionLogger.LogWiredException(e);
+        }
     }
 
     private void SetState(Item item, string extradata)
