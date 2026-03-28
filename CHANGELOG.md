@@ -1,5 +1,13 @@
 # Changelog
 
+### [0.8.2] - 2026-03-28
+#### Added
+- `WiredExecutionData` to carry queued Wired trigger invocations through the room cycle.
+
+#### Changed
+- Moved non-chat `WiredComponent.TriggerEvent` execution onto a bounded per-room queue processed during `WiredComponent.OnCycle()`.
+- Updated `WIRED-ASYNC-PLAN.md` to reflect the first implemented queue-based Wired execution slice and the remaining synchronous `TriggerUserSays` limitation.
+
 ### [0.8.1] - 2026-03-28
 #### Added
 - `WIRED-ASYNC-PLAN.md` to document the queued single-threaded execution plan for future Wired async work.

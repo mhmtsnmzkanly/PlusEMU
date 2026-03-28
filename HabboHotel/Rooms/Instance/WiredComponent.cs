@@ -11,18 +11,23 @@ namespace Plus.HabboHotel.Rooms.Instance;
 
 public class WiredComponent
 {
+    private const int MaxQueuedExecutionsPerCycle = 64;
+
     private readonly Room _room;
     private readonly ConcurrentDictionary<uint, IWiredItem> _wiredItems;
+    private readonly ConcurrentQueue<WiredExecutionData> _executionQueue;
 
     public WiredComponent(Room instance) //, RoomItem Items)
     {
         _room = instance;
         _wiredItems = new();
+        _executionQueue = new();
     }
 
     public void OnCycle()
     {
         var start = DateTime.Now;
+        ProcessExecutionQueue();
         foreach (var item in _wiredItems.ToList())
         {
             var selectedItem = _room.GetRoomItemHandler().GetItem(item.Value.Item.Id);
@@ -239,46 +244,59 @@ public class WiredComponent
 
     public bool TriggerEvent(WiredBoxType type, params object[] @params)
     {
-        var finished = false;
         try
         {
             if (type == WiredBoxType.TriggerUserSays)
-            {
-                var ranBoxes = new List<IWiredItem>();
-                foreach (var box in _wiredItems.Values.ToList())
-                {
-                    if (box == null)
-                        continue;
-                    if (box.Type == WiredBoxType.TriggerUserSays)
-                    {
-                        if (!ranBoxes.Contains(box))
-                            ranBoxes.Add(box);
-                    }
-                }
-                var message = Convert.ToString(@params[1]);
-                if (string.IsNullOrEmpty(message))
-                    return false;
-                foreach (var box in ranBoxes.ToList())
-                {
-                    if (box == null)
-                        continue;
-                    if (message.Contains($" {box.StringData}") || message.Contains($"{box.StringData} ") || message == box.StringData) finished = box.Execute(@params);
-                }
-                return finished;
-            }
-            foreach (var box in _wiredItems.Values.ToList())
-            {
-                if (box == null)
-                    continue;
-                if (box.Type == type && IsTrigger(box.Item)) finished = box.Execute(@params);
-            }
+                return ExecuteUserSaysImmediately(@params);
+
+            if (!HasTrigger(type))
+                return false;
+
+            _executionQueue.Enqueue(new(type, @params.ToArray()));
+            return true;
         }
         catch
         {
             //log.Error("Error when triggering Wired Event: " + e);
             return false;
         }
+    }
+
+    private bool ExecuteUserSaysImmediately(object[] @params)
+    {
+        var message = Convert.ToString(@params[1]);
+        if (string.IsNullOrEmpty(message))
+            return false;
+
+        var finished = false;
+        foreach (var box in _wiredItems.Values.Where(box => box != null && box.Type == WiredBoxType.TriggerUserSays).ToList())
+        {
+            if (message.Contains($" {box.StringData}") || message.Contains($"{box.StringData} ") || message == box.StringData)
+                finished = box.Execute(@params);
+        }
+
         return finished;
+    }
+
+    private bool HasTrigger(WiredBoxType type) =>
+        _wiredItems.Values.Any(box => box != null && box.Type == type && IsTrigger(box.Item));
+
+    private void ProcessExecutionQueue()
+    {
+        var executions = 0;
+        while (executions < MaxQueuedExecutionsPerCycle && _executionQueue.TryDequeue(out var execution))
+        {
+            ExecuteQueuedTrigger(execution);
+            executions++;
+        }
+    }
+
+    private void ExecuteQueuedTrigger(WiredExecutionData execution)
+    {
+        foreach (var box in _wiredItems.Values.Where(box => box != null && box.Type == execution.Type && IsTrigger(box.Item)).ToList())
+        {
+            box.Execute(execution.Parameters);
+        }
     }
 
     public ICollection<IWiredItem> GetTriggers(IWiredItem item)
