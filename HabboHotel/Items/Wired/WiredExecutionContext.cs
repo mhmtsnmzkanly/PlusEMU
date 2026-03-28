@@ -1,5 +1,4 @@
 using Plus.HabboHotel.Items;
-using Plus.HabboHotel.Rooms.Chat.Commands;
 using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 
@@ -9,12 +8,10 @@ public class WiredExecutionContext
 {
     protected WiredExecutionContext()
     {
-        Parameters = [];
     }
 
     public WiredExecutionContext(params object[] parameters)
     {
-        Parameters = parameters;
         if (WiredContextResolver.TryGetActor(parameters, out var actor))
             Actor = actor;
         if (WiredContextResolver.TryGetActorItem(parameters, out _, out var item))
@@ -22,18 +19,14 @@ public class WiredExecutionContext
         if (parameters.Length == 1 && parameters[0] is Plus.HabboHotel.Rooms.Instance.WiredChatTriggerContext chatContext)
         {
             Message = chatContext.Message;
-            CommandManager = chatContext.CommandManager;
         }
         else if (parameters.Length > 1)
         {
             Message = Convert.ToString(parameters[1]);
-            CommandManager = parameters[1] as CommandManager;
         }
     }
 
-    public object[] Parameters { get; protected init; }
     public Habbo? Actor { get; protected init; }
     public Item? Item { get; protected init; }
     public string? Message { get; protected init; }
-    public CommandManager? CommandManager { get; protected init; }
 }

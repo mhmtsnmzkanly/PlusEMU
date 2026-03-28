@@ -21,5 +21,5 @@ internal static class WiredExecutionAdapter
         => item.Execute(new WiredActorItemExecutionContext(context));
 
     public static bool ExecuteWithoutContext(this IWiredItem item)
-        => item.Execute(new WiredExecutionContext());
+        => item.Execute(new WiredEmptyExecutionContext());
 }
