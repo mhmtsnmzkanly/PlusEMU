@@ -35,6 +35,7 @@
 - Simplified `WiredExecutionAdapter` so internal Wired dispatch now goes straight through `WiredExecutionContext` without runtime fallback branching to the legacy variadic path.
 - Added a default legacy bridge implementation on `IWiredItem` itself and removed the redundant `Execute(params object[])` forwarding boilerplate from the first low-risk parameterless/data-only box slice.
 - Removed the same legacy forwarding boilerplate from a much larger typed execution slice across user/chat triggers plus actor-driven effects, cutting the remaining per-box wrappers down substantially.
+- Removed the last remaining per-box legacy forwarding wrappers as well, so Wired boxes now rely on the shared interface bridge instead of carrying duplicate `Execute(params object[])` boilerplate individually.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

@@ -34,6 +34,7 @@ Phase 1 is now in place:
 - Internally, the adapter layer now dispatches directly through typed contexts as well, so the compatibility path is no longer part of normal room-cycle or trigger-stack execution.
 - The compatibility bridge itself now lives on the interface rather than in every box implementation, which lets the repetitive forwarding wrappers be removed incrementally without changing behavior.
 - That incremental cleanup is now well underway too, with the larger actor/chat trigger slice already moved off per-box wrapper methods and onto the shared interface bridge.
+- That wrapper cleanup is now complete for the box layer, leaving the legacy variadic path centralized in one place instead of duplicated across the individual Wired boxes.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

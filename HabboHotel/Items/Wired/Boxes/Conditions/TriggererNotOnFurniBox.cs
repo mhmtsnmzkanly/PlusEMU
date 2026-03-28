@@ -38,11 +38,6 @@ internal class TriggererNotOnFurniBox : IWiredItem, IWiredExecutable
         }
     }
 
-    public bool Execute(params object[] @params)
-    {
-        return ((IWiredExecutable)this).Execute(new(@params));
-    }
-
     bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         var player = context.Actor;

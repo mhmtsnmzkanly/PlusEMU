@@ -46,11 +46,6 @@ internal class FurniMatchStateAndPositionBox : IWiredItem, IWiredExecutable
         StringData = $"{state};{direction};{placement}";
     }
 
-    public bool Execute(params object[] @params)
-    {
-        return ((IWiredExecutable)this).Execute(new(@params));
-    }
-
     bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData) || StringData == "0;0;0" || SetItems.Count == 0)
