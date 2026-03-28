@@ -20,8 +20,7 @@ internal class GetGroupFurniSettingsEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
-        if (habbo == null || !habbo.InRoom || currentRoom == null)
+        if (habbo == null || !habbo.InRoom || !habbo.TryGetCurrentRoom(out var currentRoom))
             return Task.CompletedTask;
         var itemId = packet.ReadUInt();
         var groupId = packet.ReadInt();

@@ -32,9 +32,9 @@ internal class SetActivatedBadgesEvent : IPacketEvent
 
         var equippedBadges = habbo.Inventory?.Badges?.EquippedBadges ?? new List<Plus.HabboHotel.Users.Badges.Badge>();
 
-        if (habbo.InRoom)
+        if (habbo.InRoom && habbo.TryGetCurrentRoom(out var room))
         {
-            habbo.CurrentRoom?.SendPacket(new HabboUserBadgesComposer(habbo.Id, equippedBadges));
+            room.SendPacket(new HabboUserBadgesComposer(habbo.Id, equippedBadges));
         }
         else
         {
