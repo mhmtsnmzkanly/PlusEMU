@@ -4,7 +4,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired;
 
-public class WiredExecutionContext
+public abstract class WiredExecutionContext
 {
     protected WiredExecutionContext()
     {
