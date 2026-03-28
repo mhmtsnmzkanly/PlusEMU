@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
@@ -31,11 +32,10 @@ internal class IsNotWearingFxBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params.Length == 0)
-            return false;
         if (string.IsNullOrEmpty(StringData))
             return false;
-        var player = (Habbo)@params[0];
+        if (!WiredContextResolver.TryGetActor(@params, out var player))
+            return false;
         var effects = player?.Effects;
         if (effects == null)
             return false;

@@ -10,6 +10,7 @@ Phase 1 is now in place:
 - Queued chat-trigger execution now travels through a typed `WiredChatTriggerContext`, which trims one more `params object[]` hot path without forcing a full interface break yet.
 - The same typed handoff pattern now also covers walk/furni/state triggers via `WiredActorItemTriggerContext`, reducing another cluster of positional queue payload unpacking.
 - `TriggerRoomEnter` now uses its own typed actor context and the game start/end triggers are queued through an explicit parameterless path, leaving fewer legacy queue payload shapes in the dispatcher.
+- `WiredContextResolver` now centralizes repeated actor and actor-item extraction across multiple trigger, condition, and effect boxes, reducing the amount of per-box payload decoding left before a larger interface change.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

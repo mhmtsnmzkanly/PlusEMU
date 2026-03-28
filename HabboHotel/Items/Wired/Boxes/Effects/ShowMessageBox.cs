@@ -2,6 +2,7 @@
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
@@ -38,9 +39,8 @@ internal class ShowMessageBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params == null || @params.Length == 0)
+        if (!WiredContextResolver.TryGetActor(@params, out var player))
             return false;
-        var player = (Habbo)@params[0];
         var playerClient = player?.Client;
         var currentRoom = player?.CurrentRoom;
         if (player == null || playerClient == null || currentRoom == null || string.IsNullOrWhiteSpace(StringData))

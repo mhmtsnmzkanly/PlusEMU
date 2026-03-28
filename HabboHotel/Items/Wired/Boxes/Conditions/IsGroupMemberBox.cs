@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
@@ -30,9 +31,8 @@ internal class IsGroupMemberBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params.Length == 0)
+        if (!WiredContextResolver.TryGetActor(@params, out var player))
             return false;
-        var player = (Habbo)@params[0];
         if (player == null)
             return false;
         if (Instance.Group == null)

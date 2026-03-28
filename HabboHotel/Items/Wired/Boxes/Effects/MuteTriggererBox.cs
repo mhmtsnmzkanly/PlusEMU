@@ -2,6 +2,7 @@
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 using Plus.Utilities;
 
@@ -38,9 +39,8 @@ internal class MuteTriggererBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params.Length != 1)
+        if (!WiredContextResolver.TryGetActor(@params, out var player))
             return false;
-        var player = (Habbo)@params[0];
         var playerClient = player?.Client;
         if (player == null || playerClient == null)
             return false;

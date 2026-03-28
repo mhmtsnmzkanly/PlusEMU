@@ -36,8 +36,8 @@ internal class UserSaysCommandBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        var context = GetContext(@params);
-        var player = context?.Actor ?? (Habbo)@params[0];
+        if (!WiredContextResolver.TryGetActor(@params, out var player))
+            return false;
         if (player == null || player.CurrentRoom == null || !player.InRoom)
             return false;
         var client = player.Client;
@@ -53,7 +53,4 @@ internal class UserSaysCommandBox : IWiredItem
         client.Send(new WhisperComposer(user.VirtualId, StringData, 0, 0));
         return wired.ExecuteTriggerStack(this, player);
     }
-
-    private static WiredChatTriggerContext? GetContext(object[] @params) =>
-        @params.Length == 1 ? @params[0] as WiredChatTriggerContext : null;
 }
