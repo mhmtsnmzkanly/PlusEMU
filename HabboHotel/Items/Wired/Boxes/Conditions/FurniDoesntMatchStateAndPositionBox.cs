@@ -62,24 +62,24 @@ internal class FurniDoesntMatchStateAndPositionBox : IWiredItem
             {
                 if (string.IsNullOrEmpty(I))
                     continue;
-                var ii = Instance.GetRoomItemHandler().GetItem(Convert.ToUInt32(I.Split(':')[0]));
+                if (!WiredFurniSnapshotParser.TryParseEntry(I, out var itemId, out var snapshot))
+                    continue;
+                var ii = Instance.GetRoomItemHandler().GetItem(itemId);
                 if (ii == null)
                     continue;
-                var partsString = I.Split(':');
-                var part = partsString[1].Split(',');
                 if (stateMode == 1) //State
                 {
-                    if (ii.LegacyDataString == part[4])
+                    if (ii.LegacyDataString == snapshot.State)
                         return false;
                 }
                 if (directionMode == 1) //Direction
                 {
-                    if (ii.Rotation == Convert.ToInt32(part[3]))
+                    if (ii.Rotation == snapshot.Rotation)
                         return false;
                 }
                 if (positionMode == 1) //Position
                 {
-                    if (ii.GetX == Convert.ToInt32(part[0]) && ii.GetY == Convert.ToInt32(part[1]) && ii.GetZ == Convert.ToDouble(part[2]))
+                    if (ii.GetX == snapshot.X && ii.GetY == snapshot.Y && ii.GetZ == snapshot.Z)
                         return false;
                 }
             }

@@ -51,19 +51,18 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
             {
                 if (string.IsNullOrEmpty(entry))
                     continue;
-                if (!TryParseSavedState(entry, out var itemId, out var part))
+                if (!WiredFurniSnapshotParser.TryParseEntry(entry, out var itemId, out var snapshot))
                     continue;
                 var targetItem = Instance.GetRoomItemHandler().GetItem(itemId);
                 if (targetItem == null)
                     continue;
                 if (stateMode == 1)
-                    SetState(targetItem, part.Length >= 5 ? part[4] : "1");
+                    SetState(targetItem, snapshot.State);
                 if (directionMode == 1)
                 {
                     try
                     {
-                        if (part.Length >= 4 && int.TryParse(part[3], out var rotation))
-                            SetRotation(targetItem, rotation);
+                        SetRotation(targetItem, snapshot.Rotation);
                     }
                     catch (Exception e)
                     {
@@ -74,11 +73,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
                 {
                     try
                     {
-                        if (part.Length >= 3 &&
-                            int.TryParse(part[0], out var coordX) &&
-                            int.TryParse(part[1], out var coordY) &&
-                            double.TryParse(part[2], out var coordZ))
-                            SetPosition(targetItem, coordX, coordY, coordZ);
+                        SetPosition(targetItem, snapshot.X, snapshot.Y, snapshot.Z);
                     }
                     catch (Exception e)
                     {
@@ -144,22 +139,6 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
                int.TryParse(modeParts[0], out stateMode) &&
                int.TryParse(modeParts[1], out directionMode) &&
                int.TryParse(modeParts[2], out positionMode);
-    }
-
-    private static bool TryParseSavedState(string rawData, out uint itemId, out string[] part)
-    {
-        itemId = 0;
-        part = Array.Empty<string>();
-
-        var partsString = rawData.Split(':');
-        if (partsString.Length < 2 ||
-            string.IsNullOrEmpty(partsString[0]) ||
-            string.IsNullOrEmpty(partsString[1]) ||
-            !uint.TryParse(partsString[0], out itemId))
-            return false;
-
-        part = partsString[1].Split(',');
-        return true;
     }
 
     private void SetState(Item item, string extradata)

@@ -18,6 +18,7 @@
 - Removed remaining no-op `@params` guards from parameterless bot/user-count/state-match boxes so they no longer pretend to depend on trigger payloads they never read.
 - Added `WiredConditionDataParser` so user-count and state/position condition boxes no longer each re-split and re-parse the same `StringData` payload inline.
 - Added `WiredTeamParser` so actor/team condition and effect boxes no longer repeat manual team-id decoding or effect-id math inline.
+- Added `WiredFurniSnapshotParser` so `MatchPosition` and the state/position condition boxes share the same saved furni snapshot decode path instead of each re-splitting `ItemsData` entries.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.
