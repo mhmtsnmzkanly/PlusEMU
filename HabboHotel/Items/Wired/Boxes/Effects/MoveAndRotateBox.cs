@@ -125,11 +125,9 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle
     {
         if (SetItems.Count == 0)
             return false;
-        _next = WiredCycleScheduler.GetNextTicks(_next, Delay);
-        if (WiredCycleScheduler.ShouldMarkRequested(_requested))
+        if (WiredCycleScheduler.Schedule(ref _next, ref _requested, Delay))
         {
             TickCount = Delay;
-            _requested = true;
         }
         return true;
     }

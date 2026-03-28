@@ -15,6 +15,21 @@ internal static class WiredCycleScheduler
 
     public static bool ShouldMarkRequested(bool requested) => !requested;
 
+    public static bool MarkRequested(ref bool requested)
+    {
+        if (requested)
+            return false;
+
+        requested = true;
+        return true;
+    }
+
+    public static bool Schedule(ref long nextTicks, ref bool requested, int delay)
+    {
+        nextTicks = GetNextTicks(nextTicks, delay);
+        return MarkRequested(ref requested);
+    }
+
     public static void Reset(ref long nextTicks, ref bool requested)
     {
         nextTicks = 0;

@@ -11,6 +11,7 @@ Phase 1 is now in place:
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.
 - `TeleportUserBox` and `KickUserBox` have also been moved off their legacy non-generic queue handling, keeping the queued user-targeting effect boxes closer to the same typed scheduling baseline.
 - `MatchPositionBox` no longer drives its state replay flow through repeated string splits and parse exceptions, which narrows one more legacy hot path before larger scheduling work continues.
+- `WiredCycleScheduler` now also owns the common "mark requested / schedule next tick" helpers, tightening the remaining delayed effect boxes around the same request lifecycle.
 
 ## Abstract
 The Wired system in PlusEMU relies heavily on a sequential execution tree (`Trigger` -> `Condition` -> `Effect`). Translating all synchronous `IWiredItem.Execute` methods into `Task<bool> ExecuteAsync()` natively risks severe race-conditions because the `Room` components (such as `RoomUserManager`, `GameMap`, and `RoomItemHandling`) are absolutely **NOT** thread-safe.

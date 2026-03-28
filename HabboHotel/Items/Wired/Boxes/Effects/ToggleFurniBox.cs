@@ -80,9 +80,8 @@ internal class ToggleFurniBox : IWiredItem, IWiredCycle
 
     public bool Execute(params object[] @params)
     {
-        _next = WiredCycleScheduler.GetNextTicks(_next, Delay);
-        _requested = true;
-        TickCount = Delay;
+        if (WiredCycleScheduler.Schedule(ref _next, ref _requested, Delay))
+            TickCount = Delay;
         return true;
     }
 }

@@ -13,6 +13,7 @@
 - Reworked `MatchPositionBox` saved-state parsing to decode mode flags and saved target payloads once with `TryParse` guards instead of repeatedly splitting and exception-driving the control flow.
 - Added `WiredCycleScheduler` and moved common delayed-cycle scheduling logic in `ToggleFurniBox`, `MoveFurniToUserBox`, `MoveAndRotateBox`, and `MatchPositionBox` onto the shared helper surface.
 - Normalized `TeleportUserBox` and `KickUserBox` around typed per-box queues and shared delay semantics so the remaining queued Wired effect boxes no longer depend on legacy non-generic queue handling.
+- Added `MarkRequested` / `Schedule` helpers to `WiredCycleScheduler` so delayed effect boxes no longer repeat the same next-tick scheduling boilerplate inline.
 - Updated `WIRED-ASYNC-PLAN.md` to reflect the first implemented queue-based Wired execution slice.
 
 ### [0.8.1] - 2026-03-28

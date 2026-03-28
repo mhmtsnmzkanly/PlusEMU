@@ -126,10 +126,9 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
 
     public bool Execute(params object[] @params)
     {
-        if (WiredCycleScheduler.ShouldMarkRequested(_requested))
+        if (WiredCycleScheduler.MarkRequested(ref _requested))
         {
             TickCount = Delay;
-            _requested = true;
         }
         return true;
     }
