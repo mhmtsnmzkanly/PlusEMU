@@ -69,132 +69,23 @@ public class RoomFactory : IRoomFactory
     public List<RoomData> GetRoomsDataByOwnerSortByName(int ownerId)
     {
         var data = new List<RoomData>();
-        using var connection = _database.Connection();
-        var rooms = connection.Query<RoomFactoryRow>(
-            """
-            SELECT
-                `rooms`.`id` AS Id,
-                `rooms`.`caption` AS Caption,
-                `rooms`.`model_name` AS ModelName,
-                `users`.`username` AS Username,
-                `rooms`.`owner` AS Owner,
-                `rooms`.`password` AS Password,
-                `rooms`.`score` AS Score,
-                `rooms`.`roomtype` AS RoomType,
-                `rooms`.`state` AS State,
-                `rooms`.`users_now` AS UsersNow,
-                `rooms`.`users_max` AS UsersMax,
-                `rooms`.`category` AS Category,
-                `rooms`.`description` AS Description,
-                `rooms`.`tags` AS Tags,
-                `rooms`.`floor` AS Floor,
-                `rooms`.`landscape` AS Landscape,
-                `rooms`.`allow_pets` AS AllowPets,
-                `rooms`.`allow_pets_eat` AS AllowPetsEat,
-                `rooms`.`room_blocking_disabled` AS RoomBlockingDisabled,
-                `rooms`.`allow_hidewall` AS AllowHidewall,
-                `rooms`.`wallthick` AS WallThick,
-                `rooms`.`floorthick` AS FloorThick,
-                `rooms`.`wallpaper` AS Wallpaper,
-                `rooms`.`mute_settings` AS MuteSettings,
-                `rooms`.`ban_settings` AS BanSettings,
-                `rooms`.`kick_settings` AS KickSettings,
-                `rooms`.`chat_mode` AS ChatMode,
-                `rooms`.`chat_size` AS ChatSize,
-                `rooms`.`chat_speed` AS ChatSpeed,
-                `rooms`.`chat_extra_flood` AS ChatExtraFlood,
-                `rooms`.`chat_hearing_distance` AS ChatHearingDistance,
-                `rooms`.`trade_settings` AS TradeSettings,
-                `rooms`.`push_enabled` AS PushEnabled,
-                `rooms`.`pull_enabled` AS PullEnabled,
-                `rooms`.`spush_enabled` AS SpushEnabled,
-                `rooms`.`spull_enabled` AS SpullEnabled,
-                `rooms`.`enables_enabled` AS EnablesEnabled,
-                `rooms`.`respect_notifications_enabled` AS RespectNotificationsEnabled,
-                `rooms`.`pet_morphs_allowed` AS PetMorphsAllowed,
-                `rooms`.`group_id` AS GroupId,
-                `rooms`.`sale_price` AS SalePrice,
-                `rooms`.`lay_enabled` AS LayEnabled
-            FROM `rooms`
-            JOIN `users` ON `rooms`.`owner` = `users`.`id`
-            WHERE `owner` = @ownerId
-            ORDER BY `caption` ASC
-            """,
-            new { ownerId });
+        var rooms = GetRoomRowsByOwner(ownerId);
 
         foreach (var room in rooms)
-        {
-            if (_roomManager.TryGetRoom(room.Id, out var roomInstance))
-                data.Add(roomInstance.Data);
-            else
-                data.Add(Map(room));
-        }
+            data.Add(ResolveRoomData(room));
 
         return data;
     }
 
     public bool TryGetData(uint roomId, out RoomData? data)
     {
-        using var connection = _database.Connection();
-        var room = connection.QuerySingleOrDefault<RoomFactoryRow>(
-            """
-            SELECT
-                `rooms`.`id` AS Id,
-                `rooms`.`caption` AS Caption,
-                `rooms`.`model_name` AS ModelName,
-                `users`.`username` AS Username,
-                `rooms`.`owner` AS Owner,
-                `rooms`.`password` AS Password,
-                `rooms`.`score` AS Score,
-                `rooms`.`roomtype` AS RoomType,
-                `rooms`.`state` AS State,
-                `rooms`.`users_now` AS UsersNow,
-                `rooms`.`users_max` AS UsersMax,
-                `rooms`.`category` AS Category,
-                `rooms`.`description` AS Description,
-                `rooms`.`tags` AS Tags,
-                `rooms`.`floor` AS Floor,
-                `rooms`.`landscape` AS Landscape,
-                `rooms`.`allow_pets` AS AllowPets,
-                `rooms`.`allow_pets_eat` AS AllowPetsEat,
-                `rooms`.`room_blocking_disabled` AS RoomBlockingDisabled,
-                `rooms`.`allow_hidewall` AS AllowHidewall,
-                `rooms`.`wallthick` AS WallThick,
-                `rooms`.`floorthick` AS FloorThick,
-                `rooms`.`wallpaper` AS Wallpaper,
-                `rooms`.`mute_settings` AS MuteSettings,
-                `rooms`.`ban_settings` AS BanSettings,
-                `rooms`.`kick_settings` AS KickSettings,
-                `rooms`.`chat_mode` AS ChatMode,
-                `rooms`.`chat_size` AS ChatSize,
-                `rooms`.`chat_speed` AS ChatSpeed,
-                `rooms`.`chat_extra_flood` AS ChatExtraFlood,
-                `rooms`.`chat_hearing_distance` AS ChatHearingDistance,
-                `rooms`.`trade_settings` AS TradeSettings,
-                `rooms`.`push_enabled` AS PushEnabled,
-                `rooms`.`pull_enabled` AS PullEnabled,
-                `rooms`.`spush_enabled` AS SpushEnabled,
-                `rooms`.`spull_enabled` AS SpullEnabled,
-                `rooms`.`enables_enabled` AS EnablesEnabled,
-                `rooms`.`respect_notifications_enabled` AS RespectNotificationsEnabled,
-                `rooms`.`pet_morphs_allowed` AS PetMorphsAllowed,
-                `rooms`.`group_id` AS GroupId,
-                `rooms`.`sale_price` AS SalePrice,
-                `rooms`.`lay_enabled` AS LayEnabled
-            FROM `rooms`
-            JOIN `users` ON `rooms`.`owner` = `users`.`id`
-            WHERE `rooms`.`id` = @roomId
-            LIMIT 1
-            """,
-            new { roomId });
-
-        if (room == null)
+        if (!TryGetRoomRow(roomId, out var room))
         {
             data = null;
             return false;
         }
 
-        data = Map(room);
+        data = Map(room!);
         return true;
     }
 
@@ -225,6 +116,91 @@ public class RoomFactory : IRoomFactory
 
         return new RoomData(id, name, model.Id, session.GetHabbo().Username, session.GetHabbo().Id, "", 0, "private", "open", 0, maxVisitors, category, description, "", floor, landscape,
             true, true, false, false, wallthick, floorthick, wallpaper, 0, 0, 0, 0, 1, 1, 0, 14, tradeSettings, true, true, true, true, true, true, true, 0, 0, true, model);
+    }
+
+    private IEnumerable<RoomFactoryRow> GetRoomRowsByOwner(int ownerId)
+    {
+        using var connection = _database.Connection();
+        return connection.Query<RoomFactoryRow>(
+            $"""
+            {GetRoomProjectionSql()}
+            WHERE `owner` = @ownerId
+            ORDER BY `caption` ASC
+            """,
+            new { ownerId }).ToList();
+    }
+
+    private bool TryGetRoomRow(uint roomId, out RoomFactoryRow? row)
+    {
+        using var connection = _database.Connection();
+        row = connection.QuerySingleOrDefault<RoomFactoryRow>(
+            $"""
+            {GetRoomProjectionSql()}
+            WHERE `rooms`.`id` = @roomId
+            LIMIT 1
+            """,
+            new { roomId });
+        return row != null;
+    }
+
+    private RoomData ResolveRoomData(RoomFactoryRow row)
+    {
+        if (_roomManager.TryGetRoom(row.Id, out var roomInstance))
+            return roomInstance.Data;
+
+        return Map(row);
+    }
+
+    private static string GetRoomProjectionSql()
+    {
+        return
+            """
+            SELECT
+                `rooms`.`id` AS Id,
+                `rooms`.`caption` AS Caption,
+                `rooms`.`model_name` AS ModelName,
+                `users`.`username` AS Username,
+                `rooms`.`owner` AS Owner,
+                `rooms`.`password` AS Password,
+                `rooms`.`score` AS Score,
+                `rooms`.`roomtype` AS RoomType,
+                `rooms`.`state` AS State,
+                `rooms`.`users_now` AS UsersNow,
+                `rooms`.`users_max` AS UsersMax,
+                `rooms`.`category` AS Category,
+                `rooms`.`description` AS Description,
+                `rooms`.`tags` AS Tags,
+                `rooms`.`floor` AS Floor,
+                `rooms`.`landscape` AS Landscape,
+                `rooms`.`allow_pets` AS AllowPets,
+                `rooms`.`allow_pets_eat` AS AllowPetsEat,
+                `rooms`.`room_blocking_disabled` AS RoomBlockingDisabled,
+                `rooms`.`allow_hidewall` AS AllowHidewall,
+                `rooms`.`wallthick` AS WallThick,
+                `rooms`.`floorthick` AS FloorThick,
+                `rooms`.`wallpaper` AS Wallpaper,
+                `rooms`.`mute_settings` AS MuteSettings,
+                `rooms`.`ban_settings` AS BanSettings,
+                `rooms`.`kick_settings` AS KickSettings,
+                `rooms`.`chat_mode` AS ChatMode,
+                `rooms`.`chat_size` AS ChatSize,
+                `rooms`.`chat_speed` AS ChatSpeed,
+                `rooms`.`chat_extra_flood` AS ChatExtraFlood,
+                `rooms`.`chat_hearing_distance` AS ChatHearingDistance,
+                `rooms`.`trade_settings` AS TradeSettings,
+                `rooms`.`push_enabled` AS PushEnabled,
+                `rooms`.`pull_enabled` AS PullEnabled,
+                `rooms`.`spush_enabled` AS SpushEnabled,
+                `rooms`.`spull_enabled` AS SpullEnabled,
+                `rooms`.`enables_enabled` AS EnablesEnabled,
+                `rooms`.`respect_notifications_enabled` AS RespectNotificationsEnabled,
+                `rooms`.`pet_morphs_allowed` AS PetMorphsAllowed,
+                `rooms`.`group_id` AS GroupId,
+                `rooms`.`sale_price` AS SalePrice,
+                `rooms`.`lay_enabled` AS LayEnabled
+            FROM `rooms`
+            JOIN `users` ON `rooms`.`owner` = `users`.`id`
+            """;
     }
 
     private RoomData Map(RoomFactoryRow row)

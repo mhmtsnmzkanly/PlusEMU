@@ -25,6 +25,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - That room bootstrap is now further split into room-state versus creature initialization, and the bot/pet/rights/filter query-to-model translation work now sits behind dedicated helpers instead of inline deployment loops.
 - `Room.ProcessRoom()` is now split into explicit active-cycle phases with a shared phase guard, so room item, user, status, game-item, and Wired ticks are no longer repeated inline try/catch branches.
 - `RoomManager` room load/cycle paths are also split into explicit get/create/register/dispose and per-room cycle helpers, making the lifecycle ownership boundary clearer before any service extraction.
+- That creation path is also more explicit now: `RoomManager` coordinates cache/register concerns while `RoomFactory` owns dedicated room-row query and mapping helpers instead of repeating the same projection SQL inline.
 - `Room` crash/dispose teardown is now separated into user eviction, process-task disposal, collection reset, disposable system cleanup, and component cleanup phases, so room shutdown is no longer one long mixed-responsibility branch.
 - `RoomItemHandling` has started to be split into smaller load/remove helpers, but the broader room item lifecycle and roller/update logic is still legacy-heavy.
 - `RoomItemHandling.SetFloorItem` now has separate placement validation, stack-height resolution, and state-apply steps, reducing one of the largest remaining monolithic room item branches.

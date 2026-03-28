@@ -160,31 +160,46 @@ public class RoomManager : IRoomManager
 
     public bool TryLoadRoom(uint roomId, out Room room)
     {
-        if (TryGetLoadedRoom(roomId, out room))
+        if (TryGetLoadedOrCreateRoom(roomId, out room))
             return true;
 
+        return TryLoadRoomLocked(roomId, out room);
+    }
+
+    private bool TryGetLoadedRoom(uint roomId, out Room room) => _rooms.TryGetValue(roomId, out room!);
+
+    private bool TryGetLoadedOrCreateRoom(uint roomId, out Room room) => TryGetLoadedRoom(roomId, out room);
+
+    private bool TryLoadRoomLocked(uint roomId, out Room room)
+    {
         lock (_roomLoadingSync)
         {
             if (TryGetLoadedRoom(roomId, out room))
                 return true;
 
-            if (TryCreateAndRegisterRoom(roomId, out room))
-                return true;
-        }
+            if (!TryCreateRoomInstance(roomId, out var instance))
+            {
+                room = null!;
+                return false;
+            }
 
-        room = null!;
-        return false;
+            return TryRegisterLoadedRoom(roomId, instance, out room);
+        }
     }
 
-    private bool TryGetLoadedRoom(uint roomId, out Room room) => _rooms.TryGetValue(roomId, out room!);
-
-    private bool TryCreateAndRegisterRoom(uint roomId, out Room room)
+    private bool TryCreateRoomInstance(uint roomId, out Room room)
     {
         room = null!;
         if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
             return false;
 
-        var instance = CreateRoomInstance(data);
+        room = CreateRoomInstance(data);
+        return true;
+    }
+
+    private bool TryRegisterLoadedRoom(uint roomId, Room instance, out Room room)
+    {
+        room = null!;
         if (!_rooms.TryAdd(roomId, instance))
             return false;
 
