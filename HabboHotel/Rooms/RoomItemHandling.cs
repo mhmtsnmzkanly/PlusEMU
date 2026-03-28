@@ -99,92 +99,138 @@ public class RoomItemHandling
 
     public void LoadFurniture()
     {
-        if (_floorItems.Count > 0)
-            _floorItems.Clear();
-        if (_wallItems.Count > 0)
-            _wallItems.Clear();
+        ResetLoadedFurnitureState();
         var items = _itemLoader.GetItemsForRoom(_room.Id, _room);
         foreach (var item in items.ToList())
         {
             if (item == null)
                 continue;
-            if (item.UserId == 0)
-            {
-                using var connection = _room.GetDatabase().Connection();
-                connection.Execute(
-                    "UPDATE `items` SET `user_id` = @userId WHERE `id` = @itemId LIMIT 1",
-                    new { itemId = item.Id, userId = _room.OwnerId });
-            }
+
+            EnsureOwnedItemUser(item);
+
             if (item.IsFloorItem)
             {
-                if (!_room.GetGameMap().ValidTile(item.GetX, item.GetY))
-                {
-                    using (var connection = _room.GetDatabase().Connection())
-                        connection.Execute(
-                            "UPDATE `items` SET `room_id` = 0 WHERE `id` = @id LIMIT 1",
-                            new { id = item.Id });
-                    var client = _room.GetClientManager().GetClientByUserId(item.UserId);
-                    var clientHabbo = client?.GetHabbo();
-                    var furniture = clientHabbo?.Inventory?.Furniture;
-                    if (client != null && furniture != null)
-                    {
-                        furniture.AddItem(item.ToInventoryItem());
-                        client.Send(new FurniListUpdateComposer());
-                    }
+                if (TryRecoverInvalidFloorItem(item))
                     continue;
-                }
-                if (!_floorItems.ContainsKey(item.Id))
-                    _floorItems.TryAdd(item.Id, item);
+
+                RegisterLoadedItem(item);
             }
             else if (item.IsWallItem)
             {
-                if (string.IsNullOrWhiteSpace(item.WallCoordinates))
-                {
-                    using (var connection = _room.GetDatabase().Connection())
-                        connection.Execute(
-                            "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
-                            new { wallPosition = ":w=0,2 l=11,53 l", id = item.Id });
-                    item.WallCoordinates = ":w=0,2 l=11,53 l";
-                }
-                try
-                {
-                    var wallParts = item.WallCoordinates.Split(':');
-                    if (wallParts.Length < 2)
-                        throw new FormatException("Invalid wall position");
-                    item.WallCoordinates = WallPositionCheck($":{wallParts[1]}") ?? ":w=0,2 l=11,53 l";
-                }
-                catch
-                {
-                    using (var connection = _room.GetDatabase().Connection())
-                        connection.Execute(
-                            "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
-                            new { wallPosition = ":w=0,2 l=11,53 l", id = item.Id });
-                    item.WallCoordinates = ":w=0,2 l=11,53 l";
-                }
-                if (!_wallItems.ContainsKey(item.Id))
-                    _wallItems.TryAdd(item.Id, item);
+                NormalizeWallItemPosition(item);
+                RegisterLoadedItem(item);
             }
         }
+        InitializeLoadedFloorItemState();
+    }
+
+    private void ResetLoadedFurnitureState()
+    {
+        if (_floorItems.Count > 0)
+            _floorItems.Clear();
+        if (_wallItems.Count > 0)
+            _wallItems.Clear();
+    }
+
+    private void EnsureOwnedItemUser(Item item)
+    {
+        if (item.UserId != 0)
+            return;
+
+        using var connection = _room.GetDatabase().Connection();
+        connection.Execute(
+            "UPDATE `items` SET `user_id` = @userId WHERE `id` = @itemId LIMIT 1",
+            new { itemId = item.Id, userId = _room.OwnerId });
+    }
+
+    private bool TryRecoverInvalidFloorItem(Item item)
+    {
+        if (_room.GetGameMap().ValidTile(item.GetX, item.GetY))
+            return false;
+
+        using (var connection = _room.GetDatabase().Connection())
+            connection.Execute(
+                "UPDATE `items` SET `room_id` = 0 WHERE `id` = @id LIMIT 1",
+                new { id = item.Id });
+
+        var client = _room.GetClientManager().GetClientByUserId(item.UserId);
+        var clientHabbo = client?.GetHabbo();
+        var furniture = clientHabbo?.Inventory?.Furniture;
+        if (client != null && furniture != null)
+        {
+            furniture.AddItem(item.ToInventoryItem());
+            client.Send(new FurniListUpdateComposer());
+        }
+
+        return true;
+    }
+
+    private void NormalizeWallItemPosition(Item item)
+    {
+        if (string.IsNullOrWhiteSpace(item.WallCoordinates))
+        {
+            PersistDefaultWallPosition(item);
+            item.WallCoordinates = ":w=0,2 l=11,53 l";
+            return;
+        }
+
+        try
+        {
+            var wallParts = item.WallCoordinates.Split(':');
+            if (wallParts.Length < 2)
+                throw new FormatException("Invalid wall position");
+
+            item.WallCoordinates = WallPositionCheck($":{wallParts[1]}") ?? ":w=0,2 l=11,53 l";
+        }
+        catch
+        {
+            PersistDefaultWallPosition(item);
+            item.WallCoordinates = ":w=0,2 l=11,53 l";
+        }
+    }
+
+    private void PersistDefaultWallPosition(Item item)
+    {
+        using var connection = _room.GetDatabase().Connection();
+        connection.Execute(
+            "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
+            new { wallPosition = ":w=0,2 l=11,53 l", id = item.Id });
+    }
+
+    private void RegisterLoadedItem(Item item)
+    {
+        if (item.IsFloorItem)
+        {
+            if (!_floorItems.ContainsKey(item.Id))
+                _floorItems.TryAdd(item.Id, item);
+            return;
+        }
+
+        if (item.IsWallItem && !_wallItems.ContainsKey(item.Id))
+            _wallItems.TryAdd(item.Id, item);
+    }
+
+    private void InitializeLoadedFloorItemState()
+    {
         foreach (var item in _floorItems.Values.ToList())
         {
             if (item.IsRoller)
                 GotRollers = true;
             else if (item.Definition.InteractionType == InteractionType.Moodlight)
             {
-                if (_room != null && _room.MoodlightData == null)
+                if (_room.MoodlightData == null)
                     _room.MoodlightData = new(item.Id, _room.GetDatabase());
             }
             else if (item.Definition.InteractionType == InteractionType.Toner)
             {
-                if (_room != null && _room.TonerData == null)
+                if (_room.TonerData == null)
                     _room.TonerData = new(item.Id, _room.GetDatabase());
             }
             else if (item.IsWired)
             {
-                if (_room == null)
-                    continue;
                 if (_room.GetWired() == null)
                     continue;
+
                 _room.GetWired().LoadWiredBox(item);
             }
             else if (item.Definition.InteractionType == InteractionType.Hopper)
@@ -226,24 +272,33 @@ public class RoomItemHandling
 
     private void RemoveRoomItem(Item item)
     {
+        BroadcastItemRemoval(item);
+        RemoveLoadedItem(item);
+        RemoveItem(item);
+        _room.GetGameMap().GenerateMaps();
+        _room.GetRoomUserManager().UpdateUserStatusses();
+    }
+
+    private void BroadcastItemRemoval(Item item)
+    {
         if (item.IsFloorItem)
             _room.SendPacket(new ObjectRemoveComposer(item, item.UserId));
         else if (item.IsWallItem)
             _room.SendPacket(new ItemRemoveComposer(item, item.UserId));
+    }
 
+    private void RemoveLoadedItem(Item item)
+    {
         //TODO: Recode this specific part
         if (item.IsWallItem)
-            _wallItems.TryRemove(item.Id, out _);
-        else
         {
-            _floorItems.TryRemove(item.Id, out var removedItem);
-            //mFloorItems.OnCycle();
-            if (removedItem != null)
-                _room.GetGameMap().RemoveFromMap(removedItem);
+            _wallItems.TryRemove(item.Id, out _);
+            return;
         }
-        RemoveItem(item);
-        _room.GetGameMap().GenerateMaps();
-        _room.GetRoomUserManager().UpdateUserStatusses();
+
+        _floorItems.TryRemove(item.Id, out var removedItem);
+        if (removedItem != null)
+            _room.GetGameMap().RemoveFromMap(removedItem);
     }
 
     private List<IServerPacket> CycleRollers()
