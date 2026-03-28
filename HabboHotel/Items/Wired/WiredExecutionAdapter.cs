@@ -6,19 +6,13 @@ namespace Plus.HabboHotel.Items.Wired;
 internal static class WiredExecutionAdapter
 {
     public static bool ExecuteWithQueuedContext(this IWiredItem item, object? context)
-    {
-        switch (context)
+        => context switch
         {
-            case WiredChatTriggerContext chatContext:
-                return item.ExecuteWithChat(chatContext);
-            case WiredActorTriggerContext actorContext:
-                return item.ExecuteWithActor(actorContext.Actor);
-            case WiredActorItemTriggerContext actorItemContext:
-                return item.ExecuteWithActorItem(actorItemContext);
-            default:
-                return item.ExecuteWithoutContext();
-        }
-    }
+            WiredChatTriggerContext chatContext => item.ExecuteWithChat(chatContext),
+            WiredActorTriggerContext actorContext => item.ExecuteWithActor(actorContext.Actor),
+            WiredActorItemTriggerContext actorItemContext => item.ExecuteWithActorItem(actorItemContext),
+            _ => item.ExecuteWithoutContext()
+        };
 
     public static bool ExecuteWithActor(this IWiredItem item, Habbo actor)
     {

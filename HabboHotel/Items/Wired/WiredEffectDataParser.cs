@@ -11,10 +11,13 @@ internal static class WiredEffectDataParser
             return false;
 
         var parts = data.Split(';');
-        return parts.Length == 2 &&
-               !string.IsNullOrWhiteSpace(parts[0]) &&
-               int.TryParse(parts[1], out drinkId) &&
-               (botName = parts[0]) != null;
+        if (parts.Length != 2 ||
+            string.IsNullOrWhiteSpace(parts[0]) ||
+            !int.TryParse(parts[1], out drinkId))
+            return false;
+
+        botName = parts[0];
+        return true;
     }
 
     public static bool TryParseBotFollow(string? data, out int followMode, out string botName)
@@ -26,10 +29,13 @@ internal static class WiredEffectDataParser
             return false;
 
         var parts = data.Split(';');
-        return parts.Length == 2 &&
-               int.TryParse(parts[0], out followMode) &&
-               !string.IsNullOrWhiteSpace(parts[1]) &&
-               (botName = parts[1]) != null;
+        if (parts.Length != 2 ||
+            !int.TryParse(parts[0], out followMode) ||
+            string.IsNullOrWhiteSpace(parts[1]))
+            return false;
+
+        botName = parts[1];
+        return true;
     }
 
     public static bool TryParseMoveAndRotateModes(string? data, out int movementMode, out int rotationMode)
