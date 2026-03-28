@@ -24,6 +24,7 @@ Phase 1 is now in place:
 - The typed path now reaches into actor-item triggers and some representative condition/effect boxes as well, which confirms the bridge can scale beyond the first narrow sample.
 - The negative/paired actor conditions are now moving over too, which means the typed execution path is no longer limited to only a few hand-picked happy-path boxes.
 - The same typed bridge now covers the triggerer/team/hand-item actor slice too, leaving a noticeably smaller actor-based legacy `params object[]` surface behind.
+- The remaining actor-targeted effect slice is moving across that bridge as well, which means queued teleport, nested stack, and bot-targeting effects now share the same typed entry path.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.
