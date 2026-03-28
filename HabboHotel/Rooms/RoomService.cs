@@ -45,15 +45,10 @@ public class RoomService : IRoomService
 
     public async Task PrepareRoom(GameClient session, uint roomId, string password)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (!TryGetPreparingHabbo(session, out var habbo))
             return;
 
-        if (habbo.InRoom)
-        {
-            var oldRoom = habbo.CurrentRoom;
-            oldRoom?.GetRoomUserManager().RemoveUserFromRoom(session, false);
-        }
+        LeaveCurrentRoomIfNeeded(session, habbo, false);
 
         if (habbo.IsTeleporting && habbo.TeleportingRoomId != roomId)
         {
@@ -89,60 +84,8 @@ public class RoomService : IRoomService
             return;
         }
 
-        habbo.RoomAuthOk = false;
-
-        if (room.Type == "public")
-        {
-            if (room.Access == RoomAccess.Doorbell && !(habbo.Permissions?.HasRight("room_enter_any_room") ?? false))
-            {
-                session.Send(new CantConnectComposer(1));
-                session.Send(new CloseConnectionComposer());
-                return;
-            }
-            habbo.RoomAuthOk = true;
-            session.Send(new OpenConnectionComposer());
+        if (!TryAuthorizeRoomEntry(session, habbo, room, password))
             return;
-        }
-
-        if (habbo.Id == room.OwnerId || (habbo.Permissions?.HasRight("room_enter_any_room") ?? false) || (habbo.Permissions?.HasRight("room_any_owner") ?? false))
-        {
-            habbo.RoomAuthOk = true;
-            session.Send(new OpenConnectionComposer());
-            return;
-        }
-
-        if (room.Access == RoomAccess.Doorbell)
-        {
-            if (room.GetRoomUserManager().GetRoomUserByRank(2).Count > 0)
-            {
-                session.Send(new DoorbellComposer(""));
-                room.SendPacket(new DoorbellComposer(habbo.Username), true);
-            }
-            else
-            {
-                session.Send(new CantConnectComposer(2));
-                session.Send(new CloseConnectionComposer());
-            }
-            return;
-        }
-
-        if (room.Access == RoomAccess.Password)
-        {
-            if (password.ToLower() == room.Password.ToLower() || habbo.RoomAuthOk)
-            {
-                habbo.RoomAuthOk = true;
-                session.Send(new OpenConnectionComposer());
-            }
-            else
-            {
-                session.Send(new GenericErrorComposer(-100002));
-                session.Send(new CloseConnectionComposer());
-            }
-            return;
-        }
-
-        habbo.RoomAuthOk = true;
-        session.Send(new OpenConnectionComposer());
     }
 
     public async Task<RoomData?> CreateRoom(GameClient session, string name, string description, string modelName, int category, int maxVisitors, int tradeSettings)
@@ -227,12 +170,95 @@ public class RoomService : IRoomService
 
     public Task LeaveRoom(GameClient session)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
+        if (!TryGetPreparingHabbo(session, out var habbo))
             return Task.CompletedTask;
 
-        var room = habbo.CurrentRoom;
-        room?.GetRoomUserManager().RemoveUserFromRoom(session, true);
+        LeaveCurrentRoomIfNeeded(session, habbo, true);
         return Task.CompletedTask;
+    }
+
+    private static bool TryGetPreparingHabbo(GameClient session, out Users.Habbo habbo)
+    {
+        habbo = session.GetHabbo();
+        return habbo != null;
+    }
+
+    private static void LeaveCurrentRoomIfNeeded(GameClient session, Users.Habbo habbo, bool notifyUser)
+    {
+        if (!habbo.InRoom)
+            return;
+
+        habbo.CurrentRoom?.GetRoomUserManager().RemoveUserFromRoom(session, notifyUser);
+    }
+
+    private bool TryAuthorizeRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)
+    {
+        habbo.RoomAuthOk = false;
+
+        if (room.Type == "public")
+            return TryAuthorizePublicRoomEntry(session, habbo, room);
+
+        if (CanBypassPrivateRoomChecks(habbo, room))
+            return OpenAuthorizedRoom(session, habbo);
+
+        if (room.Access == RoomAccess.Doorbell)
+            return TryAuthorizeDoorbellRoomEntry(session, habbo, room);
+
+        if (room.Access == RoomAccess.Password)
+            return TryAuthorizePasswordRoomEntry(session, habbo, room, password);
+
+        return OpenAuthorizedRoom(session, habbo);
+    }
+
+    private bool TryAuthorizePublicRoomEntry(GameClient session, Users.Habbo habbo, Room room)
+    {
+        if (room.Access == RoomAccess.Doorbell && !(habbo.Permissions?.HasRight("room_enter_any_room") ?? false))
+        {
+            session.Send(new CantConnectComposer(1));
+            session.Send(new CloseConnectionComposer());
+            return false;
+        }
+
+        return OpenAuthorizedRoom(session, habbo);
+    }
+
+    private static bool CanBypassPrivateRoomChecks(Users.Habbo habbo, Room room)
+    {
+        return habbo.Id == room.OwnerId ||
+               (habbo.Permissions?.HasRight("room_enter_any_room") ?? false) ||
+               (habbo.Permissions?.HasRight("room_any_owner") ?? false);
+    }
+
+    private static bool TryAuthorizeDoorbellRoomEntry(GameClient session, Users.Habbo habbo, Room room)
+    {
+        if (room.GetRoomUserManager().GetRoomUserByRank(2).Count > 0)
+        {
+            session.Send(new DoorbellComposer(""));
+            room.SendPacket(new DoorbellComposer(habbo.Username), true);
+        }
+        else
+        {
+            session.Send(new CantConnectComposer(2));
+            session.Send(new CloseConnectionComposer());
+        }
+
+        return false;
+    }
+
+    private static bool TryAuthorizePasswordRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)
+    {
+        if (password.ToLower() == room.Password.ToLower() || habbo.RoomAuthOk)
+            return OpenAuthorizedRoom(session, habbo);
+
+        session.Send(new GenericErrorComposer(-100002));
+        session.Send(new CloseConnectionComposer());
+        return false;
+    }
+
+    private static bool OpenAuthorizedRoom(GameClient session, Users.Habbo habbo)
+    {
+        habbo.RoomAuthOk = true;
+        session.Send(new OpenConnectionComposer());
+        return true;
     }
 }
