@@ -7,11 +7,14 @@ public static class GameClientExtensions
 {
     public static void SendWhisper(this GameClient client, string message, int colour = 0)
     {
-        if (client.GetHabbo() == null || client.GetHabbo().CurrentRoom == null)
+        var habbo = client.GetHabboOrNull();
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
             return;
-        var user = client.GetHabbo().CurrentRoom?.GetRoomUserManager().GetRoomUserByHabbo(client.GetHabbo().Username);
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
         if (user == null)
             return;
+
         client.Send(new WhisperComposer(user.VirtualId, message, 0, colour == 0 ? user.LastBubble : colour));
     }
 

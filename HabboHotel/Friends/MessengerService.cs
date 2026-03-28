@@ -301,8 +301,10 @@ internal class MessengerService : IMessengerService
             return Task.CompletedTask;
         }
 
-        var targetRoom = targetHabbo.CurrentRoom;
-        if (targetRoom == null || habbo.CurrentRoom?.RoomId == targetRoom.RoomId)
+        if (!targetHabbo.TryGetCurrentRoom(out var targetRoom))
+            return Task.CompletedTask;
+
+        if (habbo.CurrentRoom?.RoomId == targetRoom.RoomId)
             return Task.CompletedTask;
 
         session.Send(new RoomForwardComposer(targetRoom.RoomId));

@@ -124,15 +124,17 @@ public sealed class EffectsComponent
 
     public void ApplyEffect(int effectId)
     {
-        if (_habbo == null || _habbo.CurrentRoom == null)
+        if (_habbo == null || !_habbo.TryGetCurrentRoom(out var room))
             return;
-        var user = _habbo.CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(_habbo.Id);
+
+        var user = room.GetRoomUserManager().GetRoomUserByHabbo(_habbo.Id);
         if (user == null)
             return;
+
         CurrentEffect = effectId;
         if (user.IsDancing)
-            _habbo.CurrentRoom.SendPacket(new DanceComposer(user, 0));
-        _habbo.CurrentRoom.SendPacket(new AvatarEffectComposer(user.VirtualId, effectId));
+            room.SendPacket(new DanceComposer(user, 0));
+        room.SendPacket(new AvatarEffectComposer(user.VirtualId, effectId));
     }
 
     /// <summary>

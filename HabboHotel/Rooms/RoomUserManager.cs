@@ -143,7 +143,7 @@ public class RoomUserManager
         habbo.TentId = 0;
         var personalId = _secondaryPrivateUserId++;
         user.InternalRoomId = personalId;
-        habbo.CurrentRoom = _room;
+        habbo.EnterRoom(_room);
         if (!_users.TryAdd(personalId, user))
             return false;
         var model = _room.GetGameMap().Model;
@@ -285,9 +285,7 @@ public class RoomUserManager
 
     private static void ResetHabboRoomState(Habbo habbo)
     {
-        if (habbo.TentId > 0)
-            habbo.TentId = 0;
-        habbo.CurrentRoom = null;
+        habbo.LeaveRoom();
     }
 
     private void CleanupMountedHorse(RoomUser user)

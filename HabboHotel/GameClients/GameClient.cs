@@ -57,7 +57,7 @@ public abstract class GameClient
         if (habbo == null)
             return null;
 
-        habbo.Client = null;
+        habbo.DetachClient();
         habbo.OnDisconnect();
         return habbo;
     }

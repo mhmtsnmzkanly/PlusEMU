@@ -126,6 +126,8 @@ public class Habbo
 
     public event EventHandler? Disconnected;
 
+    public bool HasActiveClient => Client != null;
+
     public UserAchievement? GetAchievementData(string group) =>
         Achievements.TryGetValue(group, out var data) ? data : null;
 
@@ -149,10 +151,42 @@ public class Habbo
         // Handled by specialized process components
     }
 
-    public void Init(GameClient session)
+    public void AttachClient(GameClient session)
     {
         Client = session;
         SessionStart = UnixTimestamp.GetNow();
+    }
+
+    public void DetachClient()
+    {
+        Client = null;
+    }
+
+    public bool TryGetClient(out GameClient client)
+    {
+        client = Client!;
+        return client != null;
+    }
+
+    public void EnterRoom(Room room)
+    {
+        CurrentRoom = room;
+    }
+
+    public void LeaveRoom()
+    {
+        if (TentId > 0)
+            TentId = 0;
+
+        CurrentRoom = null;
+    }
+
+    public bool IsInRoom(Room room) => CurrentRoom == room;
+
+    public bool TryGetCurrentRoom(out Room room)
+    {
+        room = CurrentRoom!;
+        return room != null;
     }
 
     public void OnDisconnect()

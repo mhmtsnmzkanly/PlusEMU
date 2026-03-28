@@ -62,8 +62,7 @@ internal class Authenticator : IAuthenticator
     {
         session.SetHabbo(habbo);
 
-        // TODO @80O: Remove after splitting up
-        habbo.Init(session);
+        habbo.AttachClient(session);
         _gameClientManager.RegisterClient(session, habbo.Id, habbo.Username);
     }
 
