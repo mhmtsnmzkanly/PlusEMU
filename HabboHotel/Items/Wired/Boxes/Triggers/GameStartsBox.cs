@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class GameStartsBox : IWiredItem
+internal class GameStartsBox : IWiredItem, IWiredExecutable
 {
     public GameStartsBox(Room instance, Item item)
     {
@@ -24,6 +24,11 @@ internal class GameStartsBox : IWiredItem
     public void HandleSave(IIncomingPacket packet) { }
 
     public bool Execute(params object[] @params)
+    {
+        return ((IWiredExecutable)this).Execute(new(@params));
+    }
+
+    bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         var wired = Instance.GetWired();
         foreach (var condition in wired.GetConditions(this))

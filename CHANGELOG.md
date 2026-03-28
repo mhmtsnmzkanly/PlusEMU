@@ -26,6 +26,7 @@
 - Expanded typed execution coverage across the mirrored actor-condition set as well (`IsNotGroupMember`, `IsNotWearingBadge`, `IsWearingFx`, `IsNotWearingFx`), further reducing raw `params object[]` usage in the condition layer.
 - Moved the remaining triggerer/team/hand-item actor boxes (`TriggererOnFurni`, `TriggererNotOnFurni`, `ActorHasHandItem`, `ActorIsInTeam`, `AddActorToTeam`, `RemoveActorFromTeam`) onto `IWiredExecutable`, extending the typed execution path across another cohesive actor-driven slice.
 - Extended the typed execution bridge across the remaining actor-targeted effect slice too (`TeleportUser`, `ExecuteWiredStacks`, `BotFollowsUser`, `BotGivesHandItem`), so more queued and nested effect flow now bypasses raw payload unpacking.
+- Moved the simple parameterless/data-only slice (`GameStarts`, `GameEnds`, `AddonRandomEffect`, `RegenerateMaps`, `SetRollerSpeed`, `BotCommunicatesToAll`) onto the same typed bridge so the new execution path is no longer limited to actor-carrying boxes.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.
