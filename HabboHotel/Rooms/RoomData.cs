@@ -1,4 +1,5 @@
 using Dapper;
+using Plus.Database;
 using Plus.HabboHotel.Groups;
 using Plus.Utilities;
 
@@ -151,6 +152,7 @@ public class RoomData
     public int SalePrice { get; set; }
     public bool ReverseRollers { get; set; }
     public bool LayEnabled { get; set; }
+    public int GroupId { get; set; }
 
     public RoomModel Model { get; set; }
 

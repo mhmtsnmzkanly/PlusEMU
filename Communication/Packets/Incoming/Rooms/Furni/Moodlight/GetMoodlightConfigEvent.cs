@@ -1,4 +1,4 @@
-﻿using Plus.Communication.Packets.Outgoing.Rooms.Furni.Moodlight;
+using Plus.Communication.Packets.Outgoing.Rooms.Furni.Moodlight;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Rooms;
@@ -16,7 +16,7 @@ internal class GetMoodlightConfigEvent : RoomPacketEvent
             foreach (var item in room.GetRoomItemHandler().GetWall.ToList())
             {
                 if (item.Definition.InteractionType == InteractionType.Moodlight)
-                    room.MoodlightData = new(item.Id);
+                    room.MoodlightData = new(item.Id, room.GetDatabase());
             }
         }
         if (room.MoodlightData == null)

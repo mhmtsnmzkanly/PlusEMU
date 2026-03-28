@@ -3,6 +3,7 @@ using Plus.HabboHotel.Bots;
 using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.Catalog;
 using Plus.HabboHotel.Catalog.Utilities;
+using Plus.HabboHotel.Badges;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Games;
 using Plus.HabboHotel.Groups;

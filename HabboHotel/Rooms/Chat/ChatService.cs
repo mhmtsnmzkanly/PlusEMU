@@ -9,6 +9,7 @@ using Plus.HabboHotel.Rooms.Chat.Filter;
 using Plus.HabboHotel.Rooms.Chat.Logs;
 using Plus.HabboHotel.Rooms.Chat.Styles;
 using Plus.Utilities;
+using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Rooms.Chat;
 

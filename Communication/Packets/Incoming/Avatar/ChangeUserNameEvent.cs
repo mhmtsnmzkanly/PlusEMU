@@ -46,7 +46,7 @@ internal class ChangeUserNameEvent : IPacketEvent
         var oldName = habbo.Username;
         if (newName == oldName)
         {
-            habbo.ChangeName(oldName);
+            habbo.ChangeName(_database, oldName);
             session.Send(new UpdateUsernameComposer(newName));
             return;
         }
@@ -78,7 +78,7 @@ internal class ChangeUserNameEvent : IPacketEvent
         }
         habbo.ChangingName = false;
         room.GetRoomUserManager().RemoveUserFromRoom(session, true);
-        habbo.ChangeName(newName);
+        habbo.ChangeName(_database, newName);
         habbo.Messenger?.NotifyChangesToFriends();
         session.Send(new UpdateUsernameComposer(newName));
         room.SendPacket(new UserNameChangeComposer(room.Id, user.VirtualId, newName));
@@ -100,13 +100,11 @@ internal class ChangeUserNameEvent : IPacketEvent
 
     private static bool CanChangeName(Habbo habbo)
     {
-        if (habbo.Rank == 1 && habbo.VipRank == 0 && habbo.LastNameChange == 0)
+        if (habbo.Rank == 1 && (habbo.LastNameChange == 0 || UnixTimestamp.GetNow() + 604800 > habbo.LastNameChange))
             return true;
-        if (habbo.Rank == 1 && habbo.VipRank == 1 && (habbo.LastNameChange == 0 || UnixTimestamp.GetNow() + 604800 > habbo.LastNameChange))
+        if (habbo.Rank == 1 && (habbo.LastNameChange == 0 || UnixTimestamp.GetNow() + 86400 > habbo.LastNameChange))
             return true;
-        if (habbo.Rank == 1 && habbo.VipRank == 2 && (habbo.LastNameChange == 0 || UnixTimestamp.GetNow() + 86400 > habbo.LastNameChange))
-            return true;
-        if (habbo.Rank == 1 && habbo.VipRank == 3)
+        if (habbo.Rank == 1)
             return true;
         if (habbo.Permissions?.HasRight("mod_tool") == true)
             return true;

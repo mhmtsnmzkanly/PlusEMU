@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using NetCoreServer;
 using System.Net.Sockets;
+using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.GameClients;
 
@@ -8,6 +9,9 @@ public class WsSessionProxy : WsSession
 {
     private readonly GameClient _client;
     private readonly ILogger<WsSessionProxy> _logger;
+
+    public GameClient Client => _client;
+    public Habbo? GetHabboOrNull() => _client.GetHabboOrNull();
 
     public WsSessionProxy(WsServer server, GameClient client, ILogger<WsSessionProxy> logger) : base(server)
     {

@@ -14,7 +14,6 @@ using Plus.HabboHotel.Rooms.AI;
 using Plus.HabboHotel.Groups;
 using Plus.HabboHotel.Items.Data.Moodlight;
 using Plus.HabboHotel.Items.Data.Toner;
-using Plus.HabboHotel.Rooms.AI;
 using Plus.HabboHotel.Rooms.AI.Speech;
 using Plus.HabboHotel.Rooms.Games;
 using Plus.HabboHotel.Rooms.Games.Banzai;
@@ -24,6 +23,11 @@ using Plus.HabboHotel.Rooms.Games.Teams;
 using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 using Plus.Utilities;
+using Plus.HabboHotel.Badges;
+using Plus.HabboHotel.Users.UserData;
+using Plus.HabboHotel.Achievements;
+using Plus.HabboHotel.Bots;
+using Plus.Core.Language;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -131,9 +135,12 @@ public class Room : RoomData
     public TonerData? TonerData;
 
     public List<int> UsersWithRights = new();
+    public RoomData Data => this;
+    private readonly IAchievementService _achievementService;
+    private readonly IRoomManager _roomManager;
     private readonly ILanguageManager _languageManager;
 
-    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory)
+    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory, IRoomManager roomManager)
         : base(data)
     {
         _clientManager = clientManager;
@@ -164,15 +171,19 @@ public class Room : RoomData
         _wiredComponent = new(this);
         _bansComponent = new(this);
         _tradingComponent = new(this);
+        _achievementService = achievementService;
+        _roomManager = roomManager;
         GetRoomItemHandler().LoadFurniture();
         GetGameMap().GenerateMaps();
-        LoadPromotions();
+        LoadPromotions(database);
         LoadRights();
         LoadFilter();
         InitBots();
         InitPets();
         LastRegeneration = DateTime.Now;
     }
+
+    public void OnCycle() => ProcessRoom();
 
     public IRoomService GetRoomService() => _roomService;
     public IChatManager GetChatManager() => _chatManager;

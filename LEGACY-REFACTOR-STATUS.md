@@ -212,8 +212,9 @@ Verify no remaining legacy usage (should return empty):
 grep -r "GetQueryReactor" --include="*.cs" -l | grep -v "Database/"
 ```
 
-Verify no remaining legacy AchievementManager usage (should return only commented lines):
-
 ```bash
 grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | grep -v "IAchievementManager" | grep -v "AchievementManager.cs" | grep -v "AchievementService.cs"
 ```
+
+## Upcoming Architecture Tasks
+- **[Wired Execution System]**: To resolve performance threading locks in the Wired engine, see `WIRED-ASYNC-PLAN.md` for the ConcurrentQueue implementation specs over `IWiredItem.Execute`.

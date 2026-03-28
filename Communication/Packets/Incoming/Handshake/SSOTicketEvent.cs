@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Plus.Database;
 using Plus.Communication.Attributes;
 using Plus.Communication.Packets.Outgoing.BuildersClub;
 using Plus.Communication.Packets.Outgoing.Handshake;

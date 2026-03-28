@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using NetCoreServer;
 using System.Net.Sockets;
 
@@ -8,6 +8,8 @@ public class TcpSessionProxy : TcpSession
 {
     private readonly GameClient _client;
     private readonly ILogger<TcpSessionProxy> _logger;
+
+    public GameClient Client => _client;
 
     public TcpSessionProxy(TcpServer server, GameClient client, ILogger<TcpSessionProxy> logger) : base(server)
     {

@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Rooms;
 
@@ -14,9 +14,9 @@ internal class ToggleMoodlightEvent : RoomPacketEvent
         if (item == null || item.Definition.InteractionType != InteractionType.Moodlight)
             return Task.CompletedTask;
         if (room.MoodlightData.Enabled)
-            room.MoodlightData.Disable();
+            room.MoodlightData.Disable(room.GetDatabase());
         else
-            room.MoodlightData.Enable();
+            room.MoodlightData.Enable(room.GetDatabase());
         item.LegacyDataString = room.MoodlightData.GenerateExtraData();
         item.UpdateState();
         return Task.CompletedTask;

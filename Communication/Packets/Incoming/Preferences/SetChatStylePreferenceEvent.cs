@@ -1,9 +1,17 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.Database;
+using Plus.HabboHotel.GameClients;
 
 namespace Plus.Communication.Packets.Incoming.Preferences;
 
 internal class SetChatStylePreferenceEvent : IPacketEvent
 {
+    private readonly IDatabase _database;
+
+    public SetChatStylePreferenceEvent(IDatabase database)
+    {
+        _database = database;
+    }
+
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
@@ -13,7 +21,7 @@ internal class SetChatStylePreferenceEvent : IPacketEvent
         var chatBubbleId = packet.ReadInt();
 
         habbo.CustomBubbleId = chatBubbleId;
-        habbo.SaveChatBubble(chatBubbleId.ToString());
+        habbo.SaveChatBubble(_database, chatBubbleId);
 
         return Task.CompletedTask;
     }

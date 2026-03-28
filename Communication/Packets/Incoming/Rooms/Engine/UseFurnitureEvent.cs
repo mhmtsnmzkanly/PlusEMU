@@ -32,7 +32,7 @@ internal class UseFurnitureEvent : RoomPacketEvent
         if (item.Definition.InteractionType == InteractionType.Toner)
         {
             if (!room.CheckRights(session, true)) return;
-            room.TonerData ??= new(item.Id);
+            room.TonerData ??= new(item.Id, _database);
             room.TonerData.Enabled = room.TonerData.Enabled == 0 ? 1 : 0;
             room.SendPacket(new ObjectUpdateComposer(item));
             item.UpdateState();

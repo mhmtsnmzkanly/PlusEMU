@@ -426,7 +426,6 @@ public class Item
                                             //User.GetClient().SendMessage(new RoomForwardComposer(RoomHopId));
                                             InteractingUser = 0;
                                         }
-                                        }
                                     }
                                     else
                                     {
@@ -577,13 +576,12 @@ public class Item
                                                     //User.GetClient().SendMessage(new RoomForwardComposer(RoomId));
                                                     InteractingUser = 0;
                                                 }
-                                                }
-                                                }
-                                                else
-                                                {
-                                                    user.TeleDelay--;
-                                                    showTeleEffect = true;
-                                                }
+                                            }
+                                            else
+                                            {
+                                                user.TeleDelay--;
+                                                showTeleEffect = true;
+                                            }
                                                 //PlusEnvironment.GetGame().GetRoomManager().AddTeleAction(new TeleUserData(User.GetClient().GetMessageHandler(), User.GetClient().GetHabbo(), RoomId, TeleId));
                                             }
                                             GetRoom().GetGameMap().GenerateMaps();

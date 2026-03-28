@@ -1,8 +1,9 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Plus.Database;
+using Plus.HabboHotel.GameClients;
 using NetCoreServer;
 using Plus.Communication.Packets;
-using Plus.HabboHotel.GameClients;
 using System.Collections.Concurrent;
 using Plus.Communication.Flash;
 
@@ -56,12 +57,12 @@ public abstract class TcpGameServer<TGameServerOptions> : TcpServer, IGameServer
 
     protected override void OnDisconnected(TcpSession session)
     {
-        if (session is GameClient gameClient)
+        if (session is TcpSessionProxy proxy)
         {
-            var habbo = gameClient.GetHabboOrNull();
+            var habbo = proxy.Client.GetHabboOrNull();
             if (habbo != null)
             {
-                habbo.OnDisconnect(_database);
+                habbo.OnDisconnect();
                 _clientManager.UnregisterClient(habbo.Id, habbo.Username);
             }
         }

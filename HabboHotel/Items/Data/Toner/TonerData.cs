@@ -11,7 +11,7 @@ public class TonerData
     public int Lightness;
     public int Saturation;
 
-    public TonerData(uint item)
+    public TonerData(uint item, IDatabase database)
     {
         ItemId = item;
         using var db = database.Connection();

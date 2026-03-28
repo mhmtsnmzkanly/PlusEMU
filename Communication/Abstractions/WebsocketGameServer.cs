@@ -1,10 +1,11 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using Plus.Database;
+using Plus.HabboHotel.GameClients;
 using Microsoft.Extensions.Options;
 using NetCoreServer;
 using Plus.Communication.Flash;
 using Plus.Communication.Packets;
-using Plus.HabboHotel.GameClients;
 
 namespace Plus.Communication.Abstractions;
 
@@ -61,7 +62,7 @@ public abstract class WebsocketGameServer<TGameServerOptions> : WsServer, IGameS
             var habbo = gameClient.GetHabboOrNull();
             if (habbo != null)
             {
-                habbo.OnDisconnect(_database);
+                habbo.OnDisconnect();
                 _clientManager.UnregisterClient(habbo.Id, habbo.Username);
             }
             _logger.LogDebug("Websocket client disconnected {clientId} from {remoteEndPoint}. Build: {build}.",

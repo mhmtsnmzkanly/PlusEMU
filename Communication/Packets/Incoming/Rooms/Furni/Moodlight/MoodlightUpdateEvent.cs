@@ -1,4 +1,4 @@
-﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Rooms;
 
@@ -20,7 +20,7 @@ internal class MoodlightUpdateEvent : RoomPacketEvent
         var backgroundOnly = backgroundMode >= 2;
         room.MoodlightData.Enabled = true;
         room.MoodlightData.CurrentPreset = preset;
-        room.MoodlightData.UpdatePreset(preset, colorCode, intensity, backgroundOnly);
+        room.MoodlightData.UpdatePreset(preset, colorCode, intensity, backgroundOnly, room.GetDatabase());
         item.LegacyDataString = room.MoodlightData.GenerateExtraData();
         item.UpdateState();
         return Task.CompletedTask;

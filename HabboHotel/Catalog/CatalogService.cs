@@ -209,7 +209,7 @@ internal class CatalogService : ICatalogService
                 break;
             case "e": // Effect
                 var effect = habbo.Effects.HasEffect(item.Definition.SpriteId) ? habbo.Effects.GetEffectNullable(item.Definition.SpriteId) : habbo.Effects.CreateEffect(item.Definition.SpriteId, 3600);
-                effect?.AddToQuantity();
+                effect?.AddToQuantity(_database);
                 session.Send(new AvatarEffectAddedComposer(item.Definition.SpriteId, 3600));
                 break;
             case "r": // Bot

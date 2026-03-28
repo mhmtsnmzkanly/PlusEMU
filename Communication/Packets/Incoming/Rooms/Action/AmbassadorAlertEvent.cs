@@ -1,5 +1,7 @@
+using Plus.Communication.Packets;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Ambassadors;
+using Plus.HabboHotel.Users.UserData;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Action;
 
