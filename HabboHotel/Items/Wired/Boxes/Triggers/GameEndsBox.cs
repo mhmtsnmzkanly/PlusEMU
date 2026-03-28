@@ -23,11 +23,6 @@ internal class GameEndsBox : IWiredItem, IWiredExecutable
 
     public void HandleSave(IIncomingPacket packet) { }
 
-    public bool Execute(params object[] @params)
-    {
-        return ((IWiredExecutable)this).Execute(new(@params));
-    }
-
     bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         var wired = Instance.GetWired();

@@ -33,6 +33,7 @@
 - Moved the remaining cycle-backed execution boxes (`Repeater`, `ToggleFurni`, `MoveFurniToUser`, `MoveAndRotate`, `MatchPosition`) onto `IWiredExecutable`, so the typed bridge now spans queued, delayed, and cycle-driven paths too.
 - Promoted `IWiredExecutable` and `WiredExecutionContext` into the main public Wired contract, made `IWiredItem` extend that typed surface, and marked the old `Execute(params object[])` signature as a legacy bridge entry point.
 - Simplified `WiredExecutionAdapter` so internal Wired dispatch now goes straight through `WiredExecutionContext` without runtime fallback branching to the legacy variadic path.
+- Added a default legacy bridge implementation on `IWiredItem` itself and removed the redundant `Execute(params object[])` forwarding boilerplate from the first low-risk parameterless/data-only box slice.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

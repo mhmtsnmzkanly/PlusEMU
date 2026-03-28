@@ -33,11 +33,6 @@ internal class SetRollerSpeedBox : IWiredItem, IWiredExecutable
         if (!int.TryParse(StringData, out var speed)) StringData = "";
     }
 
-    public bool Execute(params object[] @params)
-    {
-        return ((IWiredExecutable)this).Execute(new(@params));
-    }
-
     bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         if (int.TryParse(StringData, out var speed)) Instance.GetRoomItemHandler().SetSpeed(speed);

@@ -30,11 +30,6 @@ internal class RegenerateMapsBox : IWiredItem, IWiredExecutable
         var unknown2 = packet.ReadString();
     }
 
-    public bool Execute(params object[] @params)
-    {
-        return ((IWiredExecutable)this).Execute(new(@params));
-    }
-
     bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         if (Instance == null)

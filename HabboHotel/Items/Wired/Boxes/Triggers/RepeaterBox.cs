@@ -56,7 +56,5 @@ internal class RepeaterBox : IWiredItem, IWiredCycle, IWiredExecutable
         TickCount = delay;
     }
 
-    public bool Execute(params object[] @params) => ((IWiredExecutable)this).Execute(new(@params));
-
     bool IWiredExecutable.Execute(WiredExecutionContext context) => true;
 }
