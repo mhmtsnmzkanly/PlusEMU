@@ -40,7 +40,9 @@ public class WsSessionProxy : WsSession
         base.OnConnected();
     }
 
-    protected override void OnDisconnected() => _client.OnDisconnected();
+    protected override void OnDisconnected()
+    {
+    }
 
     public override void OnWsReceived(byte[] buffer, long offset, long size) => _client.OnReceived(buffer, offset, size);
 

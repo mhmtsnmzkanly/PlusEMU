@@ -59,12 +59,9 @@ public abstract class WebsocketGameServer<TGameServerOptions> : WsServer, IGameS
     {
         if (session is WsSessionProxy gameClient)
         {
-            var habbo = gameClient.GetHabboOrNull();
+            var habbo = gameClient.Client.OnDisconnected();
             if (habbo != null)
-            {
-                habbo.OnDisconnect();
                 _clientManager.UnregisterClient(habbo.Id, habbo.Username);
-            }
             _logger.LogDebug("Websocket client disconnected {clientId} from {remoteEndPoint}. Build: {build}.",
                 session.Id,
                 SocketLogging.TryGetRemoteEndPoint(session.Socket),

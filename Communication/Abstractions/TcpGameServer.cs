@@ -59,12 +59,9 @@ public abstract class TcpGameServer<TGameServerOptions> : TcpServer, IGameServer
     {
         if (session is TcpSessionProxy proxy)
         {
-            var habbo = proxy.Client.GetHabboOrNull();
+            var habbo = proxy.Client.OnDisconnected();
             if (habbo != null)
-            {
-                habbo.OnDisconnect();
                 _clientManager.UnregisterClient(habbo.Id, habbo.Username);
-            }
         }
         _connectedClients.TryRemove(session.Id, out _);
         _logger.LogDebug("TCP client disconnected {clientId} from {remoteEndPoint}.", session.Id, SocketLogging.TryGetRemoteEndPoint(session.Socket));

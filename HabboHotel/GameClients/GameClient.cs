@@ -15,6 +15,7 @@ public abstract class GameClient
     private readonly IPacketFactory _packetFactory;
     private static readonly ILogger Log = LogManager.GetLogger("Plus.HabboHotel.GameClients.GameClient");
     private Habbo? _habbo;
+    private bool _hasDisconnected;
 
     public RecyclableMemoryStream? _incompleteStream;
     public Arc4? Rc4Client { get; set; }
@@ -46,7 +47,20 @@ public abstract class GameClient
         _server = server;
     }
 
-    internal void OnDisconnected() => _habbo?.OnDisconnect();
+    internal Habbo? OnDisconnected()
+    {
+        if (_hasDisconnected)
+            return null;
+
+        _hasDisconnected = true;
+        var habbo = _habbo;
+        if (habbo == null)
+            return null;
+
+        habbo.Client = null;
+        habbo.OnDisconnect();
+        return habbo;
+    }
 
     internal abstract (bool Complete, uint MessageId, int HeaderLength, int Length) GetMessageIdAndPacketLength(ReadOnlyMemory<byte> buffer);
     internal virtual async void OnReceived(byte[] buffer, long offset, long size)
