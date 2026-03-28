@@ -8,6 +8,7 @@
 #### Changed
 - Centralized room idle/promotion/unload lifecycle decisions in `RoomManager` so `Room` now focuses on active-room cycle work instead of duplicating unload logic locally.
 - Split the `Room` constructor bootstrap into an explicit room-content initialization step so furniture, map, promotions, rights, filter, bot, and pet loading no longer sit inline with dependency assignment.
+- Split `Room` bootstrap again into room-state and room-creature initialization helpers, and extracted bot/pet/rights/filter row-to-model translation so startup loading no longer mixes collection queries with deployment details inline.
 - Split `Room.ProcessRoom()` into explicit active-cycle phases so item ticks, user ticks, status serialization, game-item ticks, and Wired ticks no longer sit inside one repeated try/catch ladder.
 - Split `RoomManager` cycle/load flow into explicit room-cycle, room-creation, registration, and disposal helpers so lifecycle ownership is no longer buried inside `OnCycle()` and `TryLoadRoom()`.
 - Split `Room` crash and dispose flow into explicit user-eviction, process-task, collection-reset, disposable-system, and component-cleanup helpers so room teardown no longer lives in one long shutdown branch.

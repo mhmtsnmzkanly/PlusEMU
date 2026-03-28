@@ -29,6 +29,7 @@ using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Bots;
 using Plus.Core.Language;
 using Microsoft.Extensions.Logging;
+using System.Data;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -182,9 +183,19 @@ public class Room : RoomData
     {
         GetRoomItemHandler().LoadFurniture();
         GetGameMap().GenerateMaps();
+        InitializeRoomStateContent(database);
+        InitializeRoomCreatures();
+    }
+
+    private void InitializeRoomStateContent(IDatabase database)
+    {
         LoadPromotions(database);
         LoadRights();
         LoadFilter();
+    }
+
+    private void InitializeRoomCreatures()
+    {
         InitBots();
         InitPets();
     }
@@ -325,16 +336,9 @@ public class Room : RoomData
             new { roomId = RoomId });
         foreach (var bot in bots)
         {
-            var speeches = new List<RandomSpeech>();
-            foreach (var speech in connection.Query<BotSpeechRow>(
-                         "SELECT `text` AS Text FROM `bots_speech` WHERE `bot_id` = @botId",
-                         new { botId = bot.Id }))
-                speeches.Add(new(speech.Text, bot.Id));
-            roomUserManager.DeployBot(
-                new(bot.Id, bot.RoomId, bot.AiType, bot.WalkMode, bot.Name,
-                    bot.Motto, bot.Look, bot.X, bot.Y, bot.Z,
-                    bot.Rotation, 0, 0, 0, 0, ref speeches, "M", 0, bot.UserId, bot.AutomaticChat,
-                    bot.SpeakingInterval, ConvertExtensions.EnumToBool(bot.MixSentences), bot.ChatBubble), null!);
+            var speeches = LoadBotSpeeches(connection, bot.Id);
+            var botData = CreateBotData(bot, ref speeches);
+            roomUserManager.DeployBot(botData, null!);
         }
     }
 
@@ -373,19 +377,49 @@ public class Room : RoomData
                 new { id = row.Id });
             if (mRow == null)
                 continue;
-            var pet = new Pet(row.Id, row.UserId, row.RoomId, row.Name, mRow.Type,
-                mRow.Race,
-                mRow.Color, mRow.Experience, mRow.Energy, mRow.Nutrition, mRow.Respect,
-                mRow.CreateStamp, row.X, row.Y,
-                row.Z, mRow.HaveSaddle, mRow.AnyoneRide, mRow.HairDye, mRow.PetHair,
-                mRow.GnomeClothing);
-            pet.Room = this;
-            pet.OwnerName = _clientManager.GetNameById(pet.OwnerId).Result;
-            var rndSpeechList = new List<RandomSpeech>();
-            roomUserManager.DeployBot(
-                new(pet.PetId, RoomId, "pet", "freeroam", pet.Name, "", pet.Look, pet.X, pet.Y, Convert.ToInt32(pet.Z), 0, 0, 0, 0, 0, ref rndSpeechList, "", 0, pet.OwnerId, false, 0, false,
-                    0), pet);
+            var pet = CreatePet(row, mRow);
+            var petData = CreatePetBotData(pet);
+            roomUserManager.DeployBot(petData, pet);
         }
+    }
+
+    private List<RandomSpeech> LoadBotSpeeches(IDbConnection connection, int botId)
+    {
+        var speeches = new List<RandomSpeech>();
+        foreach (var speech in connection.Query<BotSpeechRow>(
+                     "SELECT `text` AS Text FROM `bots_speech` WHERE `bot_id` = @botId",
+                     new { botId }))
+            speeches.Add(new(speech.Text, botId));
+
+        return speeches;
+    }
+
+    private RoomBot CreateBotData(BotRow bot, ref List<RandomSpeech> speeches)
+    {
+        return new(bot.Id, bot.RoomId, bot.AiType, bot.WalkMode, bot.Name,
+            bot.Motto, bot.Look, bot.X, bot.Y, bot.Z,
+            bot.Rotation, 0, 0, 0, 0, ref speeches, "M", 0, bot.UserId, bot.AutomaticChat,
+            bot.SpeakingInterval, ConvertExtensions.EnumToBool(bot.MixSentences), bot.ChatBubble);
+    }
+
+    private Pet CreatePet(PetBotRow row, PetDataRow petData)
+    {
+        var pet = new Pet(row.Id, row.UserId, row.RoomId, row.Name, petData.Type,
+            petData.Race,
+            petData.Color, petData.Experience, petData.Energy, petData.Nutrition, petData.Respect,
+            petData.CreateStamp, row.X, row.Y,
+            row.Z, petData.HaveSaddle, petData.AnyoneRide, petData.HairDye, petData.PetHair,
+            petData.GnomeClothing);
+        pet.Room = this;
+        pet.OwnerName = _clientManager.GetNameById(pet.OwnerId).Result;
+        return pet;
+    }
+
+    private RoomBot CreatePetBotData(Pet pet)
+    {
+        var randomSpeeches = new List<RandomSpeech>();
+        return new(pet.PetId, RoomId, "pet", "freeroam", pet.Name, "", pet.Look, pet.X, pet.Y, Convert.ToInt32(pet.Z), 0, 0, 0, 0, 0, ref randomSpeeches, "", 0, pet.OwnerId, false, 0, false,
+            0);
     }
 
     public FilterComponent GetFilter() => _filterComponent;
@@ -398,28 +432,31 @@ public class Room : RoomData
 
     public void LoadRights()
     {
-        UsersWithRights = new();
         if (Group != null)
             return;
-        using (var connection = _database.Connection())
-        {
-            foreach (var userId in connection.Query<int>(
-                         "SELECT `user_id` FROM `room_rights` WHERE `room_id` = @roomId",
-                         new { roomId = Id }))
-                UsersWithRights.Add(userId);
-        }
+
+        using var connection = _database.Connection();
+        UsersWithRights = LoadRoomRights(connection);
     }
 
     private void LoadFilter()
     {
-        WordFilterList = new();
-        using (var connection = _database.Connection())
-        {
-            foreach (var word in connection.Query<string>(
-                         "SELECT `word` FROM `room_filter` WHERE `room_id` = @roomId",
-                         new { roomId = Id }))
-                WordFilterList.Add(word ?? string.Empty);
-        }
+        using var connection = _database.Connection();
+        WordFilterList = LoadRoomFilterWords(connection);
+    }
+
+    private List<int> LoadRoomRights(IDbConnection connection)
+    {
+        return connection.Query<int>(
+            "SELECT `user_id` FROM `room_rights` WHERE `room_id` = @roomId",
+            new { roomId = Id }).ToList();
+    }
+
+    private List<string> LoadRoomFilterWords(IDbConnection connection)
+    {
+        return connection.Query<string>(
+            "SELECT `word` FROM `room_filter` WHERE `room_id` = @roomId",
+            new { roomId = Id }).Select(word => word ?? string.Empty).ToList();
     }
 
     public bool CheckRights(GameClient session) => CheckRights(session, false);
