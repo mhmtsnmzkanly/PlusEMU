@@ -14,6 +14,14 @@ This file tracks the ongoing architecture cleanup that moved packet/business log
   - `Config/config.json`
   - `CONTRIBUTION-GUIDE.txt`
 
+## Active In-Progress Batch
+
+The current `master` head also contains an unfinished room / habbo lifecycle batch that is compiling cleanly but should still be treated as active refactor work rather than completed migration.
+
+- Disconnect flow is being rerouted through `TcpSessionProxy` / `WsSessionProxy` and instance-backed `Habbo.OnDisconnect()`.
+- `RoomFactory`, `RoomManager`, `Room`, and related packet handlers are being reshaped to pass `IDatabase` and managers explicitly instead of leaning on older static/global access paths.
+- `WIRED-ASYNC-PLAN.md` captures the follow-up execution-queue design for the Wired engine; it is a design note, not an implemented feature.
+
 ## Migration Status: ✅ COMPLETE
 
 All active `GetQueryReactor()` usages have been eliminated and replaced with `DatabaseManager.Connection()` + Dapper.

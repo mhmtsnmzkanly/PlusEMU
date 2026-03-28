@@ -1,5 +1,14 @@
 # Changelog
 
+### [0.8.1] - 2026-03-28
+#### Added
+- `WIRED-ASYNC-PLAN.md` to document the queued single-threaded execution plan for future Wired async work.
+
+#### Changed
+- Routed disconnect handling through session proxies and instance-backed habbo persistence methods instead of direct server-side static persistence calls.
+- Continued the in-progress room and habbo lifecycle refactor by reshaping `RoomFactory`, `RoomManager`, `Room`, and `Habbo` around injected database and manager access.
+- Updated username, chat-style, avatar-effect, moodlight, toner, and furniture-interaction packet paths to pass `IDatabase` explicitly through the new persistence flow.
+
 ### [0.8.0] - 2026-03-28
 #### Added
 - `IItemTeleporterFinder` and `IItemHopperFinder` interfaces for modernize item discovery.
