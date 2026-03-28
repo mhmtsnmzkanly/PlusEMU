@@ -132,11 +132,7 @@ public class RoomService : IRoomService
     public async Task EnterRoom(GameClient session)
     {
         var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
-            return;
-
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
             return;
 
         session.Send(new RoomReadyComposer(room.RoomId, room.ModelName));
@@ -194,10 +190,9 @@ public class RoomService : IRoomService
 
     private static void RemoveCurrentRoomIfNeeded(GameClient session, Users.Habbo habbo, bool notifyUser, bool notifyKick)
     {
-        if (!habbo.InRoom)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return;
-
-        habbo.CurrentRoom?.GetRoomUserManager().RemoveUserFromRoom(session, notifyUser, notifyKick);
+        room.GetRoomUserManager().RemoveUserFromRoom(session, notifyUser, notifyKick);
     }
 
     private bool TryAuthorizeRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)

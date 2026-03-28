@@ -111,7 +111,7 @@ internal sealed class ProcessComponent
                     new { points = respectPoints, ts = DateTime.Today.ToString("MM/dd"), id = _player.Id });
                 _player.HabboStats.DailyRespectPoints = respectPoints;
                 _player.HabboStats.DailyPetRespectPoints = respectPoints;
-                if (_player.Client != null) _player.Client.Send(new UserObjectComposer(_player));
+                if (_player.TryGetClient(out var playerClient)) playerClient.Send(new UserObjectComposer(_player));
             }
             if (_player.GiftPurchasingWarnings < 15)
                 _player.GiftPurchasingWarnings = 0;
@@ -119,8 +119,8 @@ internal sealed class ProcessComponent
                 _player.MottoUpdateWarnings = 0;
             if (_player.ClothingUpdateWarnings < 15)
                 _player.ClothingUpdateWarnings = 0;
-            if (_player.Client != null)
-                _ = _achievementService!.ProgressAchievement(_player.Client, "ACH_AllTimeHotelPresence", 1);
+            if (_player.TryGetClient(out var achievementClient))
+                _ = _achievementService!.ProgressAchievement(achievementClient, "ACH_AllTimeHotelPresence", 1);
             _player.CheckCreditsTimer(_settingsManager!, _subscriptionManager!);
             _player.Effects?.CheckEffectExpiry(_player, _database!);
 

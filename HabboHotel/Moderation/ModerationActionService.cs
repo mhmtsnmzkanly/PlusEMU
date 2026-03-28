@@ -109,7 +109,7 @@ internal class ModerationActionService : IModerationActionService
         if (_clientManager.GetClientByUserId(userId) is not GameClient client)
             return Task.CompletedTask;
         var targetHabbo = client.GetHabbo();
-        if (targetHabbo == null || targetHabbo.CurrentRoom == null || targetHabbo.Id == moderator.Id)
+        if (targetHabbo == null || !targetHabbo.TryGetCurrentRoom(out _) || targetHabbo.Id == moderator.Id)
             return Task.CompletedTask;
         if (targetHabbo.Rank >= moderator.Rank)
         {
@@ -117,7 +117,7 @@ internal class ModerationActionService : IModerationActionService
             return Task.CompletedTask;
         }
 
-        if (moderator.CurrentRoom == null)
+        if (!moderator.TryGetCurrentRoom(out _))
             return Task.CompletedTask;
 
         return _roomService.LeaveRoom(client);
@@ -165,7 +165,8 @@ internal class ModerationActionService : IModerationActionService
                 return;
             }
             targetUsername = targetHabbo.Username;
-            targetIp = client?.GetHabbo()?.Client?.MachineId ?? ""; // Wait, machineId is in Habbo. IP is in Socket usually.
+            targetIp = targetHabbo.MachineId ?? ""; // Wait, machineId is in Habbo. IP is in Socket usually.
+            targetMachine = targetHabbo.MachineId ?? "";
             // Let's just fetch from DB to be safe and consistent.
             using (var connection = _database.Connection())
             {
@@ -173,7 +174,7 @@ internal class ModerationActionService : IModerationActionService
                     "SELECT `ip_last`, `machine_id` FROM `users` WHERE `id` = @userId LIMIT 1",
                     new { userId = targetHabbo.Id });
                 targetIp = targetData?.ip_last ?? "";
-                targetMachine = targetData?.machine_id ?? targetHabbo.MachineId;
+                targetMachine = targetData?.machine_id ?? targetMachine;
             }
         }
 
@@ -279,11 +280,7 @@ internal class ModerationActionService : IModerationActionService
         var moderator = session.GetHabbo();
         if (moderator?.Permissions == null || !moderator.Permissions.HasRight("mod_caution"))
             return Task.CompletedTask;
-        if (!moderator.InRoom)
-            return Task.CompletedTask;
-
-        var currentRoom = moderator.CurrentRoom;
-        if (currentRoom == null)
+        if (!moderator.TryGetCurrentRoom(out var currentRoom))
             return Task.CompletedTask;
 
         var isCaution = alertMode != 3;

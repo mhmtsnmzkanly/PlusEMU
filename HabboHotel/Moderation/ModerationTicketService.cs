@@ -43,8 +43,7 @@ internal class ModerationTicketService : IModerationTicketService
         if (reportedUser == null)
             return;
 
-        var currentRoom = habbo.CurrentRoom;
-        if (currentRoom == null)
+        if (!habbo.TryGetCurrentRoom(out var currentRoom))
             return;
 
         var ticket = new ModerationTicket(

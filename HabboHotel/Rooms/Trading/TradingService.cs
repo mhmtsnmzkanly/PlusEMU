@@ -27,10 +27,7 @@ internal class TradingService : ITradingService
     public async Task StartTrade(GameClient session, int targetVirtualId)
     {
         var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
-            return;
-
-        if (!habbo.TryGetCurrentRoom(out var room))
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
             return;
 
         var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
@@ -305,10 +302,7 @@ internal class TradingService : ITradingService
         trade = null!;
 
         var sessionHabbo = session.GetHabbo();
-        if (sessionHabbo == null || !sessionHabbo.InRoom)
-            return SendClosedIfPossible(session, sessionHabbo);
-
-        if (!sessionHabbo.TryGetCurrentRoom(out var currentRoom))
+        if (sessionHabbo == null || !sessionHabbo.TryGetCurrentRoom(out var currentRoom))
             return SendClosedIfPossible(session, sessionHabbo);
 
         var currentRoomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(sessionHabbo.Id);
