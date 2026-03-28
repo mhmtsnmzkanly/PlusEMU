@@ -56,6 +56,7 @@ Phase 1 is now in place:
 - The same cleanup now reaches the rolling movement effects too, with `MoveAndRotate` and `MoveFurniToUser` sharing one placement helper for the common chase/roll/slide validation path rather than each carrying their own copy.
 - The queue runtime is being tightened on top of that too, with `WiredComponent` now sharing its common enqueue guard and typed dispatch routing instead of repeating those checks across each trigger-specific branch.
 - One of the lingering non-refactor tails is closed as well: `BotCommunicatesToAll` is no longer just a placeholder box and now executes real bot speech with persisted mode/config data through the normal room speech fanout path.
+- The runtime lookup surface is a bit tighter now too, with `WiredComponent` sharing its common trigger-box and same-tile box enumeration helpers instead of re-filtering the same `_wiredItems` collection in multiple places.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

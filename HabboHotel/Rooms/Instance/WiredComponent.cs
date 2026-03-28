@@ -343,7 +343,7 @@ public class WiredComponent
 
     private bool EnqueueTrigger(WiredBoxType type, IReadOnlyCollection<uint>? targetItemIds = null, object? context = null)
     {
-        if (!HasTrigger(type))
+        if (!GetTriggerBoxes(type).Any())
             return false;
 
         if (targetItemIds != null && targetItemIds.Count == 0)
@@ -353,8 +353,15 @@ public class WiredComponent
         return true;
     }
 
-    private bool HasTrigger(WiredBoxType type) =>
-        _wiredItems.Values.Any(box => box != null && box.Type == type && IsTrigger(box.Item));
+    private IEnumerable<IWiredItem> GetTriggerBoxes(WiredBoxType type) =>
+        _wiredItems.Values.Where(box => box != null && box.Type == type && IsTrigger(box.Item));
+
+    private IEnumerable<IWiredItem> GetBoxesAt(IWiredItem item, Func<Item, bool> predicate) =>
+        _wiredItems.Values.Where(box =>
+            box != null &&
+            predicate(box.Item) &&
+            box.Item.GetX == item.Item.GetX &&
+            box.Item.GetY == item.Item.GetY);
 
     private static bool MatchesUserSaysTrigger(IWiredItem box, string message) =>
         message.Contains($" {box.StringData}") || message.Contains($"{box.StringData} ") || message == box.StringData;
@@ -400,7 +407,7 @@ public class WiredComponent
 
     private IEnumerable<IWiredItem> GetQueuedTriggerTargets(WiredExecutionData execution)
     {
-        var boxes = _wiredItems.Values.Where(box => box != null && box.Type == execution.Type && IsTrigger(box.Item));
+        var boxes = GetTriggerBoxes(execution.Type);
         if (execution.TargetItemIds == null || execution.TargetItemIds.Count == 0)
             return boxes.ToList();
 
@@ -410,24 +417,12 @@ public class WiredComponent
 
     public ICollection<IWiredItem> GetTriggers(IWiredItem item)
     {
-        var items = new List<IWiredItem>();
-        foreach (var I in _wiredItems.Values)
-        {
-            if (IsTrigger(I.Item) && I.Item.GetX == item.Item.GetX && I.Item.GetY == item.Item.GetY)
-                items.Add(I);
-        }
-        return items;
+        return GetBoxesAt(item, IsTrigger).ToList();
     }
 
     public ICollection<IWiredItem> GetEffects(IWiredItem item)
     {
-        var items = new List<IWiredItem>();
-        foreach (var I in _wiredItems.Values)
-        {
-            if (IsEffect(I.Item) && I.Item.GetX == item.Item.GetX && I.Item.GetY == item.Item.GetY)
-                items.Add(I);
-        }
-        return items.OrderBy(x => x.Item.GetZ).ToList();
+        return GetBoxesAt(item, IsEffect).OrderBy(x => x.Item.GetZ).ToList();
     }
 
     public IWiredItem GetRandomEffect(ICollection<IWiredItem> effects)
