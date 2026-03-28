@@ -7,7 +7,7 @@ using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class MoveAndRotateBox : IWiredItem, IWiredCycle
+internal class MoveAndRotateBox : IWiredItem, IWiredCycle, IWiredExecutable
 {
     private int _delay;
     private long _next;
@@ -122,6 +122,11 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle
     }
 
     public bool Execute(params object[] @params)
+    {
+        return ((IWiredExecutable)this).Execute(new(@params));
+    }
+
+    bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         if (SetItems.Count == 0)
             return false;

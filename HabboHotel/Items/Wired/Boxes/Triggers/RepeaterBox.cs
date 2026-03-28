@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class RepeaterBox : IWiredItem, IWiredCycle
+internal class RepeaterBox : IWiredItem, IWiredCycle, IWiredExecutable
 {
     private int _delay;
 
@@ -56,5 +56,7 @@ internal class RepeaterBox : IWiredItem, IWiredCycle
         TickCount = delay;
     }
 
-    public bool Execute(params object[] @params) => true;
+    public bool Execute(params object[] @params) => ((IWiredExecutable)this).Execute(new(@params));
+
+    bool IWiredExecutable.Execute(WiredExecutionContext context) => true;
 }
