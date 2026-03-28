@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
@@ -41,14 +42,18 @@ internal class UserWalksOnBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        var player = (Habbo)@params[0];
+        var context = GetContext(@params);
+        var player = context?.Actor ?? (Habbo)@params[0];
         if (player == null)
             return false;
-        var item = (Item)@params[1];
+        var item = context?.Item ?? (Item)@params[1];
         if (item == null)
             return false;
         if (!SetItems.ContainsKey(item.Id))
             return false;
         return Instance.GetWired().ExecuteTriggerStack(this, player);
     }
+
+    private static WiredActorItemTriggerContext? GetContext(object[] @params) =>
+        @params.Length == 1 ? @params[0] as WiredActorItemTriggerContext : null;
 }

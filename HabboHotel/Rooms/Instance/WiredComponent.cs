@@ -254,6 +254,9 @@ public class WiredComponent
             if (type == WiredBoxType.TriggerUserSaysCommand)
                 return QueueMatchingUserSaysCommandTriggers(@params);
 
+            if (TryQueueActorItemTrigger(type, @params))
+                return true;
+
             if (!HasTrigger(type))
                 return false;
 
@@ -265,6 +268,24 @@ public class WiredComponent
             //log.Error("Error when triggering Wired Event: " + e);
             return false;
         }
+    }
+
+    private bool TryQueueActorItemTrigger(WiredBoxType type, object[] @params)
+    {
+        if (type != WiredBoxType.TriggerWalkOnFurni &&
+            type != WiredBoxType.TriggerWalkOffFurni &&
+            type != WiredBoxType.TriggerUserFurniCollision &&
+            type != WiredBoxType.TriggerStateChanges)
+            return false;
+
+        if (@params.Length < 2 || @params[0] is not Habbo actor || @params[1] is not Item item)
+            return false;
+
+        if (!HasTrigger(type))
+            return false;
+
+        _executionQueue.Enqueue(new(type, null, new WiredActorItemTriggerContext(actor, item)));
+        return true;
     }
 
     private bool QueueMatchingUserSaysTriggers(object[] @params)
