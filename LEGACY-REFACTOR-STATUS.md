@@ -269,3 +269,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 ## Upcoming Architecture Tasks
 - Continue moving room lifecycle/bootstrap ownership out of `Room` constructor/setup paths and into clearer manager/factory-driven phases.
 - Start the first true `RoomItemHandling` service extraction once the room lifecycle ownership boundary is stable.
+- Continue the incoming packet sweep by replacing ad-hoc `session.GetHabbo()` / room-null guard patterns with the newer explicit Habbo helper flow across group, users, connection, and moderation-adjacent handlers.

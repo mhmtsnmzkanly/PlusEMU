@@ -20,12 +20,16 @@ internal class AmbassadorAlertEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
+        var reporter = session.GetHabbo();
+        if (reporter == null)
+            return;
+
         var userid = packet.ReadInt();
         var target = _clientManager.GetClientByUserId(userid)?.GetHabbo() ?? 
                      await _userDataFactory.GetUserDataByIdAsync(userid);
         if (target == null)
             return;
 
-        await _ambassadorsManager.Warn(session.GetHabbo(), target, "Alert");
+        await _ambassadorsManager.Warn(reporter, target, "Alert");
     }
 }

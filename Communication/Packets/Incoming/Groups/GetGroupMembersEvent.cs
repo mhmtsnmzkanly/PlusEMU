@@ -18,8 +18,7 @@ internal class GetGroupMembersEvent : IPacketEvent
     }
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo)
             return Task.CompletedTask;
 
         var groupId = packet.ReadInt();
@@ -28,6 +27,7 @@ internal class GetGroupMembersEvent : IPacketEvent
         var requestType = packet.ReadInt();
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;
+
         var members = new List<CachedUser>();
         switch (requestType)
         {
@@ -71,8 +71,10 @@ internal class GetGroupMembersEvent : IPacketEvent
                 break;
             }
         }
+
         if (!string.IsNullOrEmpty(searchVal))
             members = members.Where(x => x.Username.StartsWith(searchVal)).ToList();
+
         var startIndex = (page - 1) * 14 + 14;
         var finishIndex = members.Count;
         session.Send(new GroupMembersComposer(group, members.Skip(startIndex).Take(finishIndex - startIndex).ToList(), members.Count, page,
