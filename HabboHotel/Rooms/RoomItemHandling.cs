@@ -34,6 +34,7 @@ public class RoomItemHandling
     private readonly IRoomItemPlacementPersistenceService _roomItemPlacementPersistenceService;
     private readonly IRoomRollerService _roomRollerService;
     private readonly IRoomItemInventoryService _roomItemInventoryService;
+    private readonly IRoomItemUpdateQueueService _roomItemUpdateQueueService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -42,7 +43,7 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService)
     {
         _room = room;
         _itemLoader = itemLoader;
@@ -51,6 +52,7 @@ public class RoomItemHandling
         _roomItemPlacementPersistenceService = roomItemPlacementPersistenceService;
         _roomRollerService = roomRollerService;
         _roomItemInventoryService = roomItemInventoryService;
+        _roomItemUpdateQueueService = roomItemUpdateQueueService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -716,38 +718,7 @@ public class RoomItemHandling
 
     private void ProcessQueuedItemUpdates()
     {
-        if (_roomItemUpdateQueue.Count == 0)
-            return;
-
-        var pendingItems = DequeueItemsNeedingFurtherUpdates();
-        RequeuePendingItems(pendingItems);
-    }
-
-    private List<Item> DequeueItemsNeedingFurtherUpdates()
-    {
-        var pendingItems = new List<Item>();
-        while (_roomItemUpdateQueue.Count > 0)
-        {
-            if (!_roomItemUpdateQueue.TryDequeue(out var item) || item == null)
-                continue;
-
-            item.ProcessUpdates();
-            if (item.UpdateCounter > 0)
-                pendingItems.Add(item);
-        }
-
-        return pendingItems;
-    }
-
-    private void RequeuePendingItems(List<Item> pendingItems)
-    {
-        foreach (var item in pendingItems.ToList())
-        {
-            if (item == null)
-                continue;
-
-            _roomItemUpdateQueue.Enqueue(item);
-        }
+        _roomItemUpdateQueueService.Process(_roomItemUpdateQueue);
     }
 
     public List<Item> RemoveItems(GameClient session)
