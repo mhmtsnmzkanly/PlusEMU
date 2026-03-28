@@ -38,60 +38,52 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
     {
         if (!_requested || string.IsNullOrEmpty(StringData) || StringData == "0;0;0" || SetItems.Count == 0)
             return false;
+        if (!TryParseModes(out var stateMode, out var directionMode, out var positionMode))
+        {
+            _requested = false;
+            return false;
+        }
         foreach (var item in SetItems.Values.ToList())
         {
             if (Instance.GetRoomItemHandler().GetFloor == null || !Instance.GetRoomItemHandler().GetFloor.Contains(item))
                 continue;
-            foreach (var I in ItemsData.Split(';'))
+            foreach (var entry in ItemsData.Split(';'))
             {
-                if (string.IsNullOrEmpty(I))
+                if (string.IsNullOrEmpty(entry))
                     continue;
-                var itemId = Convert.ToInt32(I.Split(':')[0]);
-                var ii = Instance.GetRoomItemHandler().GetItem(Convert.ToUInt32(itemId));
-                if (ii == null)
+                if (!TryParseSavedState(entry, out var itemId, out var part))
                     continue;
-                var partsString = I.Split(':');
-                try
-                {
-                    if (string.IsNullOrEmpty(partsString[0]) || string.IsNullOrEmpty(partsString[1]))
-                        continue;
-                }
-                catch
-                {
+                var targetItem = Instance.GetRoomItemHandler().GetItem(itemId);
+                if (targetItem == null)
                     continue;
-                }
-                var part = partsString[1].Split(',');
-                try
+                if (stateMode == 1)
+                    SetState(targetItem, part.Length >= 5 ? part[4] : "1");
+                if (directionMode == 1)
                 {
-                    if (int.Parse(StringData.Split(';')[0]) == 1) //State
+                    try
                     {
-                        if (part.Length >= 5)
-                            SetState(ii, part[4]);
-                        else
-                            SetState(ii, "1");
+                        if (part.Length >= 4 && int.TryParse(part[3], out var rotation))
+                            SetRotation(targetItem, rotation);
+                    }
+                    catch (Exception e)
+                    {
+                        ExceptionLogger.LogWiredException(e);
                     }
                 }
-                catch (Exception e)
+                if (positionMode == 1)
                 {
-                    ExceptionLogger.LogWiredException(e);
-                }
-                try
-                {
-                    if (int.Parse(StringData.Split(';')[1]) == 1) //Direction
-                        SetRotation(ii, Convert.ToInt32(part[3]));
-                }
-                catch (Exception e)
-                {
-                    ExceptionLogger.LogWiredException(e);
-                }
-                try
-                {
-                    if (int.Parse(StringData.Split(';')[2]) == 1) //Position
-                        SetPosition(ii, Convert.ToInt32(part[0]), Convert.ToInt32(part[1]), Convert.ToDouble(part[2]));
-                }
-                catch (Exception e)
-                {
-                    ExceptionLogger.LogWiredException(e);
+                    try
+                    {
+                        if (part.Length >= 3 &&
+                            int.TryParse(part[0], out var coordX) &&
+                            int.TryParse(part[1], out var coordY) &&
+                            double.TryParse(part[2], out var coordZ))
+                            SetPosition(targetItem, coordX, coordY, coordZ);
+                    }
+                    catch (Exception e)
+                    {
+                        ExceptionLogger.LogWiredException(e);
+                    }
                 }
             }
         }
@@ -139,6 +131,35 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
             TickCount = Delay;
             _requested = true;
         }
+        return true;
+    }
+
+    private bool TryParseModes(out int stateMode, out int directionMode, out int positionMode)
+    {
+        stateMode = 0;
+        directionMode = 0;
+        positionMode = 0;
+
+        var modeParts = StringData.Split(';');
+        return modeParts.Length >= 3 &&
+               int.TryParse(modeParts[0], out stateMode) &&
+               int.TryParse(modeParts[1], out directionMode) &&
+               int.TryParse(modeParts[2], out positionMode);
+    }
+
+    private static bool TryParseSavedState(string rawData, out uint itemId, out string[] part)
+    {
+        itemId = 0;
+        part = Array.Empty<string>();
+
+        var partsString = rawData.Split(':');
+        if (partsString.Length < 2 ||
+            string.IsNullOrEmpty(partsString[0]) ||
+            string.IsNullOrEmpty(partsString[1]) ||
+            !uint.TryParse(partsString[0], out itemId))
+            return false;
+
+        part = partsString[1].Split(',');
         return true;
     }
 
