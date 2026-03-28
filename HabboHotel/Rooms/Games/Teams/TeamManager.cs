@@ -48,10 +48,7 @@ public class TeamManager
         {
             case "banzai":
             {
-                var client = user.GetClient();
-                var habbo = client?.GetHabbo();
-                var room = habbo?.CurrentRoom;
-                if (room == null)
+                if (!TryGetRoom(user, out var room))
                     return;
                 foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
                 {
@@ -104,10 +101,7 @@ public class TeamManager
             }
             case "freeze":
             {
-                var client = user.GetClient();
-                var habbo = client?.GetHabbo();
-                var room = habbo?.CurrentRoom;
-                if (room == null)
+                if (!TryGetRoom(user, out var room))
                     return;
                 foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
                 {
@@ -154,10 +148,7 @@ public class TeamManager
         {
             case "banzai":
             {
-                var client = user.GetClient();
-                var habbo = client?.GetHabbo();
-                var room = habbo?.CurrentRoom;
-                if (room == null)
+                if (!TryGetRoom(user, out var room))
                     return;
                 foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
                 {
@@ -212,10 +203,7 @@ public class TeamManager
             }
             case "freeze":
             {
-                var client = user.GetClient();
-                var habbo = client?.GetHabbo();
-                var room = habbo?.CurrentRoom;
-                if (room == null)
+                if (!TryGetRoom(user, out var room))
                     return;
                 foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
                 {
@@ -245,6 +233,13 @@ public class TeamManager
                 break;
             }
         }
+    }
+
+    private static bool TryGetRoom(RoomUser user, out Room room)
+    {
+        room = null!;
+        var habbo = user.GetClient()?.GetHabbo();
+        return habbo != null && habbo.TryGetCurrentRoom(out room);
     }
 
     public void Dispose()
