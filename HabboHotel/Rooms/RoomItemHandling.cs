@@ -35,6 +35,8 @@ public class RoomItemHandling
     private readonly IRoomRollerService _roomRollerService;
     private readonly IRoomItemInventoryService _roomItemInventoryService;
     private readonly IRoomItemUpdateQueueService _roomItemUpdateQueueService;
+    private readonly IRoomItemLoadService _roomItemLoadService;
+    private readonly IRoomItemRemovalService _roomItemRemovalService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -43,7 +45,7 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService)
     {
         _room = room;
         _itemLoader = itemLoader;
@@ -53,6 +55,8 @@ public class RoomItemHandling
         _roomRollerService = roomRollerService;
         _roomItemInventoryService = roomItemInventoryService;
         _roomItemUpdateQueueService = roomItemUpdateQueueService;
+        _roomItemLoadService = roomItemLoadService;
+        _roomItemRemovalService = roomItemRemovalService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -124,102 +128,29 @@ public class RoomItemHandling
 
     public void LoadFurniture()
     {
-        ResetLoadedFurnitureState();
+        _roomItemLoadService.ResetLoadedFurnitureState(_floorItems.Values, _wallItems.Values);
         var items = _itemLoader.GetItemsForRoom(_room.Id, _room);
         foreach (var item in items.ToList())
         {
             if (item == null)
                 continue;
 
-            EnsureOwnedItemUser(item);
+            _roomItemLoadService.EnsureOwnedItemUser(_room, item);
 
             if (item.IsFloorItem)
             {
-                if (TryRecoverInvalidFloorItem(item))
+                if (_roomItemLoadService.TryRecoverInvalidFloorItem(_room, item))
                     continue;
 
                 RegisterLoadedItem(item);
             }
             else if (item.IsWallItem)
             {
-                NormalizeWallItemPosition(item);
+                _roomItemLoadService.NormalizeWallItemPosition(_room, item, DefaultWallPosition, WallPositionCheck);
                 RegisterLoadedItem(item);
             }
         }
         InitializeLoadedFloorItemState();
-    }
-
-    private void ResetLoadedFurnitureState()
-    {
-        if (_floorItems.Count > 0)
-            _floorItems.Clear();
-        if (_wallItems.Count > 0)
-            _wallItems.Clear();
-    }
-
-    private void EnsureOwnedItemUser(Item item)
-    {
-        if (item.UserId != 0)
-            return;
-
-        using var connection = _room.GetDatabase().Connection();
-        connection.Execute(
-            "UPDATE `items` SET `user_id` = @userId WHERE `id` = @itemId LIMIT 1",
-            new { itemId = item.Id, userId = _room.OwnerId });
-    }
-
-    private bool TryRecoverInvalidFloorItem(Item item)
-    {
-        if (_room.GetGameMap().ValidTile(item.GetX, item.GetY))
-            return false;
-
-        using (var connection = _room.GetDatabase().Connection())
-            connection.Execute(
-                "UPDATE `items` SET `room_id` = 0 WHERE `id` = @id LIMIT 1",
-                new { id = item.Id });
-
-        var client = _room.GetClientManager().GetClientByUserId(item.UserId);
-        var clientHabbo = client?.GetHabbo();
-        var furniture = clientHabbo?.Inventory?.Furniture;
-        if (client != null && furniture != null)
-        {
-            furniture.AddItem(item.ToInventoryItem());
-            client.Send(new FurniListUpdateComposer());
-        }
-
-        return true;
-    }
-
-    private void NormalizeWallItemPosition(Item item)
-    {
-        if (string.IsNullOrWhiteSpace(item.WallCoordinates))
-        {
-            PersistDefaultWallPosition(item);
-            item.WallCoordinates = DefaultWallPosition;
-            return;
-        }
-
-        try
-        {
-            var wallParts = item.WallCoordinates.Split(':');
-            if (wallParts.Length < 2)
-                throw new FormatException("Invalid wall position");
-
-            item.WallCoordinates = WallPositionCheck($":{wallParts[1]}") ?? DefaultWallPosition;
-        }
-        catch
-        {
-            PersistDefaultWallPosition(item);
-            item.WallCoordinates = DefaultWallPosition;
-        }
-    }
-
-    private void PersistDefaultWallPosition(Item item)
-    {
-        using var connection = _room.GetDatabase().Connection();
-        connection.Execute(
-            "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
-            new { wallPosition = DefaultWallPosition, id = item.Id });
     }
 
     private void RegisterLoadedItem(Item item)
@@ -302,53 +233,17 @@ public class RoomItemHandling
         if (item == null)
             return;
 
-        PrepareItemRemoval(session, item);
+        _roomItemRemovalService.PrepareItemRemoval(_room, session, item);
         RemoveRoomItem(item);
-    }
-
-    private void PrepareItemRemoval(GameClient? session, Item item)
-    {
-        UnregisterSpecialRemovalTargets(item);
-        RunItemRemovalInteractor(session, item);
-        ResetGuildGateUpdateState(item);
-    }
-
-    private void UnregisterSpecialRemovalTargets(Item item)
-    {
-        if (item.Definition.InteractionType == InteractionType.FootballGate)
-            _room.GetSoccer().UnRegisterGate(item);
-    }
-
-    private static void RunItemRemovalInteractor(GameClient? session, Item item)
-    {
-        if (item.Definition.InteractionType != InteractionType.Gift)
-            item.Interactor.OnRemove(session!, item);
-    }
-
-    private static void ResetGuildGateUpdateState(Item item)
-    {
-        if (item.Definition.InteractionType != InteractionType.GuildGate)
-            return;
-
-        item.UpdateCounter = 0;
-        item.UpdateNeeded = false;
     }
 
     private void RemoveRoomItem(Item item)
     {
-        BroadcastItemRemoval(item);
+        _roomItemRemovalService.BroadcastItemRemoval(_room, item);
         RemoveLoadedItem(item);
         RemoveItem(item);
         _room.GetGameMap().GenerateMaps();
         _room.GetRoomUserManager().UpdateUserStatusses();
-    }
-
-    private void BroadcastItemRemoval(Item item)
-    {
-        if (item.IsFloorItem)
-            _room.SendPacket(new ObjectRemoveComposer(item, item.UserId));
-        else if (item.IsWallItem)
-            _room.SendPacket(new ItemRemoveComposer(item, item.UserId));
     }
 
     private void RemoveLoadedItem(Item item)

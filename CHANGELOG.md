@@ -19,6 +19,7 @@
 - Extracted roller target analysis plus item/user move eligibility checks into `RoomRollerService`, so `RoomItemHandling` keeps packet/state coordination while roller movement rules live behind a dedicated service.
 - Extracted owned-item removal ownership checks and inventory re-add behavior into `RoomItemInventoryService`, so `RoomItemHandling` no longer owns those inventory return decisions directly during bulk pickup.
 - Extracted queued room-item dequeue/process/requeue flow into `RoomItemUpdateQueueService`, so `RoomItemHandling.OnCycle()` no longer owns the raw update-queue processing loop.
+- Extracted furniture load normalization/recovery into `RoomItemLoadService` and room-side removal preparation/broadcast behavior into `RoomItemRemovalService`, so `RoomItemHandling` carries less of the room item load/remove orchestration directly.
 - Split `RoomItemHandling` furniture load/remove flow into explicit helper stages so invalid floor recovery, wall-position normalization, registration, and removal broadcast/state cleanup no longer live in one monolithic method.
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.
