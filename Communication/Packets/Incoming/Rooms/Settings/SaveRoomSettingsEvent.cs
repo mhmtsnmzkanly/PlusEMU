@@ -120,22 +120,30 @@ internal class SaveRoomSettingsEvent : IPacketEvent
             "UPDATE `rooms` SET `caption`=@caption,`description`=@description,`password`=@password,`category`=@categoryId,`state`=@state,`tags`=@tags,`users_max`=@maxUsers,`allow_pets`=@allowPets,`allow_pets_eat`=@allowPetsEat,`room_blocking_disabled`=@roomBlockingDisabled,`allow_hidewall`=@allowHidewall,`floorthick`=@floorThick,`wallthick`=@wallThick,`mute_settings`=@muteSettings,`kick_settings`=@kickSettings,`ban_settings`=@banSettings,`chat_mode`=@chatMode,`chat_size`=@chatSize,`chat_speed`=@chatSpeed,`chat_extra_flood`=@extraFlood,`chat_hearing_distance`=@chatDistance,`trade_settings`=@tradeSettings WHERE `id`=@roomId LIMIT 1",
             new { caption = room.Name, description = room.Description, password = room.Password, categoryId, state = accessStr, tags = formattedTags.ToString(), maxUsers, allowPets, allowPetsEat, roomBlockingDisabled = roomBlockingEnabled, allowHidewall = room.Hidewall, floorThick = room.FloorThickness, wallThick = room.WallThickness, muteSettings = room.WhoCanMute, kickSettings = room.WhoCanKick, banSettings = room.WhoCanBan, chatMode = room.ChatMode, chatSize = room.ChatSize, chatSpeed = room.ChatSpeed, extraFlood = room.ExtraFlood, chatDistance = room.ChatDistance, tradeSettings = room.TradeSettings, roomId = room.Id });
         room.GetGameMap().GenerateMaps();
-        if (!habbo.IsInRoom(room))
-        {
-            session.Send(new RoomSettingsSavedComposer(room.RoomId));
-            session.Send(new RoomInfoUpdatedComposer(room.RoomId));
-            session.Send(new RoomVisualizationSettingsComposer(room.WallThickness, room.FloorThickness, Convert.ToBoolean(room.Hidewall)));
-        }
-        else
-        {
-            room.SendPacket(new RoomSettingsSavedComposer(room.RoomId));
-            room.SendPacket(new RoomInfoUpdatedComposer(room.RoomId));
-            room.SendPacket(new RoomVisualizationSettingsComposer(room.WallThickness, room.FloorThickness, Convert.ToBoolean(room.Hidewall)));
-        }
+        BroadcastUpdatedRoomSettings(session, room, habbo.IsInRoom(room));
         await _achievementService.ProgressAchievement(session, "ACH_SelfModDoorModeSeen", 1);
         await _achievementService.ProgressAchievement(session, "ACH_SelfModWalkthroughSeen", 1);
         await _achievementService.ProgressAchievement(session, "ACH_SelfModChatScrollSpeedSeen", 1);
         await _achievementService.ProgressAchievement(session, "ACH_SelfModChatFloodFilterSeen", 1);
         await _achievementService.ProgressAchievement(session, "ACH_SelfModChatHearRangeSeen", 1);
+    }
+
+    private static void BroadcastUpdatedRoomSettings(GameClient session, Room room, bool userIsInRoom)
+    {
+        var savedComposer = new RoomSettingsSavedComposer(room.RoomId);
+        var infoComposer = new RoomInfoUpdatedComposer(room.RoomId);
+        var visualizationComposer = new RoomVisualizationSettingsComposer(room.WallThickness, room.FloorThickness, Convert.ToBoolean(room.Hidewall));
+
+        if (userIsInRoom)
+        {
+            room.SendPacket(savedComposer);
+            room.SendPacket(infoComposer);
+            room.SendPacket(visualizationComposer);
+            return;
+        }
+
+        session.Send(savedComposer);
+        session.Send(infoComposer);
+        session.Send(visualizationComposer);
     }
 }

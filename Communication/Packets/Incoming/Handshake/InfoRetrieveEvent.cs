@@ -7,7 +7,10 @@ public class InfoRetrieveEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        session.Send(new UserObjectComposer(session.GetHabbo()));
+        if (session.GetHabbo() is not { } habbo)
+            return Task.CompletedTask;
+
+        session.Send(new UserObjectComposer(habbo));
         session.Send(new UserPerksComposer());
         return Task.CompletedTask;
     }

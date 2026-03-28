@@ -57,7 +57,8 @@ internal class CheckUserNameEvent : IPacketEvent
         if (inUse)
         {
             ICollection<string> suggestions = new List<string>();
-            for (var i = 100; i < 103; i++) suggestions.Add(i.ToString());
+            for (var i = 100; i < 103; i++)
+                suggestions.Add(i.ToString());
             session.Send(new NameChangeUpdateComposer(name, 5, suggestions));
             return;
         }

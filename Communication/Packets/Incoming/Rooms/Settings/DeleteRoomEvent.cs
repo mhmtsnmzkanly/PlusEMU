@@ -34,18 +34,7 @@ internal class DeleteRoomEvent : IPacketEvent
         if (room.OwnerId != habbo.Id && !(permissions?.HasRight("room_delete_any") ?? false))
             return Task.CompletedTask;
 
-        var itemsToRemove = new List<Item>();
-        foreach (var item in room.GetRoomItemHandler().GetWallAndFloor.ToList())
-        {
-            if (item == null)
-                continue;
-            if (item.Definition.InteractionType == InteractionType.Moodlight)
-            {
-                using var db = _database.Connection();
-                db.Execute("DELETE FROM `room_items_moodlight` WHERE `item_id` = @itemId LIMIT 1", new { itemId = item.Id });
-            }
-            itemsToRemove.Add(item);
-        }
+        var itemsToRemove = GetItemsToRemove(room);
         foreach (var item in itemsToRemove)
         {
             var targetClient = _clientManager.GetClientByUserId(item.UserId);
@@ -71,5 +60,25 @@ internal class DeleteRoomEvent : IPacketEvent
         dbFinal.Execute("DELETE FROM `room_rights` WHERE `room_id` = @rid", new { rid = roomId });
         dbFinal.Execute("UPDATE `users` SET `home_room` = '0' WHERE `home_room` = @rid", new { rid = roomId });
         return Task.CompletedTask;
+    }
+
+    private List<Item> GetItemsToRemove(Room room)
+    {
+        var itemsToRemove = new List<Item>();
+        foreach (var item in room.GetRoomItemHandler().GetWallAndFloor.ToList())
+        {
+            if (item == null)
+                continue;
+
+            if (item.Definition.InteractionType == InteractionType.Moodlight)
+            {
+                using var db = _database.Connection();
+                db.Execute("DELETE FROM `room_items_moodlight` WHERE `item_id` = @itemId LIMIT 1", new { itemId = item.Id });
+            }
+
+            itemsToRemove.Add(item);
+        }
+
+        return itemsToRemove;
     }
 }

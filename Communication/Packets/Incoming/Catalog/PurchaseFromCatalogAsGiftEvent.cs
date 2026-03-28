@@ -51,9 +51,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var sender = session.GetHabbo();
-        var senderBadges = sender?.Inventory?.Badges;
-        if (sender == null || senderBadges == null)
+        if (session.GetHabbo() is not { Inventory.Badges: { } senderBadges } sender)
             return;
 
         var pageId = packet.ReadInt();
