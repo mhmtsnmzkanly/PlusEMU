@@ -279,3 +279,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - Continue the remaining stateful packet cleanup so profile, badge, promotion, settings, and friend-furni handlers also rely on the same Habbo helper surface instead of open-coded session/component branching.
 - Keep trimming the packet tail by simplifying the heavier room settings / delete-room / ignore-list flows before moving the same Habbo helper cleanup into services and commands.
 - Continue the last packet-tail cleanup by extracting repeated helperless blocks from delete-room, room-settings, and large catalog purchase handlers before shifting focus to `Habbo` usage in services/commands.
+- Continue the `Habbo` helper migration in services/commands after the packet sweep, starting with `GroupService` and then the moderator/user command set that still reads `CurrentRoom` / `Client` directly.

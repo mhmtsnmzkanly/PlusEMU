@@ -326,6 +326,7 @@
 
 ### Runtime And Framework
 
+- Started moving the post-packet Habbo cleanup into services by trimming `GroupService` room/client access repetition, routing favourite-group refresh through helpers, and swapping controller notifications onto `Habbo.TryGetClient(...)`.
 - Continued trimming the packet tail by tightening handshake/profile/gift guards, extracting the repeated room-settings broadcast path, and splitting the item-collection phase out of room deletion before deeper service cleanup.
 - Continued the stateful packet cleanup around room settings, room deletion, ignored users, and catalog room/group promotion entry points by removing duplicate null branches and simplifying the surrounding Habbo/component flow.
 - Continued the stateful packet sweep across figure, motto, badge, room-promotion, room-settings, gnome, and friend-furni flows by converting them to helper-first Habbo/component guards and by reducing room-state branching around active-room checks.

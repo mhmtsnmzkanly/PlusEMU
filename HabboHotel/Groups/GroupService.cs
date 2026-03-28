@@ -92,11 +92,7 @@ internal class GroupService : IGroupService
 
         session.Send(new GroupFurniConfigComposer(_groupManager.GetGroupsForUser(habbo.Id), _groupManager));
         session.Send(new GroupInfoComposer(group, session, _roomFactory));
-        var currentRoom = habbo.CurrentRoom;
-        if (currentRoom != null)
-            currentRoom.SendPacket(new RefreshFavouriteGroupComposer(habbo.Id));
-        else
-            session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
+        SendFavouriteGroupRefreshForHabbo(session, habbo);
     }
 
     public async Task AcceptMembership(GameClient session, int groupId, int userId)
@@ -164,8 +160,7 @@ internal class GroupService : IGroupService
             "UPDATE `user_statistics` SET `groupid` = @groupId WHERE `id` = @userId LIMIT 1",
             new { groupId = habboStats.FavouriteGroupId, userId = habbo.Id });
 
-        var currentRoom = habbo.CurrentRoom;
-        if (habbo.InRoom && currentRoom != null)
+        if (habbo.TryGetCurrentRoom(out var currentRoom))
         {
             currentRoom.SendPacket(new RefreshFavouriteGroupComposer(habbo.Id));
             currentRoom.SendPacket(new HabboGroupBadgesComposer(group));
@@ -192,18 +187,16 @@ internal class GroupService : IGroupService
             "UPDATE `user_statistics` SET `groupid` = 0 WHERE `id` = @userId LIMIT 1",
             new { userId = habbo.Id });
 
-        var currentRoom = habbo.CurrentRoom;
-        if (habbo.InRoom && currentRoom != null)
+        if (habbo.TryGetCurrentRoom(out var currentRoom))
         {
             var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user != null)
                 currentRoom.SendPacket(new UpdateFavouriteGroupComposer(null, user.VirtualId));
-            currentRoom.SendPacket(new RefreshFavouriteGroupComposer(habbo.Id));
+            SendFavouriteGroupRefresh(currentRoom, habbo.Id);
+            return;
         }
-        else
-        {
-            session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
-        }
+
+        session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
     }
 
     public async Task GiveAdminRights(GameClient session, int groupId, int userId)
@@ -444,8 +437,7 @@ internal class GroupService : IGroupService
         group.Colour2 = secondaryColour;
         session.Send(new GroupInfoComposer(group, session, _roomFactory));
 
-        var currentRoom = habbo.CurrentRoom;
-        if (currentRoom == null)
+        if (!habbo.TryGetCurrentRoom(out var currentRoom))
             return;
 
         foreach (var item in currentRoom.GetRoomItemHandler().GetFloor.ToList())
@@ -545,7 +537,7 @@ internal class GroupService : IGroupService
         if (_roomManager.TryGetRoom(roomId, out var roomInstance))
             roomInstance.Group = group;
             
-        if (habbo.CurrentRoom?.Id != roomId)
+        if (roomInstance == null || !habbo.IsInRoom(roomInstance))
             session.Send(new RoomForwardComposer(roomId));
         session.Send(new NewGroupInfoComposer(roomId, group.Id));
         return Task.CompletedTask;
@@ -578,18 +570,48 @@ internal class GroupService : IGroupService
         if (group.AdminOnlyDeco == 0)
             UpdateGroupControllerStatus(group, habbo.Id, false);
 
-        var currentRoom = habbo.CurrentRoom;
-        if (habbo.InRoom && currentRoom != null)
+        if (habbo.TryGetCurrentRoom(out var currentRoom))
         {
             var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user != null)
                 currentRoom.SendPacket(new UpdateFavouriteGroupComposer(group, user.VirtualId));
-            currentRoom.SendPacket(new RefreshFavouriteGroupComposer(habbo.Id));
+            SendFavouriteGroupRefresh(currentRoom, habbo.Id);
+            return;
         }
-        else
+
+        session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
+    }
+
+    private static void SendFavouriteGroupRefresh(GameClient session, Habbo habbo) => session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
+
+    private static void SendFavouriteGroupRefresh(Room room, int habboId) => room.SendPacket(new RefreshFavouriteGroupComposer(habboId));
+
+    private void SendFavouriteGroupRefreshForHabbo(GameClient session, Habbo habbo)
+    {
+        if (habbo.TryGetCurrentRoom(out var currentRoom))
         {
-            session.Send(new RefreshFavouriteGroupComposer(habbo.Id));
+            SendFavouriteGroupRefresh(currentRoom, habbo.Id);
+            return;
         }
+
+        SendFavouriteGroupRefresh(session, habbo);
+    }
+
+    private static bool IsUserOutsideRoom(Habbo habbo, uint roomId)
+    {
+        if (!habbo.TryGetCurrentRoom(out var currentRoom))
+            return true;
+
+        return currentRoom.Id != roomId;
+    }
+
+    private static void NotifyControllerStatus(RoomUser user, int controllerLevel)
+    {
+        var habbo = user.GetClient()?.GetHabbo();
+        if (habbo == null || !habbo.TryGetClient(out var client))
+            return;
+
+        client.Send(new YouAreControllerComposer(controllerLevel));
     }
 
     private void UpdateGroupAdminRoomPermissions(Group group, int userId, bool enabled)
@@ -606,14 +628,14 @@ internal class GroupService : IGroupService
             if (!user.Statusses.ContainsKey("flatctrl 3"))
                 user.SetStatus("flatctrl 3");
             user.UpdateNeeded = true;
-            user.GetClient()?.Send(new YouAreControllerComposer(3));
+            NotifyControllerStatus(user, 3);
             return;
         }
 
         if (user.Statusses.ContainsKey("flatctrl 3"))
             user.RemoveStatus("flatctrl 3");
         user.UpdateNeeded = true;
-        user.GetClient()?.Send(new YouAreControllerComposer(0));
+        NotifyControllerStatus(user, 0);
     }
 
     private void UpdateGroupControllerStatus(Group group, int userId, bool enabled)
@@ -630,12 +652,12 @@ internal class GroupService : IGroupService
             if (!user.Statusses.ContainsKey("flatctrl 1"))
                 user.SetStatus("flatctrl 1");
             user.UpdateNeeded = true;
-            user.GetClient()?.Send(new YouAreControllerComposer(1));
+            NotifyControllerStatus(user, 1);
             return;
         }
 
         user.RemoveStatus("flatctrl 1");
         user.UpdateNeeded = true;
-        user.GetClient()?.Send(new YouAreControllerComposer(0));
+        NotifyControllerStatus(user, 0);
     }
 }
