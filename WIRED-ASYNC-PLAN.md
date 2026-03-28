@@ -15,6 +15,7 @@ Phase 1 is now in place:
 - The last actor-only effect tail (`TeleportUser`, nested stacks, badge rewards, and bot-targeted actions) is now on the same resolver path too, leaving only a small number of truly custom payload decoders behind.
 - Random selected-furni resolution for teleport/move style effects is also being centralized now, which trims another repeated stateful helper pattern before any deeper API break.
 - A few remaining boxes that never actually consumed trigger payloads have now dropped their fake `@params` dependency too, which makes the eventual interface split cleaner.
+- Shared parsing helpers are now taking over common `StringData` decoding paths as well, reducing another chunk of duplicated condition-side payload handling before a wider API break.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

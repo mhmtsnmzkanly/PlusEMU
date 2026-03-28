@@ -33,8 +33,8 @@ internal class UserCountInRoomBox : IWiredItem
     {
         if (string.IsNullOrEmpty(StringData))
             return false;
-        var countOne = StringData != null ? int.Parse(StringData.Split(';')[0]) : 1;
-        var countTwo = StringData != null ? int.Parse(StringData.Split(';')[1]) : 50;
+        if (!WiredConditionDataParser.TryParseUserCountRange(StringData, out var countOne, out var countTwo))
+            return false;
         if (Instance.UserCount >= countOne && Instance.UserCount <= countTwo)
             return true;
         return false;

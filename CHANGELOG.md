@@ -16,6 +16,7 @@
 - Moved the remaining actor-only tail set (`TeleportUser`, nested stacks, badge rewards, and bot follow/hand-item effects) onto the shared context resolver so the queue-backed trigger path now lands on a much smaller raw-cast surface.
 - Added `WiredSetItemSelector` so bot move/teleport and user teleport effects share the same random in-room furni selection and stale-item pruning logic instead of duplicating it per box.
 - Removed remaining no-op `@params` guards from parameterless bot/user-count/state-match boxes so they no longer pretend to depend on trigger payloads they never read.
+- Added `WiredConditionDataParser` so user-count and state/position condition boxes no longer each re-split and re-parse the same `StringData` payload inline.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

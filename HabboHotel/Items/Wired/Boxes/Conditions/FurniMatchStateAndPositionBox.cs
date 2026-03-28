@@ -50,6 +50,8 @@ internal class FurniMatchStateAndPositionBox : IWiredItem
     {
         if (string.IsNullOrEmpty(StringData) || StringData == "0;0;0" || SetItems.Count == 0)
             return false;
+        if (!WiredConditionDataParser.TryParseStatePositionModes(StringData, out var stateMode, out var directionMode, out var positionMode))
+            return false;
         foreach (var item in SetItems.Values.ToList())
         {
             if (item == null)
@@ -65,7 +67,7 @@ internal class FurniMatchStateAndPositionBox : IWiredItem
                     continue;
                 var partsString = I.Split(':');
                 var part = partsString[1].Split(',');
-                if (int.Parse(StringData.Split(';')[0]) == 1) //State
+                if (stateMode == 1) //State
                 {
                     try
                     {
@@ -74,7 +76,7 @@ internal class FurniMatchStateAndPositionBox : IWiredItem
                     }
                     catch { }
                 }
-                if (int.Parse(StringData.Split(';')[1]) == 1) //Direction
+                if (directionMode == 1) //Direction
                 {
                     try
                     {
@@ -83,7 +85,7 @@ internal class FurniMatchStateAndPositionBox : IWiredItem
                     }
                     catch { }
                 }
-                if (int.Parse(StringData.Split(';')[2]) == 1) //Position
+                if (positionMode == 1) //Position
                 {
                     try
                     {

@@ -52,6 +52,8 @@ internal class FurniDoesntMatchStateAndPositionBox : IWiredItem
     {
         if (string.IsNullOrEmpty(StringData) || StringData == "0;0;0" || SetItems.Count == 0)
             return false;
+        if (!WiredConditionDataParser.TryParseStatePositionModes(StringData, out var stateMode, out var directionMode, out var positionMode))
+            return false;
         foreach (var item in SetItems.Values.ToList())
         {
             if (!Instance.GetRoomItemHandler().GetFloor.Contains(item))
@@ -65,17 +67,17 @@ internal class FurniDoesntMatchStateAndPositionBox : IWiredItem
                     continue;
                 var partsString = I.Split(':');
                 var part = partsString[1].Split(',');
-                if (int.Parse(StringData.Split(';')[0]) == 1) //State
+                if (stateMode == 1) //State
                 {
                     if (ii.LegacyDataString == part[4])
                         return false;
                 }
-                if (int.Parse(StringData.Split(';')[1]) == 1) //Direction
+                if (directionMode == 1) //Direction
                 {
                     if (ii.Rotation == Convert.ToInt32(part[3]))
                         return false;
                 }
-                if (int.Parse(StringData.Split(';')[2]) == 1) //Position
+                if (positionMode == 1) //Position
                 {
                     if (ii.GetX == Convert.ToInt32(part[0]) && ii.GetY == Convert.ToInt32(part[1]) && ii.GetZ == Convert.ToDouble(part[2]))
                         return false;
