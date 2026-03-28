@@ -558,31 +558,42 @@ public class Room : RoomData
     {
         try
         {
-            var roomUserManager = _roomUserManager;
-            if (roomUserManager == null)
-                return;
-
-            foreach (var user in roomUserManager.GetRoomUsers().ToList())
-            {
-                if (user == null || user.GetClient() == null)
-                    continue;
-                user.GetClient().SendNotification("Sorry, it appears that room has crashed!"); //Unhandled exception in room: " + e);
-                try
-                {
-                    GetRoomUserManager().RemoveUserFromRoom(user.GetClient(), true);
-                }
-                catch (Exception e2)
-                {
-                    ExceptionLogger.LogException(e2);
-                }
-            }
+            NotifyAndEvictUsersAfterCrash();
         }
-        catch (Exception e3)
+        catch (Exception crashHandlingException)
         {
-            ExceptionLogger.LogException(e3);
+            ExceptionLogger.LogException(crashHandlingException);
         }
+
         IsCrashed = true;
         _roomManager.UnloadRoom(Id);
+    }
+
+    private void NotifyAndEvictUsersAfterCrash()
+    {
+        var roomUserManager = _roomUserManager;
+        if (roomUserManager == null)
+            return;
+
+        foreach (var user in roomUserManager.GetRoomUsers().ToList())
+            NotifyAndEvictUserAfterCrash(user);
+    }
+
+    private void NotifyAndEvictUserAfterCrash(RoomUser? user)
+    {
+        var client = user?.GetClient();
+        if (client == null)
+            return;
+
+        client.SendNotification("Sorry, it appears that room has crashed!");
+        try
+        {
+            GetRoomUserManager().RemoveUserFromRoom(client, true);
+        }
+        catch (Exception removalException)
+        {
+            ExceptionLogger.LogException(removalException);
+        }
     }
 
 
@@ -740,87 +751,84 @@ public class Room : RoomData
     public void Dispose()
     {
         SendPacket(new CloseConnectionComposer());
-        if (!MDisposed)
-        {
-            IsCrashed = false;
-            MDisposed = true;
-            /* TODO: Needs reviewing */
-            try
-            {
-                if (ProcessTask != null && ProcessTask.IsCompleted)
-                    ProcessTask.Dispose();
-            }
-            catch { }
-            TonerData = null;
-            MoodlightData = null;
-            if (MutedUsers.Count > 0)
-                MutedUsers.Clear();
-            if (_tents.Count > 0)
-                _tents.Clear();
-            if (UsersWithRights.Count > 0)
-                UsersWithRights.Clear();
-            if (_gameManager != null)
-            {
-                _gameManager.Dispose();
-                _gameManager = null;
-            }
-            if (_freeze != null)
-            {
-                _freeze.Dispose();
-                _freeze = null;
-            }
-            if (_soccer != null)
-            {
-                _soccer.Dispose();
-                _soccer = null;
-            }
-            if (_banzai != null)
-            {
-                _banzai.Dispose();
-                _banzai = null;
-            }
-            if (_gamemap != null)
-            {
-                _gamemap.Dispose();
-                _gamemap = null;
-            }
-            if (_gameItemHandler != null)
-            {
-                _gameItemHandler.Dispose();
-                _gameItemHandler = null;
-            }
+        if (MDisposed)
+            return;
 
-            // Room Data?
-            if (Teambanzai != null)
-            {
-                Teambanzai.Dispose();
-                Teambanzai = null;
-            }
-            if (Teamfreeze != null)
-            {
-                Teamfreeze.Dispose();
-                Teamfreeze = null;
-            }
-            if (_roomUserManager != null)
-            {
-                _roomUserManager.Dispose();
-                _roomUserManager = null;
-            }
-            if (_roomItemHandling != null)
-            {
-                _roomItemHandling.Dispose();
-                _roomItemHandling = null;
-            }
-            if (WordFilterList.Count > 0)
-                WordFilterList.Clear();
-            if (_filterComponent != null)
-                _filterComponent.Cleanup();
-            if (_wiredComponent != null)
-                _wiredComponent.Cleanup();
-            if (_bansComponent != null)
-                _bansComponent.Cleanup();
-            if (_tradingComponent != null)
-                _tradingComponent.Cleanup();
+        IsCrashed = false;
+        MDisposed = true;
+        DisposeProcessTask();
+        ResetRoomCollections();
+        DisposeRoomSystems();
+        CleanupRoomComponents();
+    }
+
+    private void DisposeProcessTask()
+    {
+        try
+        {
+            if (ProcessTask != null && ProcessTask.IsCompleted)
+                ProcessTask.Dispose();
         }
+        catch
+        {
+        }
+    }
+
+    private void ResetRoomCollections()
+    {
+        TonerData = null;
+        MoodlightData = null;
+        if (MutedUsers.Count > 0)
+            MutedUsers.Clear();
+        if (_tents.Count > 0)
+            _tents.Clear();
+        if (UsersWithRights.Count > 0)
+            UsersWithRights.Clear();
+        if (WordFilterList.Count > 0)
+            WordFilterList.Clear();
+    }
+
+    private void DisposeRoomSystems()
+    {
+        DisposeGameSystems();
+        DisposeTeamManagers();
+        DisposeRoomManagers();
+    }
+
+    private void DisposeGameSystems()
+    {
+        DisposeAndClear(ref _gameManager, static gameManager => gameManager.Dispose());
+        DisposeAndClear(ref _freeze, static freeze => freeze.Dispose());
+        DisposeAndClear(ref _soccer, static soccer => soccer.Dispose());
+        DisposeAndClear(ref _banzai, static banzai => banzai.Dispose());
+        DisposeAndClear(ref _gamemap, static gamemap => gamemap.Dispose());
+        DisposeAndClear(ref _gameItemHandler, static gameItemHandler => gameItemHandler.Dispose());
+    }
+
+    private void DisposeTeamManagers()
+    {
+        DisposeAndClear(ref Teambanzai, static teamManager => teamManager.Dispose());
+        DisposeAndClear(ref Teamfreeze, static teamManager => teamManager.Dispose());
+    }
+
+    private void DisposeRoomManagers()
+    {
+        DisposeAndClear(ref _roomUserManager, static roomUserManager => roomUserManager.Dispose());
+        DisposeAndClear(ref _roomItemHandling, static roomItemHandling => roomItemHandling.Dispose());
+    }
+
+    private void CleanupRoomComponents()
+    {
+        _filterComponent?.Cleanup();
+        _wiredComponent?.Cleanup();
+        _bansComponent?.Cleanup();
+        _tradingComponent?.Cleanup();
+    }
+
+    private static void DisposeAndClear<T>(ref T? value, Action<T> disposeAction) where T : class
+    {
+        if (value != null)
+            disposeAction(value);
+        value = null;
     }
 }
