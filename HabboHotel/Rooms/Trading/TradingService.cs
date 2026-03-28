@@ -30,8 +30,7 @@ internal class TradingService : ITradingService
         if (habbo == null || !habbo.InRoom)
             return;
 
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return;
 
         var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
@@ -309,8 +308,7 @@ internal class TradingService : ITradingService
         if (sessionHabbo == null || !sessionHabbo.InRoom)
             return SendClosedIfPossible(session, sessionHabbo);
 
-        var currentRoom = sessionHabbo.CurrentRoom;
-        if (currentRoom == null)
+        if (!sessionHabbo.TryGetCurrentRoom(out var currentRoom))
             return SendClosedIfPossible(session, sessionHabbo);
 
         var currentRoomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(sessionHabbo.Id);

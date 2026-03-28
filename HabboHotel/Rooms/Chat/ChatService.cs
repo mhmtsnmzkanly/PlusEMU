@@ -62,8 +62,7 @@ public class ChatService : IChatService
 
         message = StringCharFilter.Escape(message);
 
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return;
 
         if (!habbo.Permissions.HasRight("room_ignore_mute") && room.CheckMute(session))
@@ -145,8 +144,7 @@ public class ChatService : IChatService
         if (habbo == null || !habbo.InRoom)
             return;
 
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return;
 
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
@@ -169,8 +167,7 @@ public class ChatService : IChatService
         if (message.Length > 100)
             message = message.Substring(0, 100);
 
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return;
 
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
@@ -241,7 +238,9 @@ public class ChatService : IChatService
             return true;
         }
 
-        var user = habbo.CurrentRoom?.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+        var user = habbo.TryGetCurrentRoom(out var room)
+            ? room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id)
+            : null;
         if (user != null)
         {
             if (type == "whisper")

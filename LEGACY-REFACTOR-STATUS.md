@@ -39,6 +39,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - Packet observability is also better now: `GameClient` logs unknown incoming packet headers and packet-handler exceptions with revision/build/session/user context instead of dropping both cases silently.
 - A broader `Habbo` cleanup has started too: client attach/detach and room enter/leave state now sit behind explicit `Habbo` methods, and several hot consumers no longer reach directly into raw `Client` / `CurrentRoom` fields for their core control flow.
 - That `Habbo` cleanup is now spreading into room/wired command paths as well, so summon, wired kick, chat-trigger, and triggerer-on-furni checks no longer depend on raw client/room field reads in their hot path.
+- Messenger follow, chat, and trading hot paths are also moving onto the same helper surface, further reducing direct `CurrentRoom` reads in user-facing service code.
 - `RoomItemHandling` has started to be split into smaller load/remove helpers, but the broader room item lifecycle and roller/update logic is still legacy-heavy.
 - The first true `RoomItemHandling` extraction is now in place too: moved-item persistence lives in `RoomItemPersistenceService`, reducing direct database-write ownership inside the room item lifecycle class.
 - A second extraction is in place as well: floor-item placement and `CheckPosItem` validation now live in `RoomItemPlacementValidatorService`, pulling tile/user/stack/height rule evaluation out of `RoomItemHandling`.
