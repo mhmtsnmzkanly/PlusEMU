@@ -16,7 +16,7 @@ internal class YouTubeGetNextVideo : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        if (!(habbo?.InRoom ?? false))
+        if (habbo == null || !habbo.InRoom || !habbo.TryGetCurrentRoom(out _))
             return Task.CompletedTask;
         var videos = _televisionManager.TelevisionList;
         if (videos.Count == 0)

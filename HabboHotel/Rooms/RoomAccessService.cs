@@ -192,8 +192,8 @@ internal class RoomAccessService : IRoomAccessService
 
     public Task UnbanUser(GameClient session, int userId, int roomId)
     {
-        var room = session.GetHabbo()?.CurrentRoom;
-        if (room == null || !room.CheckRights(session, true))
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, true))
             return Task.CompletedTask;
         if (!room.GetBans().IsBanned(userId))
             return Task.CompletedTask;
@@ -205,8 +205,8 @@ internal class RoomAccessService : IRoomAccessService
 
     public Task GetBannedUsers(GameClient session)
     {
-        var room = session.GetHabbo()?.CurrentRoom;
-        if (room == null || !room.CheckRights(session, true))
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, true))
             return Task.CompletedTask;
         if (room.GetBans().BannedUsers().Count > 0)
             session.Send(new GetRoomBannedUsersComposer(room, _cacheManager));
@@ -215,8 +215,8 @@ internal class RoomAccessService : IRoomAccessService
 
     public Task ToggleMuteTool(GameClient session)
     {
-        var room = session.GetHabbo()?.CurrentRoom;
-        if (room == null || !room.CheckRights(session, true))
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, true))
             return Task.CompletedTask;
 
         room.RoomMuted = !room.RoomMuted;
@@ -231,8 +231,8 @@ internal class RoomAccessService : IRoomAccessService
 
     public async Task GetRoomFilterList(GameClient session)
     {
-        var room = session.GetHabbo()?.CurrentRoom;
-        if (room == null || !room.CheckRights(session))
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session))
             return;
 
         session.Send(new GetRoomFilterListComposer(room));
@@ -241,8 +241,8 @@ internal class RoomAccessService : IRoomAccessService
 
     public Task ModifyRoomFilterList(GameClient session, bool added, string word)
     {
-        var room = session.GetHabbo()?.CurrentRoom;
-        if (room == null || !room.CheckRights(session))
+        var habbo = session.GetHabbo();
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session))
             return Task.CompletedTask;
 
         if (added)
