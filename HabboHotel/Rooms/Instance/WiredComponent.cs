@@ -383,26 +383,7 @@ public class WiredComponent
     private void ExecuteQueuedTrigger(WiredExecutionData execution)
     {
         foreach (var box in GetQueuedTriggerTargets(execution))
-            ExecuteQueuedTrigger(box, execution.Context);
-    }
-
-    private static void ExecuteQueuedTrigger(IWiredItem box, object? context)
-    {
-        switch (context)
-        {
-            case WiredChatTriggerContext chatContext:
-                box.ExecuteWithChat(chatContext);
-                return;
-            case WiredActorTriggerContext actorContext:
-                box.ExecuteWithActor(actorContext.Actor);
-                return;
-            case WiredActorItemTriggerContext actorItemContext:
-                box.ExecuteWithActorItem(actorItemContext);
-                return;
-            default:
-                box.ExecuteWithoutContext();
-                return;
-        }
+            box.ExecuteWithQueuedContext(execution.Context);
     }
 
     private IEnumerable<IWiredItem> GetQueuedTriggerTargets(WiredExecutionData execution)

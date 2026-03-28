@@ -58,6 +58,7 @@
 - Simplified queued trigger dispatch in `WiredComponent` as well by centralizing the common enqueue guard and context-based execution routing, which trims another block of repeated branching from the main Wired runtime path.
 - Completed the previously stubbed `BotCommunicatesToAll` effect too: it now persists bot/message/mode data, publishes either chat or shout packets with the bot bubble, and notifies bot AI listeners through the matching speech path.
 - Tightened `WiredComponent` lookup helpers as well by centralizing typed trigger-box and same-tile box enumeration, which removes another small block of repeated `_wiredItems` filtering from the runtime path.
+- Moved queued context dispatch into `WiredExecutionAdapter` too, so `WiredComponent` no longer carries its own chat/actor/actor-item switch and the execution adapter owns the full queued dispatch handoff.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.
