@@ -14,6 +14,4 @@ public interface IWiredItem : IWiredExecutable
     bool BoolData { get; set; }
     string ItemsData { get; set; }
     void HandleSave(IIncomingPacket packet);
-    [Obsolete("Use IWiredExecutable.Execute(WiredExecutionContext) or WiredExecutionAdapter helpers instead.")]
-    bool Execute(params object[] @params) => Execute(new WiredExecutionContext(@params));
 }
