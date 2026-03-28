@@ -240,86 +240,123 @@ public class RoomUserManager
     {
         try
         {
-            if (_room == null)
+            if (!TryGetHabboLeavingRoom(session, out var habbo))
                 return;
-            if (session == null)
-                return;
-            var habbo = session.GetHabbo();
-            if (habbo == null)
-                return;
-            if (notifyKick)
-                session.Send(new GenericErrorComposer(4008));
-            if (nofityUser)
-                session.Send(new CloseConnectionComposer());
-            if (habbo.TentId > 0)
-                habbo.TentId = 0;
-            habbo.CurrentRoom = null;
-            var user = GetRoomUserByHabbo(habbo.Id);
-            if (user != null)
-            {
-                if (user.RidingHorse)
-                {
-                    user.RidingHorse = false;
-                    var userRiding = GetRoomUserByVirtualId(user.HorseId);
-                    if (userRiding != null)
-                    {
-                        userRiding.RidingHorse = false;
-                        userRiding.HorseId = 0;
-                    }
-                }
-                if (user.Team != Team.None)
-                {
-                    var team = _room.GetTeamManagerForFreeze();
-                    if (team != null)
-                    {
-                        team.OnUserLeave(user);
-                        user.Team = Team.None;
-                        var userClient = user.GetClient();
-                        var userHabbo = userClient?.GetHabbo();
-                        var effects = userHabbo?.Effects;
-                        if (effects != null && effects.CurrentEffect != 0)
-                            effects.ApplyEffect(0);
-                    }
-                }
-                RemoveRoomUser(user);
-                if (user.CurrentItemEffect != ItemEffectType.None)
-                {
-                    if (habbo.Effects != null)
-                        habbo.Effects.CurrentEffect = -1;
-                }
-                if (user.IsTrading)
-                {
-                    Trade? trade = null;
-                    if (_room.GetTrading().TryGetTrade(user.TradeId, out trade))
-                        trade?.EndTrade(user.TradeId);
-                }
-                habbo.Messenger?.NotifyChangesToFriends();
-                using (var dbClient = _database.Connection())
-                {
-                    dbClient.Execute("UPDATE user_roomvisits SET exit_timestamp = @exitTimestamp WHERE room_id = @roomId AND user_id = @userId ORDER BY exit_timestamp DESC LIMIT 1",
-                        new
-                        {
-                            userId = habbo.Id,
-                            roomId = _room.RoomId,
-                            exitTimestamp = UnixTimestamp.GetNow(),
-                        });
 
-                    dbClient.Execute("UPDATE `rooms` SET `users_now` = @usersNow WHERE `id` = @roomId LIMIT 1",
-                        new
-                        {
-                            usersNow = _room.UsersNow,
-                            roomId = _room.RoomId
-                        });
-                }
-                if (user != null)
-                    user.Dispose();
-            }
+            NotifyLeavingClient(session, nofityUser, notifyKick);
+            ResetHabboRoomState(habbo);
+
+            var user = GetRoomUserByHabbo(habbo.Id);
+            if (user == null)
+                return;
+
+            CleanupMountedHorse(user);
+            RemoveUserFromTeam(user);
+            RemoveRoomUser(user);
+            ResetCurrentItemEffect(habbo, user);
+            EndActiveTrade(user);
+            NotifyMessengerRoomChange(habbo);
+            PersistRoomExit(habbo);
+            DisposeLeavingUser(user);
         }
         catch (Exception e)
         {
             ExceptionLogger.LogException(e);
         }
     }
+
+    private bool TryGetHabboLeavingRoom(GameClient session, out Habbo habbo)
+    {
+        habbo = null!;
+        if (_room == null || session == null)
+            return false;
+
+        habbo = session.GetHabbo();
+        return habbo != null;
+    }
+
+    private static void NotifyLeavingClient(GameClient session, bool notifyUser, bool notifyKick)
+    {
+        if (notifyKick)
+            session.Send(new GenericErrorComposer(4008));
+        if (notifyUser)
+            session.Send(new CloseConnectionComposer());
+    }
+
+    private static void ResetHabboRoomState(Habbo habbo)
+    {
+        if (habbo.TentId > 0)
+            habbo.TentId = 0;
+        habbo.CurrentRoom = null;
+    }
+
+    private void CleanupMountedHorse(RoomUser user)
+    {
+        if (!user.RidingHorse)
+            return;
+
+        user.RidingHorse = false;
+        var mountedUser = GetRoomUserByVirtualId(user.HorseId);
+        if (mountedUser == null)
+            return;
+
+        mountedUser.RidingHorse = false;
+        mountedUser.HorseId = 0;
+    }
+
+    private void RemoveUserFromTeam(RoomUser user)
+    {
+        if (user.Team == Team.None)
+            return;
+
+        var team = _room.GetTeamManagerForFreeze();
+        if (team == null)
+            return;
+
+        team.OnUserLeave(user);
+        user.Team = Team.None;
+        var effects = user.GetClient()?.GetHabbo()?.Effects;
+        if (effects != null && effects.CurrentEffect != 0)
+            effects.ApplyEffect(0);
+    }
+
+    private static void ResetCurrentItemEffect(Habbo habbo, RoomUser user)
+    {
+        if (user.CurrentItemEffect != ItemEffectType.None && habbo.Effects != null)
+            habbo.Effects.CurrentEffect = -1;
+    }
+
+    private void EndActiveTrade(RoomUser user)
+    {
+        if (!user.IsTrading)
+            return;
+
+        if (_room.GetTrading().TryGetTrade(user.TradeId, out Trade? trade))
+            trade?.EndTrade(user.TradeId);
+    }
+
+    private static void NotifyMessengerRoomChange(Habbo habbo) => habbo.Messenger?.NotifyChangesToFriends();
+
+    private void PersistRoomExit(Habbo habbo)
+    {
+        using var dbClient = _database.Connection();
+        dbClient.Execute("UPDATE user_roomvisits SET exit_timestamp = @exitTimestamp WHERE room_id = @roomId AND user_id = @userId ORDER BY exit_timestamp DESC LIMIT 1",
+            new
+            {
+                userId = habbo.Id,
+                roomId = _room.RoomId,
+                exitTimestamp = UnixTimestamp.GetNow(),
+            });
+
+        dbClient.Execute("UPDATE `rooms` SET `users_now` = @usersNow WHERE `id` = @roomId LIMIT 1",
+            new
+            {
+                usersNow = _room.UsersNow,
+                roomId = _room.RoomId
+            });
+    }
+
+    private static void DisposeLeavingUser(RoomUser user) => user.Dispose();
 
     private void OnRemove(RoomUser user)
     {
