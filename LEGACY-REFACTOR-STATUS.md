@@ -286,3 +286,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - The remaining `Habbo` helper migration is now focused on service/supporting-domain code such as ignores, marketplace, clothing, badges/effects, moderation, navigator, and room-side helper flows.
 - That service-level migration is now reaching the heavier runtime paths too, including moderation actions/tickets, room enter/leave orchestration, trading, and process-tick notification flows.
 - A smaller tail cleanup is also underway across navigator friend-room queries plus interactor/Wired effect helpers, which is shrinking the remaining direct room/client property reads around runtime convenience code.
+- `RoomUserManager` is now joining that same cleanup too: the remaining avatar validation, team-gate, and teleporter-side room checks are moving onto `_room` ownership and `Habbo` helper methods instead of raw `CurrentRoom` reads.

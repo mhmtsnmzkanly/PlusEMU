@@ -132,7 +132,7 @@ public class RoomUserManager
         if (session == null)
             return false;
         var habbo = session.GetHabbo();
-        if (habbo == null || habbo.CurrentRoom == null)
+        if (habbo == null || !habbo.TryGetCurrentRoom(out _))
             return false;
         if (_users.Any(u => u.Value.UserId == habbo.Id))
             return false;
@@ -565,7 +565,7 @@ public class RoomUserManager
         if (user.IsBot)
             return true;
         var habbo = GetHabbo(user);
-        if (habbo?.CurrentRoom != _room)
+        if (habbo == null || !habbo.IsInRoom(_room))
             return false;
         return true;
     }
@@ -969,7 +969,7 @@ public class RoomUserManager
                             {
                                 var habbo = GetHabbo(user);
                                 var effects = habbo?.Effects;
-                                var t = habbo?.CurrentRoom?.GetTeamManagerForBanzai();
+                                var t = _room.GetTeamManagerForBanzai();
                                 if (effects == null || t == null)
                                     break;
                                 var effectId = Convert.ToInt32(item.Team + 32);
@@ -1013,7 +1013,7 @@ public class RoomUserManager
                             {
                                 var habbo = GetHabbo(user);
                                 var effects = habbo?.Effects;
-                                var t = habbo?.CurrentRoom?.GetTeamManagerForFreeze();
+                                var t = _room.GetTeamManagerForFreeze();
                                 if (effects == null || t == null)
                                     break;
                                 var effectId = Convert.ToInt32(item.Team + 39);
@@ -1076,13 +1076,9 @@ public class RoomUserManager
                         {
                             if (user!.GoalX == item.GetX && user.GoalY == item.GetY)
                             {
-                                var client = user.GetClient();
                                 var habbo = GetHabbo(user);
-                                if (habbo == null)
+                                if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
                                     continue;
-                                var room = habbo.CurrentRoom;
-                                if (room == null)
-                                    return;
                                 if (!_room.GetItemTeleporterFinder().IsTeleLinked(item.Id, room))
                                     user.UnlockWalking();
                                 else
@@ -1094,7 +1090,7 @@ public class RoomUserManager
                                         var targetItem = room.GetRoomItemHandler().GetItem(linkedTele);
                                         if (targetItem == null)
                                         {
-                                            client?.SendWhisper("Hey, that arrow is poorly!");
+                                            user.GetClient()?.SendWhisper("Hey, that arrow is poorly!");
                                             return;
                                         }
                                         room.GetGameMap().TeleportToItem(user, targetItem);
