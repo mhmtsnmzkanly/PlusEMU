@@ -263,11 +263,7 @@ public class WiredComponent
             if (TryQueueParameterlessTrigger(type))
                 return true;
 
-            if (!HasTrigger(type))
-                return false;
-
-            _executionQueue.Enqueue(new(type, null, @params.ToArray()));
-            return true;
+            return false;
         }
         catch
         {
@@ -389,25 +385,25 @@ public class WiredComponent
     {
         foreach (var box in GetQueuedTriggerTargets(execution))
         {
-            if (execution.Parameters.Length == 1 && execution.Parameters[0] is WiredChatTriggerContext chatContext)
+            if (execution.Context is WiredChatTriggerContext chatContext)
             {
                 box.ExecuteWithChat(chatContext);
                 continue;
             }
 
-            if (execution.Parameters.Length == 1 && execution.Parameters[0] is WiredActorTriggerContext actorContext)
+            if (execution.Context is WiredActorTriggerContext actorContext)
             {
                 box.ExecuteWithActor(actorContext.Actor);
                 continue;
             }
 
-            if (execution.Parameters.Length == 1 && execution.Parameters[0] is WiredActorItemTriggerContext actorItemContext)
+            if (execution.Context is WiredActorItemTriggerContext actorItemContext)
             {
                 box.ExecuteWithActorItem(actorItemContext);
                 continue;
             }
 
-            box.ExecuteWithParameters(execution.Parameters);
+            box.ExecuteWithoutContext();
         }
     }
 

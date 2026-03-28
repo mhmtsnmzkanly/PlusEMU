@@ -4,14 +4,14 @@ namespace Plus.HabboHotel.Rooms.Instance;
 
 internal sealed class WiredExecutionData
 {
-    public WiredExecutionData(WiredBoxType type, IReadOnlyCollection<uint>? targetItemIds = null, params object[] parameters)
+    public WiredExecutionData(WiredBoxType type, IReadOnlyCollection<uint>? targetItemIds = null, object? context = null)
     {
         Type = type;
         TargetItemIds = targetItemIds;
-        Parameters = parameters;
+        Context = context;
     }
 
     public WiredBoxType Type { get; }
     public IReadOnlyCollection<uint>? TargetItemIds { get; }
-    public object[] Parameters { get; }
+    public object? Context { get; }
 }
