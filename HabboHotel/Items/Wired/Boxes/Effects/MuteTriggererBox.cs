@@ -37,11 +37,6 @@ internal class MuteTriggererBox : IWiredItem, IWiredExecutable
         StringData = $"{time};{message}";
     }
 
-    public bool Execute(params object[] @params)
-    {
-        return ((IWiredExecutable)this).Execute(new(@params));
-    }
-
     bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         var player = context.Actor;

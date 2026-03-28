@@ -76,11 +76,6 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle, IWiredExecutable
         Delay = packet.ReadInt();
     }
 
-    public bool Execute(params object[] @params)
-    {
-        return ((IWiredExecutable)this).Execute(new(@params));
-    }
-
     bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         var player = context.Actor;

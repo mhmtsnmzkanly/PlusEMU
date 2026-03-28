@@ -119,11 +119,6 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredExecutable
         Delay = delay;
     }
 
-    public bool Execute(params object[] @params)
-    {
-        return ((IWiredExecutable)this).Execute(new(@params));
-    }
-
     bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         if (WiredCycleScheduler.MarkRequested(ref _requested))
