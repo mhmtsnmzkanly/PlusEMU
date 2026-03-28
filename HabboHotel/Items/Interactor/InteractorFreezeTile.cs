@@ -13,7 +13,7 @@ internal class InteractorFreezeTile : IFurniInteractor
     public void OnTrigger(GameClient session, Item item, int request, bool hasRights)
     {
         var habbo = session?.GetHabbo();
-        if (habbo == null || !habbo.InRoom || item == null || item.InteractingUser > 0)
+        if (habbo == null || item == null || item.InteractingUser > 0 || !habbo.TryGetCurrentRoom(out _))
             return;
         var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)

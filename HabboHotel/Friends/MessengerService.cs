@@ -295,14 +295,11 @@ internal class MessengerService : IMessengerService
         if (targetHabbo == null)
             return Task.CompletedTask;
 
-        if (!targetHabbo.InRoom)
+        if (!targetHabbo.TryGetCurrentRoom(out var targetRoom))
         {
             session.Send(new FollowFriendFailedComposer(2));
             return Task.CompletedTask;
         }
-
-        if (!targetHabbo.TryGetCurrentRoom(out var targetRoom))
-            return Task.CompletedTask;
 
         if (habbo.TryGetCurrentRoom(out var currentRoom) && currentRoom.RoomId == targetRoom.RoomId)
             return Task.CompletedTask;

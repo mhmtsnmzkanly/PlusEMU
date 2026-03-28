@@ -300,8 +300,7 @@ public class BattleBanzai
         if (mover == null || mover.GetHabbo() == null)
             return;
         var moverHabbo = mover.GetHabbo();
-        var currentRoom = moverHabbo?.CurrentRoom;
-        if (moverHabbo == null || currentRoom == null)
+        if (moverHabbo == null || !moverHabbo.TryGetCurrentRoom(out var currentRoom))
             return;
         var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(moverHabbo.Id);
         if (IsBanzaiActive) HandleBanzaiTiles(new(newX, newY), team, user);

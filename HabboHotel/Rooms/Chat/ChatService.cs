@@ -54,7 +54,7 @@ public class ChatService : IChatService
     public async Task Whisper(GameClient session, string targetUser, string message, int styleId)
     {
         var habbo = session.GetHabbo();
-        if (habbo?.Permissions == null || habbo.HabboStats == null || !habbo.InRoom)
+        if (habbo?.Permissions == null || habbo.HabboStats == null)
             return;
 
         if (string.IsNullOrWhiteSpace(message))
@@ -141,7 +141,7 @@ public class ChatService : IChatService
     public void ApplyTypingStatus(GameClient session, bool isTyping)
     {
         var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
+        if (habbo == null)
             return;
 
         if (!habbo.TryGetCurrentRoom(out var room))
@@ -157,7 +157,7 @@ public class ChatService : IChatService
     private async Task ProcessChat(GameClient session, string message, int styleId, bool shout)
     {
         var habbo = session.GetHabbo();
-        if (habbo?.Permissions == null || habbo.HabboStats == null || !habbo.InRoom)
+        if (habbo?.Permissions == null || habbo.HabboStats == null)
             return;
 
         if (string.IsNullOrWhiteSpace(message))

@@ -70,7 +70,7 @@ internal class QuestService : IQuestService
     public async Task GetCurrentQuest(GameClient session)
     {
         var habbo = session.GetHabbo();
-        if (habbo?.HabboStats == null || !habbo.InRoom) return;
+        if (habbo?.HabboStats == null) return;
 
         var lastQuest = _questManager.GetQuest(habbo.QuestLastCompleted);
         if (lastQuest == null) return;

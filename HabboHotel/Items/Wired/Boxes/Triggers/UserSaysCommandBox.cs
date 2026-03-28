@@ -37,7 +37,7 @@ internal class UserSaysCommandBox : IWiredItem, IWiredChatExecutable
     bool IWiredChatExecutable.Execute(WiredChatExecutionContext context)
     {
         var player = context.Actor;
-        if (player == null || !player.TryGetCurrentRoom(out var currentRoom) || !player.InRoom)
+        if (player == null || !player.TryGetCurrentRoom(out var currentRoom))
             return false;
         if (!player.TryGetClient(out var client))
             return false;
