@@ -836,39 +836,59 @@ public class RoomItemHandling
 
     public void OnCycle()
     {
-        if (GotRollers)
+        RunRollerCycle();
+        ProcessQueuedItemUpdates();
+    }
+
+    private void RunRollerCycle()
+    {
+        if (!GotRollers)
+            return;
+
+        try
         {
-            try
-            {
-                _room.SendPacket(CycleRollers());
-            }
-            catch //(Exception e)
-            {
-                // Logging.LogThreadException(e.ToString(), "rollers for room with ID " + room.RoomId);
-                GotRollers = false;
-            }
+            _room.SendPacket(CycleRollers());
         }
-        if (_roomItemUpdateQueue.Count > 0)
+        catch //(Exception e)
         {
-            var addItems = new List<Item>();
-            while (_roomItemUpdateQueue.Count > 0)
-            {
-                Item? item = null;
-                if (_roomItemUpdateQueue.TryDequeue(out item))
-                {
-                    if (item == null)
-                        continue;
-                    item.ProcessUpdates();
-                    if (item.UpdateCounter > 0)
-                        addItems.Add(item);
-                }
-            }
-            foreach (var item in addItems.ToList())
-            {
-                if (item == null)
-                    continue;
-                _roomItemUpdateQueue.Enqueue(item);
-            }
+            // Logging.LogThreadException(e.ToString(), "rollers for room with ID " + room.RoomId);
+            GotRollers = false;
+        }
+    }
+
+    private void ProcessQueuedItemUpdates()
+    {
+        if (_roomItemUpdateQueue.Count == 0)
+            return;
+
+        var pendingItems = DequeueItemsNeedingFurtherUpdates();
+        RequeuePendingItems(pendingItems);
+    }
+
+    private List<Item> DequeueItemsNeedingFurtherUpdates()
+    {
+        var pendingItems = new List<Item>();
+        while (_roomItemUpdateQueue.Count > 0)
+        {
+            if (!_roomItemUpdateQueue.TryDequeue(out var item) || item == null)
+                continue;
+
+            item.ProcessUpdates();
+            if (item.UpdateCounter > 0)
+                pendingItems.Add(item);
+        }
+
+        return pendingItems;
+    }
+
+    private void RequeuePendingItems(List<Item> pendingItems)
+    {
+        foreach (var item in pendingItems.ToList())
+        {
+            if (item == null)
+                continue;
+
+            _roomItemUpdateQueue.Enqueue(item);
         }
     }
 

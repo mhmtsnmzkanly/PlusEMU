@@ -10,6 +10,7 @@
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.
 - Split `RoomItemHandling.CycleRollers` into roller target analysis plus separate item/user move decisions so the roller cycle no longer buries both movement paths in one nested branch.
+- Split `RoomItemHandling.OnCycle` into explicit roller-cycle and queued-item-update helpers so the remaining room item tick flow is easier to follow.
 - Moved non-chat `WiredComponent.TriggerEvent` execution onto a bounded per-room queue processed during `WiredComponent.OnCycle()`.
 - Extended the queue-based Wired execution slice to cover matched `TriggerUserSays` and `TriggerUserSaysCommand` boxes without breaking the existing synchronous suppression semantics.
 - Moved `TriggerUserSays` and `TriggerUserSaysCommand` match resolution fully into `WiredComponent`, leaving the queued trigger boxes responsible only for owner checks, feedback whispers, and stack execution.
