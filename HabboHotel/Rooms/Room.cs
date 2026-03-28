@@ -500,56 +500,39 @@ public class Room : RoomData
     {
         if (IsCrashed || MDisposed)
             return;
+
         try
         {
             var roomUserManager = GetRoomUserManager();
-            try
-            {
-                GetRoomItemHandler().OnCycle();
-            }
-            catch (Exception e)
-            {
-                ExceptionLogger.LogException(e);
-            }
-            try
-            {
-                roomUserManager.OnCycle();
-            }
-            catch (Exception e)
-            {
-                ExceptionLogger.LogException(e);
-            }
-            try
-            {
-                GetRoomUserManager().SerializeStatusUpdates();
-            }
-            catch (Exception e)
-            {
-                ExceptionLogger.LogException(e);
-            }
-            try
-            {
-                if (_gameItemHandler != null)
-                    _gameItemHandler.OnCycle();
-            }
-            catch (Exception e)
-            {
-                ExceptionLogger.LogException(e);
-            }
-            try
-            {
-                GetWired().OnCycle();
-            }
-            catch (Exception e)
-            {
-                ExceptionLogger.LogException(e);
-            }
+            ExecuteRoomPhase(GetRoomItemHandler().OnCycle);
+            ExecuteRoomPhase(roomUserManager.OnCycle);
+            ExecuteRoomPhase(roomUserManager.SerializeStatusUpdates);
+            ExecuteRoomPhase(RunGameItemCycle);
+            ExecuteRoomPhase(GetWired().OnCycle);
         }
         catch (Exception e)
         {
             ExceptionLogger.LogException(e);
             OnRoomCrash(e);
         }
+    }
+
+    private void ExecuteRoomPhase(Action phase)
+    {
+        try
+        {
+            phase();
+        }
+        catch (Exception e)
+        {
+            ExceptionLogger.LogException(e);
+        }
+    }
+
+    private void RunGameItemCycle()
+    {
+        if (_gameItemHandler != null)
+            _gameItemHandler.OnCycle();
     }
 
     public void UpdateLifecycleState()
