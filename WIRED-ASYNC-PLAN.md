@@ -7,6 +7,7 @@ Phase 1 is now in place:
 - `WiredComponent.OnCycle()` drains the queued trigger invocations in bounded batches before running existing `IWiredCycle` boxes.
 - `TriggerUserSays` and `TriggerUserSaysCommand` now queue only the matched trigger boxes while still returning synchronously so the legacy chat/command suppression behavior is preserved.
 - The synchronous chat/command suppression decision is now isolated to `WiredComponent`, while the queued `UserSays` trigger boxes no longer re-resolve the match during execution.
+- Queued chat-trigger execution now travels through a typed `WiredChatTriggerContext`, which trims one more `params object[]` hot path without forcing a full interface break yet.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

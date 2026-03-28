@@ -1,6 +1,7 @@
 ﻿using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 using System.Collections.Concurrent;
 
@@ -35,7 +36,8 @@ internal class UserSaysCommandBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        var player = (Habbo)@params[0];
+        var context = GetContext(@params);
+        var player = context?.Actor ?? (Habbo)@params[0];
         if (player == null || player.CurrentRoom == null || !player.InRoom)
             return false;
         var client = player.Client;
@@ -51,4 +53,7 @@ internal class UserSaysCommandBox : IWiredItem
         client.Send(new WhisperComposer(user.VirtualId, StringData, 0, 0));
         return wired.ExecuteTriggerStack(this, player);
     }
+
+    private static WiredChatTriggerContext? GetContext(object[] @params) =>
+        @params.Length == 1 ? @params[0] as WiredChatTriggerContext : null;
 }

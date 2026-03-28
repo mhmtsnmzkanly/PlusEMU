@@ -7,6 +7,7 @@ using Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 using Plus.HabboHotel.Items.Wired.Boxes.Effects;
 using Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 using Plus.HabboHotel.Rooms.Chat.Commands;
+using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Rooms.Instance;
 
@@ -268,6 +269,9 @@ public class WiredComponent
 
     private bool QueueMatchingUserSaysTriggers(object[] @params)
     {
+        if (@params.Length < 2 || @params[0] is not Habbo actor)
+            return false;
+
         var message = Convert.ToString(@params[1]);
         if (string.IsNullOrEmpty(message))
             return false;
@@ -280,13 +284,16 @@ public class WiredComponent
         if (targetIds.Length == 0)
             return false;
 
-        _executionQueue.Enqueue(new(WiredBoxType.TriggerUserSays, targetIds, @params.ToArray()));
+        _executionQueue.Enqueue(new(
+            WiredBoxType.TriggerUserSays,
+            targetIds,
+            new WiredChatTriggerContext(actor, message)));
         return true;
     }
 
     private bool QueueMatchingUserSaysCommandTriggers(object[] @params)
     {
-        if (@params.Length < 2 || @params[1] is not CommandManager commandManager)
+        if (@params.Length < 2 || @params[0] is not Habbo actor || @params[1] is not CommandManager commandManager)
             return false;
 
         var targetIds = _wiredItems.Values
@@ -297,7 +304,10 @@ public class WiredComponent
         if (targetIds.Length == 0)
             return false;
 
-        _executionQueue.Enqueue(new(WiredBoxType.TriggerUserSaysCommand, targetIds, @params.ToArray()));
+        _executionQueue.Enqueue(new(
+            WiredBoxType.TriggerUserSaysCommand,
+            targetIds,
+            new WiredChatTriggerContext(actor, commandManager: commandManager)));
         return true;
     }
 
