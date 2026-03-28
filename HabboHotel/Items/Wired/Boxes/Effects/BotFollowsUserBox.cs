@@ -35,7 +35,7 @@ internal class BotFollowsUserBox : IWiredItem, IWiredActorExecutable
 
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
-        if (string.IsNullOrEmpty(StringData))
+        if (!WiredEffectDataParser.TryParseBotFollow(StringData, out var followMode, out var botName))
             return false;
         var player = context.Actor;
         if (player == null)
@@ -43,15 +43,8 @@ internal class BotFollowsUserBox : IWiredItem, IWiredActorExecutable
         var human = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
         if (human == null)
             return false;
-        var stuff = StringData.Split(';');
-        if (stuff.Length != 2)
-            return false; //This is important, incase a cunt scripts.
-        var username = stuff[1];
-        var user = Instance.GetRoomUserManager().GetBotByName(username);
+        var user = Instance.GetRoomUserManager().GetBotByName(botName);
         if (user == null)
-            return false;
-        var followMode = 0;
-        if (!int.TryParse(stuff[0], out followMode))
             return false;
         if (followMode == 0)
         {

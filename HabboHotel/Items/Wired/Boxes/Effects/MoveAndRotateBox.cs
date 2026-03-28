@@ -38,6 +38,8 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
     {
         if (Instance == null || !_requested || _next == 0)
             return false;
+        if (!WiredEffectDataParser.TryParseMoveAndRotateModes(StringData, out var movementMode, out var rotationMode))
+            return false;
         if (WiredCycleScheduler.IsReady(_requested, _next))
         {
             foreach (var item in SetItems.Values.ToList())
@@ -48,8 +50,8 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
                     continue;
                 if (Instance.GetWired().OtherBoxHasItem(this, item.Id))
                     SetItems.TryRemove(item.Id, out _);
-                var point = HandleMovement(Convert.ToInt32(StringData.Split(';')[0]), new(item.GetX, item.GetY));
-                var newRot = HandleRotation(Convert.ToInt32(StringData.Split(';')[1]), item.Rotation);
+                var point = HandleMovement(movementMode, new(item.GetX, item.GetY));
+                var newRot = HandleRotation(rotationMode, item.Rotation);
                 Instance.GetWired().OnUserFurniCollision(Instance, item);
                 if (!Instance.GetGameMap().ItemCanMove(item, point))
                     continue;

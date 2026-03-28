@@ -35,7 +35,7 @@ internal class BotGivesHandItemBox : IWiredItem, IWiredActorExecutable
 
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
-        if (string.IsNullOrEmpty(StringData))
+        if (!WiredEffectDataParser.TryParseBotHandItem(StringData, out var botName, out var drinkId))
             return false;
         var player = context.Actor;
         if (player == null)
@@ -43,15 +43,12 @@ internal class BotGivesHandItemBox : IWiredItem, IWiredActorExecutable
         var actor = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
         if (actor == null)
             return false;
-        var user = Instance.GetRoomUserManager().GetBotByName(StringData.Split(';')[0]);
+        var user = Instance.GetRoomUserManager().GetBotByName(botName);
         if (user == null)
             return false;
         if (user.BotData.TargetUser == 0)
         {
             if (!Instance.GetGameMap().CanWalk(actor.SquareBehind.X, actor.SquareBehind.Y, false))
-                return false;
-            var data = StringData.Split(';');
-            if (!int.TryParse(data[1], out var drinkId))
                 return false;
             user.CarryItem(drinkId);
             user.BotData.TargetUser = actor.HabboId;

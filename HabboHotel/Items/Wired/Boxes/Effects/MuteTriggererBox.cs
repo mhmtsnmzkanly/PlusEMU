@@ -51,8 +51,8 @@ internal class MuteTriggererBox : IWiredItem, IWiredActorExecutable
             playerClient.Send(new WhisperComposer(user.VirtualId, "Wired Mute Exception: Unmutable Player", 0, 0));
             return false;
         }
-        var time = StringData != null ? int.Parse(StringData.Split(';')[0]) : 0;
-        var message = StringData != null ? StringData.Split(';')[1] : "No message!";
+        if (!WiredEffectDataParser.TryParseMute(StringData, out var time, out var message))
+            return false;
         if (time > 0)
         {
             playerClient.Send(new WhisperComposer(user.VirtualId, $"Wired Mute: Muted for {time}! Message: {message}", 0, 0));

@@ -50,6 +50,7 @@
 - Removed the now-redundant `IWiredExecutable` interface declarations from Wired box class signatures too, since `IWiredItem` already inherits that base contract and the boxes now advertise only the narrower execution interfaces they actually implement.
 - Removed the remaining raw `object[]` queue payload handling from the main Wired dispatch path too: queued trigger execution now carries either a typed trigger context or no context at all, and the old generic parameter-based adapter helpers are gone.
 - Marked `WiredExecutionContext` itself as an abstract base type as well, reflecting the fact that execution now always flows through one of the narrower specialized context shapes rather than directly instantiating the shared shell.
+- Added a shared `WiredEffectDataParser` for the remaining bot/mute/move-rotate string payloads too, which removes another pocket of repeated `Split(';')` / integer parsing logic from the effect boxes.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.
