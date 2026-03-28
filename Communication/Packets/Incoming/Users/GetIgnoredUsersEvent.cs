@@ -16,11 +16,10 @@ internal class GetIgnoredUsersEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo)
             return;
 
-        var ignoredUserIds = habbo?.IgnoresComponent?.IgnoredUsers ?? new List<int>();
+        var ignoredUserIds = habbo.IgnoresComponent?.IgnoredUsers ?? new List<int>();
         var ignoredUsers = await _ignoredUsersService.GetIgnoredUsersByName(ignoredUserIds);
         session.Send(new IgnoredUsersComposer(ignoredUsers));
     }

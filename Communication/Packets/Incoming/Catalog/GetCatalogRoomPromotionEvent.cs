@@ -15,8 +15,7 @@ internal class GetCatalogRoomPromotionEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo)
             return Task.CompletedTask;
 
         var rooms = _roomFactory.GetRoomsDataByOwnerSortByName(habbo.Id);

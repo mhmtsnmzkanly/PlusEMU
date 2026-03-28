@@ -22,18 +22,23 @@ internal class DeleteRoomEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var permissions = habbo?.Permissions;
-        if (habbo == null) return Task.CompletedTask;
+        if (session.GetHabbo() is not { } habbo)
+            return Task.CompletedTask;
+
+        var permissions = habbo.Permissions;
         var roomId = packet.ReadUInt();
-        if (roomId == 0) return Task.CompletedTask;
-        if (!_roomManager.TryGetRoom(roomId, out var room)) return Task.CompletedTask;
+        if (roomId == 0)
+            return Task.CompletedTask;
+        if (!_roomManager.TryGetRoom(roomId, out var room))
+            return Task.CompletedTask;
         if (room.OwnerId != habbo.Id && !(permissions?.HasRight("room_delete_any") ?? false))
             return Task.CompletedTask;
+
         var itemsToRemove = new List<Item>();
         foreach (var item in room.GetRoomItemHandler().GetWallAndFloor.ToList())
         {
-            if (item == null) continue;
+            if (item == null)
+                continue;
             if (item.Definition.InteractionType == InteractionType.Moodlight)
             {
                 using var db = _database.Connection();
@@ -65,7 +70,6 @@ internal class DeleteRoomEvent : IPacketEvent
         dbFinal.Execute("DELETE FROM `items` WHERE `room_id` = @rid", new { rid = roomId });
         dbFinal.Execute("DELETE FROM `room_rights` WHERE `room_id` = @rid", new { rid = roomId });
         dbFinal.Execute("UPDATE `users` SET `home_room` = '0' WHERE `home_room` = @rid", new { rid = roomId });
-        _roomManager.UnloadRoom(room.Id);
         return Task.CompletedTask;
     }
 }

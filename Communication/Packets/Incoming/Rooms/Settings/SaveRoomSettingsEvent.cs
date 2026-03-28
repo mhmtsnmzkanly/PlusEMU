@@ -46,12 +46,30 @@ internal class SaveRoomSettingsEvent : IPacketEvent
         var tagCount = packet.ReadInt();
         var tags = new List<string>();
         var formattedTags = new StringBuilder();
-        for (var i = 0; i < tagCount; i++) { if (i > 0) formattedTags.Append(","); var tag = packet.ReadString().ToLower(); tags.Add(tag); formattedTags.Append(tag); }
+        for (var i = 0; i < tagCount; i++)
+        {
+            if (i > 0)
+                formattedTags.Append(",");
+
+            var tag = packet.ReadString().ToLower();
+            tags.Add(tag);
+            formattedTags.Append(tag);
+        }
         var tradeSettings = packet.ReadInt();
-        var allowPets = packet.ReadBool(); var allowPetsEat = packet.ReadBool(); var roomBlockingEnabled = packet.ReadBool(); var hidewall = packet.ReadBool();
-        var wallThickness = packet.ReadInt(); var floorThickness = packet.ReadInt();
-        var whoMute = packet.ReadInt(); var whoKick = packet.ReadInt(); var whoBan = packet.ReadInt();
-        var chatMode = packet.ReadInt(); var chatSize = packet.ReadInt(); var chatSpeed = packet.ReadInt(); var chatDistance = packet.ReadInt(); var extraFlood = packet.ReadInt();
+        var allowPets = packet.ReadBool();
+        var allowPetsEat = packet.ReadBool();
+        var roomBlockingEnabled = packet.ReadBool();
+        var hidewall = packet.ReadBool();
+        var wallThickness = packet.ReadInt();
+        var floorThickness = packet.ReadInt();
+        var whoMute = packet.ReadInt();
+        var whoKick = packet.ReadInt();
+        var whoBan = packet.ReadInt();
+        var chatMode = packet.ReadInt();
+        var chatSize = packet.ReadInt();
+        var chatSpeed = packet.ReadInt();
+        var chatDistance = packet.ReadInt();
+        var extraFlood = packet.ReadInt();
         if (chatMode < 0 || chatMode > 1) chatMode = 0;
         if (chatSize < 0 || chatSize > 2) chatSize = 0;
         if (chatSpeed < 0 || chatSpeed > 2) chatSpeed = 0;
@@ -71,15 +89,32 @@ internal class SaveRoomSettingsEvent : IPacketEvent
         if (maxUsers > 50) maxUsers = 50;
         if (!_navigationManager.TryGetSearchResultList(categoryId, out var searchResultList)) categoryId = 36;
         if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank || habbo.Id != room.OwnerId && habbo.Rank >= searchResultList.RequiredRank) categoryId = 36;
-        if (tagCount > 2) return;
-        room.AllowPets = allowPets; room.AllowPetsEating = allowPetsEat; room.RoomBlockingEnabled = roomBlockingEnabled; room.Hidewall = hidewall;
-        room.Name = name; room.Access = access; room.Description = description; room.Category = categoryId; room.Password = password;
-        room.WhoCanBan = whoBan; room.WhoCanKick = whoKick; room.WhoCanMute = whoMute;
-        room.ClearTags(); room.AddTagRange(tags);
-        room.UsersMax = maxUsers; room.WallThickness = wallThickness; room.FloorThickness = floorThickness;
-        room.ChatMode = chatMode; room.ChatSize = chatSize; room.ChatSpeed = chatSpeed; room.ChatDistance = chatDistance; room.ExtraFlood = extraFlood;
+        if (tagCount > 2)
+            return;
+        room.AllowPets = allowPets;
+        room.AllowPetsEating = allowPetsEat;
+        room.RoomBlockingEnabled = roomBlockingEnabled;
+        room.Hidewall = hidewall;
+        room.Name = name;
+        room.Access = access;
+        room.Description = description;
+        room.Category = categoryId;
+        room.Password = password;
+        room.WhoCanBan = whoBan;
+        room.WhoCanKick = whoKick;
+        room.WhoCanMute = whoMute;
+        room.ClearTags();
+        room.AddTagRange(tags);
+        room.UsersMax = maxUsers;
+        room.WallThickness = wallThickness;
+        room.FloorThickness = floorThickness;
+        room.ChatMode = chatMode;
+        room.ChatSize = chatSize;
+        room.ChatSpeed = chatSpeed;
+        room.ChatDistance = chatDistance;
+        room.ExtraFlood = extraFlood;
         room.TradeSettings = tradeSettings;
-        string accessStr = access switch { RoomAccess.Password => "password", RoomAccess.Doorbell => "locked", RoomAccess.Invisible => "invisible", _ => "open" };
+        var accessStr = access switch { RoomAccess.Password => "password", RoomAccess.Doorbell => "locked", RoomAccess.Invisible => "invisible", _ => "open" };
         using var db = _database.Connection();
         db.Execute(
             "UPDATE `rooms` SET `caption`=@caption,`description`=@description,`password`=@password,`category`=@categoryId,`state`=@state,`tags`=@tags,`users_max`=@maxUsers,`allow_pets`=@allowPets,`allow_pets_eat`=@allowPetsEat,`room_blocking_disabled`=@roomBlockingDisabled,`allow_hidewall`=@allowHidewall,`floorthick`=@floorThick,`wallthick`=@wallThick,`mute_settings`=@muteSettings,`kick_settings`=@kickSettings,`ban_settings`=@banSettings,`chat_mode`=@chatMode,`chat_size`=@chatSize,`chat_speed`=@chatSpeed,`chat_extra_flood`=@extraFlood,`chat_hearing_distance`=@chatDistance,`trade_settings`=@tradeSettings WHERE `id`=@roomId LIMIT 1",
