@@ -19,6 +19,7 @@ Phase 1 is now in place:
 - Team-targeted Wired boxes now share a small parser/helper too, continuing the same pattern of moving repeated decode logic out of individual box implementations.
 - Saved furni snapshot decoding is now shared between `MatchPosition` and the related state/position condition boxes, trimming another repeated `ItemsData` parsing path.
 - `WiredComponent` now also routes its legacy box invocation through a small execution adapter layer, which gives the codebase a bridge point for any future `Execute` interface split without forcing that break yet.
+- The first typed execution slice is now live as well: `IWiredExecutable` plus `WiredExecutionContext` sit beside the legacy interface, and a few representative boxes already execute through that new path.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.
