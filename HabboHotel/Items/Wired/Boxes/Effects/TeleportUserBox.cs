@@ -100,24 +100,8 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle
             return;
         if (player.IsTeleporting || player.IsHopping || player.TeleporterId != 0)
             return;
-        var items = SetItems.Values.ToList();
-        items = items.OrderBy(x => Random.Shared.Next()).ToList();
-        if (items.Count == 0)
+        if (!WiredSetItemSelector.TryGetRandomFloorItem(Instance, SetItems, out var item))
             return;
-        var item = items.First();
-        if (item == null)
-            return;
-        if (!Instance.GetRoomItemHandler().GetFloor.Contains(item))
-        {
-            SetItems.TryRemove(item.Id, out item);
-            if (item != null && items.Contains(item))
-                items.Remove(item);
-            if (SetItems.Count == 0 || items.Count == 0)
-                return;
-            item = items.First();
-            if (item == null)
-                return;
-        }
         if (room.GetGameMap() == null)
             return;
         room.GetGameMap().TeleportToItem(user, item);

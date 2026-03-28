@@ -44,24 +44,8 @@ internal class TeleportBotToFurniBox : IWiredItem
         var user = Instance.GetRoomUserManager().GetBotByName(StringData);
         if (user == null)
             return false;
-        var items = SetItems.Values.ToList();
-        items = items.OrderBy(x => Random.Shared.Next()).ToList();
-        if (items.Count == 0)
+        if (!WiredSetItemSelector.TryGetRandomFloorItem(Instance, SetItems, out var item))
             return false;
-        var item = items.First();
-        if (item == null)
-            return false;
-        if (!Instance.GetRoomItemHandler().GetFloor.Contains(item))
-        {
-            SetItems.TryRemove(item.Id, out item);
-            if (item != null && items.Contains(item))
-                items.Remove(item);
-            if (SetItems.Count == 0 || items.Count == 0)
-                return false;
-            item = items.First();
-            if (item == null)
-                return false;
-        }
         if (Instance.GetGameMap() == null)
             return false;
         Instance.GetGameMap().TeleportToItem(user, item);

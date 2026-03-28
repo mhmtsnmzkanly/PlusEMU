@@ -13,6 +13,7 @@ Phase 1 is now in place:
 - `WiredContextResolver` now centralizes repeated actor and actor-item extraction across multiple trigger, condition, and effect boxes, reducing the amount of per-box payload decoding left before a larger interface change.
 - That shared resolver now also covers more of the actor-centric triggerer/team/hand-item path, narrowing the remaining legacy `Habbo` cast sites to a much smaller tail set.
 - The last actor-only effect tail (`TeleportUser`, nested stacks, badge rewards, and bot-targeted actions) is now on the same resolver path too, leaving only a small number of truly custom payload decoders behind.
+- Random selected-furni resolution for teleport/move style effects is also being centralized now, which trims another repeated stateful helper pattern before any deeper API break.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.
