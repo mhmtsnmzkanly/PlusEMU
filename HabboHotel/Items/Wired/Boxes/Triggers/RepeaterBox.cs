@@ -29,63 +29,13 @@ internal class RepeaterBox : IWiredItem, IWiredCycle
 
     public bool OnCycle()
     {
-        var success = false;
-        ICollection<RoomUser> avatars = Instance.GetRoomUserManager().GetRoomUsers().ToList();
-        var effects = Instance.GetWired().GetEffects(this);
-        var conditions = Instance.GetWired().GetConditions(this);
-        foreach (var condition in conditions.ToList())
-        {
-            foreach (var avatar in avatars.ToList())
-            {
-                var client = avatar?.GetClient();
-                var habbo = client?.GetHabbo();
-                if (habbo == null)
-                    continue;
-                if (!condition.Execute(habbo))
-                    continue;
-                success = true;
-            }
-            if (!success)
-                return false;
-            success = false;
-            Instance.GetWired().OnEvent(condition.Item);
-        }
-        success = false;
+        var wired = Instance.GetWired();
+        if (!wired.ExecuteRepeaterConditions(this))
+            return false;
 
-        //Check the ICollection to find the random addon effect.
-        var hasRandomEffectAddon = effects.Count(x => x.Type == WiredBoxType.AddonRandomEffect) > 0;
-        if (hasRandomEffectAddon)
-        {
-            //Okay, so we have a random addon effect, now lets get the IWiredItem and attempt to execute it.
-            var randomBox = effects.FirstOrDefault(x => x.Type == WiredBoxType.AddonRandomEffect);
-            if (randomBox == null || !randomBox.Execute())
-                return false;
+        if (!wired.ExecuteTriggerEffectsForRoomUsers(this))
+            return false;
 
-            //Success! Let's get our selected box and continue.
-            var selectedBox = Instance.GetWired().GetRandomEffect(effects.ToList());
-            if (!selectedBox.Execute())
-                return false;
-
-            //Woo! Almost there captain, now lets broadcast the update to the room instance.
-            if (Instance != null)
-            {
-                Instance.GetWired().OnEvent(randomBox.Item);
-                Instance.GetWired().OnEvent(selectedBox.Item);
-            }
-        }
-        else
-        {
-            foreach (var effect in effects.ToList())
-            {
-                if (!effect.Execute())
-                    continue;
-                success = true;
-                if (!success)
-                    return false;
-                if (Instance != null)
-                    Instance.GetWired().OnEvent(effect.Item);
-            }
-        }
         TickCount = Delay;
         return true;
     }

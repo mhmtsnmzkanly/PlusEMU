@@ -401,6 +401,57 @@ public class WiredComponent
         });
     }
 
+    public bool ExecuteRepeaterConditions(IWiredItem trigger)
+    {
+        foreach (var condition in GetConditions(trigger).ToList())
+        {
+            var matched = false;
+            foreach (var avatar in _room.GetRoomUserManager().GetRoomUsers().ToList())
+            {
+                var client = avatar?.GetClient();
+                var habbo = client?.GetHabbo();
+                if (habbo == null)
+                    continue;
+
+                if (!condition.Execute(habbo))
+                    continue;
+
+                matched = true;
+            }
+
+            if (!matched)
+                return false;
+
+            OnEvent(condition.Item);
+        }
+
+        return true;
+    }
+
+    public bool ExecuteNestedStackEffects(IWiredItem trigger, object actor)
+    {
+        foreach (var item in trigger.SetItems.Values.ToList())
+        {
+            if (item == null || !_room.GetRoomItemHandler().GetFloor.Contains(item) || !item.IsWired)
+                continue;
+
+            if (!TryGet(item.Id, out var wiredItem) || wiredItem.Type == WiredBoxType.EffectExecuteWiredStacks)
+                continue;
+
+            foreach (var effectItem in GetEffects(wiredItem).ToList())
+            {
+                if (trigger.SetItems.ContainsKey(effectItem.Item.Id) && effectItem.Item.Id != item.Id)
+                    continue;
+                if (effectItem.Type == WiredBoxType.EffectExecuteWiredStacks)
+                    continue;
+                if (!effectItem.Execute(actor))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     private bool ExecuteTriggerEffects(IWiredItem trigger, Func<IWiredItem, bool> effectExecutor)
     {
         var effects = GetEffects(trigger).ToList();
