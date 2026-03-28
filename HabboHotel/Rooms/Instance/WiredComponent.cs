@@ -8,20 +8,43 @@ using Plus.HabboHotel.Items.Wired.Boxes.Effects;
 using Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 using Plus.HabboHotel.Rooms.Chat.Commands;
 using Plus.HabboHotel.Users;
+using Microsoft.Extensions.Logging;
 
 namespace Plus.HabboHotel.Rooms.Instance;
 
 public class WiredComponent
 {
     private const int MaxQueuedExecutionsPerCycle = 64;
+    private static readonly Action<ILogger, uint, string, int, string, int, Exception?> TriggerQueuedLog =
+        LoggerMessage.Define<uint, string, int, string, int>(
+            LogLevel.Debug,
+            new EventId(2001, nameof(TriggerQueuedLog)),
+            "Room {RoomId} queued Wired trigger {TriggerType} for {TargetCount} target(s) with {ContextType}; queue length is {QueueLength}");
+    private static readonly Action<ILogger, uint, int, int, Exception?> QueueProcessedLog =
+        LoggerMessage.Define<uint, int, int>(
+            LogLevel.Debug,
+            new EventId(2002, nameof(QueueProcessedLog)),
+            "Room {RoomId} processed {ProcessedCount} Wired queued execution(s); {RemainingCount} remain");
+    private static readonly Action<ILogger, uint, int, int, Exception?> QueueSaturatedLog =
+        LoggerMessage.Define<uint, int, int>(
+            LogLevel.Warning,
+            new EventId(2003, nameof(QueueSaturatedLog)),
+            "Room {RoomId} hit the Wired per-cycle queue cap of {ProcessedCount}; {RemainingCount} queued execution(s) remain");
+    private static readonly Action<ILogger, uint, double, Exception?> SlowCycleLog =
+        LoggerMessage.Define<uint, double>(
+            LogLevel.Warning,
+            new EventId(2004, nameof(SlowCycleLog)),
+            "Room {RoomId} Wired cycle took {ElapsedMs}ms to execute");
 
     private readonly Room _room;
+    private readonly ILogger<WiredComponent> _logger;
     private readonly ConcurrentDictionary<uint, IWiredItem> _wiredItems;
     private readonly ConcurrentQueue<WiredExecutionData> _executionQueue;
 
-    public WiredComponent(Room instance) //, RoomItem Items)
+    public WiredComponent(Room instance, ILogger<WiredComponent> logger) //, RoomItem Items)
     {
         _room = instance;
+        _logger = logger;
         _wiredItems = new();
         _executionQueue = new();
     }
@@ -45,9 +68,9 @@ public class WiredComponent
             }
         }
         var span = DateTime.Now - start;
-        if (span.Milliseconds > 400)
+        if (span.TotalMilliseconds > 400)
         {
-            //log.Warn("<Room " + _room.Id + "> Wired took " + Span.TotalMilliseconds + "ms to execute - Rooms lagging behind");
+            SlowCycleLog(_logger, _room.Id, span.TotalMilliseconds, null);
         }
     }
 
@@ -350,6 +373,17 @@ public class WiredComponent
             return false;
 
         _executionQueue.Enqueue(new(type, targetItemIds, context));
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            TriggerQueuedLog(
+                _logger,
+                _room.Id,
+                type.ToString(),
+                targetItemIds?.Count ?? GetTriggerBoxes(type).Count(),
+                context?.GetType().Name ?? nameof(WiredEmptyExecutionContext),
+                _executionQueue.Count,
+                null);
+        }
         return true;
     }
 
@@ -378,6 +412,16 @@ public class WiredComponent
             ExecuteQueuedTrigger(execution);
             executions++;
         }
+
+        if (executions == 0)
+            return;
+
+        var remaining = _executionQueue.Count;
+        if (_logger.IsEnabled(LogLevel.Debug))
+            QueueProcessedLog(_logger, _room.Id, executions, remaining, null);
+
+        if (remaining > 0)
+            QueueSaturatedLog(_logger, _room.Id, executions, remaining, null);
     }
 
     private void ExecuteQueuedTrigger(WiredExecutionData execution)

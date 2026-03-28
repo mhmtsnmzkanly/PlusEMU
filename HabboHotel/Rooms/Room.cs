@@ -28,6 +28,7 @@ using Plus.HabboHotel.Users.UserData;
 using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Bots;
 using Plus.Core.Language;
+using Microsoft.Extensions.Logging;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -140,7 +141,7 @@ public class Room : RoomData
     private readonly IRoomManager _roomManager;
     private readonly ILanguageManager _languageManager;
 
-    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory, IRoomManager roomManager)
+    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory, IRoomManager roomManager, ILoggerFactory loggerFactory)
         : base(data)
     {
         _clientManager = clientManager;
@@ -168,7 +169,7 @@ public class Room : RoomData
         _roomItemHandling = new(this, _itemLoader);
         _roomUserManager = new(this, clientManager, database, groupManager);
         _filterComponent = new(this);
-        _wiredComponent = new(this);
+        _wiredComponent = new(this, loggerFactory.CreateLogger<WiredComponent>());
         _bansComponent = new(this);
         _tradingComponent = new(this);
         _achievementService = achievementService;

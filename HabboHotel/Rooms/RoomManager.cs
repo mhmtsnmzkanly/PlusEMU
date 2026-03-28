@@ -23,6 +23,7 @@ namespace Plus.HabboHotel.Rooms;
 public class RoomManager : IRoomManager
 {
     private readonly ILogger<RoomManager> _logger;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly IDatabase _database;
     private readonly ILanguageManager _languageManager;
     private readonly IGameClientManager _clientManager;
@@ -61,6 +62,7 @@ public class RoomManager : IRoomManager
         IItemHopperFinder itemHopperFinder,
         IBadgeManager badgeManager,
         IUserDataFactory userDataFactory,
+        ILoggerFactory loggerFactory,
         ILogger<RoomManager> logger)
     {
         _database = database;
@@ -79,6 +81,7 @@ public class RoomManager : IRoomManager
         _itemHopperFinder = itemHopperFinder;
         _badgeManager = badgeManager;
         _userDataFactory = userDataFactory;
+        _loggerFactory = loggerFactory;
         _logger = logger;
         _rooms = new();
         _roomModels = new();
@@ -162,7 +165,7 @@ public class RoomManager : IRoomManager
                 return false;
             }
 
-            var myInstance = new Room(data, _clientManager, _database, _itemLoader, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this);
+            var myInstance = new Room(data, _clientManager, _database, _itemLoader, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
             if (_rooms.TryAdd(roomId, myInstance))
             {
                 room = myInstance;

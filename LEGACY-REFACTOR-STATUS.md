@@ -20,7 +20,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 
 - Disconnect flow is being rerouted through `TcpSessionProxy` / `WsSessionProxy` and instance-backed `Habbo.OnDisconnect()`.
 - `RoomFactory`, `RoomManager`, `Room`, and related packet handlers are being reshaped to pass `IDatabase` and managers explicitly instead of leaning on older static/global access paths.
-- `WIRED-ASYNC-PLAN.md` now has a first queued-execution slice in place in `WiredComponent`, including matched chat/command triggers, but the broader Wired migration is still in progress.
+- The active Wired runtime now includes room-local queue observability in `WiredComponent`, so enqueue, batch processing, saturation, and slow-cycle behavior can be traced through the standard logger pipeline while the broader room/habbo cleanup continues.
 
 ## Migration Status: ✅ COMPLETE
 

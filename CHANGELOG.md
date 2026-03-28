@@ -3,6 +3,7 @@
 ### [0.8.2] - 2026-03-28
 #### Added
 - `WiredExecutionData` to carry queued Wired trigger invocations through the room cycle.
+- Logger-backed Wired queue observability so room-local enqueue, batch processing, saturation, and slow-cycle behavior can be traced without attaching a debugger.
 
 #### Changed
 - Moved non-chat `WiredComponent.TriggerEvent` execution onto a bounded per-room queue processed during `WiredComponent.OnCycle()`.
