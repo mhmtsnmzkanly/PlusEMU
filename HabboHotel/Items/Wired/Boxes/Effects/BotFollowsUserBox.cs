@@ -33,11 +33,6 @@ internal class BotFollowsUserBox : IWiredItem, IWiredExecutable, IWiredActorExec
         StringData = $"{followMode};{botConfiguration}";
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))

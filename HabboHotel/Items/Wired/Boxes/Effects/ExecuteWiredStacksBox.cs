@@ -44,11 +44,6 @@ internal class ExecuteWiredStacksBox : IWiredItem, IWiredExecutable, IWiredActor
         }
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;

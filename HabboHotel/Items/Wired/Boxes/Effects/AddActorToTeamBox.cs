@@ -31,11 +31,6 @@ internal class AddActorToTeamBox : IWiredItem, IWiredExecutable, IWiredActorExec
         StringData = team.ToString();
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         if (Instance == null || string.IsNullOrEmpty(StringData))

@@ -37,11 +37,6 @@ internal class ShowMessageBox : IWiredItem, IWiredExecutable, IWiredActorExecuta
         StringData = message;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;

@@ -29,11 +29,6 @@ internal class RemoveActorFromTeamBox : IWiredItem, IWiredExecutable, IWiredActo
         var unknown = packet.ReadInt();
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         if (Instance == null)
