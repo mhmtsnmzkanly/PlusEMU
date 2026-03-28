@@ -10,6 +10,7 @@
 - Moved `TriggerUserSays` and `TriggerUserSaysCommand` match resolution fully into `WiredComponent`, leaving the queued trigger boxes responsible only for owner checks, feedback whispers, and stack execution.
 - Added `WiredChatTriggerContext` so queued chat and command triggers no longer depend on raw positional `object[]` payloads for their actor/message handoff.
 - Added `WiredActorItemTriggerContext` for walk-on, walk-off, furni-collision, and state-change triggers so the next queued trigger slice also moves off raw positional payload unpacking.
+- Added `WiredActorTriggerContext` for `TriggerRoomEnter` and explicit parameterless queue handling for game start/end triggers so the remaining low-parameter trigger paths also stop relying on ad hoc payload packing.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

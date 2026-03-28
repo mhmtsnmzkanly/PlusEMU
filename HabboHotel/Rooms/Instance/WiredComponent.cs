@@ -257,6 +257,12 @@ public class WiredComponent
             if (TryQueueActorItemTrigger(type, @params))
                 return true;
 
+            if (TryQueueActorTrigger(type, @params))
+                return true;
+
+            if (TryQueueParameterlessTrigger(type))
+                return true;
+
             if (!HasTrigger(type))
                 return false;
 
@@ -268,6 +274,21 @@ public class WiredComponent
             //log.Error("Error when triggering Wired Event: " + e);
             return false;
         }
+    }
+
+    private bool TryQueueActorTrigger(WiredBoxType type, object[] @params)
+    {
+        if (type != WiredBoxType.TriggerRoomEnter)
+            return false;
+
+        if (@params.Length == 0 || @params[0] is not Habbo actor)
+            return false;
+
+        if (!HasTrigger(type))
+            return false;
+
+        _executionQueue.Enqueue(new(type, null, new WiredActorTriggerContext(actor)));
+        return true;
     }
 
     private bool TryQueueActorItemTrigger(WiredBoxType type, object[] @params)
@@ -285,6 +306,18 @@ public class WiredComponent
             return false;
 
         _executionQueue.Enqueue(new(type, null, new WiredActorItemTriggerContext(actor, item)));
+        return true;
+    }
+
+    private bool TryQueueParameterlessTrigger(WiredBoxType type)
+    {
+        if (type != WiredBoxType.TriggerGameStarts && type != WiredBoxType.TriggerGameEnds)
+            return false;
+
+        if (!HasTrigger(type))
+            return false;
+
+        _executionQueue.Enqueue(new(type));
         return true;
     }
 
