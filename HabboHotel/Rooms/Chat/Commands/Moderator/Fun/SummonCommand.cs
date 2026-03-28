@@ -24,7 +24,7 @@ internal class SummonCommand : ITargetChatCommand
     public async Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
-        if (habbo == null || target.Client == null)
+        if (habbo == null || !target.TryGetClient(out var targetClient))
             return;
 
         if (target.Username == habbo.Username)
@@ -33,15 +33,15 @@ internal class SummonCommand : ITargetChatCommand
             return;
         }
 
-        target.Client.SendNotification($"You have been summoned to {habbo.Username}!");
+        targetClient.SendNotification($"You have been summoned to {habbo.Username}!");
         
         if (!target.InRoom)
         {
-            target.Client.Send(new RoomForwardComposer(room.Id));
+            targetClient.Send(new RoomForwardComposer(room.Id));
         }
         else
         {
-            await _roomService.PrepareRoom(target.Client, room.Id, "");
+            await _roomService.PrepareRoom(targetClient, room.Id, "");
         }
     }
 }

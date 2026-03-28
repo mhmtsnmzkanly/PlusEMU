@@ -37,12 +37,11 @@ internal class UserSaysCommandBox : IWiredItem, IWiredChatExecutable
     bool IWiredChatExecutable.Execute(WiredChatExecutionContext context)
     {
         var player = context.Actor;
-        if (player == null || player.CurrentRoom == null || !player.InRoom)
+        if (player == null || !player.TryGetCurrentRoom(out var currentRoom) || !player.InRoom)
             return false;
-        var client = player.Client;
-        if (client == null)
+        if (!player.TryGetClient(out var client))
             return false;
-        var user = player.CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
+        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)
             return false;
         if (BoolData && Instance.OwnerId != player.Id || string.IsNullOrWhiteSpace(StringData))

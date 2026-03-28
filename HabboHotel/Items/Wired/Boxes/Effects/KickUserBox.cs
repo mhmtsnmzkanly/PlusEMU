@@ -41,9 +41,9 @@ internal class KickUserBox : IWiredItem, IWiredCycle, IWiredActorExecutable
             while (_toKick.Count > 0)
             {
                 var player = _toKick.Dequeue();
-                if (player == null || !player.InRoom || player.CurrentRoom != Instance || player.Client == null)
+                if (player == null || !player.IsInRoom(Instance) || !player.TryGetClient(out var playerClient))
                     continue;
-                Instance.GetRoomUserManager().RemoveUserFromRoom(player.Client, true);
+                _ = Instance.GetRoomService().KickFromRoom(playerClient);
             }
         }
         TickCount = KickDelay;
@@ -77,8 +77,7 @@ internal class KickUserBox : IWiredItem, IWiredCycle, IWiredActorExecutable
         if (!_toKick.Contains(player))
         {
             var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
-            var playerClient = player.Client;
-            if (user == null || playerClient == null)
+            if (user == null || !player.TryGetClient(out var playerClient))
                 return false;
             if ((player.Permissions?.HasRight("mod_tool") ?? false) || Instance.OwnerId == player.Id)
             {

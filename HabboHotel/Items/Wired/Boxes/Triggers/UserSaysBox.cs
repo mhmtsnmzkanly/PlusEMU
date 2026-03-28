@@ -40,9 +40,7 @@ internal class UserSaysBox : IWiredItem, IWiredChatExecutable
         var message = context.Message ?? string.Empty;
         if (player == null)
             return false;
-        var playerClient = player?.Client;
-        var currentRoom = player?.CurrentRoom;
-        if (player == null || playerClient == null || currentRoom == null || !player.InRoom)
+        if (!player.TryGetClient(out var playerClient) || !player.TryGetCurrentRoom(out var currentRoom) || !player.InRoom)
             return false;
         var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)

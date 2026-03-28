@@ -41,11 +41,9 @@ internal class TriggererNotOnFurniBox : IWiredItem, IWiredActorExecutable
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;
-        if (player == null)
+        if (player == null || !player.TryGetCurrentRoom(out var currentRoom))
             return false;
-        if (player.CurrentRoom == null)
-            return false;
-        var user = player.CurrentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
+        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)
             return false;
         var itemsOnSquare = Instance.GetGameMap().GetAllRoomItemForSquare(user.X, user.Y);
