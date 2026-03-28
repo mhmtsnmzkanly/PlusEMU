@@ -37,6 +37,7 @@ public class RoomItemHandling
     private readonly ConcurrentDictionary<uint, Item> _wallItems;
     private readonly IItemLoader _itemLoader;
     private readonly IRoomItemPersistenceService _roomItemPersistenceService;
+    private readonly IRoomItemPlacementValidatorService _roomItemPlacementValidatorService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -45,11 +46,12 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService)
     {
         _room = room;
         _itemLoader = itemLoader;
         _roomItemPersistenceService = roomItemPersistenceService;
+        _roomItemPlacementValidatorService = roomItemPlacementValidatorService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -567,90 +569,30 @@ public class RoomItemHandling
     public bool SetFloorItem(GameClient session, Item item, int newX, int newY, int newRot, bool newItem, bool onRoller, bool sendMessage, bool updateRoomUserStatuses = false, double height = -1)
     {
         var needsReAdd = false;
-        if (!CanPlaceNewFloorItem(item, newItem))
+        if (!_roomItemPlacementValidatorService.CanPlaceNewFloorItem(_room, item, newItem))
             return false;
 
         var itemsOnTile = GetFurniObjects(newX, newY);
-        if (HasConflictingRoller(item, itemsOnTile))
+        if (_roomItemPlacementValidatorService.HasConflictingRoller(item, itemsOnTile))
             return false;
 
         if (!newItem)
             needsReAdd = _room.GetGameMap().RemoveFromMap(item);
 
         var affectedTiles = Gamemap.GetAffectedTiles(item.Definition.Length, item.Definition.Width, newX, newY, newRot);
-        if (!ValidateFloorPlacement(item, newX, newY, onRoller, needsReAdd, affectedTiles))
-            return false;
-
-        if (!TryResolveFloorPlacement(item, newX, newY, newRot, onRoller, needsReAdd, height, affectedTiles, itemsOnTile, out var resolvedRotation, out var resolvedZ))
-            return false;
-
-        return ApplyFloorPlacement(session, item, newX, newY, resolvedRotation, resolvedZ, newItem, onRoller, sendMessage, updateRoomUserStatuses, affectedTiles);
-    }
-
-    private bool CanPlaceNewFloorItem(Item item, bool newItem)
-    {
-        if (!newItem || !item.IsWired)
-            return true;
-
-        return item.Definition.WiredType != WiredBoxType.EffectRegenerateMaps ||
-               _room.GetRoomItemHandler().GetFloor.Count(x => x.Definition.WiredType == WiredBoxType.EffectRegenerateMaps) == 0;
-    }
-
-    private static bool HasConflictingRoller(Item item, List<Item> itemsOnTile) =>
-        item.Definition.InteractionType == InteractionType.Roller &&
-        itemsOnTile.Count(x => x.Definition.InteractionType == InteractionType.Roller && x.Id != item.Id) > 0;
-
-    private bool ValidateFloorPlacement(Item item, int newX, int newY, bool onRoller, bool needsReAdd, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        if (!HasValidTargetTiles(item, newX, newY, affectedTiles) ||
-            (!onRoller && !HasOpenPlacementTiles(item, affectedTiles)) ||
-            (!onRoller && !HasNoUserBlocking(item, affectedTiles)))
+        if (!_roomItemPlacementValidatorService.ValidateFloorPlacement(_room, item, newX, newY, onRoller, affectedTiles))
         {
             ReAddItemToMapIfNeeded(item, needsReAdd);
             return false;
         }
 
-        return true;
-    }
-
-    private bool HasValidTargetTiles(Item item, int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        if (!_room.GetGameMap().ValidTile(newX, newY) || (_room.GetGameMap().SquareHasUsers(newX, newY) && !item.Definition.IsSeat))
+        if (!_roomItemPlacementValidatorService.TryResolveFloorPlacement(_room, item, newX, newY, newRot, onRoller, height, affectedTiles, itemsOnTile, out var resolvedRotation, out var resolvedZ))
+        {
+            ReAddItemToMapIfNeeded(item, needsReAdd);
             return false;
-
-        foreach (var tile in affectedTiles.Values)
-        {
-            if (!_room.GetGameMap().ValidTile(tile.X, tile.Y) ||
-                (_room.GetGameMap().SquareHasUsers(tile.X, tile.Y) && !item.Definition.IsSeat))
-                return false;
         }
 
-        return true;
-    }
-
-    private bool HasOpenPlacementTiles(Item item, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        foreach (var tile in affectedTiles.Values)
-        {
-            if (_room.GetGameMap().Model.SqState[tile.X, tile.Y] != SquareState.Open && !item.Definition.IsSeat)
-                return false;
-        }
-
-        return true;
-    }
-
-    private bool HasNoUserBlocking(Item item, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        if (item.Definition.IsSeat || item.IsRoller)
-            return true;
-
-        foreach (var tile in affectedTiles.Values)
-        {
-            if (_room.GetGameMap().GetRoomUsers(new(tile.X, tile.Y)).Count > 0)
-                return false;
-        }
-
-        return true;
+        return ApplyFloorPlacement(session, item, newX, newY, resolvedRotation, resolvedZ, newItem, onRoller, sendMessage, updateRoomUserStatuses, affectedTiles);
     }
 
     private void ReAddItemToMapIfNeeded(Item item, bool needsReAdd)
@@ -659,85 +601,6 @@ public class RoomItemHandling
             _room.GetGameMap().AddToMap(item);
     }
 
-    private bool TryResolveFloorPlacement(Item item, int newX, int newY, int newRot, bool onRoller, bool needsReAdd, double height, Dictionary<int, ThreeDCoord> affectedTiles, List<Item> itemsOnTile, out int resolvedRotation, out double resolvedZ)
-    {
-        resolvedRotation = NormalizeFloorItemRotation(item, newRot);
-        resolvedZ = height != -1 ? height : _room.GetGameMap().Model.SqFloorHeight[newX, newY];
-        if (height != -1)
-            return true;
-
-        var itemsComplete = GetAffectedPlacementItems(newX, newY, affectedTiles, itemsOnTile);
-        if (!onRoller && !AreStackedItemsPlaceable(item, itemsComplete))
-        {
-            ReAddItemToMapIfNeeded(item, needsReAdd);
-            return false;
-        }
-
-        resolvedZ = ResolveFloorPlacementHeight(item, newX, newY, resolvedRotation, resolvedZ, itemsComplete);
-        return true;
-    }
-
-    private List<Item> GetAffectedPlacementItems(int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles, List<Item> itemsOnTile)
-    {
-        var itemsAffected = new List<Item>();
-        foreach (var tile in affectedTiles.Values.ToList())
-        {
-            var temp = GetFurniObjects(tile.X, tile.Y);
-            if (temp != null)
-                itemsAffected.AddRange(temp);
-        }
-
-        var itemsComplete = new List<Item>();
-        itemsComplete.AddRange(itemsOnTile);
-        itemsComplete.AddRange(itemsAffected);
-        return itemsComplete;
-    }
-
-    private bool AreStackedItemsPlaceable(Item item, List<Item> itemsComplete)
-    {
-        foreach (var stackedItem in itemsComplete.ToList())
-        {
-            if (stackedItem == null || stackedItem.Id == item.Id || stackedItem.Definition == null)
-                continue;
-
-            if (!stackedItem.Definition.Stackable)
-                return false;
-        }
-
-        return true;
-    }
-
-    private static int NormalizeFloorItemRotation(Item item, int newRot)
-    {
-        if (newRot != 0 && newRot != 2 && newRot != 4 && newRot != 6 && newRot != 8 && !item.Definition.ExtraRot)
-            return 0;
-
-        return newRot;
-    }
-
-    private double ResolveFloorPlacementHeight(Item item, int newX, int newY, int newRot, double baseZ, List<Item> itemsComplete)
-    {
-        var resolvedZ = baseZ;
-        if (item.Rotation != newRot && item.GetX == newX && item.GetY == newY)
-            resolvedZ = item.GetZ;
-
-        foreach (var stackedItem in itemsComplete.ToList())
-        {
-            if (stackedItem == null || stackedItem.Id == item.Id)
-                continue;
-
-            if (stackedItem.Definition.InteractionType == InteractionType.Stacktool)
-            {
-                resolvedZ = stackedItem.GetZ;
-                break;
-            }
-
-            if (stackedItem.TotalHeight > resolvedZ)
-                resolvedZ = stackedItem.TotalHeight;
-        }
-
-        return resolvedZ;
-    }
 
     private bool ApplyFloorPlacement(GameClient session, Item item, int newX, int newY, int newRot, double newZ, bool newItem, bool onRoller, bool sendMessage, bool updateRoomUserStatuses, Dictionary<int, ThreeDCoord> affectedTiles)
     {
@@ -1027,115 +890,8 @@ public class RoomItemHandling
     }
 
 
-    public bool CheckPosItem(Item item, int newX, int newY, int newRot)
-    {
-        try
-        {
-            var affectedTiles = Gamemap.GetAffectedTiles(item.Definition.Length, item.Definition.Width, newX, newY, newRot);
-            if (!HasValidCheckPositionTiles(newX, newY, affectedTiles))
-                return false;
-            if (IntersectsDoorTile(newX, newY, affectedTiles))
-                return false;
-            if (!HasMatchingBaseHeight(item, newX, newY, newRot))
-                return false;
-            if (!HasOpenCheckPositionTiles(newX, newY, affectedTiles))
-                return false;
-            if (!HasNoBlockingUsers(item, newX, newY, affectedTiles))
-                return false;
-
-            return HasOnlyStackableItems(item, newX, newY, affectedTiles);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private bool HasValidCheckPositionTiles(int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        if (!_room.GetGameMap().ValidTile(newX, newY))
-            return false;
-
-        foreach (var coord in affectedTiles.Values)
-        {
-            if (!_room.GetGameMap().ValidTile(coord.X, coord.Y))
-                return false;
-        }
-
-        return true;
-    }
-
-    private bool IntersectsDoorTile(int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        if (_room.GetGameMap().Model.DoorX == newX && _room.GetGameMap().Model.DoorY == newY)
-            return true;
-
-        foreach (var coord in affectedTiles.Values)
-        {
-            if (_room.GetGameMap().Model.DoorX == coord.X && _room.GetGameMap().Model.DoorY == coord.Y)
-                return true;
-        }
-
-        return false;
-    }
-
-    private bool HasMatchingBaseHeight(Item item, int newX, int newY, int newRot)
-    {
-        var floorHeight = _room.GetGameMap().Model.SqFloorHeight[newX, newY];
-        return item.Rotation != newRot || item.GetX != newX || item.GetY != newY || item.GetZ == floorHeight;
-    }
-
-    private bool HasOpenCheckPositionTiles(int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        if (_room.GetGameMap().Model.SqState[newX, newY] != SquareState.Open)
-            return false;
-
-        foreach (var coord in affectedTiles.Values)
-        {
-            if (_room.GetGameMap().Model.SqState[coord.X, coord.Y] != SquareState.Open)
-                return false;
-        }
-
-        return true;
-    }
-
-    private bool HasNoBlockingUsers(Item item, int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        if (item.Definition.IsSeat)
-            return true;
-
-        if (_room.GetGameMap().SquareHasUsers(newX, newY))
-            return false;
-
-        foreach (var coord in affectedTiles.Values)
-        {
-            if (_room.GetGameMap().SquareHasUsers(coord.X, coord.Y))
-                return false;
-        }
-
-        return true;
-    }
-
-    private bool HasOnlyStackableItems(Item item, int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        var itemsOnTarget = new List<Item>();
-        itemsOnTarget.AddRange(GetFurniObjects(newX, newY));
-
-        foreach (var coord in affectedTiles.Values)
-        {
-            var coordinatedItems = GetFurniObjects(coord.X, coord.Y);
-            if (coordinatedItems != null)
-                itemsOnTarget.AddRange(coordinatedItems);
-        }
-
-        foreach (var roomItem in itemsOnTarget)
-        {
-            if (roomItem.Id != item.Id && !roomItem.Definition.Stackable)
-                return false;
-        }
-
-        return true;
-    }
+    public bool CheckPosItem(Item item, int newX, int newY, int newRot) =>
+        _roomItemPlacementValidatorService.CheckPosItem(_room, item, newX, newY, newRot);
 
 
     public ICollection<Item> GetRollers() => _rollers.Values;

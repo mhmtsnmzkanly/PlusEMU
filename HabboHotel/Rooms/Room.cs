@@ -115,6 +115,7 @@ public class Room : RoomData
     private readonly IGroupManager _groupManager;
     private readonly IItemLoader _itemLoader;
     private readonly IRoomItemPersistenceService _roomItemPersistenceService;
+    private readonly IRoomItemPlacementValidatorService _roomItemPlacementValidatorService;
     private readonly IRoomService _roomService;
     private readonly IChatManager _chatManager;
     private readonly IBotManager _botManager;
@@ -143,13 +144,14 @@ public class Room : RoomData
     private readonly IRoomManager _roomManager;
     private readonly ILanguageManager _languageManager;
 
-    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory, IRoomManager roomManager, ILoggerFactory loggerFactory)
+    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory, IRoomManager roomManager, ILoggerFactory loggerFactory)
         : base(data)
     {
         _clientManager = clientManager;
         _database = database;
         _itemLoader = itemLoader;
         _roomItemPersistenceService = roomItemPersistenceService;
+        _roomItemPlacementValidatorService = roomItemPlacementValidatorService;
         _groupManager = groupManager;
         _roomService = roomService;
         _chatManager = chatManager;
@@ -171,7 +173,7 @@ public class Room : RoomData
         MutedUsers = new();
         _tents = new();
         _gamemap = new(this, data.Model);
-        _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService);
+        _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService);
         _roomUserManager = new(this, clientManager, database, groupManager);
         _filterComponent = new(this);
         _wiredComponent = new(this, loggerFactory.CreateLogger<WiredComponent>());
@@ -234,7 +236,7 @@ public class Room : RoomData
 
     public RoomItemHandling GetRoomItemHandler()
     {
-        if (_roomItemHandling == null) _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService);
+        if (_roomItemHandling == null) _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService);
         return _roomItemHandling;
     }
 
