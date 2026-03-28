@@ -955,65 +955,110 @@ public class RoomItemHandling
     {
         try
         {
-            var dictionary = Gamemap.GetAffectedTiles(item.Definition.Length, item.Definition.Width, newX, newY, newRot);
-            if (!_room.GetGameMap().ValidTile(newX, newY))
+            var affectedTiles = Gamemap.GetAffectedTiles(item.Definition.Length, item.Definition.Width, newX, newY, newRot);
+            if (!HasValidCheckPositionTiles(newX, newY, affectedTiles))
                 return false;
-            foreach (var coord in dictionary.Values)
-            {
-                if (_room.GetGameMap().Model.DoorX == coord.X && _room.GetGameMap().Model.DoorY == coord.Y)
-                    return false;
-            }
-            if (_room.GetGameMap().Model.DoorX == newX && _room.GetGameMap().Model.DoorY == newY)
+            if (IntersectsDoorTile(newX, newY, affectedTiles))
                 return false;
-            foreach (var coord in dictionary.Values)
-            {
-                if (!_room.GetGameMap().ValidTile(coord.X, coord.Y))
-                    return false;
-            }
-            double num = _room.GetGameMap().Model.SqFloorHeight[newX, newY];
-            if (item.Rotation == newRot && item.GetX == newX && item.GetY == newY && item.GetZ != num)
+            if (!HasMatchingBaseHeight(item, newX, newY, newRot))
                 return false;
-            if (_room.GetGameMap().Model.SqState[newX, newY] != SquareState.Open)
+            if (!HasOpenCheckPositionTiles(newX, newY, affectedTiles))
                 return false;
-            foreach (var coord in dictionary.Values)
-            {
-                if (_room.GetGameMap().Model.SqState[coord.X, coord.Y] != SquareState.Open)
-                    return false;
-            }
-            if (!item.Definition.IsSeat)
-            {
-                if (_room.GetGameMap().SquareHasUsers(newX, newY))
-                    return false;
-                foreach (var coord in dictionary.Values)
-                {
-                    if (_room.GetGameMap().SquareHasUsers(coord.X, coord.Y))
-                        return false;
-                }
-            }
-            var furniObjects = GetFurniObjects(newX, newY);
-            var collection = new List<Item>();
-            var list3 = new List<Item>();
-            foreach (var coord in dictionary.Values)
-            {
-                var list4 = GetFurniObjects(coord.X, coord.Y);
-                if (list4 != null)
-                    collection.AddRange(list4);
-            }
-            if (furniObjects == null)
-                furniObjects = new();
-            list3.AddRange(furniObjects);
-            list3.AddRange(collection);
-            foreach (var i in list3)
-            {
-                if (i.Id != item.Id && !i.Definition.Stackable)
-                    return false;
-            }
-            return true;
+            if (!HasNoBlockingUsers(item, newX, newY, affectedTiles))
+                return false;
+
+            return HasOnlyStackableItems(item, newX, newY, affectedTiles);
         }
         catch
         {
             return false;
         }
+    }
+
+    private bool HasValidCheckPositionTiles(int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
+    {
+        if (!_room.GetGameMap().ValidTile(newX, newY))
+            return false;
+
+        foreach (var coord in affectedTiles.Values)
+        {
+            if (!_room.GetGameMap().ValidTile(coord.X, coord.Y))
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool IntersectsDoorTile(int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
+    {
+        if (_room.GetGameMap().Model.DoorX == newX && _room.GetGameMap().Model.DoorY == newY)
+            return true;
+
+        foreach (var coord in affectedTiles.Values)
+        {
+            if (_room.GetGameMap().Model.DoorX == coord.X && _room.GetGameMap().Model.DoorY == coord.Y)
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool HasMatchingBaseHeight(Item item, int newX, int newY, int newRot)
+    {
+        var floorHeight = _room.GetGameMap().Model.SqFloorHeight[newX, newY];
+        return item.Rotation != newRot || item.GetX != newX || item.GetY != newY || item.GetZ == floorHeight;
+    }
+
+    private bool HasOpenCheckPositionTiles(int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
+    {
+        if (_room.GetGameMap().Model.SqState[newX, newY] != SquareState.Open)
+            return false;
+
+        foreach (var coord in affectedTiles.Values)
+        {
+            if (_room.GetGameMap().Model.SqState[coord.X, coord.Y] != SquareState.Open)
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool HasNoBlockingUsers(Item item, int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
+    {
+        if (item.Definition.IsSeat)
+            return true;
+
+        if (_room.GetGameMap().SquareHasUsers(newX, newY))
+            return false;
+
+        foreach (var coord in affectedTiles.Values)
+        {
+            if (_room.GetGameMap().SquareHasUsers(coord.X, coord.Y))
+                return false;
+        }
+
+        return true;
+    }
+
+    private bool HasOnlyStackableItems(Item item, int newX, int newY, Dictionary<int, ThreeDCoord> affectedTiles)
+    {
+        var itemsOnTarget = new List<Item>();
+        itemsOnTarget.AddRange(GetFurniObjects(newX, newY));
+
+        foreach (var coord in affectedTiles.Values)
+        {
+            var coordinatedItems = GetFurniObjects(coord.X, coord.Y);
+            if (coordinatedItems != null)
+                itemsOnTarget.AddRange(coordinatedItems);
+        }
+
+        foreach (var roomItem in itemsOnTarget)
+        {
+            if (roomItem.Id != item.Id && !roomItem.Definition.Stackable)
+                return false;
+        }
+
+        return true;
     }
 
 
