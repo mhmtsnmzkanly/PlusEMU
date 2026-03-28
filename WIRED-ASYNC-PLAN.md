@@ -31,6 +31,7 @@ Phase 1 is now in place:
 - The same bridge now carries the remaining bot-targeted/data-only effect slice too, which trims another block of boxes that were still only reachable through the legacy `Execute(params object[])` path.
 - The delayed/cycle-backed boxes are on that bridge now as well, which means the typed execution entry point covers not just direct trigger/effect calls but also the room-cycle scheduling path that Phase 1 introduced.
 - At the contract level, `IWiredExecutable` and `WiredExecutionContext` are now the primary execution surface, while the old variadic `Execute(params object[])` signature is explicitly retained only as a compatibility bridge.
+- Internally, the adapter layer now dispatches directly through typed contexts as well, so the compatibility path is no longer part of normal room-cycle or trigger-stack execution.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

@@ -5,34 +5,14 @@ namespace Plus.HabboHotel.Items.Wired;
 internal static class WiredExecutionAdapter
 {
     public static bool ExecuteWithContext(this IWiredItem item, object context)
-    {
-        if (item is IWiredExecutable executable)
-            return executable.Execute(new(context));
-
-        return item.Execute(context);
-    }
+        => item.Execute(new WiredExecutionContext(context));
 
     public static bool ExecuteWithActor(this IWiredItem item, Habbo actor)
-    {
-        if (item is IWiredExecutable executable)
-            return executable.Execute(new(actor));
-
-        return item.Execute(actor);
-    }
+        => item.Execute(new WiredExecutionContext(actor));
 
     public static bool ExecuteWithParameters(this IWiredItem item, params object[] parameters)
-    {
-        if (item is IWiredExecutable executable)
-            return executable.Execute(new(parameters));
-
-        return item.Execute(parameters);
-    }
+        => item.Execute(new WiredExecutionContext(parameters));
 
     public static bool ExecuteWithoutContext(this IWiredItem item)
-    {
-        if (item is IWiredExecutable executable)
-            return executable.Execute(new());
-
-        return item.Execute();
-    }
+        => item.Execute(new WiredExecutionContext());
 }
