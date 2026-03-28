@@ -280,3 +280,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - Keep trimming the packet tail by simplifying the heavier room settings / delete-room / ignore-list flows before moving the same Habbo helper cleanup into services and commands.
 - Continue the last packet-tail cleanup by extracting repeated helperless blocks from delete-room, room-settings, and large catalog purchase handlers before shifting focus to `Habbo` usage in services/commands.
 - Continue the `Habbo` helper migration in services/commands after the packet sweep, starting with `GroupService` and then the moderator/user command set that still reads `CurrentRoom` / `Client` directly.
+- Keep sweeping the command layer after `GroupService`, starting with `CommandManager` and the hot moderator/user commands that still compare rooms or address clients through raw `Habbo` properties.

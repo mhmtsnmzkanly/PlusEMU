@@ -39,10 +39,7 @@ public class CommandManager : ICommandManager
     /// <returns>True if parsed or false if not.</returns>
     public async Task<bool> Parse(GameClient session, string message)
     {
-        var habbo = session.GetHabbo();
-        var permissions = habbo?.Permissions;
-        var currentRoom = habbo?.CurrentRoom;
-        if (permissions == null || currentRoom == null || habbo == null)
+        if (session.GetHabbo() is not { Permissions: { } permissions } habbo || !habbo.TryGetCurrentRoom(out var currentRoom))
             return false;
         if (!message.StartsWith(_prefix))
             return false;
@@ -102,15 +99,15 @@ public class CommandManager : ICommandManager
                     return true;
                 }
 
-                if (targetChatCommand.MustBeInSameRoom && currentRoom != target.GetHabbo()?.CurrentRoom)
+                var targetHabbo = target.GetHabbo();
+                if (targetHabbo == null)
+                    return true;
+
+                if (targetChatCommand.MustBeInSameRoom && !targetHabbo.IsInRoom(currentRoom))
                 {
                     session.SendWhisper($"You must be in the same room as {username} to execute this command.");
                     return true;
                 }
-
-                var targetHabbo = target.GetHabbo();
-                if (targetHabbo == null)
-                    return true;
 
                 await targetChatCommand.Execute(session, currentRoom, targetHabbo, parameters);
             }

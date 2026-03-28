@@ -23,14 +23,12 @@ internal class KickCommand : ITargetChatCommand
     
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var targetClient = target.Client;
-        var targetRoom = target.CurrentRoom;
         if (target == session.GetHabbo())
         {
             session.SendWhisper("Get a life.");
             return Task.CompletedTask;
         }
-        if (!target.InRoom || targetClient == null || targetRoom == null)
+        if (!target.TryGetClient(out var targetClient) || !target.TryGetCurrentRoom(out _))
         {
             session.SendWhisper("That user currently isn't in a room.");
             return Task.CompletedTask;

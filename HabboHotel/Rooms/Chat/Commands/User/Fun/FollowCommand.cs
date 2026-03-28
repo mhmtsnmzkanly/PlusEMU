@@ -22,12 +22,10 @@ internal class FollowCommand : ITargetChatCommand
 
     public async Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var habbo = session.GetHabbo();
-        var permissions = habbo?.Permissions;
-        if (habbo == null)
+        if (session.GetHabbo() is not { Permissions: { } permissions } habbo)
             return;
 
-        if (target.CurrentRoom == habbo.CurrentRoom)
+        if (target.IsInRoom(room))
         {
             session.SendWhisper($"Hey you, open your eyes! {target.Username} is in this room!");
             return;
@@ -39,15 +37,11 @@ internal class FollowCommand : ITargetChatCommand
             return;
         }
 
-        if (!target.InRoom)
+        if (!target.TryGetCurrentRoom(out var targetRoom))
         {
             session.SendWhisper("That user currently isn't in a room!");
             return;
         }
-
-        var targetRoom = target.CurrentRoom;
-        if (targetRoom == null)
-            return;
 
         if (targetRoom.Access != RoomAccess.Open && !(permissions?.HasRight("mod_tool") ?? false))
         {
