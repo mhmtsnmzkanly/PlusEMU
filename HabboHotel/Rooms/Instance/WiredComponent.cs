@@ -280,11 +280,7 @@ public class WiredComponent
         if (@params.Length == 0 || @params[0] is not Habbo actor)
             return false;
 
-        if (!HasTrigger(type))
-            return false;
-
-        _executionQueue.Enqueue(new(type, null, new WiredActorTriggerContext(actor)));
-        return true;
+        return EnqueueTrigger(type, null, new WiredActorTriggerContext(actor));
     }
 
     private bool TryQueueActorItemTrigger(WiredBoxType type, object[] @params)
@@ -298,11 +294,7 @@ public class WiredComponent
         if (@params.Length < 2 || @params[0] is not Habbo actor || @params[1] is not Item item)
             return false;
 
-        if (!HasTrigger(type))
-            return false;
-
-        _executionQueue.Enqueue(new(type, null, new WiredActorItemTriggerContext(actor, item)));
-        return true;
+        return EnqueueTrigger(type, null, new WiredActorItemTriggerContext(actor, item));
     }
 
     private bool TryQueueParameterlessTrigger(WiredBoxType type)
@@ -310,11 +302,7 @@ public class WiredComponent
         if (type != WiredBoxType.TriggerGameStarts && type != WiredBoxType.TriggerGameEnds)
             return false;
 
-        if (!HasTrigger(type))
-            return false;
-
-        _executionQueue.Enqueue(new(type));
-        return true;
+        return EnqueueTrigger(type);
     }
 
     private bool QueueMatchingUserSaysTriggers(object[] @params)
@@ -331,14 +319,10 @@ public class WiredComponent
             .Select(box => box.Item.Id)
             .ToArray();
 
-        if (targetIds.Length == 0)
-            return false;
-
-        _executionQueue.Enqueue(new(
+        return EnqueueTrigger(
             WiredBoxType.TriggerUserSays,
             targetIds,
-            new WiredChatTriggerContext(actor, message)));
-        return true;
+            new WiredChatTriggerContext(actor, message));
     }
 
     private bool QueueMatchingUserSaysCommandTriggers(object[] @params)
@@ -351,13 +335,21 @@ public class WiredComponent
             .Select(box => box.Item.Id)
             .ToArray();
 
-        if (targetIds.Length == 0)
-            return false;
-
-        _executionQueue.Enqueue(new(
+        return EnqueueTrigger(
             WiredBoxType.TriggerUserSaysCommand,
             targetIds,
-            new WiredChatTriggerContext(actor, commandManager: commandManager)));
+            new WiredChatTriggerContext(actor, commandManager: commandManager));
+    }
+
+    private bool EnqueueTrigger(WiredBoxType type, IReadOnlyCollection<uint>? targetItemIds = null, object? context = null)
+    {
+        if (!HasTrigger(type))
+            return false;
+
+        if (targetItemIds != null && targetItemIds.Count == 0)
+            return false;
+
+        _executionQueue.Enqueue(new(type, targetItemIds, context));
         return true;
     }
 
@@ -384,26 +376,25 @@ public class WiredComponent
     private void ExecuteQueuedTrigger(WiredExecutionData execution)
     {
         foreach (var box in GetQueuedTriggerTargets(execution))
+            ExecuteQueuedTrigger(box, execution.Context);
+    }
+
+    private static void ExecuteQueuedTrigger(IWiredItem box, object? context)
+    {
+        switch (context)
         {
-            if (execution.Context is WiredChatTriggerContext chatContext)
-            {
+            case WiredChatTriggerContext chatContext:
                 box.ExecuteWithChat(chatContext);
-                continue;
-            }
-
-            if (execution.Context is WiredActorTriggerContext actorContext)
-            {
+                return;
+            case WiredActorTriggerContext actorContext:
                 box.ExecuteWithActor(actorContext.Actor);
-                continue;
-            }
-
-            if (execution.Context is WiredActorItemTriggerContext actorItemContext)
-            {
+                return;
+            case WiredActorItemTriggerContext actorItemContext:
                 box.ExecuteWithActorItem(actorItemContext);
-                continue;
-            }
-
-            box.ExecuteWithoutContext();
+                return;
+            default:
+                box.ExecuteWithoutContext();
+                return;
         }
     }
 
