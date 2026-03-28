@@ -29,6 +29,7 @@
 - Moved the simple parameterless/data-only slice (`GameStarts`, `GameEnds`, `AddonRandomEffect`, `RegenerateMaps`, `SetRollerSpeed`, `BotCommunicatesToAll`) onto the same typed bridge so the new execution path is no longer limited to actor-carrying boxes.
 - Moved the furni occupancy condition slice (`FurniHasUsers`, `FurniHasNoUsers`, `FurniHasFurni`, `FurniHasNoFurni`) onto `IWiredExecutable` too, broadening typed execution coverage across non-actor conditions.
 - Moved the remaining user-count and state/position condition boxes (`UserCountInRoom`, `UserCountDoesntInRoom`, `FurniMatchStateAndPosition`, `FurniDoesntMatchStateAndPosition`) onto the typed execution bridge as well.
+- Moved the remaining bot-targeted/data-only effect boxes (`BotMovesToFurni`, `TeleportBotToFurni`, `BotChangesClothes`, `GiveReward`) onto the typed execution bridge too.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

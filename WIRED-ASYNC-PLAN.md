@@ -28,6 +28,7 @@ Phase 1 is now in place:
 - A matching parameterless/data-only slice is on that bridge too now, which broadens the new execution path beyond actor payload scenarios and reduces the amount of legacy adapter-only traffic still left.
 - The same is now true for one furni-occupancy condition cluster as well, so the typed path is starting to cover non-actor conditions instead of only trigger/effect happy paths.
 - The remaining user-count and state/position conditions are joining that bridge too, leaving a much smaller legacy condition surface behind than before.
+- The same bridge now carries the remaining bot-targeted/data-only effect slice too, which trims another block of boxes that were still only reachable through the legacy `Execute(params object[])` path.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

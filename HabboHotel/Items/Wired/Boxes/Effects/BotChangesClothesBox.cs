@@ -6,7 +6,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class BotChangesClothesBox : IWiredItem
+internal class BotChangesClothesBox : IWiredItem, IWiredExecutable
 {
     public BotChangesClothesBox(Room instance, Item item)
     {
@@ -33,6 +33,11 @@ internal class BotChangesClothesBox : IWiredItem
     }
 
     public bool Execute(params object[] @params)
+    {
+        return ((IWiredExecutable)this).Execute(new(@params));
+    }
+
+    bool IWiredExecutable.Execute(WiredExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))
             return false;
