@@ -33,6 +33,7 @@ public class RoomItemHandling
     private readonly IRoomItemPlacementValidatorService _roomItemPlacementValidatorService;
     private readonly IRoomItemPlacementPersistenceService _roomItemPlacementPersistenceService;
     private readonly IRoomRollerService _roomRollerService;
+    private readonly IRoomItemInventoryService _roomItemInventoryService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -41,7 +42,7 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService)
     {
         _room = room;
         _itemLoader = itemLoader;
@@ -49,6 +50,7 @@ public class RoomItemHandling
         _roomItemPlacementValidatorService = roomItemPlacementValidatorService;
         _roomItemPlacementPersistenceService = roomItemPlacementPersistenceService;
         _roomRollerService = roomRollerService;
+        _roomItemInventoryService = roomItemInventoryService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -758,7 +760,7 @@ public class RoomItemHandling
 
         foreach (var item in GetWallAndFloor.ToList())
         {
-            if (!CanRemoveOwnedItem(item, habbo.Id))
+            if (!_roomItemInventoryService.CanRemoveOwnedItem(item, habbo.Id))
                 continue;
 
             RemoveOwnedItem(item, inventory);
@@ -768,9 +770,6 @@ public class RoomItemHandling
         _rollers.Clear();
         return items;
     }
-
-    private static bool CanRemoveOwnedItem(Item? item, int ownerId) =>
-        item != null && item.UserId == ownerId;
 
     private void RemoveOwnedItem(Item item, FurnitureInventoryComponent inventory)
     {
@@ -787,22 +786,15 @@ public class RoomItemHandling
     private void RemoveOwnedFloorItem(Item item, FurnitureInventoryComponent inventory)
     {
         _floorItems.TryRemove(item.Id, out var removedItem);
-        AddRemovedItemToInventory(removedItem, inventory);
+        _roomItemInventoryService.AddRemovedItemToInventory(removedItem, inventory);
         _room.SendPacket(new ObjectRemoveComposer(item, item.UserId));
     }
 
     private void RemoveOwnedWallItem(Item item, FurnitureInventoryComponent inventory)
     {
         _wallItems.TryRemove(item.Id, out var removedItem);
-        AddRemovedItemToInventory(removedItem, inventory);
+        _roomItemInventoryService.AddRemovedItemToInventory(removedItem, inventory);
         _room.SendPacket(new ItemRemoveComposer(item, item.UserId));
-    }
-
-    private static void AddRemovedItemToInventory(Item? removedItem, FurnitureInventoryComponent inventory)
-    {
-        // TODO @80O: Items refactor
-        if (removedItem != null)
-            inventory.AddItem(removedItem.ToInventoryItem());
     }
 
 

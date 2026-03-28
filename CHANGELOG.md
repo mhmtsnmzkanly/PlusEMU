@@ -17,6 +17,7 @@
 - Extracted floor-item placement and `CheckPosItem` validation logic into `RoomItemPlacementValidatorService`, so `RoomItemHandling` now coordinates placement flow instead of also owning the tile, user-blocking, stackability, and height-resolution rule set.
 - Extracted floor/wall placement persistence into `RoomItemPlacementPersistenceService`, so `RoomItemHandling` no longer writes room-placement updates directly when applying floor or wall item placement.
 - Extracted roller target analysis plus item/user move eligibility checks into `RoomRollerService`, so `RoomItemHandling` keeps packet/state coordination while roller movement rules live behind a dedicated service.
+- Extracted owned-item removal ownership checks and inventory re-add behavior into `RoomItemInventoryService`, so `RoomItemHandling` no longer owns those inventory return decisions directly during bulk pickup.
 - Split `RoomItemHandling` furniture load/remove flow into explicit helper stages so invalid floor recovery, wall-position normalization, registration, and removal broadcast/state cleanup no longer live in one monolithic method.
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.
