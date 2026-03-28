@@ -41,20 +41,33 @@ internal class Authenticator : IAuthenticator
         if (!canLogin)
             return AuthenticationError.LoginProhibited;
 
-        var habbo = await _userDataFactory.Create(userId);
+        var habbo = await TryCreateHabbo(userId);
         if (habbo == null)
             return AuthenticationError.NoAccountFound;
 
-        habbo.Disconnected += async (_, _) => await OnHabboDisconnected(habbo);
+        AttachDisconnectLifecycle(habbo);
+        BindAuthenticatedSession(session, habbo);
+        await CompleteLogin(habbo);
+        return null;
+    }
 
+    private Task<Habbo?> TryCreateHabbo(int userId) => _userDataFactory.Create(userId);
+
+    private void AttachDisconnectLifecycle(Habbo habbo)
+    {
+        habbo.Disconnected += async (_, _) => await OnHabboDisconnected(habbo);
+    }
+
+    private void BindAuthenticatedSession(GameClient session, Habbo habbo)
+    {
         session.SetHabbo(habbo);
 
         // TODO @80O: Remove after splitting up
         habbo.Init(session);
         _gameClientManager.RegisterClient(session, habbo.Id, habbo.Username);
-        await RaiseHabboLoggedIn(habbo);
-        return null;
     }
+
+    private Task CompleteLogin(Habbo habbo) => RaiseHabboLoggedIn(habbo);
 
     private async Task<int> GetUserIdFromSso(string sso)
     {
