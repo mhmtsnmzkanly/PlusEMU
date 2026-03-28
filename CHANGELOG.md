@@ -13,6 +13,7 @@
 - Split `RoomItemHandling.OnCycle` into explicit roller-cycle and queued-item-update helpers so the remaining room item tick flow is easier to follow.
 - Split `RoomItemHandling.RemoveItems` into owned-item filtering plus dedicated floor/wall removal helpers so bulk inventory return no longer mixes ownership, collection mutation, inventory updates, and packet broadcast inline.
 - Split `RoomItemHandling.CheckPosItem` into explicit tile, door, height, user, and stackability checks so game-item movement validation no longer lives in one long try block.
+- Split `RoomItemHandling.SetWallItem`, small item-tracking helpers, and `Dispose` cleanup into explicit phases so the remaining wall placement and teardown code is easier to follow.
 - Moved non-chat `WiredComponent.TriggerEvent` execution onto a bounded per-room queue processed during `WiredComponent.OnCycle()`.
 - Extended the queue-based Wired execution slice to cover matched `TriggerUserSays` and `TriggerUserSaysCommand` boxes without breaking the existing synchronous suppression semantics.
 - Moved `TriggerUserSays` and `TriggerUserSaysCommand` match resolution fully into `WiredComponent`, leaving the queued trigger boxes responsible only for owner checks, feedback whispers, and stack execution.

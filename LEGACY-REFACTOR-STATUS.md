@@ -22,7 +22,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - `RoomFactory`, `RoomManager`, `Room`, and related packet handlers are being reshaped to pass `IDatabase` and managers explicitly instead of leaning on older static/global access paths.
 - `RoomItemHandling` has started to be split into smaller load/remove helpers, but the broader room item lifecycle and roller/update logic is still legacy-heavy.
 - `RoomItemHandling.SetFloorItem` now has separate placement validation, stack-height resolution, and state-apply steps, reducing one of the largest remaining monolithic room item branches.
-- `RoomItemHandling.SaveFurniture` now has explicit moved-item persistence helpers, `CycleRollers` is split into target-state plus item/user move helpers, `OnCycle` now isolates queue processing, `RemoveItems` is decomposed, and `CheckPosItem` is now helper-based, but the broader item service boundary remains legacy-heavy.
+- `RoomItemHandling.SaveFurniture` now has explicit moved-item persistence helpers, `CycleRollers` is split into target-state plus item/user move helpers, `OnCycle` now isolates queue processing, `RemoveItems` is decomposed, `CheckPosItem` is helper-based, and `SetWallItem` / disposal flow are also split, but the broader item service boundary remains legacy-heavy.
 - The active Wired runtime now includes room-local queue observability in `WiredComponent`, so enqueue, batch processing, saturation, and slow-cycle behavior can be traced through the standard logger pipeline while the broader room/habbo cleanup continues.
 
 ## Migration Status: ✅ COMPLETE

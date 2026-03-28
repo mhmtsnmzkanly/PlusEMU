@@ -780,57 +780,97 @@ public class RoomItemHandling
 
     public bool SetWallItem(GameClient session, Item item)
     {
-        if (!item.IsWallItem || _wallItems.ContainsKey(item.Id))
+        if (!CanPlaceWallItem(item))
             return false;
-        if (_floorItems.ContainsKey(item.Id))
-        {
-            session.SendNotification(PlusEnvironment.LanguageManager.TryGetValue("room.item.already_placed"));
+
+        if (IsWallItemAlreadyPlacedOnFloor(session, item))
             return true;
-        }
-        item.Interactor.OnPlace(session, item);
-        if (item.Definition.InteractionType == InteractionType.Moodlight)
-        {
-            if (_room.MoodlightData == null)
-            {
-                _room.MoodlightData = new(item.Id, _room.GetDatabase());
-                item.LegacyDataString = _room.MoodlightData.GenerateExtraData();
-            }
-        }
-        using (var connection = _room.GetDatabase().Connection())
-        {
-            connection.Execute(
-                "UPDATE `items` SET `room_id` = @roomId, `x` = @x, `y` = @y, `z` = @z, `rot` = @rot, `wall_pos` = @wallPos WHERE `id` = @id LIMIT 1",
-                new
-                {
-                    roomId = _room.RoomId,
-                    x = item.GetX,
-                    y = item.GetY,
-                    z = item.GetZ,
-                    rot = item.Rotation,
-                    wallPos = item.WallCoordinates,
-                    id = item.Id
-                });
-        }
+
+        PlaceWallItem(session, item);
+        InitializeWallItemState(item);
+        PersistWallItemPlacement(item);
         _wallItems.TryAdd(item.Id, item);
         _room.SendPacket(new ItemAddComposer(item));
         return true;
+    }
+
+    private bool CanPlaceWallItem(Item item) =>
+        item.IsWallItem && !_wallItems.ContainsKey(item.Id);
+
+    private bool IsWallItemAlreadyPlacedOnFloor(GameClient session, Item item)
+    {
+        if (!_floorItems.ContainsKey(item.Id))
+            return false;
+
+        session.SendNotification(PlusEnvironment.LanguageManager.TryGetValue("room.item.already_placed"));
+        return true;
+    }
+
+    private static void PlaceWallItem(GameClient session, Item item)
+    {
+        item.Interactor.OnPlace(session, item);
+    }
+
+    private void InitializeWallItemState(Item item)
+    {
+        if (item.Definition.InteractionType != InteractionType.Moodlight)
+            return;
+
+        if (_room.MoodlightData == null)
+        {
+            _room.MoodlightData = new(item.Id, _room.GetDatabase());
+            item.LegacyDataString = _room.MoodlightData.GenerateExtraData();
+        }
+    }
+
+    private void PersistWallItemPlacement(Item item)
+    {
+        using var connection = _room.GetDatabase().Connection();
+        connection.Execute(
+            "UPDATE `items` SET `room_id` = @roomId, `x` = @x, `y` = @y, `z` = @z, `rot` = @rot, `wall_pos` = @wallPos WHERE `id` = @id LIMIT 1",
+            new
+            {
+                roomId = _room.RoomId,
+                x = item.GetX,
+                y = item.GetY,
+                z = item.GetZ,
+                rot = item.Rotation,
+                wallPos = item.WallCoordinates,
+                id = item.Id
+            });
     }
 
     public void UpdateItem(Item item)
     {
         if (item == null)
             return;
+
+        TrackMovedItem(item);
+    }
+
+    private void TrackMovedItem(Item item)
+    {
         if (!_movedItems.ContainsKey(item.Id))
             _movedItems.TryAdd(item.Id, item);
     }
-
 
     public void RemoveItem(Item item)
     {
         if (item == null)
             return;
+
+        UntrackMovedItem(item);
+        UntrackRoller(item);
+    }
+
+    private void UntrackMovedItem(Item item)
+    {
         if (_movedItems.ContainsKey(item.Id))
             _movedItems.TryRemove(item.Id, out _);
+    }
+
+    private void UntrackRoller(Item item)
+    {
         if (_rollers.ContainsKey(item.Id))
             _rollers.TryRemove(item.Id, out _);
     }
@@ -1067,12 +1107,24 @@ public class RoomItemHandling
     public void Dispose()
     {
         SaveFurniture();
+        DestroyLoadedItems();
+        ClearTrackedState();
+        _roomItemUpdateQueue = null!;
+    }
+
+    private void DestroyLoadedItems()
+    {
         foreach (var item in GetWallAndFloor.ToList())
         {
             if (item == null)
                 continue;
+
             item.Destroy();
         }
+    }
+
+    private void ClearTrackedState()
+    {
         _movedItems.Clear();
         _rollers.Clear();
         _wallItems.Clear();
@@ -1080,6 +1132,5 @@ public class RoomItemHandling
         _rollerItemsMoved.Clear();
         _rollerUsersMoved.Clear();
         _rollerMessages.Clear();
-        _roomItemUpdateQueue = null!;
     }
 }
