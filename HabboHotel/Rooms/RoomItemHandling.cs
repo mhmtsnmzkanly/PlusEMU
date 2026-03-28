@@ -9,6 +9,7 @@ using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Items.Wired;
 using Plus.HabboHotel.Rooms.PathFinding;
+using Plus.HabboHotel.Users;
 using Plus.HabboHotel.Users.Inventory.Furniture;
 
 namespace Plus.HabboHotel.Rooms;
@@ -88,15 +89,9 @@ public class RoomItemHandling
             var posD = wallPosition.Split(' ');
             if (posD[2] != "l" && posD[2] != "r")
                 return null;
-            var widD = posD[0].Substring(3).Split(',');
-            var widthX = int.Parse(widD[0]);
-            var widthY = int.Parse(widD[1]);
-            if (widthX < -1000 || widthY < -1 || widthX > 700 || widthY > 700)
+            if (!TryParseWallPair(posD[0].Substring(3), -1000, -1, out var widthX, out var widthY))
                 return null;
-            var lenD = posD[1].Substring(2).Split(',');
-            var lengthX = int.Parse(lenD[0]);
-            var lengthY = int.Parse(lenD[1]);
-            if (lengthX < -1 || lengthY < -1000 || lengthX > 700 || lengthY > 700)
+            if (!TryParseWallPair(posD[1].Substring(2), -1, -1000, out var lengthX, out var lengthY))
                 return null;
             return $":w={widthX},{widthY} l={lengthX},{lengthY} {posD[2]}";
         }
@@ -104,6 +99,20 @@ public class RoomItemHandling
         {
             return null;
         }
+    }
+
+    private static bool TryParseWallPair(string rawPair, int minX, int minY, out int first, out int second)
+    {
+        first = 0;
+        second = 0;
+
+        var parts = rawPair.Split(',');
+        if (parts.Length != 2)
+            return false;
+
+        first = int.Parse(parts[0]);
+        second = int.Parse(parts[1]);
+        return first >= minX && second >= minY && first <= 700 && second <= 700;
     }
 
     public void LoadFurniture()
@@ -249,16 +258,12 @@ public class RoomItemHandling
 
     public Item GetItem(uint pId)
     {
-        if (_floorItems.ContainsKey(pId))
-        {
-            if (_floorItems.TryGetValue(pId, out var item))
-                return item;
-        }
-        else if (_wallItems.ContainsKey(pId))
-        {
-            if (_wallItems.TryGetValue(pId, out var item))
-                return item;
-        }
+        if (_floorItems.TryGetValue(pId, out var floorItem))
+            return floorItem;
+
+        if (_wallItems.TryGetValue(pId, out var wallItem))
+            return wallItem;
+
         return null!;
     }
 
@@ -267,16 +272,37 @@ public class RoomItemHandling
         var item = GetItem(id);
         if (item == null)
             return;
+
+        PrepareItemRemoval(session, item);
+        RemoveRoomItem(item);
+    }
+
+    private void PrepareItemRemoval(GameClient? session, Item item)
+    {
+        UnregisterSpecialRemovalTargets(item);
+        RunItemRemovalInteractor(session, item);
+        ResetGuildGateUpdateState(item);
+    }
+
+    private void UnregisterSpecialRemovalTargets(Item item)
+    {
         if (item.Definition.InteractionType == InteractionType.FootballGate)
             _room.GetSoccer().UnRegisterGate(item);
+    }
+
+    private static void RunItemRemovalInteractor(GameClient? session, Item item)
+    {
         if (item.Definition.InteractionType != InteractionType.Gift)
             item.Interactor.OnRemove(session!, item);
-        if (item.Definition.InteractionType == InteractionType.GuildGate)
-        {
-            item.UpdateCounter = 0;
-            item.UpdateNeeded = false;
-        }
-        RemoveRoomItem(item);
+    }
+
+    private static void ResetGuildGateUpdateState(Item item)
+    {
+        if (item.Definition.InteractionType != InteractionType.GuildGate)
+            return;
+
+        item.UpdateCounter = 0;
+        item.UpdateNeeded = false;
     }
 
     private void RemoveRoomItem(Item item)
@@ -465,19 +491,36 @@ public class RoomItemHandling
         _room.GetGameMap().GameMap[pUser.X, pUser.Y] = 0;
         var client = pUser?.GetClient();
         var habbo = client?.GetHabbo();
-        if (habbo != null)
-        {
-            var items = _room.GetGameMap().GetRoomItemForSquare(pNextCoord.X, pNextCoord.Y);
-            foreach (var item in items.ToList())
-            {
-                if (item == null)
-                    continue;
-                _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOnFurni, habbo, item);
-            }
-            var roller = _room.GetRoomItemHandler().GetItem(pRollerId);
-            if (roller != null) _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOffFurni, habbo, roller);
-        }
+        TriggerRollerUserWiredEvents(habbo, pNextCoord, pRollerId);
         return mMessage;
+    }
+
+    private void TriggerRollerUserWiredEvents(Habbo? habbo, Point nextCoord, uint rollerId)
+    {
+        if (habbo == null)
+            return;
+
+        TriggerWalkOnEvents(habbo, nextCoord);
+        TriggerWalkOffRollerEvent(habbo, rollerId);
+    }
+
+    private void TriggerWalkOnEvents(Habbo habbo, Point nextCoord)
+    {
+        var items = _room.GetGameMap().GetRoomItemForSquare(nextCoord.X, nextCoord.Y);
+        foreach (var item in items.ToList())
+        {
+            if (item == null)
+                continue;
+
+            _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOnFurni, habbo, item);
+        }
+    }
+
+    private void TriggerWalkOffRollerEvent(Habbo habbo, uint rollerId)
+    {
+        var roller = _room.GetRoomItemHandler().GetItem(rollerId);
+        if (roller != null)
+            _room.GetWired().TriggerEvent(WiredBoxType.TriggerWalkOffFurni, habbo, roller);
     }
 
     private void SaveFurniture()
@@ -768,14 +811,22 @@ public class RoomItemHandling
     {
         if (_room == null)
             return false;
+
         _room.GetGameMap().RemoveFromMap(item);
         item.SetState(newX, newY, newZ, Gamemap.GetAffectedTiles(item.Definition.Length, item.Definition.Width, newX, newY, item.Rotation));
-        if (item.Definition.InteractionType == InteractionType.Toner)
-            if (_room.TonerData == null)
-                _room.TonerData = new(item.Id, _room.GetDatabase());
+        EnsureTonerData(item);
         UpdateItem(item);
         _room.GetGameMap().AddItemToMap(item);
         return true;
+    }
+
+    private void EnsureTonerData(Item item)
+    {
+        if (item.Definition.InteractionType != InteractionType.Toner)
+            return;
+
+        if (_room.TonerData == null)
+            _room.TonerData = new(item.Id, _room.GetDatabase());
     }
 
     public bool SetWallItem(GameClient session, Item item)
