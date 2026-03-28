@@ -72,13 +72,7 @@ internal class AvatarClothingService : IAvatarClothingService
 
     public Task UseSellableClothing(GameClient session, uint itemId)
     {
-        var habbo = session.GetHabbo();
-        var clothingComponent = habbo?.Clothing;
-        if (habbo == null || clothingComponent == null || !habbo.InRoom)
-            return Task.CompletedTask;
-
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (session.GetHabbo() is not { Clothing: { } clothingComponent } habbo || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
 
         var item = room.GetRoomItemHandler().GetItem(itemId);
@@ -117,9 +111,7 @@ internal class AvatarClothingService : IAvatarClothingService
 
     public Task SetMannequinFigure(GameClient session, uint itemId)
     {
-        var habbo = session.GetHabbo();
-        var room = habbo?.CurrentRoom;
-        if (habbo == null || room == null || !room.CheckRights(session, true))
+        if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, true))
             return Task.CompletedTask;
 
         var item = room.GetRoomItemHandler().GetItem(itemId);
@@ -148,8 +140,7 @@ internal class AvatarClothingService : IAvatarClothingService
 
     public Task SetMannequinName(GameClient session, uint itemId, string name)
     {
-        var room = session.GetHabbo()?.CurrentRoom;
-        if (room == null || !room.CheckRights(session, true))
+        if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, true))
             return Task.CompletedTask;
 
         var item = room.GetRoomItemHandler().GetItem(itemId);

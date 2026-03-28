@@ -91,8 +91,7 @@ public class MarketplaceManager : IMarketplaceManager
 
         var giveItem = _itemFactory.CreateSingleItem(item, habbo, offer.ExtraData, offer.ExtraData, offer.FurniId, offer.LimitedNumber, offer.LimitedStack);
         if (giveItem == null) return false;
-        var client = habbo.Client;
-        if (client == null) return false;
+        if (!habbo.TryGetClient(out var client)) return false;
         client.Send(new FurniListNotificationComposer(giveItem.Id, 1));
         client.Send(new FurniListUpdateComposer());
         await DeleteOffer(offerId);

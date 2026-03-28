@@ -36,8 +36,7 @@ public class BadgeManager : IBadgeManager
     public async Task GiveBadge(Habbo habbo, string code)
     {
         var badges = habbo.Inventory?.Badges;
-        var client = habbo.Client;
-        if (badges == null || client == null)
+        if (badges == null || !habbo.TryGetClient(out var client))
             return;
 
         if (badges.HasBadge(code))

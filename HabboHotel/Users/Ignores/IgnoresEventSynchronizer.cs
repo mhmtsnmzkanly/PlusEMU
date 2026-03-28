@@ -30,8 +30,7 @@ internal class IgnoresEventSynchronizer : IAuthenticationTask
 
     public async Task RegisterIgnore(Habbo habbo, int targetId)
     {
-        var client = habbo.Client;
-        if (client == null)
+        if (!habbo.TryGetClient(out var client))
             return;
 
         using var connection = _database.Connection();
@@ -41,8 +40,7 @@ internal class IgnoresEventSynchronizer : IAuthenticationTask
     }
     public async Task UnregisterIgnore(Habbo habbo, int targetId)
     {
-        var client = habbo.Client;
-        if (client == null)
+        if (!habbo.TryGetClient(out var client))
             return;
 
         using var connection = _database.Connection();

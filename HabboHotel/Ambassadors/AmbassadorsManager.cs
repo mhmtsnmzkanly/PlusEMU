@@ -18,12 +18,10 @@ public class AmbassadorsManager : IAmbassadorsManager
 
     public async Task Warn(Habbo ambassador, Habbo target, string message)
     {
-        var ambassadorClient = ambassador.Client;
-        if (ambassadorClient?.GetHabbo() is not { IsAmbassador: true })
+        if (!ambassador.TryGetClient(out var ambassadorClient) || ambassadorClient.GetHabbo() is not { IsAmbassador: true })
             return;
 
-        var targetClient = target.Client;
-        if (targetClient == null)
+        if (!target.TryGetClient(out var targetClient))
             return;
 
         using var connection = _database.Connection();

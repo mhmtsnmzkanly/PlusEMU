@@ -81,7 +81,8 @@ public sealed class AvatarEffect
                     new { qt = Quantity, id = Id });
             }
         }
-        habbo.Client?.Send(new AvatarEffectExpiredComposer(this));
+        if (habbo.TryGetClient(out var client))
+            client.Send(new AvatarEffectExpiredComposer(this));
         // reset fx if in room?
     }
 

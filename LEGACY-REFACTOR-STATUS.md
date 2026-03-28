@@ -283,3 +283,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - Keep sweeping the command layer after `GroupService`, starting with `CommandManager` and the hot moderator/user commands that still compare rooms or address clients through raw `Habbo` properties.
 - Continue sweeping the remaining command tail after those first command batches, especially the leftover moderator/user commands that still reach for direct `Habbo` room/client state instead of the helper surface.
 - The chat command folder no longer relies on direct `Habbo.CurrentRoom` / `Habbo.Client` reads; remaining `Habbo` helper migration work now sits outside packet and command handlers.
+- The remaining `Habbo` helper migration is now focused on service/supporting-domain code such as ignores, marketplace, clothing, badges/effects, moderation, navigator, and room-side helper flows.
