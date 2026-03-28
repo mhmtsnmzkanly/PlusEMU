@@ -38,7 +38,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
     {
         if (!_requested || string.IsNullOrEmpty(StringData) || StringData == "0;0;0" || SetItems.Count == 0)
             return false;
-        if (!TryParseModes(out var stateMode, out var directionMode, out var positionMode))
+        if (!WiredConditionDataParser.TryParseStatePositionModes(StringData, out var stateMode, out var directionMode, out var positionMode))
         {
             _requested = false;
             return false;
@@ -47,22 +47,18 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
         {
             if (Instance.GetRoomItemHandler().GetFloor == null || !Instance.GetRoomItemHandler().GetFloor.Contains(item))
                 continue;
-            foreach (var entry in ItemsData.Split(';'))
+            foreach (var entry in WiredFurniSnapshotParser.EnumerateEntries(ItemsData))
             {
-                if (string.IsNullOrEmpty(entry))
-                    continue;
-                if (!WiredFurniSnapshotParser.TryParseEntry(entry, out var itemId, out var snapshot))
-                    continue;
-                var targetItem = Instance.GetRoomItemHandler().GetItem(itemId);
+                var targetItem = Instance.GetRoomItemHandler().GetItem(entry.ItemId);
                 if (targetItem == null)
                     continue;
                 if (stateMode == 1)
-                    SetState(targetItem, snapshot.State);
+                    SetState(targetItem, entry.Snapshot.State);
                 if (directionMode == 1)
                 {
                     try
                     {
-                        SetRotation(targetItem, snapshot.Rotation);
+                        SetRotation(targetItem, entry.Snapshot.Rotation);
                     }
                     catch (Exception e)
                     {
@@ -73,7 +69,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
                 {
                     try
                     {
-                        SetPosition(targetItem, snapshot.X, snapshot.Y, snapshot.Z);
+                        SetPosition(targetItem, entry.Snapshot.X, entry.Snapshot.Y, entry.Snapshot.Z);
                     }
                     catch (Exception e)
                     {
@@ -126,19 +122,6 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
             TickCount = Delay;
         }
         return true;
-    }
-
-    private bool TryParseModes(out int stateMode, out int directionMode, out int positionMode)
-    {
-        stateMode = 0;
-        directionMode = 0;
-        positionMode = 0;
-
-        var modeParts = StringData.Split(';');
-        return modeParts.Length >= 3 &&
-               int.TryParse(modeParts[0], out stateMode) &&
-               int.TryParse(modeParts[1], out directionMode) &&
-               int.TryParse(modeParts[2], out positionMode);
     }
 
     private void SetState(Item item, string extradata)

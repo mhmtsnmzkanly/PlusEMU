@@ -2,6 +2,21 @@ namespace Plus.HabboHotel.Items.Wired;
 
 internal static class WiredFurniSnapshotParser
 {
+    public static IEnumerable<(uint ItemId, WiredFurniSnapshot Snapshot)> EnumerateEntries(string? rawData)
+    {
+        if (string.IsNullOrWhiteSpace(rawData))
+            yield break;
+
+        foreach (var entry in rawData.Split(';'))
+        {
+            if (string.IsNullOrWhiteSpace(entry))
+                continue;
+
+            if (TryParseEntry(entry, out var itemId, out var snapshot))
+                yield return (itemId, snapshot);
+        }
+    }
+
     public static bool TryParseEntry(string rawData, out uint itemId, out WiredFurniSnapshot snapshot)
     {
         itemId = 0;

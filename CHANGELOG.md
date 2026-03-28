@@ -51,6 +51,7 @@
 - Removed the remaining raw `object[]` queue payload handling from the main Wired dispatch path too: queued trigger execution now carries either a typed trigger context or no context at all, and the old generic parameter-based adapter helpers are gone.
 - Marked `WiredExecutionContext` itself as an abstract base type as well, reflecting the fact that execution now always flows through one of the narrower specialized context shapes rather than directly instantiating the shared shell.
 - Added a shared `WiredEffectDataParser` for the remaining bot/mute/move-rotate string payloads too, which removes another pocket of repeated `Split(';')` / integer parsing logic from the effect boxes.
+- Added shared state/position snapshot enumeration for the `MatchPosition` and furni state/position condition family as well, so those boxes now reuse the same decoded snapshot stream and mode parser instead of each re-splitting the saved payloads on their own.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.
