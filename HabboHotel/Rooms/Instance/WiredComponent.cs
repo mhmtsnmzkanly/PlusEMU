@@ -389,7 +389,7 @@ public class WiredComponent
     {
         foreach (var box in GetQueuedTriggerTargets(execution))
         {
-            box.Execute(execution.Parameters);
+            box.ExecuteWithParameters(execution.Parameters);
         }
     }
 
@@ -434,13 +434,13 @@ public class WiredComponent
     {
         foreach (var condition in GetConditions(trigger).ToList())
         {
-            if (!condition.Execute(actor))
+            if (!condition.ExecuteWithContext(actor))
                 return false;
 
             OnEvent(condition.Item);
         }
 
-        return ExecuteTriggerEffects(trigger, effect => effect.Execute(actor));
+        return ExecuteTriggerEffects(trigger, effect => effect.ExecuteWithContext(actor));
     }
 
     public bool ExecuteTriggerEffectsForRoomUsers(IWiredItem trigger)
@@ -455,7 +455,7 @@ public class WiredComponent
                 if (habbo == null)
                     continue;
 
-                if (!effect.Execute(habbo))
+                if (!effect.ExecuteWithActor(habbo))
                     return false;
 
                 executed = true;
@@ -477,7 +477,7 @@ public class WiredComponent
                 if (habbo == null)
                     continue;
 
-                if (!condition.Execute(habbo))
+                if (!condition.ExecuteWithActor(habbo))
                     continue;
 
                 matched = true;
@@ -508,7 +508,7 @@ public class WiredComponent
                     continue;
                 if (effectItem.Type == WiredBoxType.EffectExecuteWiredStacks)
                     continue;
-                if (!effectItem.Execute(actor))
+                if (!effectItem.ExecuteWithContext(actor))
                     return false;
             }
         }
@@ -524,11 +524,11 @@ public class WiredComponent
         if (hasRandomEffectAddon)
         {
             var randomBox = effects.FirstOrDefault(x => x.Type == WiredBoxType.AddonRandomEffect);
-            if (randomBox == null || !randomBox.Execute())
+            if (randomBox == null || !randomBox.ExecuteWithoutContext())
                 return false;
 
             var selectedBox = GetRandomEffect(effects);
-            if (selectedBox == null || !selectedBox.Execute())
+            if (selectedBox == null || !selectedBox.ExecuteWithoutContext())
                 return false;
 
             OnEvent(randomBox.Item);
