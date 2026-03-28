@@ -123,6 +123,7 @@ public class Room : RoomData
     private readonly IRoomItemLoadService _roomItemLoadService;
     private readonly IRoomItemRemovalService _roomItemRemovalService;
     private readonly IRoomItemStateService _roomItemStateService;
+    private readonly IRoomItemPlacementApplyService _roomItemPlacementApplyService;
     private readonly IRoomService _roomService;
     private readonly IChatManager _chatManager;
     private readonly IBotManager _botManager;
@@ -151,7 +152,7 @@ public class Room : RoomData
     private readonly IRoomManager _roomManager;
     private readonly ILanguageManager _languageManager;
 
-    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory, IRoomManager roomManager, ILoggerFactory loggerFactory)
+    public Room(RoomData data, IGameClientManager clientManager, IDatabase database, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService, IRoomItemPlacementApplyService roomItemPlacementApplyService, IGroupManager groupManager, IRoomService roomService, IChatManager chatManager, IBotManager botManager, IAchievementService achievementService, IQuestService questService, ICacheManager cacheManager, ILanguageManager languageManager, IItemTeleporterFinder itemTeleporterFinder, IItemHopperFinder itemHopperFinder, IBadgeManager badgeManager, IUserDataFactory userDataFactory, IRoomManager roomManager, ILoggerFactory loggerFactory)
         : base(data)
     {
         _clientManager = clientManager;
@@ -166,6 +167,7 @@ public class Room : RoomData
         _roomItemLoadService = roomItemLoadService;
         _roomItemRemovalService = roomItemRemovalService;
         _roomItemStateService = roomItemStateService;
+        _roomItemPlacementApplyService = roomItemPlacementApplyService;
         _groupManager = groupManager;
         _roomService = roomService;
         _chatManager = chatManager;
@@ -187,7 +189,7 @@ public class Room : RoomData
         MutedUsers = new();
         _tents = new();
         _gamemap = new(this, data.Model);
-        _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService);
+        _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService, _roomItemPlacementApplyService);
         _roomUserManager = new(this, clientManager, database, groupManager);
         _filterComponent = new(this);
         _wiredComponent = new(this, loggerFactory.CreateLogger<WiredComponent>());
@@ -250,7 +252,7 @@ public class Room : RoomData
 
     public RoomItemHandling GetRoomItemHandler()
     {
-        if (_roomItemHandling == null) _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService);
+        if (_roomItemHandling == null) _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService, _roomItemPlacementApplyService);
         return _roomItemHandling;
     }
 

@@ -37,6 +37,7 @@ public class RoomManager : IRoomManager
     private readonly IRoomItemLoadService _roomItemLoadService;
     private readonly IRoomItemRemovalService _roomItemRemovalService;
     private readonly IRoomItemStateService _roomItemStateService;
+    private readonly IRoomItemPlacementApplyService _roomItemPlacementApplyService;
     private readonly IChatManager _chatManager;
     private readonly IBotManager _botManager;
     private readonly IRoomService _roomService;
@@ -67,6 +68,7 @@ public class RoomManager : IRoomManager
         IRoomItemLoadService roomItemLoadService,
         IRoomItemRemovalService roomItemRemovalService,
         IRoomItemStateService roomItemStateService,
+        IRoomItemPlacementApplyService roomItemPlacementApplyService,
         IGameClientManager gameClientManager,
         IGroupManager groupManager,
         IRoomService roomService,
@@ -95,6 +97,7 @@ public class RoomManager : IRoomManager
         _roomItemLoadService = roomItemLoadService;
         _roomItemRemovalService = roomItemRemovalService;
         _roomItemStateService = roomItemStateService;
+        _roomItemPlacementApplyService = roomItemPlacementApplyService;
         _clientManager = gameClientManager;
         _groupManager = groupManager;
         _roomService = roomService;
@@ -236,7 +239,7 @@ public class RoomManager : IRoomManager
 
     private Room CreateRoomInstance(RoomData data)
     {
-        return new Room(data, _clientManager, _database, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
+        return new Room(data, _clientManager, _database, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService, _roomItemPlacementApplyService, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
     }
 
     private static void DisposeRoom(Room room) => room.Dispose();

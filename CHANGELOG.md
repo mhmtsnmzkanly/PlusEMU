@@ -21,6 +21,7 @@
 - Extracted queued room-item dequeue/process/requeue flow into `RoomItemUpdateQueueService`, so `RoomItemHandling.OnCycle()` no longer owns the raw update-queue processing loop.
 - Extracted furniture load normalization/recovery into `RoomItemLoadService` and room-side removal preparation/broadcast behavior into `RoomItemRemovalService`, so `RoomItemHandling` carries less of the room item load/remove orchestration directly.
 - Extracted loaded-item state initialization into `RoomItemStateService`, so roller/hopper flags plus moodlight/toner/wired startup behavior are no longer owned directly by `RoomItemHandling`.
+- Extracted floor/wall placement apply orchestration into `RoomItemPlacementApplyService`, so `RoomItemHandling` no longer directly owns placement-side packet, map, tent, user-status, and persistence coordination.
 - Split `RoomItemHandling` furniture load/remove flow into explicit helper stages so invalid floor recovery, wall-position normalization, registration, and removal broadcast/state cleanup no longer live in one monolithic method.
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.

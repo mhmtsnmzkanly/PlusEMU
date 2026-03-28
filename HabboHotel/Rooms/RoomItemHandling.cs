@@ -38,6 +38,7 @@ public class RoomItemHandling
     private readonly IRoomItemLoadService _roomItemLoadService;
     private readonly IRoomItemRemovalService _roomItemRemovalService;
     private readonly IRoomItemStateService _roomItemStateService;
+    private readonly IRoomItemPlacementApplyService _roomItemPlacementApplyService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -46,7 +47,7 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService, IRoomItemPlacementApplyService roomItemPlacementApplyService)
     {
         _room = room;
         _itemLoader = itemLoader;
@@ -59,6 +60,7 @@ public class RoomItemHandling
         _roomItemLoadService = roomItemLoadService;
         _roomItemRemovalService = roomItemRemovalService;
         _roomItemStateService = roomItemStateService;
+        _roomItemPlacementApplyService = roomItemPlacementApplyService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -398,7 +400,7 @@ public class RoomItemHandling
             return false;
         }
 
-        return ApplyFloorPlacement(session, item, newX, newY, resolvedRotation, resolvedZ, newItem, onRoller, sendMessage, updateRoomUserStatuses, affectedTiles);
+        return _roomItemPlacementApplyService.ApplyFloorPlacement(_room, session, item, newX, newY, resolvedRotation, resolvedZ, newItem, onRoller, sendMessage, updateRoomUserStatuses, affectedTiles, _floorItems, _wallItems, UpdateItem);
     }
 
     private void ReAddItemToMapIfNeeded(Item item, bool needsReAdd)
@@ -407,55 +409,6 @@ public class RoomItemHandling
             _room.GetGameMap().AddToMap(item);
     }
 
-
-    private bool ApplyFloorPlacement(GameClient session, Item item, int newX, int newY, int newRot, double newZ, bool newItem, bool onRoller, bool sendMessage, bool updateRoomUserStatuses, Dictionary<int, ThreeDCoord> affectedTiles)
-    {
-        item.Rotation = newRot;
-        item.SetState(newX, newY, newZ, affectedTiles);
-        if (!onRoller && session != null)
-            item.Interactor.OnPlace(session, item);
-
-        if (newItem)
-        {
-            if (_floorItems.ContainsKey(item.Id))
-            {
-                if (session != null)
-                    session.SendNotification(PlusEnvironment.LanguageManager.TryGetValue("room.item.already_placed"));
-                _room.GetGameMap().RemoveFromMap(item);
-                return true;
-            }
-
-            if (item.IsFloorItem && !_floorItems.ContainsKey(item.Id))
-                _floorItems.TryAdd(item.Id, item);
-            else if (item.IsWallItem && !_wallItems.ContainsKey(item.Id))
-                _wallItems.TryAdd(item.Id, item);
-
-            if (sendMessage)
-                _room.SendPacket(new ObjectAddComposer(item));
-        }
-        else
-        {
-            UpdateItem(item);
-            if (!onRoller && sendMessage)
-                _room.SendPacket(new ObjectUpdateComposer(item));
-        }
-
-        _room.GetGameMap().AddToMap(item);
-        if (item.Definition.IsSeat)
-            updateRoomUserStatuses = true;
-        if (updateRoomUserStatuses)
-            _room.GetRoomUserManager().UpdateUserStatusses();
-        if (item.Definition.InteractionType == InteractionType.Tent || item.Definition.InteractionType == InteractionType.TentSmall)
-        {
-            _room.RemoveTent(item.Id);
-            _room.AddTent(item.Id);
-        }
-
-        _roomItemPlacementPersistenceService.SaveFloorPlacement(_room.RoomId, item);
-        return true;
-    }
-
-
     public List<Item> GetFurniObjects(int x, int y) => _room.GetGameMap().GetCoordinatedItems(new(x, y));
 
     public bool SetFloorItem(Item item, int newX, int newY, double newZ)
@@ -463,50 +416,12 @@ public class RoomItemHandling
         if (_room == null)
             return false;
 
-        _room.GetGameMap().RemoveFromMap(item);
-        item.SetState(newX, newY, newZ, Gamemap.GetAffectedTiles(item.Definition.Length, item.Definition.Width, newX, newY, item.Rotation));
-        _roomItemStateService.EnsureTonerData(_room, item);
-        UpdateItem(item);
-        _room.GetGameMap().AddItemToMap(item);
-        return true;
+        return _roomItemPlacementApplyService.ApplyRollerFloorPlacement(_room, item, newX, newY, newZ, UpdateItem);
     }
 
     public bool SetWallItem(GameClient session, Item item)
     {
-        if (!CanPlaceWallItem(item))
-            return false;
-
-        if (IsWallItemAlreadyPlacedOnFloor(session, item))
-            return true;
-
-        PlaceWallItem(session, item);
-        _roomItemStateService.InitializeWallItemState(_room, item);
-        PersistWallItemPlacement(item);
-        _wallItems.TryAdd(item.Id, item);
-        _room.SendPacket(new ItemAddComposer(item));
-        return true;
-    }
-
-    private bool CanPlaceWallItem(Item item) =>
-        item.IsWallItem && !_wallItems.ContainsKey(item.Id);
-
-    private bool IsWallItemAlreadyPlacedOnFloor(GameClient session, Item item)
-    {
-        if (!_floorItems.ContainsKey(item.Id))
-            return false;
-
-        session.SendNotification(PlusEnvironment.LanguageManager.TryGetValue("room.item.already_placed"));
-        return true;
-    }
-
-    private static void PlaceWallItem(GameClient session, Item item)
-    {
-        item.Interactor.OnPlace(session, item);
-    }
-
-    private void PersistWallItemPlacement(Item item)
-    {
-        _roomItemPlacementPersistenceService.SaveWallPlacement(_room.RoomId, item);
+        return _roomItemPlacementApplyService.ApplyWallPlacement(_room, session, item, _floorItems, _wallItems);
     }
 
     public void UpdateItem(Item item)
