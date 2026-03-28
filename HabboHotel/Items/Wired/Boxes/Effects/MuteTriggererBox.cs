@@ -8,7 +8,7 @@ using Plus.Utilities;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class MuteTriggererBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class MuteTriggererBox : IWiredItem, IWiredActorExecutable
 {
     public MuteTriggererBox(Room instance, Item item)
     {

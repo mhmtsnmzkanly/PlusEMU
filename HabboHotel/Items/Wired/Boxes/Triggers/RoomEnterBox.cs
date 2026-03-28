@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class RoomEnterBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class RoomEnterBox : IWiredItem, IWiredActorExecutable
 {
     public RoomEnterBox(Room instance, Item item)
     {

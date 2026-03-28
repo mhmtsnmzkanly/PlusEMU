@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class ActorHasHandItemBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class ActorHasHandItemBox : IWiredItem, IWiredActorExecutable
 {
     public ActorHasHandItemBox(Room instance, Item item)
     {

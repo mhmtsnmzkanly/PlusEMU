@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class UserSaysCommandBox : IWiredItem, IWiredExecutable, IWiredChatExecutable
+internal class UserSaysCommandBox : IWiredItem, IWiredChatExecutable
 {
     public UserSaysCommandBox(Room instance, Item item)
     {

@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class BotFollowsUserBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class BotFollowsUserBox : IWiredItem, IWiredActorExecutable
 {
     public BotFollowsUserBox(Room instance, Item item)
     {

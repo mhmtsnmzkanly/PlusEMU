@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class TriggererNotOnFurniBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class TriggererNotOnFurniBox : IWiredItem, IWiredActorExecutable
 {
     public TriggererNotOnFurniBox(Room instance, Item item)
     {

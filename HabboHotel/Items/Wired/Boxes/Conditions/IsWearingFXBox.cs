@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class IsWearingFxBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class IsWearingFxBox : IWiredItem, IWiredActorExecutable
 {
     public IsWearingFxBox(Room instance, Item item)
     {

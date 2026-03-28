@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class UserCountDoesntInRoomBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
+internal class UserCountDoesntInRoomBox : IWiredItem, IWiredEmptyExecutable
 {
     public UserCountDoesntInRoomBox(Room instance, Item item)
     {

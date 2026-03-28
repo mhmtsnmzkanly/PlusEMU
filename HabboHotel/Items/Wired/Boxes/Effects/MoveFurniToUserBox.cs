@@ -6,7 +6,7 @@ using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class MoveFurniToUserBox : IWiredItem, IWiredCycle, IWiredExecutable, IWiredEmptyExecutable
+internal class MoveFurniToUserBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
 {
     private int _delay;
     private long _next;

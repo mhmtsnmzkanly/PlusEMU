@@ -7,7 +7,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class ShowMessageBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class ShowMessageBox : IWiredItem, IWiredActorExecutable
 {
     public ShowMessageBox(Room instance, Item item)
     {

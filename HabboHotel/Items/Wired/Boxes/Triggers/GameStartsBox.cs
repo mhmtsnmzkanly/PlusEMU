@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class GameStartsBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
+internal class GameStartsBox : IWiredItem, IWiredEmptyExecutable
 {
     public GameStartsBox(Room instance, Item item)
     {

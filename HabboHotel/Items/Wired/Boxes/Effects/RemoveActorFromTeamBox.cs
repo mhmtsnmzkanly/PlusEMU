@@ -7,7 +7,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class RemoveActorFromTeamBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class RemoveActorFromTeamBox : IWiredItem, IWiredActorExecutable
 {
     public RemoveActorFromTeamBox(Room instance, Item item)
     {

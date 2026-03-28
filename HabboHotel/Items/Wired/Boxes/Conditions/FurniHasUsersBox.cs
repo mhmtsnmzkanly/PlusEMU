@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class FurniHasUsersBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
+internal class FurniHasUsersBox : IWiredItem, IWiredEmptyExecutable
 {
     public FurniHasUsersBox(Room instance, Item item)
     {

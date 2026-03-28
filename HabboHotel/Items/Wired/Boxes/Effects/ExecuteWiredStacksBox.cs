@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class ExecuteWiredStacksBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class ExecuteWiredStacksBox : IWiredItem, IWiredActorExecutable
 {
     public ExecuteWiredStacksBox(Room instance, Item item)
     {

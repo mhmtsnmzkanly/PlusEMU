@@ -7,7 +7,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class AddActorToTeamBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class AddActorToTeamBox : IWiredItem, IWiredActorExecutable
 {
     public AddActorToTeamBox(Room instance, Item item)
     {

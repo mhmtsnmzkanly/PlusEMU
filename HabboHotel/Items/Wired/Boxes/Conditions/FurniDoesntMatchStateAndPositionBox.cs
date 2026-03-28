@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class FurniDoesntMatchStateAndPositionBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
+internal class FurniDoesntMatchStateAndPositionBox : IWiredItem, IWiredEmptyExecutable
 {
     public FurniDoesntMatchStateAndPositionBox(Room instance, Item item)
     {

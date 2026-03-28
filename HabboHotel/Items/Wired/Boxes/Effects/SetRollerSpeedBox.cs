@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class SetRollerSpeedBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
+internal class SetRollerSpeedBox : IWiredItem, IWiredEmptyExecutable
 {
     public SetRollerSpeedBox(Room instance, Item item)
     {

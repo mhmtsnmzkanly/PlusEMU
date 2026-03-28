@@ -8,7 +8,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class KickUserBox : IWiredItem, IWiredCycle, IWiredExecutable, IWiredActorExecutable
+internal class KickUserBox : IWiredItem, IWiredCycle, IWiredActorExecutable
 {
     private const int KickDelay = 3;
     private readonly Queue<Habbo> _toKick;

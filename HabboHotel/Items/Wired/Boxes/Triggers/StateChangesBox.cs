@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class StateChangesBox : IWiredItem, IWiredExecutable, IWiredActorItemExecutable
+internal class StateChangesBox : IWiredItem, IWiredActorItemExecutable
 {
     public StateChangesBox(Room instance, Item item)
     {

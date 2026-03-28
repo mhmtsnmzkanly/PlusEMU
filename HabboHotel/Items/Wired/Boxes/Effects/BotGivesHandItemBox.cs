@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class BotGivesHandItemBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
+internal class BotGivesHandItemBox : IWiredItem, IWiredActorExecutable
 {
     public BotGivesHandItemBox(Room instance, Item item)
     {
