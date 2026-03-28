@@ -24,6 +24,7 @@
 - Expanded the typed execution slice to additional actor-driven trigger/effect boxes (`UserSaysCommand`, `UserWalksOff`, `RoomEnter`, `MuteTriggerer`, `KickUser`) so more of the common Wired path now runs through `WiredExecutionContext`.
 - Extended the typed execution slice again across actor-item triggers and representative condition/effect boxes (`StateChanges`, `UserFurniCollision`, `IsGroupMember`, `IsWearingBadge`, `GiveUserBadge`).
 - Expanded typed execution coverage across the mirrored actor-condition set as well (`IsNotGroupMember`, `IsNotWearingBadge`, `IsWearingFx`, `IsNotWearingFx`), further reducing raw `params object[]` usage in the condition layer.
+- Moved the remaining triggerer/team/hand-item actor boxes (`TriggererOnFurni`, `TriggererNotOnFurni`, `ActorHasHandItem`, `ActorIsInTeam`, `AddActorToTeam`, `RemoveActorFromTeam`) onto `IWiredExecutable`, extending the typed execution path across another cohesive actor-driven slice.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

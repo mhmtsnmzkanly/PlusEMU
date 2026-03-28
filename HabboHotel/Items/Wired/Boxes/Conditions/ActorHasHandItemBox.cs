@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class ActorHasHandItemBox : IWiredItem
+internal class ActorHasHandItemBox : IWiredItem, IWiredExecutable
 {
     public ActorHasHandItemBox(Room instance, Item item)
     {
@@ -34,10 +34,14 @@ internal class ActorHasHandItemBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
+        return ((IWiredExecutable)this).Execute(new(@params));
+    }
+
+    bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
         if (Instance == null || string.IsNullOrEmpty(StringData))
             return false;
-        if (!WiredContextResolver.TryGetActor(@params, out var player))
-            return false;
+        var player = context.Actor;
         if (player == null)
             return false;
         var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
