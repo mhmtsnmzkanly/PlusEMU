@@ -3,6 +3,7 @@ using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Core;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
@@ -27,7 +28,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
         set
         {
             _delay = value;
-            TickCount = value + 1;
+            TickCount = WiredCycleScheduler.GetTickCountForDelay(value, extraTick: true);
         }
     }
 
@@ -133,7 +134,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
 
     public bool Execute(params object[] @params)
     {
-        if (!_requested)
+        if (WiredCycleScheduler.ShouldMarkRequested(_requested))
         {
             TickCount = Delay;
             _requested = true;

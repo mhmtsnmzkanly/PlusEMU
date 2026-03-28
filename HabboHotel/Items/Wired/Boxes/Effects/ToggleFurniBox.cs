@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
@@ -26,7 +27,7 @@ internal class ToggleFurniBox : IWiredItem, IWiredCycle
         set
         {
             _delay = value;
-            TickCount = value;
+            TickCount = WiredCycleScheduler.GetTickCountForDelay(value);
         }
     }
 
@@ -34,8 +35,7 @@ internal class ToggleFurniBox : IWiredItem, IWiredCycle
     {
         if (SetItems.Count == 0 || !_requested)
             return false;
-        var now = DateTime.UtcNow.Ticks;
-        if (_next < now)
+        if (WiredCycleScheduler.IsReady(_requested, _next))
         {
             foreach (var item in SetItems.Values.ToList())
             {
@@ -48,8 +48,7 @@ internal class ToggleFurniBox : IWiredItem, IWiredCycle
                 }
                 item.Interactor.OnWiredTrigger(item);
             }
-            _requested = false;
-            _next = 0;
+            WiredCycleScheduler.Reset(ref _next, ref _requested);
             TickCount = Delay;
         }
         return true;
@@ -81,8 +80,7 @@ internal class ToggleFurniBox : IWiredItem, IWiredCycle
 
     public bool Execute(params object[] @params)
     {
-        if (_next == 0 || _next < DateTime.UtcNow.Ticks)
-            _next = DateTime.UtcNow.Ticks + Delay;
+        _next = WiredCycleScheduler.GetNextTicks(_next, Delay);
         _requested = true;
         TickCount = Delay;
         return true;

@@ -3,6 +3,7 @@ using System.Drawing;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
@@ -27,7 +28,7 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle
         set
         {
             _delay = value;
-            TickCount = value + 1;
+            TickCount = WiredCycleScheduler.GetTickCountForDelay(value, extraTick: true);
         }
     }
 
@@ -37,8 +38,7 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle
     {
         if (Instance == null || !_requested || _next == 0)
             return false;
-        var now = DateTime.UtcNow.Ticks;
-        if (_next < now)
+        if (WiredCycleScheduler.IsReady(_requested, _next))
         {
             foreach (var item in SetItems.Values.ToList())
             {
@@ -125,9 +125,8 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle
     {
         if (SetItems.Count == 0)
             return false;
-        if (_next == 0 || _next < DateTime.UtcNow.Ticks)
-            _next = DateTime.UtcNow.Ticks + Delay;
-        if (!_requested)
+        _next = WiredCycleScheduler.GetNextTicks(_next, Delay);
+        if (WiredCycleScheduler.ShouldMarkRequested(_requested))
         {
             TickCount = Delay;
             _requested = true;
