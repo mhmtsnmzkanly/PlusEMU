@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
@@ -38,14 +39,13 @@ internal class GiveUserBadgeBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params == null || @params.Length == 0)
+        if (!WiredContextResolver.TryGetActor(@params, out var player))
             return false;
         var owner = Instance.GetClientManager().GetClientByUserId(Item.UserId)?.GetHabbo() ?? 
                     Instance.GetUserDataFactory().GetUserDataByIdAsync(Item.UserId).GetAwaiter().GetResult();
         var ownerPermissions = owner?.Permissions;
         if (ownerPermissions == null || !ownerPermissions.HasRight("room_item_wired_rewards"))
             return false;
-        var player = (Habbo)@params[0];
         var playerClient = player?.Client;
         var currentRoom = player?.CurrentRoom;
         var playerBadges = player?.Inventory?.Badges;

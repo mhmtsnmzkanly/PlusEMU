@@ -13,6 +13,7 @@
 - Added `WiredActorTriggerContext` for `TriggerRoomEnter` and explicit parameterless queue handling for game start/end triggers so the remaining low-parameter trigger paths also stop relying on ad hoc payload packing.
 - Added `WiredContextResolver` and moved repeated actor / actor-item / chat payload unpacking in several trigger, condition, and effect boxes onto the shared helper surface.
 - Extended `WiredContextResolver` adoption across the remaining actor-driven triggerer/team/hand-item boxes, further shrinking direct `Habbo` casts spread through Wired conditions and effects.
+- Moved the remaining actor-only tail set (`TeleportUser`, nested stacks, badge rewards, and bot follow/hand-item effects) onto the shared context resolver so the queue-backed trigger path now lands on a much smaller raw-cast surface.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.
