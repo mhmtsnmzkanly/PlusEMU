@@ -5,8 +5,13 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired;
 
-public sealed class WiredExecutionContext
+public class WiredExecutionContext
 {
+    protected WiredExecutionContext()
+    {
+        Parameters = [];
+    }
+
     public WiredExecutionContext(params object[] parameters)
     {
         Parameters = parameters;
@@ -26,9 +31,9 @@ public sealed class WiredExecutionContext
         }
     }
 
-    public object[] Parameters { get; }
-    public Habbo? Actor { get; }
-    public Item? Item { get; }
-    public string? Message { get; }
-    public CommandManager? CommandManager { get; }
+    public object[] Parameters { get; protected init; }
+    public Habbo? Actor { get; protected init; }
+    public Item? Item { get; protected init; }
+    public string? Message { get; protected init; }
+    public CommandManager? CommandManager { get; protected init; }
 }

@@ -1,4 +1,5 @@
 using Plus.HabboHotel.Users;
+using Plus.HabboHotel.Rooms.Instance;
 
 namespace Plus.HabboHotel.Items.Wired;
 
@@ -12,6 +13,9 @@ internal static class WiredExecutionAdapter
 
     public static bool ExecuteWithParameters(this IWiredItem item, params object[] parameters)
         => item.Execute(new WiredExecutionContext(parameters));
+
+    public static bool ExecuteWithChat(this IWiredItem item, WiredChatTriggerContext context)
+        => item.Execute(new WiredChatExecutionContext(context));
 
     public static bool ExecuteWithoutContext(this IWiredItem item)
         => item.Execute(new WiredExecutionContext());

@@ -389,6 +389,12 @@ public class WiredComponent
     {
         foreach (var box in GetQueuedTriggerTargets(execution))
         {
+            if (execution.Parameters.Length == 1 && execution.Parameters[0] is WiredChatTriggerContext chatContext)
+            {
+                box.ExecuteWithChat(chatContext);
+                continue;
+            }
+
             box.ExecuteWithParameters(execution.Parameters);
         }
     }
