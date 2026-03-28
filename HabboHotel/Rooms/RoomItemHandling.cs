@@ -17,6 +17,8 @@ namespace Plus.HabboHotel.Rooms;
 [Obsolete("Everything in here is bad and whoever wrote this must've been high on some crack or something")]
 public class RoomItemHandling
 {
+    private const string DefaultWallPosition = ":w=0,2 l=11,53 l";
+
     private sealed class RollerTargetState
     {
         public bool NextSquareIsRoller { get; init; }
@@ -74,9 +76,9 @@ public class RoomItemHandling
         _roomItemUpdateQueue.Enqueue(item);
     }
 
-    public void SetSpeed(int p)
+    public void SetSpeed(int speed)
     {
-        _mRollerSpeed = p;
+        _mRollerSpeed = speed;
     }
 
     public string? WallPositionCheck(string wallPosition)
@@ -188,7 +190,7 @@ public class RoomItemHandling
         if (string.IsNullOrWhiteSpace(item.WallCoordinates))
         {
             PersistDefaultWallPosition(item);
-            item.WallCoordinates = ":w=0,2 l=11,53 l";
+            item.WallCoordinates = DefaultWallPosition;
             return;
         }
 
@@ -198,12 +200,12 @@ public class RoomItemHandling
             if (wallParts.Length < 2)
                 throw new FormatException("Invalid wall position");
 
-            item.WallCoordinates = WallPositionCheck($":{wallParts[1]}") ?? ":w=0,2 l=11,53 l";
+            item.WallCoordinates = WallPositionCheck($":{wallParts[1]}") ?? DefaultWallPosition;
         }
         catch
         {
             PersistDefaultWallPosition(item);
-            item.WallCoordinates = ":w=0,2 l=11,53 l";
+            item.WallCoordinates = DefaultWallPosition;
         }
     }
 
@@ -212,7 +214,7 @@ public class RoomItemHandling
         using var connection = _room.GetDatabase().Connection();
         connection.Execute(
             "UPDATE `items` SET `wall_pos` = @wallPosition WHERE `id` = @id LIMIT 1",
-            new { wallPosition = ":w=0,2 l=11,53 l", id = item.Id });
+            new { wallPosition = DefaultWallPosition, id = item.Id });
     }
 
     private void RegisterLoadedItem(Item item)
@@ -231,45 +233,67 @@ public class RoomItemHandling
     private void InitializeLoadedFloorItemState()
     {
         foreach (var item in _floorItems.Values.ToList())
-        {
-            if (item.IsRoller)
-                GotRollers = true;
-            else if (item.Definition.InteractionType == InteractionType.Moodlight)
-            {
-                if (_room.MoodlightData == null)
-                    _room.MoodlightData = new(item.Id, _room.GetDatabase());
-            }
-            else if (item.Definition.InteractionType == InteractionType.Toner)
-            {
-                if (_room.TonerData == null)
-                    _room.TonerData = new(item.Id, _room.GetDatabase());
-            }
-            else if (item.IsWired)
-            {
-                if (_room.GetWired() == null)
-                    continue;
-
-                _room.GetWired().LoadWiredBox(item);
-            }
-            else if (item.Definition.InteractionType == InteractionType.Hopper)
-                HopperCount++;
-        }
+            InitializeLoadedFloorItem(item);
     }
 
-    public Item GetItem(uint pId)
+    private void InitializeLoadedFloorItem(Item item)
     {
-        if (_floorItems.TryGetValue(pId, out var floorItem))
-            return floorItem;
+        if (item.IsRoller)
+        {
+            GotRollers = true;
+            return;
+        }
 
-        if (_wallItems.TryGetValue(pId, out var wallItem))
-            return wallItem;
+        if (item.Definition.InteractionType == InteractionType.Moodlight)
+        {
+            if (_room.MoodlightData == null)
+                _room.MoodlightData = new(item.Id, _room.GetDatabase());
+            return;
+        }
+
+        if (item.Definition.InteractionType == InteractionType.Toner)
+        {
+            if (_room.TonerData == null)
+                _room.TonerData = new(item.Id, _room.GetDatabase());
+            return;
+        }
+
+        if (item.IsWired)
+        {
+            if (_room.GetWired() == null)
+                return;
+
+            _room.GetWired().LoadWiredBox(item);
+            return;
+        }
+
+        if (item.Definition.InteractionType == InteractionType.Hopper)
+            HopperCount++;
+    }
+
+    public Item GetItem(uint itemId)
+    {
+        if (TryGetLoadedItem(itemId, out var item))
+            return item;
 
         return null!;
     }
 
-    public void RemoveFurniture(GameClient? session, uint id)
+    private bool TryGetLoadedItem(uint itemId, out Item item)
     {
-        var item = GetItem(id);
+        if (_floorItems.TryGetValue(itemId, out item!))
+            return true;
+
+        if (_wallItems.TryGetValue(itemId, out item!))
+            return true;
+
+        item = null!;
+        return false;
+    }
+
+    public void RemoveFurniture(GameClient? session, uint itemId)
+    {
+        var item = GetItem(itemId);
         if (item == null)
             return;
 

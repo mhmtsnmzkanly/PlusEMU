@@ -15,6 +15,7 @@
 - Split `RoomItemHandling.CheckPosItem` into explicit tile, door, height, user, and stackability checks so game-item movement validation no longer lives in one long try block.
 - Split `RoomItemHandling.SetWallItem`, small item-tracking helpers, and `Dispose` cleanup into explicit phases so the remaining wall placement and teardown code is easier to follow.
 - Split the remaining `RoomItemHandling` utility branches as well: wall-position pair parsing, single-item removal preparation, roller user Wired trigger fanout, simple toner initialization, and loaded item lookup are now all helper-based.
+- Polished `RoomItemHandling` naming/grouping consistency too by introducing a shared default wall-position constant, a loaded-item lookup helper, and a per-item floor initialization helper instead of repeating tiny inline branches.
 - Moved non-chat `WiredComponent.TriggerEvent` execution onto a bounded per-room queue processed during `WiredComponent.OnCycle()`.
 - Extended the queue-based Wired execution slice to cover matched `TriggerUserSays` and `TriggerUserSaysCommand` boxes without breaking the existing synchronous suppression semantics.
 - Moved `TriggerUserSays` and `TriggerUserSaysCommand` match resolution fully into `WiredComponent`, leaving the queued trigger boxes responsible only for owner checks, feedback whispers, and stack execution.
