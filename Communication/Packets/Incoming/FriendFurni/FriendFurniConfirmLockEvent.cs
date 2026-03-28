@@ -17,8 +17,7 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo)
             return Task.CompletedTask;
 
         var pId = packet.ReadUInt();
@@ -67,7 +66,8 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
         }
         if (userOneId == habbo.Id) { session.Send(new LoveLockDialogueSetLockedComposer(pId)); userOne.LlPartner = userTwoId; }
         else if (userTwoId == habbo.Id) { session.Send(new LoveLockDialogueSetLockedComposer(pId)); userTwo.LlPartner = userOneId; }
-        if (userOne.LlPartner == 0 || userTwo.LlPartner == 0) return Task.CompletedTask;
+        if (userOne.LlPartner == 0 || userTwo.LlPartner == 0)
+            return Task.CompletedTask;
         item.ExtraData.Store($"1{(char)5}{userOne.GetUsername()}{(char)5}{userTwo.GetUsername()}{(char)5}{userOneHabbo.Look}{(char)5}{userTwoHabbo.Look}{(char)5}{DateTime.Now:dd/MM/yyyy}");
         item.InteractingUser = 0; item.InteractingUser2 = 0;
         userOne.LlPartner = 0; userTwo.LlPartner = 0;

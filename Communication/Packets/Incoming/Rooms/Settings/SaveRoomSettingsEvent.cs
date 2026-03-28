@@ -31,10 +31,12 @@ internal class SaveRoomSettingsEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null) return;
+        if (session.GetHabbo() is not { } habbo)
+            return;
+
         var roomId = packet.ReadUInt();
-        if (!_roomManager.TryLoadRoom(roomId, out var room)) return;
+        if (!_roomManager.TryLoadRoom(roomId, out var room))
+            return;
         var name = _wordFilterManager.CheckMessage(packet.ReadString());
         var description = _wordFilterManager.CheckMessage(packet.ReadString());
         var access = RoomAccessUtility.ToRoomAccess(packet.ReadInt());
@@ -53,7 +55,8 @@ internal class SaveRoomSettingsEvent : IPacketEvent
         if (chatMode < 0 || chatMode > 1) chatMode = 0;
         if (chatSize < 0 || chatSize > 2) chatSize = 0;
         if (chatSpeed < 0 || chatSpeed > 2) chatSpeed = 0;
-        if (chatDistance < 0) chatDistance = 1; if (chatDistance > 99) chatDistance = 100;
+        if (chatDistance < 0) chatDistance = 1;
+        if (chatDistance > 99) chatDistance = 100;
         if (extraFlood < 0 || extraFlood > 2) extraFlood = 0;
         if (tradeSettings < 0 || tradeSettings > 2) tradeSettings = 0;
         if (whoMute < 0 || whoMute > 1) whoMute = 0;
@@ -64,7 +67,8 @@ internal class SaveRoomSettingsEvent : IPacketEvent
         if (name.Length < 1) return;
         if (name.Length > 60) name = name.Substring(0, 60);
         if (access == RoomAccess.Password && password.Length == 0) access = RoomAccess.Open;
-        if (maxUsers < 0) maxUsers = 10; if (maxUsers > 50) maxUsers = 50;
+        if (maxUsers < 0) maxUsers = 10;
+        if (maxUsers > 50) maxUsers = 50;
         if (!_navigationManager.TryGetSearchResultList(categoryId, out var searchResultList)) categoryId = 36;
         if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank || habbo.Id != room.OwnerId && habbo.Rank >= searchResultList.RequiredRank) categoryId = 36;
         if (tagCount > 2) return;
@@ -81,7 +85,7 @@ internal class SaveRoomSettingsEvent : IPacketEvent
             "UPDATE `rooms` SET `caption`=@caption,`description`=@description,`password`=@password,`category`=@categoryId,`state`=@state,`tags`=@tags,`users_max`=@maxUsers,`allow_pets`=@allowPets,`allow_pets_eat`=@allowPetsEat,`room_blocking_disabled`=@roomBlockingDisabled,`allow_hidewall`=@allowHidewall,`floorthick`=@floorThick,`wallthick`=@wallThick,`mute_settings`=@muteSettings,`kick_settings`=@kickSettings,`ban_settings`=@banSettings,`chat_mode`=@chatMode,`chat_size`=@chatSize,`chat_speed`=@chatSpeed,`chat_extra_flood`=@extraFlood,`chat_hearing_distance`=@chatDistance,`trade_settings`=@tradeSettings WHERE `id`=@roomId LIMIT 1",
             new { caption = room.Name, description = room.Description, password = room.Password, categoryId, state = accessStr, tags = formattedTags.ToString(), maxUsers, allowPets, allowPetsEat, roomBlockingDisabled = roomBlockingEnabled, allowHidewall = room.Hidewall, floorThick = room.FloorThickness, wallThick = room.WallThickness, muteSettings = room.WhoCanMute, kickSettings = room.WhoCanKick, banSettings = room.WhoCanBan, chatMode = room.ChatMode, chatSize = room.ChatSize, chatSpeed = room.ChatSpeed, extraFlood = room.ExtraFlood, chatDistance = room.ChatDistance, tradeSettings = room.TradeSettings, roomId = room.Id });
         room.GetGameMap().GenerateMaps();
-        if (!habbo.TryGetCurrentRoom(out _))
+        if (!habbo.IsInRoom(room))
         {
             session.Send(new RoomSettingsSavedComposer(room.RoomId));
             session.Send(new RoomInfoUpdatedComposer(room.RoomId));

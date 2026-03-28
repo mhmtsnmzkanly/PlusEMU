@@ -28,9 +28,7 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var furniture = habbo?.Inventory?.Furniture;
-        if (habbo == null || furniture == null)
+        if (session.GetHabbo() is not { Inventory.Furniture: { } furniture } habbo)
             return Task.CompletedTask;
 
         var itemId = packet.ReadUInt();

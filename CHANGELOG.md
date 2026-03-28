@@ -326,6 +326,7 @@
 
 ### Runtime And Framework
 
+- Continued the stateful packet sweep across figure, motto, badge, room-promotion, room-settings, gnome, and friend-furni flows by converting them to helper-first Habbo/component guards and by reducing room-state branching around active-room checks.
 - Grouped the extracted room access, item, roller, and room-model files into dedicated `HabboHotel/Rooms/*` subfolders so the `Rooms` root better reflects domain boundaries after the recent service split work.
 - Continued the room-entry packet cleanup across avatar movement, simple furni triggers, moderation actions, and YouTube television handlers by replacing the remaining split room guards with single helper-first Habbo room checks.
 - Continued the room-bound packet sweep by collapsing repeated `InRoom` + `TryGetCurrentRoom(...)` guards in badges, rights, wired save, magic tile, branding, floorplan, gift, ignore, unignore, and mute handlers into single helper-first entry checks.

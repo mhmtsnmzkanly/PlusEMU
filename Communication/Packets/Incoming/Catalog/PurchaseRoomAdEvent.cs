@@ -30,9 +30,7 @@ public class PurchaseRoomAdEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var badges = habbo?.Inventory?.Badges;
-        if (habbo == null || badges == null)
+        if (session.GetHabbo() is not { Inventory.Badges: { } badges } habbo)
             return;
 
         packet.ReadInt(); //pageId
@@ -63,7 +61,7 @@ public class PurchaseRoomAdEvent : IPacketEvent
         if (!badges.HasBadge("RADZZ"))
             await _badgeManager.GiveBadge(habbo, "RADZZ");
         session.Send(new PurchaseOkComposer());
-        if (habbo.InRoom && habbo.TryGetCurrentRoom(out var currentRoom) && currentRoom.Id == roomId)
+        if (habbo.TryGetCurrentRoom(out var currentRoom) && currentRoom.Id == roomId)
             currentRoom.SendPacket(new RoomEventComposer(data, data.Promotion));
         _messengerDataLoader.BroadcastStatusUpdate(habbo, MessengerEventTypes.EventStarted, name);
     }

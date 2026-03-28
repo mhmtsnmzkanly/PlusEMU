@@ -12,6 +12,9 @@ internal class SetActivatedBadgesEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
+        if (session.GetHabbo() is not { } habbo)
+            return;
+
         var badgeUpdates = new List<(int slot, string badge)>();
 
         for (var i = 0; i < 5; i++)
@@ -27,12 +30,11 @@ internal class SetActivatedBadgesEvent : IPacketEvent
             badgeUpdates.Add((slot, badge));
         }
 
-        var habbo = session.GetHabbo();
         await _badgeManager.UpdateUserBadges(habbo, badgeUpdates);
 
         var equippedBadges = habbo.Inventory?.Badges?.EquippedBadges ?? new List<Plus.HabboHotel.Users.Badges.Badge>();
 
-        if (habbo.InRoom && habbo.TryGetCurrentRoom(out var room))
+        if (habbo.TryGetCurrentRoom(out var room))
         {
             room.SendPacket(new HabboUserBadgesComposer(habbo.Id, equippedBadges));
         }

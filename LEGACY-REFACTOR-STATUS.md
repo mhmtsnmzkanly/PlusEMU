@@ -276,3 +276,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - Continue folding room-bound packet handlers onto single-entry room resolution so `InRoom`/`TryGetCurrentRoom(...)` checks stop being duplicated across moderation, furni, floorplan, and room-settings packets.
 - Continue sweeping the remaining avatar/action/furni packet tail so even small movement and trigger handlers share the same single-entry Habbo room guard style before broader service extraction.
 - Keep the `HabboHotel/Rooms` physical layout aligned with the extracted architecture by grouping access, item, roller, and model files under dedicated subfolders as service boundaries stabilize.
+- Continue the remaining stateful packet cleanup so profile, badge, promotion, settings, and friend-furni handlers also rely on the same Habbo helper surface instead of open-coded session/component branching.

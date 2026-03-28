@@ -27,17 +27,32 @@ internal class UpdateFigureDataEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var clothing = habbo?.Clothing;
-        if (habbo == null || clothing == null) return;
+        if (session.GetHabbo() is not { Clothing: { } clothing } habbo)
+            return;
+
         var gender = packet.ReadString().ToUpper();
         var look = _figureManager.ProcessFigure(packet.ReadString(), gender, clothing.GetClothingParts, true);
-        if (look == habbo.Look) return;
-        if ((DateTime.Now - habbo.LastClothingUpdateTime).TotalSeconds <= 2.0) { habbo.ClothingUpdateWarnings += 1; if (habbo.ClothingUpdateWarnings >= 25) habbo.SessionClothingBlocked = true; return; }
-        if (habbo.SessionClothingBlocked) return;
+        if (look == habbo.Look)
+            return;
+        if ((DateTime.Now - habbo.LastClothingUpdateTime).TotalSeconds <= 2.0)
+        {
+            habbo.ClothingUpdateWarnings += 1;
+            if (habbo.ClothingUpdateWarnings >= 25)
+                habbo.SessionClothingBlocked = true;
+
+            return;
+        }
+        if (habbo.SessionClothingBlocked)
+            return;
+
         habbo.LastClothingUpdateTime = DateTime.Now;
         string[] allowedGenders = { "M", "F" };
-        if (!allowedGenders.Contains(gender)) { session.Send(new BroadcastMessageAlertComposer("Sorry, you chose an invalid gender.")); return; }
+        if (!allowedGenders.Contains(gender))
+        {
+            session.Send(new BroadcastMessageAlertComposer("Sorry, you chose an invalid gender."));
+            return;
+        }
+
         await _questService.ProgressUserQuest(session, QuestType.ProfileChangeLook);
         habbo.Look = _figureManager.FilterFigure(look);
         habbo.Gender = gender.ToLower();
@@ -46,11 +61,16 @@ internal class UpdateFigureDataEvent : IPacketEvent
             new { look, gender, id = habbo.Id });
         await _achievementService.ProgressAchievement(session, "ACH_AvatarLooks", 1);
         session.Send(new AvatarAspectUpdateComposer(look, gender));
-        if (habbo.Look.Contains("ha-1006")) await _questService.ProgressUserQuest(session, QuestType.WearHat);
-        if (habbo.InRoom && habbo.TryGetCurrentRoom(out var currentRoom))
+        if (habbo.Look.Contains("ha-1006"))
+            await _questService.ProgressUserQuest(session, QuestType.WearHat);
+        if (habbo.TryGetCurrentRoom(out var currentRoom))
         {
             var roomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (roomUser != null) { session.Send(new UserChangeComposer(roomUser, true)); currentRoom.SendPacket(new UserChangeComposer(roomUser, false)); }
+            if (roomUser != null)
+            {
+                session.Send(new UserChangeComposer(roomUser, true));
+                currentRoom.SendPacket(new UserChangeComposer(roomUser, false));
+            }
         }
     }
 }
