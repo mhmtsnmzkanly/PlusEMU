@@ -6,9 +6,12 @@ namespace Plus.Communication.Packets.Incoming.Navigator;
 
 internal class GoToHotelViewEvent : RoomPacketEvent
 {
-    public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
+    private readonly IRoomService _roomService;
+
+    public GoToHotelViewEvent(IRoomService roomService)
     {
-        room.GetRoomUserManager()?.RemoveUserFromRoom(session, true);
-        return Task.CompletedTask;
+        _roomService = roomService;
     }
+
+    public override Task Parse(Room room, GameClient session, IIncomingPacket packet) => _roomService.LeaveRoom(session);
 }

@@ -18,14 +18,16 @@ internal class ChangeUserNameEvent : IPacketEvent
     private readonly IUserDataFactory _userDataFactory;
     private readonly IGameClientManager _clientManager;
     private readonly IRoomManager _roomManager;
+    private readonly IRoomService _roomService;
     private readonly IAchievementService _achievementService;
     private readonly IDatabase _database;
 
-    public ChangeUserNameEvent(IUserDataFactory userDataFactory, IGameClientManager clientManager, IRoomManager roomManager, IAchievementService achievementService, IDatabase database)
+    public ChangeUserNameEvent(IUserDataFactory userDataFactory, IGameClientManager clientManager, IRoomManager roomManager, IRoomService roomService, IAchievementService achievementService, IDatabase database)
     {
         _userDataFactory = userDataFactory;
         _clientManager = clientManager;
         _roomManager = roomManager;
+        _roomService = roomService;
         _achievementService = achievementService;
         _database = database;
     }
@@ -77,7 +79,7 @@ internal class ChangeUserNameEvent : IPacketEvent
             return;
         }
         habbo.ChangingName = false;
-        room.GetRoomUserManager().RemoveUserFromRoom(session, true);
+        await _roomService.LeaveRoom(session);
         habbo.ChangeName(_database, newName);
         habbo.Messenger?.NotifyChangesToFriends();
         session.Send(new UpdateUsernameComposer(newName));
