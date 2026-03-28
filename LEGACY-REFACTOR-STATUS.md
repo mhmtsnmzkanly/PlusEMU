@@ -288,3 +288,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - A smaller tail cleanup is also underway across navigator friend-room queries plus interactor/Wired effect helpers, which is shrinking the remaining direct room/client property reads around runtime convenience code.
 - `RoomUserManager` is now joining that same cleanup too: the remaining avatar validation, team-gate, and teleporter-side room checks are moving onto `_room` ownership and `Habbo` helper methods instead of raw `CurrentRoom` reads.
 - Team/game support code is joining it too, with `TeamManager` now using a shared room-resolution helper instead of duplicating raw `CurrentRoom` access in each gate-update branch.
+- `RoomCreatureService` has also started moving the same direction: pet/bot entry points are beginning to use the owned room parameter or `Habbo.TryGetCurrentRoom(...)` instead of raw `CurrentRoom` reads.
