@@ -48,8 +48,6 @@ internal class FurniMatchStateAndPositionBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params.Length == 0)
-            return false;
         if (string.IsNullOrEmpty(StringData) || StringData == "0;0;0" || SetItems.Count == 0)
             return false;
         foreach (var item in SetItems.Values.ToList())

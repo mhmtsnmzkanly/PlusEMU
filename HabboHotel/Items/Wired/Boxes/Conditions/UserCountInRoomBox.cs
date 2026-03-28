@@ -31,8 +31,6 @@ internal class UserCountInRoomBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params.Length == 0)
-            return false;
         if (string.IsNullOrEmpty(StringData))
             return false;
         var countOne = StringData != null ? int.Parse(StringData.Split(';')[0]) : 1;

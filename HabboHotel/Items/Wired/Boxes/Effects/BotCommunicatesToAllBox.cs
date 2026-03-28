@@ -34,8 +34,6 @@ internal class BotCommunicatesToAllBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params == null || @params.Length == 0)
-            return false;
         if (string.IsNullOrEmpty(StringData))
             return false;
         var user = Instance.GetRoomUserManager().GetBotByName(StringData);

@@ -39,7 +39,7 @@ internal class BotMovesToFurniBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params == null || @params.Length == 0 || string.IsNullOrEmpty(StringData))
+        if (string.IsNullOrEmpty(StringData))
             return false;
         var user = Instance.GetRoomUserManager().GetBotByName(StringData);
         if (user == null)
