@@ -39,7 +39,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
             return false;
         foreach (var item in SetItems.Values.ToList())
         {
-            if (Instance.GetRoomItemHandler().GetFloor == null && !Instance.GetRoomItemHandler().GetFloor.Contains(item))
+            if (Instance.GetRoomItemHandler().GetFloor == null || !Instance.GetRoomItemHandler().GetFloor.Contains(item))
                 continue;
             foreach (var I in ItemsData.Split(';'))
             {
@@ -64,7 +64,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle
                 {
                     if (int.Parse(StringData.Split(';')[0]) == 1) //State
                     {
-                        if (part.Length >= 4)
+                        if (part.Length >= 5)
                             SetState(ii, part[4]);
                         else
                             SetState(ii, "1");
