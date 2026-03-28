@@ -25,7 +25,6 @@ internal class BanCommand : ITargetChatCommand
     public async Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
-        var targetClient = target.Client;
         var permissions = habbo?.Permissions;
         if ((target.Permissions?.HasRight("mod_soft_ban") ?? false) && !(permissions?.HasRight("mod_ban_any") ?? false))
         {
@@ -47,8 +46,9 @@ internal class BanCommand : ITargetChatCommand
             reason = "No reason specified.";
 
         await _moderationActionService.Ban(habbo?.Username ?? "System", ModerationBanType.Username, target.Username, reason, expire);
-        
-        targetClient?.Disconnect();
+
+        if (target.TryGetClient(out var targetClient))
+            targetClient.Disconnect();
         session.SendWhisper($"Success, you have account banned the user '{target.Username}' for {length} hour(s) with the reason '{reason}'!");
     }
 }

@@ -13,15 +13,11 @@ internal class CoordsCommand : IChatCommand
 
     public async Task Execute(GameClient session, Room room, string[] parameters)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var currentRoom))
             return;
 
         var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        var currentRoom = habbo.CurrentRoom;
         if (thisUser == null)
-            return;
-        if (currentRoom == null)
             return;
         session.SendNotification(
             $"X: {thisUser.X}\n - Y: {thisUser.Y}\n - Z: {thisUser.Z}\n - Rot: {thisUser.RotBody}, sqState: {room.GetGameMap().GameMap[thisUser.X, thisUser.Y]}\n\n - RoomID: {currentRoom.RoomId}");

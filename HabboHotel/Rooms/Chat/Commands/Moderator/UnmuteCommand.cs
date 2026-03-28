@@ -26,11 +26,11 @@ internal class UnmuteCommand : ITargetChatCommand
     {
         var habbo = session.GetHabbo();
         var username = habbo?.Username ?? string.Empty;
-        var targetClient = target.Client;
         using var connection = _database.Connection();
         connection.Execute("UPDATE `users` SET `time_muted` = '0' WHERE `id` = @id LIMIT 1", new { id = target.Id });
         target.TimeMuted = 0;
-        targetClient?.SendNotification($"You have been un-muted by {username}!");
+        if (target.TryGetClient(out var targetClient))
+            targetClient.SendNotification($"You have been un-muted by {username}!");
         session.SendWhisper($"You have successfully un-muted {target.Username}!");
         return Task.CompletedTask;
     }

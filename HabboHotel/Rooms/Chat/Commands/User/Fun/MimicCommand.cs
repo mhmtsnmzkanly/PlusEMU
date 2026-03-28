@@ -26,8 +26,7 @@ internal class MimicCommand : ITargetChatCommand
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
-        if (habbo == null || currentRoom == null)
+        if (habbo == null || !habbo.IsInRoom(room))
             return Task.CompletedTask;
 
         if (!target.AllowMimic)
@@ -35,7 +34,7 @@ internal class MimicCommand : ITargetChatCommand
             session.SendWhisper("Oops, you cannot mimic this user - sorry!");
             return Task.CompletedTask;
         }
-        var targetUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
+        var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
         if (targetUser == null)
         {
             session.SendWhisper("An error occoured whilst finding that user, maybe they're not online or in this room.");

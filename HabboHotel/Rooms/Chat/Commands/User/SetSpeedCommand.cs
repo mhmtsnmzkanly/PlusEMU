@@ -13,9 +13,9 @@ internal class SetSpeedCommand : IChatCommand
 
     public async Task Execute(GameClient session, Room room, string[] parameters)
     {
-        var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
         if (!room.CheckRights(session, true))
+            return;
+        if (session.GetHabbo() is not { } habbo || !habbo.IsInRoom(room))
             return;
         if (!parameters.Any())
         {
@@ -23,7 +23,7 @@ internal class SetSpeedCommand : IChatCommand
             return;
         }
         if (int.TryParse(parameters[0], out var speed))
-            currentRoom?.GetRoomItemHandler().SetSpeed(speed);
+            room.GetRoomItemHandler().SetSpeed(speed);
         else
             session.SendWhisper("Invalid amount, please enter a valid number.");
     }

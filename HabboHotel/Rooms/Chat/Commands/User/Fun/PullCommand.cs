@@ -17,7 +17,6 @@ internal class PullCommand : ITargetChatCommand
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
         var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
         if (!room.PullEnabled && !(habbo?.Permissions?.HasRight("room_override_custom_config") ?? false))
         {
             session.SendWhisper("Oops, it appears that the room owner has disabled the ability to use the pull command in here.");
@@ -47,7 +46,7 @@ internal class PullCommand : ITargetChatCommand
             session.SendWhisper("Please don't pull that user out of the room :(!");
             return Task.CompletedTask; ;
         }
-        if (target.CurrentRoom?.Id == currentRoom?.Id && Math.Abs(thisUser.X - targetUser.X) < 3 && Math.Abs(thisUser.Y - targetUser.Y) < 3)
+        if (target.IsInRoom(room) && Math.Abs(thisUser.X - targetUser.X) < 3 && Math.Abs(thisUser.Y - targetUser.Y) < 3)
         {
             room.SendPacket(new ChatComposer(thisUser.VirtualId, $"*pulls {parameters[1]} to them*", 0, thisUser.LastBubble));
             if (thisUser.RotBody % 2 != 0) 

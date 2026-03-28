@@ -83,11 +83,10 @@ internal class UserInfoCommand : IChatCommand
         if (targetHabbo != null)
         {
             habboInfo.Append("Current Session:\r");
-            if (!targetHabbo.InRoom || targetHabbo.CurrentRoom == null)
+            if (!targetHabbo.TryGetCurrentRoom(out var currentRoom))
                 habboInfo.Append("Currently not in a room.\r");
             else
             {
-                var currentRoom = targetHabbo.CurrentRoom;
                 habboInfo.Append($"Room: {currentRoom.Name} ({currentRoom.RoomId})\r");
                 habboInfo.Append($"Room Owner: {currentRoom.OwnerName}\r");
                 habboInfo.Append($"Current Visitors: {currentRoom.UserCount}/{currentRoom.UsersMax}");

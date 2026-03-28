@@ -14,11 +14,7 @@ internal class EnableCommand : IChatCommand
 
     public async Task Execute(GameClient session, Room room, string[] parameters)
     {
-        var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
-        var permissions = habbo?.Permissions;
-        var effects = habbo?.Effects;
-        if (habbo == null || currentRoom == null || effects == null)
+        if (session.GetHabbo() is not { Permissions: { } permissions, Effects: { } effects } habbo || !habbo.IsInRoom(room))
             return;
 
         if (parameters.Length == 0)
@@ -31,7 +27,7 @@ internal class EnableCommand : IChatCommand
             session.SendWhisper("Oops, it appears that the room owner has disabled the ability to use the enable command in here.");
             return;
         }
-        var thisUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
+        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
         if (thisUser == null)
             return;
         if (thisUser.RidingHorse)

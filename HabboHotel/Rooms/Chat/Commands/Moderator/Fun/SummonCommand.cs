@@ -35,7 +35,7 @@ internal class SummonCommand : ITargetChatCommand
 
         targetClient.SendNotification($"You have been summoned to {habbo.Username}!");
         
-        if (!target.InRoom)
+        if (!target.TryGetCurrentRoom(out _))
         {
             targetClient.Send(new RoomForwardComposer(room.Id));
         }

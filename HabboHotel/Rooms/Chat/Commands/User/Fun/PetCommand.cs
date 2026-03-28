@@ -20,12 +20,10 @@ internal class PetCommand : IChatCommand
 
     public async Task Execute(GameClient session, Room room, string[] parameters)
     {
-        var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
-        if (habbo == null || currentRoom == null)
+        if (session.GetHabbo() is not { } habbo || !habbo.IsInRoom(room))
             return;
 
-        var roomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (roomUser == null)
             return;
         if (!room.PetMorphsAllowed)

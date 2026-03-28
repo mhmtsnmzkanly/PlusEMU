@@ -25,8 +25,7 @@ internal class FacelessCommand : IChatCommand
 
     public async Task Execute(GameClient session, Room room, string[] parameters)
     {
-        var habbo = session.GetHabbo();
-        if (habbo?.Clothing == null)
+        if (session.GetHabbo() is not { Clothing: { } } habbo || !habbo.IsInRoom(room))
             return;
 
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
@@ -51,6 +50,6 @@ internal class FacelessCommand : IChatCommand
         using var connection = _database.Connection();
         connection.Execute("UPDATE `users` SET `look` = @look WHERE `id` = @id LIMIT 1", new { look = habbo.Look, id = habbo.Id });
         session.Send(new UserChangeComposer(user, true));
-        habbo.CurrentRoom?.SendPacket(new UserChangeComposer(user, false));
+        room.SendPacket(new UserChangeComposer(user, false));
     }
 }

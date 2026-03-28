@@ -17,13 +17,12 @@ internal class FlagUserCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var targetClient = target.Client;
         if ((target.Permissions?.HasRight("mod_tool") ?? false))
         {
             session.SendWhisper("You are not allowed to flag that user.");
             return Task.CompletedTask;
         }
-        if (targetClient == null)
+        if (!target.TryGetClient(out var targetClient))
             return Task.CompletedTask;
         target.LastNameChange = 0;
         target.ChangingName = true;

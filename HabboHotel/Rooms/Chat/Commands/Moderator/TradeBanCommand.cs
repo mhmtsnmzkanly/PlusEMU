@@ -34,10 +34,10 @@ internal class TradeBanCommand : ITargetChatCommand
         {
             using var connection = _database.Connection();
             connection.Execute("UPDATE `user_info` SET `trading_locked` = '0' WHERE `user_id` = @id LIMIT 1", new { id = target.Id });
-            if (target.Client != null)
+            if (target.TryGetClient(out var targetClient))
             {
                 target.TradingLockExpiry = 0;
-                target.Client.SendNotification("Your outstanding trade ban has been removed.");
+                targetClient.SendNotification("Your outstanding trade ban has been removed.");
             }
             session.SendWhisper($"You have successfully removed {target.Username}'s trade ban.");
             return Task.CompletedTask;
@@ -51,10 +51,10 @@ internal class TradeBanCommand : ITargetChatCommand
             var length = PlusEnvironment.GetUnixTimestamp() + days * 86400;
             using var connection = _database.Connection();
             connection.Execute("UPDATE `user_info` SET `trading_locked` = @length, `trading_locks_count` = `trading_locks_count` + '1' WHERE `user_id` = @id LIMIT 1", new { length = length, id = target.Id });
-            if (target.Client != null)
+            if (target.TryGetClient(out var targetClient))
             {
                 target.TradingLockExpiry = length;
-                target.Client.SendNotification($"You have been trade banned for {days} day(s)!");
+                targetClient.SendNotification($"You have been trade banned for {days} day(s)!");
             }
             session.SendWhisper($"You have successfully trade banned {target.Username} for {days} day(s).");
         }

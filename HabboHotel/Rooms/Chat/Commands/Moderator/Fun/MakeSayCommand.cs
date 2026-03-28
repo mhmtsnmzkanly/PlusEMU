@@ -17,18 +17,15 @@ internal class MakeSayCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
-
         if (!parameters.Any())
             session.SendWhisper("You must enter a username and the message you wish to force them to say.");
         else
         {
-            if (currentRoom == null)
+            if (session.GetHabbo() is not { } habbo || !habbo.IsInRoom(room))
                 return Task.CompletedTask;
 
             var message = CommandManager.MergeParams(parameters);
-            var targetUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
+            var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
             if (targetUser != null)
             {
                 var targetClient = targetUser.GetClient();
