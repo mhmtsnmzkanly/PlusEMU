@@ -39,6 +39,7 @@ public class RoomItemHandling
     private readonly IRoomItemRemovalService _roomItemRemovalService;
     private readonly IRoomItemStateService _roomItemStateService;
     private readonly IRoomItemPlacementApplyService _roomItemPlacementApplyService;
+    private readonly IRoomItemTrackingService _roomItemTrackingService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -47,7 +48,7 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService, IRoomItemPlacementApplyService roomItemPlacementApplyService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomRollerService roomRollerService, IRoomItemInventoryService roomItemInventoryService, IRoomItemUpdateQueueService roomItemUpdateQueueService, IRoomItemLoadService roomItemLoadService, IRoomItemRemovalService roomItemRemovalService, IRoomItemStateService roomItemStateService, IRoomItemPlacementApplyService roomItemPlacementApplyService, IRoomItemTrackingService roomItemTrackingService)
     {
         _room = room;
         _itemLoader = itemLoader;
@@ -61,6 +62,7 @@ public class RoomItemHandling
         _roomItemRemovalService = roomItemRemovalService;
         _roomItemStateService = roomItemStateService;
         _roomItemPlacementApplyService = roomItemPlacementApplyService;
+        _roomItemTrackingService = roomItemTrackingService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -146,28 +148,15 @@ public class RoomItemHandling
                 if (_roomItemLoadService.TryRecoverInvalidFloorItem(_room, item))
                     continue;
 
-                RegisterLoadedItem(item);
+                _roomItemTrackingService.RegisterLoadedItem(_floorItems, _wallItems, item);
             }
             else if (item.IsWallItem)
             {
                 _roomItemLoadService.NormalizeWallItemPosition(_room, item, DefaultWallPosition, WallPositionCheck);
-                RegisterLoadedItem(item);
+                _roomItemTrackingService.RegisterLoadedItem(_floorItems, _wallItems, item);
             }
         }
         InitializeLoadedFloorItemState();
-    }
-
-    private void RegisterLoadedItem(Item item)
-    {
-        if (item.IsFloorItem)
-        {
-            if (!_floorItems.ContainsKey(item.Id))
-                _floorItems.TryAdd(item.Id, item);
-            return;
-        }
-
-        if (item.IsWallItem && !_wallItems.ContainsKey(item.Id))
-            _wallItems.TryAdd(item.Id, item);
     }
 
     private void InitializeLoadedFloorItemState()
@@ -187,22 +176,10 @@ public class RoomItemHandling
 
     public Item GetItem(uint itemId)
     {
-        if (TryGetLoadedItem(itemId, out var item))
+        if (_roomItemTrackingService.TryGetLoadedItem(_floorItems, _wallItems, itemId, out var item))
             return item;
 
         return null!;
-    }
-
-    private bool TryGetLoadedItem(uint itemId, out Item item)
-    {
-        if (_floorItems.TryGetValue(itemId, out item!))
-            return true;
-
-        if (_wallItems.TryGetValue(itemId, out item!))
-            return true;
-
-        item = null!;
-        return false;
     }
 
     public void RemoveFurniture(GameClient? session, uint itemId)
@@ -218,24 +195,10 @@ public class RoomItemHandling
     private void RemoveRoomItem(Item item)
     {
         _roomItemRemovalService.BroadcastItemRemoval(_room, item);
-        RemoveLoadedItem(item);
+        _roomItemTrackingService.RemoveLoadedItem(_room, _floorItems, _wallItems, item);
         RemoveItem(item);
         _room.GetGameMap().GenerateMaps();
         _room.GetRoomUserManager().UpdateUserStatusses();
-    }
-
-    private void RemoveLoadedItem(Item item)
-    {
-        //TODO: Recode this specific part
-        if (item.IsWallItem)
-        {
-            _wallItems.TryRemove(item.Id, out _);
-            return;
-        }
-
-        _floorItems.TryRemove(item.Id, out var removedItem);
-        if (removedItem != null)
-            _room.GetGameMap().RemoveFromMap(removedItem);
     }
 
     private List<IServerPacket> CycleRollers()
@@ -429,13 +392,7 @@ public class RoomItemHandling
         if (item == null)
             return;
 
-        TrackMovedItem(item);
-    }
-
-    private void TrackMovedItem(Item item)
-    {
-        if (!_movedItems.ContainsKey(item.Id))
-            _movedItems.TryAdd(item.Id, item);
+        _roomItemTrackingService.TrackMovedItem(_movedItems, item);
     }
 
     public void RemoveItem(Item item)
@@ -443,20 +400,7 @@ public class RoomItemHandling
         if (item == null)
             return;
 
-        UntrackMovedItem(item);
-        UntrackRoller(item);
-    }
-
-    private void UntrackMovedItem(Item item)
-    {
-        if (_movedItems.ContainsKey(item.Id))
-            _movedItems.TryRemove(item.Id, out _);
-    }
-
-    private void UntrackRoller(Item item)
-    {
-        if (_rollers.ContainsKey(item.Id))
-            _rollers.TryRemove(item.Id, out _);
+        _roomItemTrackingService.RemoveTrackedItem(_movedItems, _rollers, item);
     }
 
     public void OnCycle()
@@ -543,30 +487,8 @@ public class RoomItemHandling
     public void Dispose()
     {
         SaveFurniture();
-        DestroyLoadedItems();
-        ClearTrackedState();
+        _roomItemTrackingService.DestroyLoadedItems(GetWallAndFloor);
+        _roomItemTrackingService.ClearTrackedState(_movedItems, _rollers, _wallItems, _floorItems, _rollerItemsMoved, _rollerUsersMoved, _rollerMessages);
         _roomItemUpdateQueue = null!;
-    }
-
-    private void DestroyLoadedItems()
-    {
-        foreach (var item in GetWallAndFloor.ToList())
-        {
-            if (item == null)
-                continue;
-
-            item.Destroy();
-        }
-    }
-
-    private void ClearTrackedState()
-    {
-        _movedItems.Clear();
-        _rollers.Clear();
-        _wallItems.Clear();
-        _floorItems.Clear();
-        _rollerItemsMoved.Clear();
-        _rollerUsersMoved.Clear();
-        _rollerMessages.Clear();
     }
 }
