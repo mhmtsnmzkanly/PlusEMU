@@ -6,7 +6,8 @@
 
 #### Changed
 - Moved non-chat `WiredComponent.TriggerEvent` execution onto a bounded per-room queue processed during `WiredComponent.OnCycle()`.
-- Updated `WIRED-ASYNC-PLAN.md` to reflect the first implemented queue-based Wired execution slice and the remaining synchronous `TriggerUserSays` limitation.
+- Extended the queue-based Wired execution slice to cover matched `TriggerUserSays` and `TriggerUserSaysCommand` boxes without breaking the existing synchronous suppression semantics.
+- Updated `WIRED-ASYNC-PLAN.md` to reflect the first implemented queue-based Wired execution slice.
 
 ### [0.8.1] - 2026-03-28
 #### Added

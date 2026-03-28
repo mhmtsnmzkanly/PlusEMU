@@ -6,6 +6,7 @@ using Plus.HabboHotel.Items.Wired.Boxes;
 using Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 using Plus.HabboHotel.Items.Wired.Boxes.Effects;
 using Plus.HabboHotel.Items.Wired.Boxes.Triggers;
+using Plus.HabboHotel.Rooms.Chat.Commands;
 
 namespace Plus.HabboHotel.Rooms.Instance;
 
@@ -247,12 +248,15 @@ public class WiredComponent
         try
         {
             if (type == WiredBoxType.TriggerUserSays)
-                return ExecuteUserSaysImmediately(@params);
+                return QueueMatchingUserSaysTriggers(@params);
+
+            if (type == WiredBoxType.TriggerUserSaysCommand)
+                return QueueMatchingUserSaysCommandTriggers(@params);
 
             if (!HasTrigger(type))
                 return false;
 
-            _executionQueue.Enqueue(new(type, @params.ToArray()));
+            _executionQueue.Enqueue(new(type, null, @params.ToArray()));
             return true;
         }
         catch
@@ -262,24 +266,50 @@ public class WiredComponent
         }
     }
 
-    private bool ExecuteUserSaysImmediately(object[] @params)
+    private bool QueueMatchingUserSaysTriggers(object[] @params)
     {
         var message = Convert.ToString(@params[1]);
         if (string.IsNullOrEmpty(message))
             return false;
 
-        var finished = false;
-        foreach (var box in _wiredItems.Values.Where(box => box != null && box.Type == WiredBoxType.TriggerUserSays).ToList())
-        {
-            if (message.Contains($" {box.StringData}") || message.Contains($"{box.StringData} ") || message == box.StringData)
-                finished = box.Execute(@params);
-        }
+        var targetIds = _wiredItems.Values
+            .Where(box => box != null && box.Type == WiredBoxType.TriggerUserSays && MatchesUserSaysTrigger(box, message))
+            .Select(box => box.Item.Id)
+            .ToArray();
 
-        return finished;
+        if (targetIds.Length == 0)
+            return false;
+
+        _executionQueue.Enqueue(new(WiredBoxType.TriggerUserSays, targetIds, @params.ToArray()));
+        return true;
+    }
+
+    private bool QueueMatchingUserSaysCommandTriggers(object[] @params)
+    {
+        if (@params.Length < 2 || @params[1] is not CommandManager commandManager)
+            return false;
+
+        var targetIds = _wiredItems.Values
+            .Where(box => box != null && box.Type == WiredBoxType.TriggerUserSaysCommand && MatchesUserSaysCommandTrigger(box, commandManager))
+            .Select(box => box.Item.Id)
+            .ToArray();
+
+        if (targetIds.Length == 0)
+            return false;
+
+        _executionQueue.Enqueue(new(WiredBoxType.TriggerUserSaysCommand, targetIds, @params.ToArray()));
+        return true;
     }
 
     private bool HasTrigger(WiredBoxType type) =>
         _wiredItems.Values.Any(box => box != null && box.Type == type && IsTrigger(box.Item));
+
+    private static bool MatchesUserSaysTrigger(IWiredItem box, string message) =>
+        message.Contains($" {box.StringData}") || message.Contains($"{box.StringData} ") || message == box.StringData;
+
+    private static bool MatchesUserSaysCommandTrigger(IWiredItem box, CommandManager commandManager) =>
+        !string.IsNullOrWhiteSpace(box.StringData) &&
+        commandManager.TryGetCommand(box.StringData.Replace(":", "").ToLower(), out _);
 
     private void ProcessExecutionQueue()
     {
@@ -293,10 +323,20 @@ public class WiredComponent
 
     private void ExecuteQueuedTrigger(WiredExecutionData execution)
     {
-        foreach (var box in _wiredItems.Values.Where(box => box != null && box.Type == execution.Type && IsTrigger(box.Item)).ToList())
+        foreach (var box in GetQueuedTriggerTargets(execution))
         {
             box.Execute(execution.Parameters);
         }
+    }
+
+    private IEnumerable<IWiredItem> GetQueuedTriggerTargets(WiredExecutionData execution)
+    {
+        var boxes = _wiredItems.Values.Where(box => box != null && box.Type == execution.Type && IsTrigger(box.Item));
+        if (execution.TargetItemIds == null || execution.TargetItemIds.Count == 0)
+            return boxes.ToList();
+
+        var targetIds = execution.TargetItemIds.ToHashSet();
+        return boxes.Where(box => targetIds.Contains(box.Item.Id)).ToList();
     }
 
     public ICollection<IWiredItem> GetTriggers(IWiredItem item)
