@@ -16,8 +16,7 @@ internal class UnIgnoreUserEvent : IPacketEvent
         var habbo = session.GetHabbo();
         if (habbo?.IgnoresComponent == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out _))
             return Task.CompletedTask;
         var username = packet.ReadString();
         var player = _gameClientManager.GetClientByUsername(username)?.GetHabbo();

@@ -18,19 +18,17 @@ internal class MuteUserEvent : IPacketEvent
         var habbo = session.GetHabbo();
         if (habbo?.Permissions == null || !habbo.InRoom)
             return;
+        if (!habbo.TryGetCurrentRoom(out var room))
+            return;
         var userId = packet.ReadInt();
         packet.ReadInt(); //roomId
         var time = packet.ReadInt();
-        var room = habbo.CurrentRoom;
-        if (room == null)
-            return;
         if (room.WhoCanMute == 0 && !room.CheckRights(session, true) && room.Group == null || room.WhoCanMute == 1 && !room.CheckRights(session) && room.Group == null ||
             room.Group != null && !room.CheckRights(session, false, true))
             return;
         var target = room.GetRoomUserManager().GetRoomUserByHabbo(PlusEnvironment.GetUsernameById(userId));
         var targetClient = target?.GetClient();
-        var targetHabbo = targetClient?.GetHabbo();
-        if (targetHabbo == null || targetClient == null)
+        if (targetClient?.GetHabbo() is not { } targetHabbo)
             return;
         if (targetHabbo.Permissions?.HasRight("mod_tool") == true)
             return;

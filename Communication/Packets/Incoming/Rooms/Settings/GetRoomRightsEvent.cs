@@ -18,8 +18,7 @@ internal class GetRoomRightsEvent : IPacketEvent
         var habbo = session.GetHabbo();
         if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var instance = habbo.CurrentRoom;
-        if (instance == null)
+        if (!habbo.TryGetCurrentRoom(out var instance))
             return Task.CompletedTask;
         if (!instance.CheckRights(session))
             return Task.CompletedTask;

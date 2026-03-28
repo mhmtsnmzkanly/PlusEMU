@@ -7,8 +7,7 @@ public abstract class RoomPacketEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        var room = habbo?.CurrentRoom;
-        if (room == null)
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
 
         return Parse(room, session, packet);

@@ -12,8 +12,7 @@ internal class UpdateMagicTileEvent : IPacketEvent
         var permissions = habbo?.Permissions;
         if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
         if (!room.CheckRights(session, false, true) && !(permissions?.HasRight("room_item_use_any_stack_tile") ?? false))
             return Task.CompletedTask;

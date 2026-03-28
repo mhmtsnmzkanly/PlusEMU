@@ -9,8 +9,7 @@ internal class MoveAvatarEvent : IPacketEvent
         var habbo = session.GetHabbo();
         if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null || !user.CanWalk)

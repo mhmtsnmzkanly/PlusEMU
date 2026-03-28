@@ -7,8 +7,7 @@ internal class SitEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
-        if (habbo == null || !habbo.InRoom || currentRoom == null)
+        if (habbo == null || !habbo.InRoom || !habbo.TryGetCurrentRoom(out var currentRoom))
             return Task.CompletedTask;
         var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)

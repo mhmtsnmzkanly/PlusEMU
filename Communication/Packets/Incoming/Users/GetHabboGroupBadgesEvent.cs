@@ -15,8 +15,7 @@ internal class GetHabboGroupBadgesEvent : IPacketEvent
         var habbo = session.GetHabbo();
         if (habbo == null || !habbo.InRoom)
             return Task.CompletedTask;
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
         var badges = _groupManager.GetAllBadgesInRoom(room);
         if (badges != null)

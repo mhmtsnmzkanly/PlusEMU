@@ -19,8 +19,7 @@ internal class IgnoreUserEvent : IPacketEvent
         var habbo = session.GetHabbo();
         if (habbo?.InRoom != true)
             return;
-        var room = habbo.CurrentRoom;
-        if (room == null)
+        if (!habbo.TryGetCurrentRoom(out _))
             return;
         var username = packet.ReadString();
         var player = _gameClientManager.GetClientByUsername(username)?.GetHabbo();

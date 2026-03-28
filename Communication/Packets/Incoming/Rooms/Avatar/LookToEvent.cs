@@ -9,8 +9,7 @@ internal class LookToEvent : RoomPacketEvent
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        var currentRoom = habbo?.CurrentRoom;
-        if (habbo == null || currentRoom == null)
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var currentRoom))
             return Task.CompletedTask;
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
