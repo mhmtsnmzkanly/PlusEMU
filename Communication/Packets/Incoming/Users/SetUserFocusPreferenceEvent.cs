@@ -15,8 +15,9 @@ internal class SetUserFocusPreferenceEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null) return Task.CompletedTask;
+        if (session.GetHabbo() is not { } habbo)
+            return Task.CompletedTask;
+
         var focusPreference = packet.ReadBool();
         habbo.FocusPreference = focusPreference;
         using var db = _database.Connection();

@@ -7,11 +7,10 @@ internal class GetBotInventoryEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var inventory = habbo?.Inventory;
-        if (inventory?.Bots == null)
+        if (session.GetHabbo()?.Inventory?.Bots is not { } botsInventory)
             return Task.CompletedTask;
-        var bots = inventory.Bots.Bots.Values.ToList();
+
+        var bots = botsInventory.Bots.Values.ToList();
         session.Send(new BotInventoryComposer(bots));
         return Task.CompletedTask;
     }

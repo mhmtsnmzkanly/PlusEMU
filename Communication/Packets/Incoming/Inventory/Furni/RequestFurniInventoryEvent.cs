@@ -8,9 +8,7 @@ internal class RequestFurniInventoryEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var furniture = habbo?.Inventory?.Furniture;
-        if (furniture == null)
+        if (session.GetHabbo()?.Inventory?.Furniture is not { } furniture)
         {
             session.Send(new FurniListComposer(new List<InventoryItem>(), 1, 1));
             return Task.CompletedTask;
@@ -23,7 +21,7 @@ internal class RequestFurniInventoryEvent : IPacketEvent
             session.Send(new FurniListComposer(items.ToList(), 1, 1));
         else
         {
-            foreach (ICollection<InventoryItem> batch in items.Chunk(700))
+            foreach (var batch in items.Chunk(700))
             {
                 session.Send(new FurniListComposer(batch.ToList(), pages, page));
                 page++;

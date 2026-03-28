@@ -39,7 +39,7 @@ internal class CheckUserNameEvent : IPacketEvent
             session.Send(new NameChangeUpdateComposer(name, 4));
             return;
         }
-        if (!name.ToLower().Contains("mod") && (habbo?.Rank == 2 || habbo?.Rank == 3))
+        if (!name.ToLower().Contains("mod") && habbo is { Rank: 2 or 3 })
         {
             session.Send(new NameChangeUpdateComposer(name, 4));
             return;
@@ -62,6 +62,5 @@ internal class CheckUserNameEvent : IPacketEvent
             return;
         }
         session.Send(new NameChangeUpdateComposer(name, 0));
-        return;
     }
 }

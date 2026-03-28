@@ -14,15 +14,12 @@ internal class SetChatStylePreferenceEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo)
             return Task.CompletedTask;
 
         var chatBubbleId = packet.ReadInt();
-
         habbo.CustomBubbleId = chatBubbleId;
         habbo.SaveChatBubble(_database, chatBubbleId);
-
         return Task.CompletedTask;
     }
 }
