@@ -11,6 +11,7 @@
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.
 - Added `WiredCycleScheduler` and moved common delayed-cycle scheduling logic in `ToggleFurniBox`, `MoveFurniToUserBox`, `MoveAndRotateBox`, and `MatchPositionBox` onto the shared helper surface.
+- Normalized `TeleportUserBox` and `KickUserBox` around typed per-box queues and shared delay semantics so the remaining queued Wired effect boxes no longer depend on legacy non-generic queue handling.
 - Updated `WIRED-ASYNC-PLAN.md` to reflect the first implemented queue-based Wired execution slice.
 
 ### [0.8.1] - 2026-03-28

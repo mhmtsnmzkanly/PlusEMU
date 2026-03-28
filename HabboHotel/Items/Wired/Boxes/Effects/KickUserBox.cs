@@ -1,22 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
-using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Users;
+using Plus.HabboHotel.Items.Wired;
+using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
 internal class KickUserBox : IWiredItem, IWiredCycle
 {
-    private readonly Queue _toKick;
+    private const int KickDelay = 3;
+    private readonly Queue<Habbo> _toKick;
 
     public KickUserBox(Room instance, Item item)
     {
         Instance = instance;
         Item = item;
         SetItems = new();
-        TickCount = Delay;
+        TickCount = WiredCycleScheduler.GetTickCountForDelay(KickDelay);
         _toKick = new();
         if (SetItems.Count > 0)
             SetItems.Clear();
@@ -31,21 +32,20 @@ internal class KickUserBox : IWiredItem, IWiredCycle
             return false;
         if (_toKick.Count == 0)
         {
-            TickCount = 3;
+            TickCount = KickDelay;
             return true;
         }
-        lock (_toKick.SyncRoot)
+        lock (_toKick)
         {
             while (_toKick.Count > 0)
             {
-                if (_toKick.Dequeue() is not Habbo player)
-                    continue;
+                var player = _toKick.Dequeue();
                 if (player == null || !player.InRoom || player.CurrentRoom != Instance || player.Client == null)
                     continue;
                 Instance.GetRoomUserManager().RemoveUserFromRoom(player.Client, true);
             }
         }
-        TickCount = 3;
+        TickCount = KickDelay;
         return true;
     }
 
@@ -74,7 +74,7 @@ internal class KickUserBox : IWiredItem, IWiredCycle
         if (player == null)
             return false;
         if (TickCount <= 0)
-            TickCount = 3;
+            TickCount = KickDelay;
         if (!_toKick.Contains(player))
         {
             var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);

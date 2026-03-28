@@ -1,14 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Users;
+using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
 internal class TeleportUserBox : IWiredItem, IWiredCycle
 {
-    private readonly Queue _queue;
+    private readonly Queue<Habbo> _queue;
     private int _delay;
 
     public TeleportUserBox(Room instance, Item item)
@@ -17,7 +17,7 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle
         Item = item;
         SetItems = new();
         _queue = new();
-        TickCount = Delay;
+        TickCount = WiredCycleScheduler.GetTickCountForDelay(Delay, extraTick: true);
     }
 
     public int Delay
@@ -26,7 +26,7 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle
         set
         {
             _delay = value;
-            TickCount = value + 1;
+            TickCount = WiredCycleScheduler.GetTickCountForDelay(value, extraTick: true);
         }
     }
 
@@ -42,7 +42,7 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle
         }
         while (_queue.Count > 0)
         {
-            var player = _queue.Dequeue() as Habbo;
+            var player = _queue.Dequeue();
             if (player == null || player.CurrentRoom != Instance)
                 continue;
             TeleportUser(player);
