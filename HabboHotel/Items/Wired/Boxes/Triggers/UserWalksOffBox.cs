@@ -40,11 +40,6 @@ internal class UserWalksOffBox : IWiredItem, IWiredExecutable, IWiredActorItemEx
         }
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorItemExecutable)this).Execute((WiredActorItemExecutionContext)context);
-    }
-
     bool IWiredActorItemExecutable.Execute(WiredActorItemExecutionContext context)
     {
         var player = context.Actor;

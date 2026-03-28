@@ -30,11 +30,6 @@ internal class IsNotWearingBadgeBox : IWiredItem, IWiredExecutable, IWiredActorE
         StringData = badgeCode;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))

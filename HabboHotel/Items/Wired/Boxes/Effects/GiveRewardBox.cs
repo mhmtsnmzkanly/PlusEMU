@@ -34,7 +34,5 @@ internal class GiveRewardBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutab
         //this.StringData = Time + ";" + Message;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context) => ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
-
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context) => true;
 }

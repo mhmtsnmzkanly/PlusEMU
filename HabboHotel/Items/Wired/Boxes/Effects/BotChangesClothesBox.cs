@@ -32,11 +32,6 @@ internal class BotChangesClothesBox : IWiredItem, IWiredExecutable, IWiredEmptyE
         StringData = botConfiguration;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
-    }
-
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))

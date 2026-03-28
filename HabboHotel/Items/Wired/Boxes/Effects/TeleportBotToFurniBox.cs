@@ -37,11 +37,6 @@ internal class TeleportBotToFurniBox : IWiredItem, IWiredExecutable, IWiredEmpty
         StringData = botName;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
-    }
-
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))

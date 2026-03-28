@@ -34,11 +34,6 @@ internal class UserSaysCommandBox : IWiredItem, IWiredExecutable, IWiredChatExec
         StringData = message;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredChatExecutable)this).Execute((WiredChatExecutionContext)context);
-    }
-
     bool IWiredChatExecutable.Execute(WiredChatExecutionContext context)
     {
         var player = context.Actor;

@@ -29,11 +29,6 @@ internal class IsGroupMemberBox : IWiredItem, IWiredExecutable, IWiredActorExecu
         var unknown2 = packet.ReadString();
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;

@@ -40,11 +40,6 @@ internal class UserWalksOnBox : IWiredItem, IWiredExecutable, IWiredActorItemExe
         }
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorItemExecutable)this).Execute((WiredActorItemExecutionContext)context);
-    }
-
     bool IWiredActorItemExecutable.Execute(WiredActorItemExecutionContext context)
     {
         var player = context.Actor;

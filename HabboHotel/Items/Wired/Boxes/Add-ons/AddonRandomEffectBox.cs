@@ -27,7 +27,5 @@ internal class AddonRandomEffectBox : IWiredItem, IWiredExecutable, IWiredEmptyE
 
     public void HandleSave(IIncomingPacket packet) { }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context) => ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
-
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context) => true;
 }

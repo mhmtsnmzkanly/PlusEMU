@@ -30,11 +30,6 @@ internal class IsWearingFxBox : IWiredItem, IWiredExecutable, IWiredActorExecuta
         StringData = unknown2.ToString();
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))

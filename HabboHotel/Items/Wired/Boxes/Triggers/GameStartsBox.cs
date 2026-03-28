@@ -23,11 +23,6 @@ internal class GameStartsBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutab
 
     public void HandleSave(IIncomingPacket packet) { }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
-    }
-
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         var wired = Instance.GetWired();

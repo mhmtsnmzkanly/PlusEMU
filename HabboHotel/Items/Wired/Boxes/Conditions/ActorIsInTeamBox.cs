@@ -33,11 +33,6 @@ internal class ActorIsInTeamBox : IWiredItem, IWiredExecutable, IWiredActorExecu
         StringData = unknown2.ToString();
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
-    }
-
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         if (Instance == null || string.IsNullOrEmpty(StringData))

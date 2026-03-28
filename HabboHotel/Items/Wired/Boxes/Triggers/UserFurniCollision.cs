@@ -32,11 +32,6 @@ internal class UserFurniCollision : IWiredItem, IWiredExecutable, IWiredActorIte
         var unknown2 = packet.ReadString();
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredActorItemExecutable)this).Execute((WiredActorItemExecutionContext)context);
-    }
-
     bool IWiredActorItemExecutable.Execute(WiredActorItemExecutionContext context)
     {
         var player = context.Actor;

@@ -32,11 +32,6 @@ internal class BotCommunicatesToAllBox : IWiredItem, IWiredExecutable, IWiredEmp
         //this.StringData = ChatConfig.Replace('\t', ';') + ";" + ChatMode;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
-    {
-        return ((IWiredEmptyExecutable)this).Execute((WiredEmptyExecutionContext)context);
-    }
-
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData))
