@@ -15,20 +15,22 @@ internal class GetClubOffersEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo)
             return Task.CompletedTask;
 
         var offerId = packet.ReadInt();
         if (!_catalogManager.ItemOffers.ContainsKey(offerId))
             return Task.CompletedTask;
+
         var pageId = _catalogManager.ItemOffers[offerId];
         if (!_catalogManager.TryGetPage(pageId, out var page))
             return Task.CompletedTask;
+
         if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || page.MinimumVip > habbo.VipRank && habbo.Rank == 1)
             return Task.CompletedTask;
         if (!page.ItemOffers.ContainsKey(offerId))
             return Task.CompletedTask;
+
         var item = page.ItemOffers[offerId];
         if (item != null)
             session.Send(new CatalogOfferComposer(item, _catalogManager));

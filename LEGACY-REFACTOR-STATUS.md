@@ -271,3 +271,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - Start the first true `RoomItemHandling` service extraction once the room lifecycle ownership boundary is stable.
 - Continue the incoming packet sweep by replacing ad-hoc `session.GetHabbo()` / room-null guard patterns with the newer explicit Habbo helper flow across group, users, connection, and moderation-adjacent handlers.
 - Keep folding avatar and room-adjacent packet handlers onto `Habbo.TryGetCurrentRoom(...)` so username-change, furni interaction, and avatar action flows no longer read `Habbo.CurrentRoom` directly.
+- Continue collapsing packet-side Habbo/inventory/effects guard boilerplate so catalog, preference, and furni handlers all follow the same helper-first flow before deeper service extraction.

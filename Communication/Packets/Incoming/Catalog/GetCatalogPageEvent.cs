@@ -15,8 +15,7 @@ public class GetCatalogPageEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo)
             return Task.CompletedTask;
 
         var pageId = packet.ReadInt();
@@ -24,8 +23,10 @@ public class GetCatalogPageEvent : IPacketEvent
         var cataMode = packet.ReadString();
         if (!_catalogManager.TryGetPage(pageId, out var page))
             return Task.CompletedTask;
+
         if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || page.MinimumVip > habbo.VipRank && habbo.Rank == 1)
             return Task.CompletedTask;
+
         session.Send(new CatalogPageComposer(page, cataMode, _catalogManager));
         return Task.CompletedTask;
     }

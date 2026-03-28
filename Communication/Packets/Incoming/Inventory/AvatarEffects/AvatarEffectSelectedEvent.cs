@@ -6,8 +6,7 @@ internal class AvatarEffectSelectedEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { Effects: { } effects } habbo)
             return Task.CompletedTask;
 
         var effectId = packet.ReadInt();
@@ -15,11 +14,13 @@ internal class AvatarEffectSelectedEvent : IPacketEvent
             effectId = 0;
         if (!habbo.InRoom || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
+
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return Task.CompletedTask;
-        if (effectId != 0 && habbo.Effects?.HasEffect(effectId, true) == true)
+        if (effectId != 0 && effects.HasEffect(effectId, true))
             user.ApplyEffect(effectId);
+
         return Task.CompletedTask;
     }
 }

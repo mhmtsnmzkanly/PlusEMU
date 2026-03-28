@@ -26,12 +26,15 @@ internal class ApplyDecorationEvent : RoomPacketEvent
 
     public override async Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var furniture = habbo?.Inventory?.Furniture;
-        if (furniture == null) return;
-        if (!room.CheckRights(session, true)) return;
+        if (session.GetHabbo() is not { Inventory.Furniture: { } furniture })
+            return;
+        if (!room.CheckRights(session, true))
+            return;
+
         var item = furniture.GetItem(packet.ReadUInt());
-        if (item == null || item.Definition == null) return;
+        if (item == null || item.Definition == null)
+            return;
+
         var decorationKey = string.Empty;
         switch (item.Definition.InteractionType)
         {
@@ -39,8 +42,11 @@ internal class ApplyDecorationEvent : RoomPacketEvent
             case InteractionType.Wallpaper: decorationKey = "wallpaper"; break;
             case InteractionType.Landscape: decorationKey = "landscape"; break;
         }
+
         var data = (item.ExtraData is LegacyDataFormat legacyData ? legacyData.Data : string.Empty);
-        if (string.IsNullOrWhiteSpace(data)) return;
+        if (string.IsNullOrWhiteSpace(data))
+            return;
+
         switch (decorationKey)
         {
             case "floor": 
@@ -58,6 +64,7 @@ internal class ApplyDecorationEvent : RoomPacketEvent
                 await _achievementService.ProgressAchievement(session, "ACH_RoomDecoLandscape", 1); 
                 break;
         }
+
         using var db = _database.Connection();
         // decorationKey is validated against enum values above (floor/wallpaper/landscape only) — column name is safe
         db.Execute($"UPDATE `rooms` SET `{decorationKey}` = @extradata WHERE `id` = @roomId LIMIT 1",

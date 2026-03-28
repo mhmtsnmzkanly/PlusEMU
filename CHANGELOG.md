@@ -326,6 +326,7 @@
 
 ### Runtime And Framework
 
+- Continued the packet normalization sweep across catalog, room-furni, decoration, score, hand-item, avatar-effect, and preference handlers by collapsing established Habbo/inventory/effects guards into the newer helper-first style.
 - Continued the incoming packet guard sweep across avatar, friend-furni, and username-change flows by replacing direct `CurrentRoom` reads with `Habbo.TryGetCurrentRoom(...)` and by tightening established Habbo/effects guards before room-bound avatar actions run.
 - Tightened another packet-handler sweep around established Habbo/session guards by normalizing respect, group management/member creation, ambassador alerts, and room connection entry points onto explicit `session.GetHabbo()` checks before continuing into room- or user-bound flows.
 - Added the runtime `revisions/example.json` snapshot to version the generated header mapping alongside the codebase.
