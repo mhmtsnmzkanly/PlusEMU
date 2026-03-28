@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class FurniMatchStateAndPositionBox : IWiredItem, IWiredExecutable
+internal class FurniMatchStateAndPositionBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
 {
     public FurniMatchStateAndPositionBox(Room instance, Item item)
     {
@@ -46,7 +46,7 @@ internal class FurniMatchStateAndPositionBox : IWiredItem, IWiredExecutable
         StringData = $"{state};{direction};{placement}";
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (string.IsNullOrEmpty(StringData) || StringData == "0;0;0" || SetItems.Count == 0)
             return false;

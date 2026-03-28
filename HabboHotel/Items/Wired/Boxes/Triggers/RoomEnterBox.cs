@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class RoomEnterBox : IWiredItem, IWiredExecutable
+internal class RoomEnterBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
 {
     public RoomEnterBox(Room instance, Item item)
     {
@@ -30,7 +30,7 @@ internal class RoomEnterBox : IWiredItem, IWiredExecutable
         StringData = user;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
+    bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;
         if (player == null)

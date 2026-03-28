@@ -45,6 +45,7 @@ Phase 1 is now in place:
 - That actor-only specialization now covers the remaining triggerer/effect tail as well, leaving very little of the normal Wired execution flow on the unspecialized base interface.
 - The specialized execution contracts now also own their own `IWiredExecutable` bridge methods, which means boxes no longer need to repeat that same cast-and-forward shim individually once they adopt one of the narrower interfaces.
 - The actor-specialized trigger/effect tail has now been cleaned up on top of that, so the remaining broad bridge usages are concentrated in the still-generic room-enter, user-count, furni-state, and cycle-heavy boxes rather than scattered across the actor path too.
+- That remaining generic slice is now specialized too, which leaves the broad `IWiredExecutable` bridge only on the interface definitions themselves rather than in any individual Wired box implementation.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

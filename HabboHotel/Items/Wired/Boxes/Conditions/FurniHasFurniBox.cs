@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class FurniHasFurniBox : IWiredItem, IWiredExecutable
+internal class FurniHasFurniBox : IWiredItem, IWiredExecutable, IWiredEmptyExecutable
 {
     public FurniHasFurniBox(Room instance, Item item)
     {
@@ -42,7 +42,7 @@ internal class FurniHasFurniBox : IWiredItem, IWiredExecutable
         }
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         foreach (var item in SetItems.Values.ToList())
         {

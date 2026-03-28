@@ -7,7 +7,7 @@ using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredExecutable
+internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredExecutable, IWiredEmptyExecutable
 {
     private int _delay;
 
@@ -119,7 +119,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredExecutable
         Delay = delay;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (WiredCycleScheduler.MarkRequested(ref _requested))
         {

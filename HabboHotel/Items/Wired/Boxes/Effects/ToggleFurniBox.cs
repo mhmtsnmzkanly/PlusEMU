@@ -5,7 +5,7 @@ using Plus.HabboHotel.Items.Wired;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
-internal class ToggleFurniBox : IWiredItem, IWiredCycle, IWiredExecutable
+internal class ToggleFurniBox : IWiredItem, IWiredCycle, IWiredExecutable, IWiredEmptyExecutable
 {
     private int _delay;
 
@@ -78,7 +78,7 @@ internal class ToggleFurniBox : IWiredItem, IWiredCycle, IWiredExecutable
         Delay = delay;
     }
 
-    bool IWiredExecutable.Execute(WiredExecutionContext context)
+    bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
         if (WiredCycleScheduler.Schedule(ref _next, ref _requested, Delay))
             TickCount = Delay;
