@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
 using Plus.HabboHotel.Rooms.Games.Teams;
 using Plus.HabboHotel.Users;
 
@@ -34,9 +35,10 @@ internal class ActorIsInTeamBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (@params.Length == 0 || Instance == null || string.IsNullOrEmpty(StringData))
+        if (Instance == null || string.IsNullOrEmpty(StringData))
             return false;
-        var player = (Habbo)@params[0];
+        if (!WiredContextResolver.TryGetActor(@params, out var player))
+            return false;
         if (player == null)
             return false;
         var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);

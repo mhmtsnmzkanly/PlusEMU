@@ -1,9 +1,10 @@
 ﻿using System.Collections.Concurrent;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
-using Plus.HabboHotel.Users;
 using Plus.HabboHotel.Items.Wired;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Instance;
+using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Effects;
 
@@ -68,9 +69,8 @@ internal class KickUserBox : IWiredItem, IWiredCycle
 
     public bool Execute(params object[] @params)
     {
-        if (@params.Length != 1)
+        if (!WiredContextResolver.TryGetActor(@params, out var player))
             return false;
-        var player = (Habbo)@params[0];
         if (player == null)
             return false;
         if (TickCount <= 0)
