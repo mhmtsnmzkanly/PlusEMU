@@ -9,13 +9,13 @@ internal class ApplySignEvent : RoomPacketEvent
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
         var signId = packet.ReadInt();
-        var habbo = session.GetHabbo();
-        if (habbo == null)
+        if (session.GetHabbo() is not { } habbo)
             return Task.CompletedTask;
 
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null)
             return Task.CompletedTask;
+
         user.UnIdle();
         user.SetStatus("sign", Convert.ToString(signId));
         user.UpdateNeeded = true;

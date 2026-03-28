@@ -18,11 +18,14 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
-        if (habbo == null) return Task.CompletedTask;
+        if (habbo == null)
+            return Task.CompletedTask;
+
         var pId = packet.ReadUInt();
         var isConfirmed = packet.ReadBool();
-        var room = habbo.CurrentRoom;
-        if (room == null) return Task.CompletedTask;
+        if (!habbo.TryGetCurrentRoom(out var room))
+            return Task.CompletedTask;
+
         var item = room.GetRoomItemHandler().GetItem(pId);
         if (item == null || item.Definition == null || item.Definition.InteractionType != InteractionType.Lovelock)
             return Task.CompletedTask;
