@@ -6,6 +6,7 @@ Phase 1 is now in place:
 - `WiredComponent.TriggerEvent` queues room / furni / game / command trigger invocations instead of executing them immediately on the caller thread.
 - `WiredComponent.OnCycle()` drains the queued trigger invocations in bounded batches before running existing `IWiredCycle` boxes.
 - `TriggerUserSays` and `TriggerUserSaysCommand` now queue only the matched trigger boxes while still returning synchronously so the legacy chat/command suppression behavior is preserved.
+- Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 
 ## Abstract
 The Wired system in PlusEMU relies heavily on a sequential execution tree (`Trigger` -> `Condition` -> `Effect`). Translating all synchronous `IWiredItem.Execute` methods into `Task<bool> ExecuteAsync()` natively risks severe race-conditions because the `Room` components (such as `RoomUserManager`, `GameMap`, and `RoomItemHandling`) are absolutely **NOT** thread-safe.

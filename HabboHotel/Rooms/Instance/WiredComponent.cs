@@ -366,6 +366,72 @@ public class WiredComponent
         return effects.OrderBy(x => Guid.NewGuid()).FirstOrDefault()!;
     }
 
+    public bool ExecuteTriggerStack(IWiredItem trigger, object actor)
+    {
+        foreach (var condition in GetConditions(trigger).ToList())
+        {
+            if (!condition.Execute(actor))
+                return false;
+
+            OnEvent(condition.Item);
+        }
+
+        return ExecuteTriggerEffects(trigger, effect => effect.Execute(actor));
+    }
+
+    public bool ExecuteTriggerEffectsForRoomUsers(IWiredItem trigger)
+    {
+        return ExecuteTriggerEffects(trigger, effect =>
+        {
+            var executed = false;
+            foreach (var user in _room.GetRoomUserManager().GetRoomUsers().ToList())
+            {
+                var client = user?.GetClient();
+                var habbo = client?.GetHabbo();
+                if (habbo == null)
+                    continue;
+
+                if (!effect.Execute(habbo))
+                    return false;
+
+                executed = true;
+            }
+
+            return executed;
+        });
+    }
+
+    private bool ExecuteTriggerEffects(IWiredItem trigger, Func<IWiredItem, bool> effectExecutor)
+    {
+        var effects = GetEffects(trigger).ToList();
+
+        var hasRandomEffectAddon = effects.Any(x => x.Type == WiredBoxType.AddonRandomEffect);
+        if (hasRandomEffectAddon)
+        {
+            var randomBox = effects.FirstOrDefault(x => x.Type == WiredBoxType.AddonRandomEffect);
+            if (randomBox == null || !randomBox.Execute())
+                return false;
+
+            var selectedBox = GetRandomEffect(effects);
+            if (selectedBox == null || !selectedBox.Execute())
+                return false;
+
+            OnEvent(randomBox.Item);
+            OnEvent(selectedBox.Item);
+            return true;
+        }
+
+        foreach (var effect in effects)
+        {
+            if (effect == null || !effectExecutor(effect))
+                return false;
+
+            OnEvent(effect.Item);
+        }
+
+        return true;
+    }
+
     public bool OnUserFurniCollision(Room room, Item item)
     {
         if (room == null || item == null)
