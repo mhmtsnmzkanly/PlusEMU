@@ -1,4 +1,6 @@
 ﻿using System.Collections.Concurrent;
+using Plus.Communication.Packets;
+using Plus.Communication.Packets.Outgoing.Rooms.Chat;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
 
@@ -28,19 +30,56 @@ internal class BotCommunicatesToAllBox : IWiredItem, IWiredEmptyExecutable
         var chatConfig = packet.ReadString();
         if (SetItems.Count > 0)
             SetItems.Clear();
-
-        //this.StringData = ChatConfig.Replace('\t', ';') + ";" + ChatMode;
+        StringData = $"{chatConfig};{chatMode}";
     }
 
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
-        if (!WiredBotDataParser.TryParseBotName(StringData, out var botName))
+        if (!WiredBotDataParser.TryParseBotCommunication(StringData, out var botName, out var message, out var chatMode))
             return false;
         var user = Instance.GetRoomUserManager().GetBotByName(botName);
         if (user == null)
             return false;
-
-        //TODO: This needs finishing.
+        SpeakToRoom(user, message, chatMode);
         return true;
     }
+
+    private void SpeakToRoom(RoomUser bot, string message, int chatMode)
+    {
+        var roomUserManager = Instance.GetRoomUserManager();
+        var bubbleId = bot.BotData?.ChatBubble ?? 0;
+        var packet = CreateSpeechPacket(bot.VirtualId, message, bubbleId, chatMode);
+
+        foreach (var user in roomUserManager.GetUserList().ToList())
+        {
+            if (user == null || user.IsBot)
+                continue;
+
+            var client = user.GetClient();
+            if (client == null)
+                continue;
+            var habbo = client.GetHabbo();
+            if (habbo == null)
+                continue;
+
+            if (!habbo.AllowBotSpeech)
+                client.Send(packet);
+        }
+
+        foreach (var user in roomUserManager.GetUserList().ToList())
+        {
+            if (user == null || !user.IsBot)
+                continue;
+
+            if (chatMode == 1)
+                user.BotAi.OnUserShout(bot, message);
+            else
+                user.BotAi.OnUserSay(bot, message);
+        }
+    }
+
+    private static IServerPacket CreateSpeechPacket(int virtualId, string message, int bubbleId, int chatMode) =>
+        chatMode == 1
+            ? new ShoutComposer(virtualId, message, 0, bubbleId == 0 ? 2 : bubbleId)
+            : new ChatComposer(virtualId, message, 0, bubbleId == 0 ? 2 : bubbleId);
 }

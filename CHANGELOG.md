@@ -56,6 +56,7 @@
 - Simplified `MatchPosition` execution flow as well by collapsing its per-mode apply/logging branches into one shared snapshot-application path, which trims another chunk of duplicated control flow from the cycle effect tail.
 - Added a shared `WiredFloorMoveHelper` for the repeated roll/place/slide logic in `MoveAndRotate` and `MoveFurniToUser`, so that floor-item movement validation and placement now lives in one helper instead of two near-identical cycle bodies.
 - Simplified queued trigger dispatch in `WiredComponent` as well by centralizing the common enqueue guard and context-based execution routing, which trims another block of repeated branching from the main Wired runtime path.
+- Completed the previously stubbed `BotCommunicatesToAll` effect too: it now persists bot/message/mode data, publishes either chat or shout packets with the bot bubble, and notifies bot AI listeners through the matching speech path.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.
