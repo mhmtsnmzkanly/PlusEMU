@@ -28,6 +28,7 @@ public class RoomManager : IRoomManager
     private readonly ILanguageManager _languageManager;
     private readonly IGameClientManager _clientManager;
     private readonly IItemLoader _itemLoader;
+    private readonly IRoomItemPersistenceService _roomItemPersistenceService;
     private readonly IChatManager _chatManager;
     private readonly IBotManager _botManager;
     private readonly IRoomService _roomService;
@@ -49,6 +50,7 @@ public class RoomManager : IRoomManager
     public RoomManager(IDatabase database,
         IRoomFactory roomFactory,
         IItemLoader itemLoader,
+        IRoomItemPersistenceService roomItemPersistenceService,
         IGameClientManager gameClientManager,
         IGroupManager groupManager,
         IRoomService roomService,
@@ -68,6 +70,7 @@ public class RoomManager : IRoomManager
         _database = database;
         _roomFactory = roomFactory;
         _itemLoader = itemLoader;
+        _roomItemPersistenceService = roomItemPersistenceService;
         _clientManager = gameClientManager;
         _groupManager = groupManager;
         _roomService = roomService;
@@ -209,7 +212,7 @@ public class RoomManager : IRoomManager
 
     private Room CreateRoomInstance(RoomData data)
     {
-        return new Room(data, _clientManager, _database, _itemLoader, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
+        return new Room(data, _clientManager, _database, _itemLoader, _roomItemPersistenceService, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
     }
 
     private static void DisposeRoom(Room room) => room.Dispose();

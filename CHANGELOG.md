@@ -13,6 +13,7 @@
 - Split `RoomManager` cycle/load flow into explicit room-cycle, room-creation, registration, and disposal helpers so lifecycle ownership is no longer buried inside `OnCycle()` and `TryLoadRoom()`.
 - Split `Room` crash and dispose flow into explicit user-eviction, process-task, collection-reset, disposable-system, and component-cleanup helpers so room teardown no longer lives in one long shutdown branch.
 - Split the room creation path further by making `RoomManager` a clearer cache/register coordinator and moving `RoomFactory` room-row query/mapping resolution behind dedicated helpers instead of repeating projection SQL inline.
+- Extracted moved-item persistence out of `RoomItemHandling` into `RoomItemPersistenceService`, so room item tick/state code no longer owns the low-level extra-data, wall-position, and coordinate database writes directly.
 - Split `RoomItemHandling` furniture load/remove flow into explicit helper stages so invalid floor recovery, wall-position normalization, registration, and removal broadcast/state cleanup no longer live in one monolithic method.
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.
