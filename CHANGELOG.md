@@ -31,6 +31,7 @@
 - Moved the remaining user-count and state/position condition boxes (`UserCountInRoom`, `UserCountDoesntInRoom`, `FurniMatchStateAndPosition`, `FurniDoesntMatchStateAndPosition`) onto the typed execution bridge as well.
 - Moved the remaining bot-targeted/data-only effect boxes (`BotMovesToFurni`, `TeleportBotToFurni`, `BotChangesClothes`, `GiveReward`) onto the typed execution bridge too.
 - Moved the remaining cycle-backed execution boxes (`Repeater`, `ToggleFurni`, `MoveFurniToUser`, `MoveAndRotate`, `MatchPosition`) onto `IWiredExecutable`, so the typed bridge now spans queued, delayed, and cycle-driven paths too.
+- Promoted `IWiredExecutable` and `WiredExecutionContext` into the main public Wired contract, made `IWiredItem` extend that typed surface, and marked the old `Execute(params object[])` signature as a legacy bridge entry point.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

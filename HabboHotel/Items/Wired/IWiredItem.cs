@@ -4,7 +4,7 @@ using Plus.HabboHotel.Rooms;
 
 namespace Plus.HabboHotel.Items.Wired;
 
-public interface IWiredItem
+public interface IWiredItem : IWiredExecutable
 {
     Room Instance { get; set; }
     Item Item { get; set; }
@@ -14,5 +14,6 @@ public interface IWiredItem
     bool BoolData { get; set; }
     string ItemsData { get; set; }
     void HandleSave(IIncomingPacket packet);
+    [Obsolete("Use IWiredExecutable.Execute(WiredExecutionContext) or WiredExecutionAdapter helpers instead.")]
     bool Execute(params object[] @params);
 }

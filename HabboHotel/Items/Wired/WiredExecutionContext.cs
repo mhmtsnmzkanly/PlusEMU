@@ -5,7 +5,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired;
 
-internal sealed class WiredExecutionContext
+public sealed class WiredExecutionContext
 {
     public WiredExecutionContext(params object[] parameters)
     {
