@@ -23,7 +23,7 @@ internal class BotMovesToFurniBox : IWiredItem, IWiredEmptyExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var botName = packet.ReadString();
         if (SetItems.Count > 0)
             SetItems.Clear();

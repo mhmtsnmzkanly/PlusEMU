@@ -25,7 +25,7 @@ internal class BotChangesClothesBox : IWiredItem, IWiredEmptyExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var botConfiguration = packet.ReadString();
         if (SetItems.Count > 0)
             SetItems.Clear();

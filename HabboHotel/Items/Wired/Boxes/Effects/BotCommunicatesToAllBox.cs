@@ -25,7 +25,7 @@ internal class BotCommunicatesToAllBox : IWiredItem, IWiredEmptyExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var chatMode = packet.ReadInt();
         var chatConfig = packet.ReadString();
         if (SetItems.Count > 0)

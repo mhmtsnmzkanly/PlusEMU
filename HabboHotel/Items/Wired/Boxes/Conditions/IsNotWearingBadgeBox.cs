@@ -25,7 +25,7 @@ internal class IsNotWearingBadgeBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var badgeCode = packet.ReadString();
         StringData = badgeCode;
     }

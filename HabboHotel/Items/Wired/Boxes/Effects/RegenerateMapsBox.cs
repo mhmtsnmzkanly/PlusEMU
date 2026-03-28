@@ -26,7 +26,7 @@ internal class RegenerateMapsBox : IWiredItem, IWiredEmptyExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var unknown2 = packet.ReadString();
     }
 

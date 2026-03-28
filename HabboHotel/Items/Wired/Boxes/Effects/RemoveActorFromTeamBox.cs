@@ -26,7 +26,7 @@ internal class RemoveActorFromTeamBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
     }
 
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)

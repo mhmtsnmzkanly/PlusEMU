@@ -75,7 +75,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
     {
         if (SetItems.Count > 0)
             SetItems.Clear();
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var state = packet.ReadInt();
         var direction = packet.ReadInt();
         var placement = packet.ReadInt();

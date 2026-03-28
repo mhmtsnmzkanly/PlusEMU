@@ -27,7 +27,7 @@ internal class SetRollerSpeedBox : IWiredItem, IWiredEmptyExecutable
     {
         if (SetItems.Count > 0)
             SetItems.Clear();
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var message = packet.ReadString();
         StringData = message;
         if (!int.TryParse(StringData, out var speed)) StringData = "";

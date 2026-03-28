@@ -26,7 +26,7 @@ internal class AddActorToTeamBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var team = packet.ReadInt();
         StringData = team.ToString();
     }

@@ -32,7 +32,7 @@ internal class ShowMessageBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var message = packet.ReadString();
         StringData = message;
     }

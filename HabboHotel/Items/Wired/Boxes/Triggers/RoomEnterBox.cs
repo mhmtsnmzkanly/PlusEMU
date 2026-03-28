@@ -25,7 +25,7 @@ internal class RoomEnterBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var user = packet.ReadString();
         StringData = user;
     }

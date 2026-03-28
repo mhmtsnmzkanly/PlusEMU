@@ -25,7 +25,7 @@ internal class BotFollowsUserBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var followMode = packet.ReadInt(); //1 = follow, 0 = don't.
         var botConfiguration = packet.ReadString();
         if (SetItems.Count > 0)

@@ -23,7 +23,7 @@ internal class UserCountDoesntInRoomBox : IWiredItem, IWiredEmptyExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var countOne = packet.ReadInt();
         var countTwo = packet.ReadInt();
         StringData = $"{countOne};{countTwo}";

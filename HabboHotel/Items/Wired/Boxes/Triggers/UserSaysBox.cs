@@ -27,7 +27,7 @@ internal class UserSaysBox : IWiredItem, IWiredChatExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var ownerOnly = packet.ReadInt();
         var message = packet.ReadString();
         BoolData = ownerOnly == 1;

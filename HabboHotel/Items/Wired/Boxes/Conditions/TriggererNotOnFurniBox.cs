@@ -25,7 +25,7 @@ internal class TriggererNotOnFurniBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var unknown2 = packet.ReadString();
         if (SetItems.Count > 0)
             SetItems.Clear();

@@ -50,7 +50,7 @@ internal class RepeaterBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var delay = packet.ReadInt();
         Delay = delay;
         TickCount = delay;

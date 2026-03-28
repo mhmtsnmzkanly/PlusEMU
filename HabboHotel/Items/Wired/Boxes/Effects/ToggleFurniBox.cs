@@ -65,7 +65,7 @@ internal class ToggleFurniBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
     public void HandleSave(IIncomingPacket packet)
     {
         SetItems.Clear();
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var unknown2 = packet.ReadString();
         var furniCount = packet.ReadInt();
         for (var i = 0; i < furniCount; i++)

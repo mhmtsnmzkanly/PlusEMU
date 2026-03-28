@@ -90,7 +90,7 @@ internal class MoveAndRotateBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
     {
         if (SetItems.Count > 0)
             SetItems.Clear();
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var movement = packet.ReadInt();
         var rotation = packet.ReadInt();
         var unknown1 = packet.ReadString();

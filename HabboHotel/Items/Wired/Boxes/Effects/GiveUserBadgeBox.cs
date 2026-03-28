@@ -32,7 +32,7 @@ internal class GiveUserBadgeBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var badge = packet.ReadString();
         StringData = badge;
     }

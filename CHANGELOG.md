@@ -60,6 +60,7 @@
 - Tightened `WiredComponent` lookup helpers as well by centralizing typed trigger-box and same-tile box enumeration, which removes another small block of repeated `_wiredItems` filtering from the runtime path.
 - Moved queued context dispatch into `WiredExecutionAdapter` too, so `WiredComponent` no longer carries its own chat/actor/actor-item switch and the execution adapter owns the full queued dispatch handoff.
 - Finished another small condition-tail cleanup by centralizing single-value numeric parsing in `WiredConditionDataParser`, removing the last direct `int.Parse(StringData)` checks from the actor-hand-item and FX condition boxes.
+- Finished the last broad packet-save cleanup pass as well by replacing the remaining unused `var unknown = packet.ReadInt();` placeholders across the Wired boxes with explicit discard reads, which removes another wave of no-op local variables from the save handlers.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

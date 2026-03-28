@@ -28,7 +28,7 @@ internal class UserFurniCollision : IWiredItem, IWiredActorItemExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var unknown2 = packet.ReadString();
     }
 

@@ -31,7 +31,7 @@ internal class MuteTriggererBox : IWiredItem, IWiredActorExecutable
     {
         if (SetItems.Count > 0)
             SetItems.Clear();
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var time = packet.ReadInt();
         var message = packet.ReadString();
         StringData = $"{time};{message}";

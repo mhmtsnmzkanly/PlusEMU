@@ -25,7 +25,7 @@ internal class BotGivesHandItemBox : IWiredItem, IWiredActorExecutable
 
     public void HandleSave(IIncomingPacket packet)
     {
-        var unknown = packet.ReadInt();
+        _ = packet.ReadInt();
         var drinkId = packet.ReadInt();
         var botName = packet.ReadString();
         if (SetItems.Count > 0)
