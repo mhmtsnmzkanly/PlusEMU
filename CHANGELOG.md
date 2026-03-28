@@ -328,6 +328,7 @@
 
 - Continued the post-packet `Habbo` cleanup in the chat command layer by routing `CommandManager` and a first batch of moderator/user commands away from direct `CurrentRoom` / `Client` reads and onto the newer helper methods.
 - Extended that chat-command cleanup across moderator notification utilities, same-room fun commands, summon/user-info flows, and currency/trade-ban actions so a larger slice of the command layer now prefers `Habbo` room/client helpers over raw property reads.
+- Finished the command-folder `Habbo` helper sweep by moving the last admin group-deletion room lookup onto `Habbo.TryGetCurrentRoom(...)`, leaving the command layer off direct `CurrentRoom` / `Client` reads.
 - Started moving the post-packet Habbo cleanup into services by trimming `GroupService` room/client access repetition, routing favourite-group refresh through helpers, and swapping controller notifications onto `Habbo.TryGetClient(...)`.
 - Continued trimming the packet tail by tightening handshake/profile/gift guards, extracting the repeated room-settings broadcast path, and splitting the item-collection phase out of room deletion before deeper service cleanup.
 - Continued the stateful packet cleanup around room settings, room deletion, ignored users, and catalog room/group promotion entry points by removing duplicate null branches and simplifying the surrounding Habbo/component flow.
