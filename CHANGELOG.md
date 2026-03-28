@@ -21,6 +21,7 @@
 - Added `WiredFurniSnapshotParser` so `MatchPosition` and the state/position condition boxes share the same saved furni snapshot decode path instead of each re-splitting `ItemsData` entries.
 - Added `WiredExecutionAdapter` so `WiredComponent` no longer calls legacy `Execute(...)` entry points directly and instead goes through a shared bridge while the old interface remains in place.
 - Added `IWiredExecutable` and `WiredExecutionContext`, then migrated the first typed slice (`UserSays`, `UserWalksOn`, `ShowMessage`) onto that bridge without removing the legacy `Execute(params object[])` contract yet.
+- Expanded the typed execution slice to additional actor-driven trigger/effect boxes (`UserSaysCommand`, `UserWalksOff`, `RoomEnter`, `MuteTriggerer`, `KickUser`) so more of the common Wired path now runs through `WiredExecutionContext`.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

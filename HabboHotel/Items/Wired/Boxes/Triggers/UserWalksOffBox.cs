@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Triggers;
 
-internal class UserWalksOffBox : IWiredItem
+internal class UserWalksOffBox : IWiredItem, IWiredExecutable
 {
     public UserWalksOffBox(Room instance, Item item)
     {
@@ -42,7 +42,14 @@ internal class UserWalksOffBox : IWiredItem
 
     public bool Execute(params object[] @params)
     {
-        if (!WiredContextResolver.TryGetActorItem(@params, out var player, out var item))
+        return ((IWiredExecutable)this).Execute(new(@params));
+    }
+
+    bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        var player = context.Actor;
+        var item = context.Item;
+        if (player == null || item == null)
             return false;
         if (!SetItems.ContainsKey(item.Id))
             return false;
