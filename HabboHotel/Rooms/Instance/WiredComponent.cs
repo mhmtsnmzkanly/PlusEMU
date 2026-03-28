@@ -395,6 +395,12 @@ public class WiredComponent
                 continue;
             }
 
+            if (execution.Parameters.Length == 1 && execution.Parameters[0] is WiredActorItemTriggerContext actorItemContext)
+            {
+                box.ExecuteWithActorItem(actorItemContext);
+                continue;
+            }
+
             box.ExecuteWithParameters(execution.Parameters);
         }
     }
