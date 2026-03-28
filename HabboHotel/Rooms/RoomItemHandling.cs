@@ -38,6 +38,7 @@ public class RoomItemHandling
     private readonly IItemLoader _itemLoader;
     private readonly IRoomItemPersistenceService _roomItemPersistenceService;
     private readonly IRoomItemPlacementValidatorService _roomItemPlacementValidatorService;
+    private readonly IRoomItemPlacementPersistenceService _roomItemPlacementPersistenceService;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -46,12 +47,13 @@ public class RoomItemHandling
     public int HopperCount;
     public bool GotRollers { get; set; }
 
-    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService)
+    public RoomItemHandling(Room room, IItemLoader itemLoader, IRoomItemPersistenceService roomItemPersistenceService, IRoomItemPlacementValidatorService roomItemPlacementValidatorService, IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService)
     {
         _room = room;
         _itemLoader = itemLoader;
         _roomItemPersistenceService = roomItemPersistenceService;
         _roomItemPlacementValidatorService = roomItemPlacementValidatorService;
+        _roomItemPlacementPersistenceService = roomItemPlacementPersistenceService;
         HopperCount = 0;
         GotRollers = false;
         _mRollerSpeed = 4;
@@ -645,10 +647,7 @@ public class RoomItemHandling
             _room.AddTent(item.Id);
         }
 
-        using var connection = _room.GetDatabase().Connection();
-        connection.Execute(
-            "UPDATE `items` SET `room_id` = @roomId, `x` = @x, `y` = @y, `z` = @z, `rot` = @rot WHERE `id` = @id LIMIT 1",
-            new { roomId = _room.RoomId, x = item.GetX, y = item.GetY, z = item.GetZ, rot = item.Rotation, id = item.Id });
+        _roomItemPlacementPersistenceService.SaveFloorPlacement(_room.RoomId, item);
         return true;
     }
 
@@ -724,19 +723,7 @@ public class RoomItemHandling
 
     private void PersistWallItemPlacement(Item item)
     {
-        using var connection = _room.GetDatabase().Connection();
-        connection.Execute(
-            "UPDATE `items` SET `room_id` = @roomId, `x` = @x, `y` = @y, `z` = @z, `rot` = @rot, `wall_pos` = @wallPos WHERE `id` = @id LIMIT 1",
-            new
-            {
-                roomId = _room.RoomId,
-                x = item.GetX,
-                y = item.GetY,
-                z = item.GetZ,
-                rot = item.Rotation,
-                wallPos = item.WallCoordinates,
-                id = item.Id
-            });
+        _roomItemPlacementPersistenceService.SaveWallPlacement(_room.RoomId, item);
     }
 
     public void UpdateItem(Item item)
