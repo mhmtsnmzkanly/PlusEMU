@@ -7,9 +7,9 @@ internal class OneWayGateEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
+        if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
+
         var item = room.GetRoomItemHandler().GetItem(packet.ReadUInt());
         if (item == null)
             return Task.CompletedTask;

@@ -6,11 +6,9 @@ internal class MoveAvatarEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
+        if (session.GetHabbo() is not { InRoom: true } habbo || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
-        if (!habbo.TryGetCurrentRoom(out var room))
-            return Task.CompletedTask;
+
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
         if (user == null || !user.CanWalk)
             return Task.CompletedTask;

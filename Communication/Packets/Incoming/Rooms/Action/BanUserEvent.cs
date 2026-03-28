@@ -14,9 +14,9 @@ internal class BanUserEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
+        if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var room))
             return;
+
         if (room.WhoCanBan == 0 && !room.CheckRights(session, true) && room.Group == null || room.WhoCanBan == 1 && !room.CheckRights(session) && room.Group == null ||
             room.Group != null && !room.CheckRights(session, false, true))
             return;
