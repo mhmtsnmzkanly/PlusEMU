@@ -13,16 +13,15 @@ internal class UnIgnoreUserEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo?.IgnoresComponent == null || !habbo.InRoom)
+        if (session.GetHabbo() is not { InRoom: true, IgnoresComponent: { } ignoresComponent } habbo || !habbo.TryGetCurrentRoom(out _))
             return Task.CompletedTask;
-        if (!habbo.TryGetCurrentRoom(out _))
-            return Task.CompletedTask;
+
         var username = packet.ReadString();
         var player = _gameClientManager.GetClientByUsername(username)?.GetHabbo();
         if (player == null)
             return Task.CompletedTask;
-        habbo.IgnoresComponent.Unignore(player.Id);
+
+        ignoresComponent.Unignore(player.Id);
         return Task.CompletedTask;
     }
 }

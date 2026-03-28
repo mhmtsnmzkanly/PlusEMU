@@ -326,6 +326,7 @@
 
 ### Runtime And Framework
 
+- Continued the room-bound packet sweep by collapsing repeated `InRoom` + `TryGetCurrentRoom(...)` guards in badges, rights, wired save, magic tile, branding, floorplan, gift, ignore, unignore, and mute handlers into single helper-first entry checks.
 - Continued the packet cleanup across user, sound, preference, and inventory handlers by collapsing repeated `session.GetHabbo()` / nested inventory null checks into the newer pattern-based guards, including a null-safety fix for the badges inventory response path.
 - Continued the packet normalization sweep across catalog, room-furni, decoration, score, hand-item, avatar-effect, and preference handlers by collapsing established Habbo/inventory/effects guards into the newer helper-first style.
 - Continued the incoming packet guard sweep across avatar, friend-furni, and username-change flows by replacing direct `CurrentRoom` reads with `Habbo.TryGetCurrentRoom(...)` and by tightening established Habbo/effects guards before room-bound avatar actions run.

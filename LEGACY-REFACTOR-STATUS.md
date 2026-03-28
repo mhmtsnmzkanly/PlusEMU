@@ -273,3 +273,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - Keep folding avatar and room-adjacent packet handlers onto `Habbo.TryGetCurrentRoom(...)` so username-change, furni interaction, and avatar action flows no longer read `Habbo.CurrentRoom` directly.
 - Continue collapsing packet-side Habbo/inventory/effects guard boilerplate so catalog, preference, and furni handlers all follow the same helper-first flow before deeper service extraction.
 - Keep normalizing simple user and inventory packet entry points onto pattern-based Habbo guards so packet handlers stop open-coding nested null checks around inventory/components.
+- Continue folding room-bound packet handlers onto single-entry room resolution so `InRoom`/`TryGetCurrentRoom(...)` checks stop being duplicated across moderation, furni, floorplan, and room-settings packets.

@@ -15,13 +15,11 @@ internal class GetRoomRightsEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
-            return Task.CompletedTask;
-        if (!habbo.TryGetCurrentRoom(out var instance))
+        if (session.GetHabbo() is not { InRoom: true } habbo || !habbo.TryGetCurrentRoom(out var instance))
             return Task.CompletedTask;
         if (!instance.CheckRights(session))
             return Task.CompletedTask;
+
         session.Send(new RoomRightsListComposer(instance, _cacheManager));
         return Task.CompletedTask;
     }

@@ -26,16 +26,16 @@ internal class OpenGiftEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var furniture = habbo?.Inventory?.Furniture;
-        if (habbo == null || furniture == null || !habbo.InRoom)
+        if (session.GetHabbo() is not { InRoom: true, Inventory.Furniture: { } furniture } habbo || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
-        if (!habbo.TryGetCurrentRoom(out var room))
-            return Task.CompletedTask;
+
         var presentId = packet.ReadUInt();
         var present = room.GetRoomItemHandler().GetItem(presentId);
-        if (present == null) return Task.CompletedTask;
-        if (present.UserId != habbo.Id) return Task.CompletedTask;
+        if (present == null)
+            return Task.CompletedTask;
+        if (present.UserId != habbo.Id)
+            return Task.CompletedTask;
+
         using var db = _database.Connection();
         dynamic? data = db.QueryFirstOrDefault(
             "SELECT `base_id`, `extra_data` FROM `user_presents` WHERE `item_id` = @presentId LIMIT 1",

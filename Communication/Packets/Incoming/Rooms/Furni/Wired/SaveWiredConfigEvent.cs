@@ -8,17 +8,16 @@ internal abstract class SaveWiredConfigEvent : IPacketEvent
 {
     public virtual Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        var permissions = habbo?.Permissions;
-        if (habbo == null || !habbo.InRoom)
+        if (session.GetHabbo() is not { InRoom: true } habbo || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, false, true))
             return Task.CompletedTask;
-        if (!habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, false, true))
-            return Task.CompletedTask;
+
+        var permissions = habbo.Permissions;
         var itemId = packet.ReadUInt();
         session.Send(new HideWiredConfigComposer());
         var selectedItem = room.GetRoomItemHandler().GetItem(itemId);
         if (selectedItem == null)
             return Task.CompletedTask;
+
         if (!room.GetWired().TryGet(itemId, out var box))
             return Task.CompletedTask;
         if (box.Type == WiredBoxType.EffectGiveUserBadge && !(permissions?.HasRight("room_item_wired_rewards") ?? false))

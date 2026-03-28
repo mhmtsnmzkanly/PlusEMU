@@ -8,11 +8,9 @@ internal class FloorPlanEditorRoomPropertiesEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.InRoom)
+        if (session.GetHabbo() is not { InRoom: true } habbo || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
-        if (!habbo.TryGetCurrentRoom(out var room))
-            return Task.CompletedTask;
+
         var model = room.GetGameMap().Model;
         if (model == null)
             return Task.CompletedTask;

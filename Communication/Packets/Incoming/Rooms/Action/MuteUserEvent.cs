@@ -15,11 +15,9 @@ internal class MuteUserEvent : IPacketEvent
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
     {
-        var habbo = session.GetHabbo();
-        if (habbo?.Permissions == null || !habbo.InRoom)
+        if (session.GetHabbo() is not { InRoom: true, Permissions: { } } habbo || !habbo.TryGetCurrentRoom(out var room))
             return;
-        if (!habbo.TryGetCurrentRoom(out var room))
-            return;
+
         var userId = packet.ReadInt();
         packet.ReadInt(); //roomId
         var time = packet.ReadInt();
