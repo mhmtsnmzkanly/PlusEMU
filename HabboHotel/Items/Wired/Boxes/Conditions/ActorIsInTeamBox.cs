@@ -44,14 +44,6 @@ internal class ActorIsInTeamBox : IWiredItem
         var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
         if (user == null)
             return false;
-        if (int.Parse(StringData) == 1 && user.Team == Team.Red)
-            return true;
-        if (int.Parse(StringData) == 2 && user.Team == Team.Green)
-            return true;
-        if (int.Parse(StringData) == 3 && user.Team == Team.Blue)
-            return true;
-        if (int.Parse(StringData) == 4 && user.Team == Team.Yellow)
-            return true;
-        return false;
+        return WiredTeamParser.TryParseTeam(StringData, out var team) && user.Team == team;
     }
 }

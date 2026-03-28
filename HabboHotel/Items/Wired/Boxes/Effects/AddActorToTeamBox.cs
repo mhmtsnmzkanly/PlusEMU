@@ -47,7 +47,8 @@ internal class AddActorToTeamBox : IWiredItem
         var effects = habbo?.Effects;
         if (effects == null)
             return false;
-        var toJoin = int.Parse(StringData) == 1 ? Team.Red : int.Parse(StringData) == 2 ? Team.Green : int.Parse(StringData) == 3 ? Team.Blue : int.Parse(StringData) == 4 ? Team.Yellow : Team.None;
+        if (!WiredTeamParser.TryParseTeam(StringData, out var toJoin))
+            return false;
         var team = Instance.GetTeamManagerForFreeze();
         if (team != null)
         {
@@ -57,8 +58,9 @@ internal class AddActorToTeamBox : IWiredItem
                     team.OnUserLeave(user);
                 user.Team = toJoin;
                 team.AddUser(user);
-                if (effects.CurrentEffect != Convert.ToInt32(toJoin + 39))
-                    effects.ApplyEffect(Convert.ToInt32(toJoin + 39));
+                var effectId = WiredTeamParser.GetEffectId(toJoin);
+                if (effects.CurrentEffect != effectId)
+                    effects.ApplyEffect(effectId);
             }
         }
         return true;
