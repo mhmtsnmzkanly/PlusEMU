@@ -3,6 +3,7 @@ using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Rooms;
 using Plus.Utilities;
 
 namespace Plus.HabboHotel.Moderation;
@@ -13,17 +14,20 @@ internal class ModerationActionService : IModerationActionService
     private readonly IDatabase _database;
     private readonly IModerationManager _moderationManager;
     private readonly ILanguageManager _languageManager;
+    private readonly IRoomService _roomService;
 
     public ModerationActionService(
         IGameClientManager clientManager,
         IDatabase database,
         IModerationManager moderationManager,
-        ILanguageManager languageManager)
+        ILanguageManager languageManager,
+        IRoomService roomService)
     {
         _clientManager = clientManager;
         _database = database;
         _moderationManager = moderationManager;
         _languageManager = languageManager;
+        _roomService = roomService;
     }
 
     public async Task SendCaution(GameClient session, int userId, string message)
@@ -113,12 +117,10 @@ internal class ModerationActionService : IModerationActionService
             return Task.CompletedTask;
         }
 
-        var room = moderator.CurrentRoom;
-        if (room == null)
+        if (moderator.CurrentRoom == null)
             return Task.CompletedTask;
 
-        room.GetRoomUserManager().RemoveUserFromRoom(client, true);
-        return Task.CompletedTask;
+        return _roomService.LeaveRoom(client);
     }
 
     public async Task Ban(GameClient session, int userId, string message, int durationHours, bool ipBan, bool machineBan)
