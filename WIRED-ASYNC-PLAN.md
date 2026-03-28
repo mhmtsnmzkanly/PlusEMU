@@ -41,6 +41,7 @@ Phase 1 is now in place:
 - Actor-only execution is now on the same path: room-enter style queued triggers and the shared actor-driven stack/effect flow no longer need the broad generic context either.
 - Parameterless execution is on a dedicated empty context now too, and the broad context has already shed some fields that were no longer read anywhere in the Wired box layer.
 - The split has now reached the executable contracts as well for the first slices, so chat, actor-item, and empty execution can be dispatched through narrower interfaces instead of only the broad base one.
+- Actor-only condition execution is now moving onto the same specialized contract pattern too, which narrows another large slice of the remaining broad-interface dispatch surface.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

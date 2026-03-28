@@ -7,7 +7,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class ActorIsInTeamBox : IWiredItem, IWiredExecutable
+internal class ActorIsInTeamBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
 {
     public ActorIsInTeamBox(Room instance, Item item)
     {
@@ -34,6 +34,11 @@ internal class ActorIsInTeamBox : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
+    }
+
+    bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         if (Instance == null || string.IsNullOrEmpty(StringData))
             return false;

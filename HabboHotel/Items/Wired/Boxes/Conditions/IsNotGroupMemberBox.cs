@@ -6,7 +6,7 @@ using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Items.Wired.Boxes.Conditions;
 
-internal class IsNotGroupMemberBox : IWiredItem, IWiredExecutable
+internal class IsNotGroupMemberBox : IWiredItem, IWiredExecutable, IWiredActorExecutable
 {
     public IsNotGroupMemberBox(Room instance, Item item)
     {
@@ -30,6 +30,11 @@ internal class IsNotGroupMemberBox : IWiredItem, IWiredExecutable
     }
 
     bool IWiredExecutable.Execute(WiredExecutionContext context)
+    {
+        return ((IWiredActorExecutable)this).Execute((WiredActorExecutionContext)context);
+    }
+
+    bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;
         if (player == null)

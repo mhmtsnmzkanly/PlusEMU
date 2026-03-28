@@ -42,6 +42,7 @@
 - Extended the split to actor-only paths too: queued actor triggers plus the shared trigger-stack / nested-stack actor execution flow now run through a dedicated `WiredActorExecutionContext`.
 - Added a dedicated empty execution context for parameterless Wired paths and removed the now-unused `Parameters` / `CommandManager` baggage from `WiredExecutionContext`.
 - Carried that context split up to the executable interface layer too by adding specialized chat / actor-item / empty executable contracts and routing the first box families through them.
+- Continued the interface specialization for actor-only condition boxes as well, so the common badge/fx/group/team/triggerer checks now dispatch through a dedicated actor executable contract.
 - Consolidated repeated trigger condition/effect execution flow in `WiredComponent` so room-enter, walk, collision, state-change, and game-start/end triggers share the same stack runner helpers.
 - Moved repeater and nested wired-stack execution loops onto the same centralized `WiredComponent` helper surface to reduce duplicate trigger/effect traversal logic.
 - Fixed `MatchPositionBox` guard logic so removed items are skipped correctly and saved state payloads no longer read past the parsed coordinate data.

@@ -15,6 +15,11 @@ internal interface IWiredActorItemExecutable
     bool Execute(WiredActorItemExecutionContext context);
 }
 
+internal interface IWiredActorExecutable
+{
+    bool Execute(WiredActorExecutionContext context);
+}
+
 internal interface IWiredEmptyExecutable
 {
     bool Execute(WiredEmptyExecutionContext context);
