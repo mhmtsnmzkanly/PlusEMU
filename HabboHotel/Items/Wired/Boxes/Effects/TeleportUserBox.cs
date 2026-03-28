@@ -44,7 +44,7 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle, IWiredActorExecutable
         while (_queue.Count > 0)
         {
             var player = _queue.Dequeue();
-            if (player == null || player.CurrentRoom != Instance)
+            if (player == null || !player.IsInRoom(Instance))
                 continue;
             TeleportUser(player);
         }
@@ -90,8 +90,7 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle, IWiredActorExecutable
     {
         if (player == null)
             return;
-        var room = player.CurrentRoom;
-        if (room == null)
+        if (!player.TryGetCurrentRoom(out var room))
             return;
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)

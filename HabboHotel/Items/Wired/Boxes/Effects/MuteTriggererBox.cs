@@ -40,8 +40,7 @@ internal class MuteTriggererBox : IWiredItem, IWiredActorExecutable
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
         var player = context.Actor;
-        var playerClient = player?.Client;
-        if (player == null || playerClient == null)
+        if (player == null || !player.TryGetClient(out var playerClient))
             return false;
         var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
         if (user == null)

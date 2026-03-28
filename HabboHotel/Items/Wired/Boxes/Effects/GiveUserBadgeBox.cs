@@ -45,10 +45,8 @@ internal class GiveUserBadgeBox : IWiredItem, IWiredActorExecutable
         var ownerPermissions = owner?.Permissions;
         if (ownerPermissions == null || !ownerPermissions.HasRight("room_item_wired_rewards"))
             return false;
-        var playerClient = player?.Client;
-        var currentRoom = player?.CurrentRoom;
         var playerBadges = player?.Inventory?.Badges;
-        if (player == null || playerClient == null || currentRoom == null || playerBadges == null)
+        if (player == null || playerBadges == null || !player.TryGetClient(out var playerClient) || !player.TryGetCurrentRoom(out var currentRoom))
             return false;
         var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
         if (user == null)

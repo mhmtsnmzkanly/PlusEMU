@@ -51,8 +51,7 @@ internal class InteractorMannequin : IFurniInteractor
             db.Execute(
                 "UPDATE `users` SET `look` = @look, `gender` = @gender WHERE `id` = @id LIMIT 1",
                 new { look = habbo.Look, gender = habbo.Gender, id = habbo.Id });
-            var room = habbo.CurrentRoom;
-            if (room == null)
+            if (!habbo.TryGetCurrentRoom(out var room))
                 return;
             var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
             if (roomUser == null)

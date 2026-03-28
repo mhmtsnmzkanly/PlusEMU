@@ -138,9 +138,9 @@ internal class NavigatorQueryService : INavigatorQueryService
         if (habbo.Messenger == null)
             return Array.Empty<RoomData>();
 
-        foreach (var buddy in habbo.Messenger.Friends.Values.Where(p => p.InRoom))
+        foreach (var buddy in habbo.Messenger.Friends.Values)
         {
-            if (buddy == null || !buddy.InRoom || buddy.Id == habbo.Id || buddy.CurrentRoom == null)
+            if (buddy == null || buddy.Id == habbo.Id || buddy.CurrentRoom == null)
                 continue;
             if (!roomIds.Contains(buddy.CurrentRoom.Id))
                 roomIds.Add(buddy.CurrentRoom.Id);
