@@ -34,16 +34,11 @@ internal class BotChangesClothesBox : IWiredItem, IWiredEmptyExecutable
 
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
-        if (string.IsNullOrEmpty(StringData))
+        if (!WiredBotDataParser.TryParseBotClothing(StringData, out var botName, out var figure))
             return false;
-        var stuff = StringData.Split('\t');
-        if (stuff.Length != 2)
-            return false; //This is important, incase a cunt scripts.
-        var username = stuff[0];
-        var user = Instance.GetRoomUserManager().GetBotByName(username);
+        var user = Instance.GetRoomUserManager().GetBotByName(botName);
         if (user == null)
             return false;
-        var figure = stuff[1];
         var userChangeComposer = new UserChangeComposer(user.BotData);
         Instance.SendPacket(userChangeComposer);
         user.BotData.Look = figure;

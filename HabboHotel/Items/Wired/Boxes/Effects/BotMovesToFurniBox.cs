@@ -39,9 +39,9 @@ internal class BotMovesToFurniBox : IWiredItem, IWiredEmptyExecutable
 
     bool IWiredEmptyExecutable.Execute(WiredEmptyExecutionContext context)
     {
-        if (string.IsNullOrEmpty(StringData))
+        if (!WiredBotDataParser.TryParseBotName(StringData, out var botName))
             return false;
-        var user = Instance.GetRoomUserManager().GetBotByName(StringData);
+        var user = Instance.GetRoomUserManager().GetBotByName(botName);
         if (user == null)
             return false;
         if (!WiredSetItemSelector.TryGetRandomFloorItem(Instance, SetItems, out var item))
