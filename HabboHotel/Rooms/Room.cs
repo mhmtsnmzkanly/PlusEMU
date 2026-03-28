@@ -498,16 +498,6 @@ public class Room : RoomData
         try
         {
             var roomUserManager = GetRoomUserManager();
-            if (roomUserManager.GetRoomUsers().Count == 0)
-                IdleTime++;
-            else if (IdleTime > 0)
-                IdleTime = 0;
-            if (HasActivePromotion && Promotion?.HasExpired == true) EndPromotion();
-            if (IdleTime >= 60 && !HasActivePromotion)
-            {
-                _roomManager.UnloadRoom(Id);
-                return;
-            }
             try
             {
                 GetRoomItemHandler().OnCycle();
@@ -556,6 +546,25 @@ public class Room : RoomData
             OnRoomCrash(e);
         }
     }
+
+    public void UpdateLifecycleState()
+    {
+        if (HasActivePromotion && Promotion?.HasExpired == true)
+            EndPromotion();
+
+        if (HasUsers())
+        {
+            if (IdleTime > 0)
+                IdleTime = 0;
+            return;
+        }
+
+        IdleTime++;
+    }
+
+    public bool HasUsers() => GetRoomUserManager().UserCount > 0;
+
+    public bool ShouldUnloadForInactivity() => IdleTime >= 60 && !HasActivePromotion;
 
     private void OnRoomCrash(Exception e)
     {

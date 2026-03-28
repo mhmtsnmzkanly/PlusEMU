@@ -99,12 +99,15 @@ public class RoomManager : IRoomManager
             if (room == null || room.Unloaded)
                 continue;
 
-            if (room.GetRoomUserManager().UserCount > 0)
-                room.OnCycle();
-            else if (room.IdleTime >= 60) // 1 minute
+            room.UpdateLifecycleState();
+            if (room.ShouldUnloadForInactivity())
+            {
                 UnloadRoom(room.RoomId);
-            else
-                room.IdleTime++;
+                continue;
+            }
+
+            if (room.HasUsers())
+                room.OnCycle();
         }
         var span = DateTime.Now - start;
         if (span.TotalMilliseconds > 500)

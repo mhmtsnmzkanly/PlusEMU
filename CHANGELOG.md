@@ -6,6 +6,7 @@
 - Logger-backed Wired queue observability so room-local enqueue, batch processing, saturation, and slow-cycle behavior can be traced without attaching a debugger.
 
 #### Changed
+- Centralized room idle/promotion/unload lifecycle decisions in `RoomManager` so `Room` now focuses on active-room cycle work instead of duplicating unload logic locally.
 - Split `RoomItemHandling` furniture load/remove flow into explicit helper stages so invalid floor recovery, wall-position normalization, registration, and removal broadcast/state cleanup no longer live in one monolithic method.
 - Split `RoomItemHandling.SetFloorItem` into explicit placement validation, stack/height resolution, and final apply steps so the room item placement path is easier to reason about without changing behavior.
 - Split `RoomItemHandling.SaveFurniture` persistence into dedicated extra-data, wall-position, and coordinate update helpers so moved-item persistence no longer hides three separate write paths in one loop.

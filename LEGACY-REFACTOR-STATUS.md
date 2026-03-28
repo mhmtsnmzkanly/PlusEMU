@@ -20,6 +20,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 
 - Disconnect flow is being rerouted through `TcpSessionProxy` / `WsSessionProxy` and instance-backed `Habbo.OnDisconnect()`.
 - `RoomFactory`, `RoomManager`, `Room`, and related packet handlers are being reshaped to pass `IDatabase` and managers explicitly instead of leaning on older static/global access paths.
+- `RoomManager` now owns room idle/promotion/unload lifecycle decisions, while `Room` is narrowed toward active-room cycle execution.
 - `RoomItemHandling` has started to be split into smaller load/remove helpers, but the broader room item lifecycle and roller/update logic is still legacy-heavy.
 - `RoomItemHandling.SetFloorItem` now has separate placement validation, stack-height resolution, and state-apply steps, reducing one of the largest remaining monolithic room item branches.
 - `RoomItemHandling.SaveFurniture` now has explicit moved-item persistence helpers, `CycleRollers` is split into target-state plus item/user move helpers, `OnCycle` now isolates queue processing, `RemoveItems` is decomposed, `CheckPosItem` is helper-based, `SetWallItem` / disposal flow are split, and the remaining small utility branches are also helperized. The bigger remaining concern is no longer monolithic method size, but the class boundary itself.
