@@ -93,27 +93,35 @@ public class RoomManager : IRoomManager
     public void OnCycle()
     {
         var start = DateTime.Now;
-        var roomsToCycle = _rooms.Values.ToList();
-        foreach (var room in roomsToCycle)
+        foreach (var room in GetRoomsToCycle())
+            ProcessRoomCycle(room);
+
+        LogSlowCycle(start);
+    }
+
+    private List<Room> GetRoomsToCycle() => _rooms.Values.ToList();
+
+    private void ProcessRoomCycle(Room room)
+    {
+        if (room == null || room.Unloaded)
+            return;
+
+        room.UpdateLifecycleState();
+        if (room.ShouldUnloadForInactivity())
         {
-            if (room == null || room.Unloaded)
-                continue;
-
-            room.UpdateLifecycleState();
-            if (room.ShouldUnloadForInactivity())
-            {
-                UnloadRoom(room.RoomId);
-                continue;
-            }
-
-            if (room.HasUsers())
-                room.OnCycle();
+            UnloadRoom(room.RoomId);
+            return;
         }
+
+        if (room.HasUsers())
+            room.OnCycle();
+    }
+
+    private void LogSlowCycle(DateTime start)
+    {
         var span = DateTime.Now - start;
         if (span.TotalMilliseconds > 500)
-        {
             _logger.LogWarning("RoomManager.OnCycle took {span}ms to execute - Rooms lagging behind", span.TotalMilliseconds);
-        }
     }
 
     public void LoadModels()
@@ -147,38 +155,49 @@ public class RoomManager : IRoomManager
     public void UnloadRoom(uint roomId)
     {
         if (_rooms.TryRemove(roomId, out var room))
-        {
-            room.Dispose();
-        }
+            DisposeRoom(room);
     }
 
     public bool TryLoadRoom(uint roomId, out Room room)
     {
-        if (_rooms.TryGetValue(roomId, out room!))
+        if (TryGetLoadedRoom(roomId, out room))
             return true;
 
         lock (_roomLoadingSync)
         {
-            if (_rooms.TryGetValue(roomId, out room!))
+            if (TryGetLoadedRoom(roomId, out room))
                 return true;
 
-            if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
-            {
-                room = null!;
-                return false;
-            }
-
-            var myInstance = new Room(data, _clientManager, _database, _itemLoader, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
-            if (_rooms.TryAdd(roomId, myInstance))
-            {
-                room = myInstance;
+            if (TryCreateAndRegisterRoom(roomId, out room))
                 return true;
-            }
         }
 
         room = null!;
         return false;
     }
+
+    private bool TryGetLoadedRoom(uint roomId, out Room room) => _rooms.TryGetValue(roomId, out room!);
+
+    private bool TryCreateAndRegisterRoom(uint roomId, out Room room)
+    {
+        room = null!;
+        if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
+            return false;
+
+        var instance = CreateRoomInstance(data);
+        if (!_rooms.TryAdd(roomId, instance))
+            return false;
+
+        room = instance;
+        return true;
+    }
+
+    private Room CreateRoomInstance(RoomData data)
+    {
+        return new Room(data, _clientManager, _database, _itemLoader, _groupManager, _roomService, _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
+    }
+
+    private static void DisposeRoom(Room room) => room.Dispose();
 
     public List<Room> SearchGroupRooms(string query) => _rooms.Values.Where(x => x.Data.GroupId > 0 && x.Data.Name.Contains(query, System.StringComparison.OrdinalIgnoreCase)).ToList();
     public List<Room> SearchTaggedRooms(string query) => _rooms.Values.Where(x => x.Data.Tags.Any(t => t.Contains(query, System.StringComparison.OrdinalIgnoreCase))).ToList();
