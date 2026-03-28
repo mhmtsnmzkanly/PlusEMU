@@ -48,7 +48,7 @@ public class RoomService : IRoomService
         if (!TryGetPreparingHabbo(session, out var habbo))
             return;
 
-        LeaveCurrentRoomIfNeeded(session, habbo, false);
+        RemoveCurrentRoomIfNeeded(session, habbo, false, false);
 
         if (habbo.IsTeleporting && habbo.TeleportingRoomId != roomId)
         {
@@ -173,7 +173,16 @@ public class RoomService : IRoomService
         if (!TryGetPreparingHabbo(session, out var habbo))
             return Task.CompletedTask;
 
-        LeaveCurrentRoomIfNeeded(session, habbo, notifyUser);
+        RemoveCurrentRoomIfNeeded(session, habbo, notifyUser, false);
+        return Task.CompletedTask;
+    }
+
+    public Task KickFromRoom(GameClient session, bool notifyUser = true)
+    {
+        if (!TryGetPreparingHabbo(session, out var habbo))
+            return Task.CompletedTask;
+
+        RemoveCurrentRoomIfNeeded(session, habbo, notifyUser, true);
         return Task.CompletedTask;
     }
 
@@ -183,12 +192,12 @@ public class RoomService : IRoomService
         return habbo != null;
     }
 
-    private static void LeaveCurrentRoomIfNeeded(GameClient session, Users.Habbo habbo, bool notifyUser)
+    private static void RemoveCurrentRoomIfNeeded(GameClient session, Users.Habbo habbo, bool notifyUser, bool notifyKick)
     {
         if (!habbo.InRoom)
             return;
 
-        habbo.CurrentRoom?.GetRoomUserManager().RemoveUserFromRoom(session, notifyUser);
+        habbo.CurrentRoom?.GetRoomUserManager().RemoveUserFromRoom(session, notifyUser, notifyKick);
     }
 
     private bool TryAuthorizeRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)

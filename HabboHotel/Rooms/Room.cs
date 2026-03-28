@@ -649,7 +649,7 @@ public class Room : RoomData
         client.SendNotification("Sorry, it appears that room has crashed!");
         try
         {
-            GetRoomUserManager().RemoveUserFromRoom(client, true);
+            _ = GetRoomService().LeaveRoom(client);
         }
         catch (Exception removalException)
         {

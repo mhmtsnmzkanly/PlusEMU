@@ -1026,7 +1026,7 @@ public class Item
                                     target.ApplyEffect(4);
                                     targetClient.Send(new RoomNotificationComposer("Kicked from room", "You were hit by a cannonball!", "room_kick_cannonball", ""));
                                     target.ApplyEffect(0);
-                                    room.GetRoomUserManager().RemoveUserFromRoom(targetClient, true);
+                                    _ = room.GetRoomService().LeaveRoom(targetClient);
                                 }
                             }
                         }
