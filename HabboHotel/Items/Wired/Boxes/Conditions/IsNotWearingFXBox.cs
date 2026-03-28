@@ -32,13 +32,13 @@ internal class IsNotWearingFxBox : IWiredItem, IWiredActorExecutable
 
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
-        if (string.IsNullOrEmpty(StringData))
+        if (!WiredConditionDataParser.TryParseSingleValue(StringData, out var effectId))
             return false;
         var player = context.Actor;
         var effects = player?.Effects;
         if (effects == null)
             return false;
-        if (effects.CurrentEffect != int.Parse(StringData))
+        if (effects.CurrentEffect != effectId)
             return true;
         return false;
     }

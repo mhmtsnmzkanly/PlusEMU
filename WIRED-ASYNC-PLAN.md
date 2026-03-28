@@ -58,6 +58,7 @@ Phase 1 is now in place:
 - One of the lingering non-refactor tails is closed as well: `BotCommunicatesToAll` is no longer just a placeholder box and now executes real bot speech with persisted mode/config data through the normal room speech fanout path.
 - The runtime lookup surface is a bit tighter now too, with `WiredComponent` sharing its common trigger-box and same-tile box enumeration helpers instead of re-filtering the same `_wiredItems` collection in multiple places.
 - The queue dispatch handoff is centralized now as well, with `WiredExecutionAdapter` owning the context-type routing that `WiredComponent` previously kept inline.
+- The remaining small parse tails are narrowing too, with the simple numeric `StringData` condition cases now routed through one parser helper instead of a few lingering direct `int.Parse` calls inside the boxes.
 - Shared trigger-stack helpers in `WiredComponent` now execute the common condition / random-addon / effect flow for multiple trigger box types, reducing duplicate execution code before the larger async migration continues.
 - `RepeaterBox` and `ExecuteWiredStacksBox` also use centralized `WiredComponent` execution helpers now, so the remaining migration work is concentrated more tightly around scheduling and side-effect isolation rather than duplicate traversal code.
 - The delayed-cycle effect boxes are also being normalized around shared scheduling helpers, reducing per-box timing boilerplate before any larger queue/callback redesign.

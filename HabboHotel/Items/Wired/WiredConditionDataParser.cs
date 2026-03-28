@@ -2,6 +2,12 @@ namespace Plus.HabboHotel.Items.Wired;
 
 internal static class WiredConditionDataParser
 {
+    public static bool TryParseSingleValue(string stringData, out int value)
+    {
+        value = 0;
+        return !string.IsNullOrWhiteSpace(stringData) && int.TryParse(stringData, out value);
+    }
+
     public static bool TryParseUserCountRange(string stringData, out int minimum, out int maximum)
     {
         minimum = 0;

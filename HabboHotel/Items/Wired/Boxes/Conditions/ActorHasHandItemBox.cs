@@ -34,7 +34,7 @@ internal class ActorHasHandItemBox : IWiredItem, IWiredActorExecutable
 
     bool IWiredActorExecutable.Execute(WiredActorExecutionContext context)
     {
-        if (Instance == null || string.IsNullOrEmpty(StringData))
+        if (Instance == null || !WiredConditionDataParser.TryParseSingleValue(StringData, out var carryItemId))
             return false;
         var player = context.Actor;
         if (player == null)
@@ -42,7 +42,7 @@ internal class ActorHasHandItemBox : IWiredItem, IWiredActorExecutable
         var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
         if (user == null)
             return false;
-        if (user.CarryItemId != int.Parse(StringData))
+        if (user.CarryItemId != carryItemId)
             return false;
         return true;
     }
