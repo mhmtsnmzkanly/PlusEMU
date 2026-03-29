@@ -336,7 +336,7 @@ public class Item
                         }
                         if (user == null) InteractingUser = 0;
                         break;
-                    case InteractionType.GateVip:
+                    case var _ when Definition.IsGateVip:
                         user = null;
                         if (InteractingUser > 0) user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
                         var newY = 0;
@@ -367,7 +367,7 @@ public class Item
                         }
                         if (user == null) InteractingUser = 0;
                         break;
-                    case InteractionType.Hopper:
+                    case var _ when Definition.IsHopper:
                     {
                         user = null;
                         user2 = null;
@@ -485,7 +485,7 @@ public class Item
                         RequestUpdate(1, false);
                         break;
                     }
-                    case InteractionType.Teleport:
+                    case var _ when Definition.IsTeleport:
                     {
                         user = null;
                         user2 = null;
@@ -755,42 +755,20 @@ public class Item
                         }
                         break;
                     }
-                    case InteractionType.Banzaitele:
+                    case var _ when Definition.IsBanzaiTeleport:
                     {
                         LegacyDataString = string.Empty;
                         UpdateState();
                         break;
                     }
-                    case InteractionType.Banzaifloor:
+                    case var _ when Definition.IsBanzaiFloor:
                     {
                         if (Value == 3)
                         {
                             if (InteractionCountHelper == 1)
                             {
                                 InteractionCountHelper = 0;
-                                switch (Team)
-                                {
-                                    case Team.Blue:
-                                    {
-                                        LegacyDataString = "11";
-                                        break;
-                                    }
-                                    case Team.Green:
-                                    {
-                                        LegacyDataString = "8";
-                                        break;
-                                    }
-                                    case Team.Red:
-                                    {
-                                        LegacyDataString = "5";
-                                        break;
-                                    }
-                                    case Team.Yellow:
-                                    {
-                                        LegacyDataString = "14";
-                                        break;
-                                    }
-                                }
+                                LegacyDataString = Definition.GetBanzaiFloorPulseState(Team);
                             }
                             else
                             {
@@ -806,7 +784,7 @@ public class Item
                         }
                         break;
                     }
-                    case InteractionType.Banzaipuck:
+                    case var _ when Definition.IsBanzaiPuck:
                     {
                         if (InteractionCount > 4)
                         {
@@ -908,9 +886,7 @@ public class Item
                         UpdateState();
                         break;
                     }
-                    case InteractionType.WiredEffect:
-                    case InteractionType.WiredTrigger:
-                    case InteractionType.WiredCondition:
+                    case var _ when Definition.IsWired:
                     {
                         if (LegacyDataString == "1")
                         {

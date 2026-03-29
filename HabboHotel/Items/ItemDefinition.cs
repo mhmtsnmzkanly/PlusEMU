@@ -101,6 +101,8 @@ public class ItemDefinition
 
     public bool IsGate => InteractionType == InteractionType.Gate;
 
+    public bool IsGateVip => InteractionType == InteractionType.GateVip;
+
     public bool IsArrow => InteractionType == InteractionType.Arrow;
 
     public bool IsOneWayGate => InteractionType == InteractionType.OneWayGate;
@@ -304,4 +306,14 @@ public class ItemDefinition
             _ => Team.None
         };
     }
+
+    public string GetBanzaiFloorPulseState(Team team) =>
+        team switch
+        {
+            Team.Blue => "11",
+            Team.Green => "8",
+            Team.Red => "5",
+            Team.Yellow => "14",
+            _ => string.Empty
+        };
 }
