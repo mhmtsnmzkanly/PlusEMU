@@ -31,9 +31,6 @@ public class PlusEnvironment : IPlusEnvironment
     public const string PrettyBuild = "3.4.3.0";
     private static readonly ILogger Log = LogManager.GetLogger("Plus.PlusEnvironment");
 
-    private static Encoding _defaultEncoding = Encoding.Default;
-    public static CultureInfo CultureInfo = CultureInfo.InvariantCulture;
-
     private static IGame _game = null!;
     private static IGameClientManager _gameClientManager = null!;
     private static IRoomManager _roomManager = null!;
@@ -102,10 +99,8 @@ public class PlusEnvironment : IPlusEnvironment
         Console.WriteLine("                                http://PlusIndustry.com");
         Console.WriteLine("");
         Console.Title = "Loading PlusEMU";
-        _defaultEncoding = Encoding.Default;
         Console.WriteLine("");
         Console.WriteLine("");
-        CultureInfo = CultureInfo.InvariantCulture;
         try
         {
             if (!_database.IsConnected())
@@ -222,5 +217,4 @@ public class PlusEnvironment : IPlusEnvironment
         Environment.Exit(0);
     }
 
-    public static Encoding GetDefaultEncoding() => _defaultEncoding;
 }

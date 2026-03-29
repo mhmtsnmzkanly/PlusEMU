@@ -1,4 +1,5 @@
-﻿using Plus.Utilities;
+﻿using System.Text;
+using Plus.Utilities;
 
 namespace Plus.Communication.Packets.Incoming;
 
@@ -25,7 +26,7 @@ public class ClientPacket
         _pointer = 0;
     }
 
-    public override string ToString() => $"[{Id}] BODY: {PlusEnvironment.GetDefaultEncoding().GetString(_body).Replace(Convert.ToChar(0).ToString(), "[0]")}";
+    public override string ToString() => $"[{Id}] BODY: {Encoding.Default.GetString(_body).Replace(Convert.ToChar(0).ToString(), "[0]")}";
 
     public void AdvancePointer(int i)
     {
@@ -57,7 +58,7 @@ public class ClientPacket
         return ReadBytes(len);
     }
 
-    public string PopString() => PlusEnvironment.GetDefaultEncoding().GetString(ReadFixedValue());
+    public string PopString() => Encoding.Default.GetString(ReadFixedValue());
 
     public bool PopBoolean() => RemainingLength > 0 && _body[_pointer++] == Convert.ToChar(1);
 

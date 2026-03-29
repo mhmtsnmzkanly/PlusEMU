@@ -150,7 +150,7 @@ internal class CatalogService : ICatalogService
                 await _achievementService.ProgressAchievement(session, "ACH_PetLover", 1);
                 break;
             case var _ when item.Definition.IsRoomDecoration:
-                double.TryParse(extraData, NumberStyles.Any, PlusEnvironment.CultureInfo, out var number);
+                double.TryParse(extraData, NumberStyles.Any, CultureInfo.InvariantCulture, out var number);
                 extraData = number.ToString(CultureInfo.InvariantCulture);
                 break;
             case InteractionType.Postit: extraData = "FFFF33"; break;
