@@ -276,7 +276,6 @@ public class Item
             {
                 UpdateNeeded = false;
                 UpdateCounter = 0;
-                RoomUser? user = null;
                 switch (Definition.InteractionType)
                 {
                     case var _ when Definition.IsGroupGate:
@@ -320,92 +319,29 @@ public class Item
                         ProcessTeleportUpdate();
                         break;
                     case var _ when Definition.IsBottle:
-                        LegacyDataString = Random.Shared.Next(0, 8).ToString();
-                        UpdateState();
+                        ProcessBottleUpdate();
                         break;
                     case var _ when Definition.IsDice:
-                    {
-                        var numbers = new[] { "1", "2", "3", "4", "5", "6" };
-                        if (LegacyDataString == "-1")
-                            LegacyDataString = RandomizeStrings(numbers)[0];
-                        UpdateState();
-                    }
+                        ProcessDiceUpdate();
                         break;
                     case var _ when Definition.IsHabboWheel:
-                        LegacyDataString = Random.Shared.Next(1, 10).ToString();
-                        UpdateState();
+                        ProcessHabboWheelUpdate();
                         break;
                     case var _ when Definition.IsLoveShuffler:
-                        if (LegacyDataString == "0")
-                        {
-                            LegacyDataString = Random.Shared.Next(1, 5).ToString();
-                            RequestUpdate(20, false);
-                        }
-                        else if (LegacyDataString != "-1") LegacyDataString = "-1";
-                        UpdateState(false, true);
+                        ProcessLoveShufflerUpdate();
                         break;
                     case var _ when Definition.IsAlert:
-                        if (LegacyDataString == "1")
-                        {
-                            LegacyDataString = "0";
-                            UpdateState(false, true);
-                        }
+                        ProcessAlertUpdate();
                         break;
                     case var _ when Definition.IsVendingMachine:
-                        if (LegacyDataString == "1")
-                        {
-                            user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
-                            if (user == null)
-                                break;
-                            user.UnlockWalking();
-                            if (Definition.VendingIds.Count > 0)
-                            {
-                                var randomDrink = Definition.VendingIds[Random.Shared.Next(0, Definition.VendingIds.Count)];
-                                user.CarryItem(randomDrink);
-                            }
-                            InteractingUser = 0;
-                            LegacyDataString = "0";
-                            UpdateState(false, true);
-                        }
+                        ProcessVendingMachineUpdate();
                         break;
                     case var _ when Definition.IsScoreboard:
                         ProcessScoreboardUpdate();
                         break;
                     case var _ when Definition.IsBanzaiCounter:
-                    {
-                        if (string.IsNullOrEmpty(LegacyDataString))
-                            break;
-                        var seconds = 0;
-                        try
-                        {
-                            seconds = int.Parse(LegacyDataString);
-                        }
-                        catch { }
-                        if (seconds > 0)
-                        {
-                            if (InteractionCountHelper == 1)
-                            {
-                                seconds--;
-                                InteractionCountHelper = 0;
-                                if (GetRoom().GetBanzai().IsBanzaiActive)
-                                {
-                                    LegacyDataString = seconds.ToString();
-                                    UpdateState();
-                                }
-                                else
-                                    break;
-                            }
-                            else
-                                InteractionCountHelper++;
-                            UpdateCounter = 1;
-                        }
-                        else
-                        {
-                            UpdateCounter = 0;
-                            GetRoom().GetBanzai().BanzaiEnd();
-                        }
+                        ProcessBanzaiCounterUpdate();
                         break;
-                    }
                     case var _ when Definition.IsBanzaiTeleport:
                     {
                         LegacyDataString = string.Empty;
@@ -413,54 +349,14 @@ public class Item
                         break;
                     }
                     case var _ when Definition.IsBanzaiFloor:
-                    {
-                        if (Value == 3)
-                        {
-                            if (InteractionCountHelper == 1)
-                            {
-                                InteractionCountHelper = 0;
-                                LegacyDataString = Definition.GetBanzaiFloorPulseState(Team);
-                            }
-                            else
-                            {
-                                LegacyDataString = "";
-                                InteractionCountHelper++;
-                            }
-                            UpdateState();
-                            InteractionCount++;
-                            if (InteractionCount < 16)
-                                UpdateCounter = 1;
-                            else
-                                UpdateCounter = 0;
-                        }
+                        ProcessBanzaiFloorUpdate();
                         break;
-                    }
                     case var _ when Definition.IsBanzaiPuck:
-                    {
-                        if (InteractionCount > 4)
-                        {
-                            InteractionCount++;
-                            UpdateCounter = 1;
-                        }
-                        else
-                        {
-                            InteractionCount = 0;
-                            UpdateCounter = 0;
-                        }
+                        ProcessBanzaiPuckUpdate();
                         break;
-                    }
                     case var _ when Definition.IsFreezeTile:
-                    {
-                        if (InteractingUser > 0)
-                        {
-                            LegacyDataString = "11000";
-                            UpdateState(false, true);
-                            GetRoom().GetFreeze().OnFreezeTiles(this, FreezePowerUp);
-                            InteractingUser = 0;
-                            InteractionCountHelper = 0;
-                        }
+                        ProcessFreezeTileUpdate();
                         break;
-                    }
                     case var _ when Definition.IsCounter:
                         ProcessCounterUpdate();
                         break;
@@ -468,19 +364,10 @@ public class Item
                         ProcessFreezeTimerUpdate();
                         break;
                     case var _ when Definition.IsPressurePad:
-                    {
-                        LegacyDataString = "1";
-                        UpdateState();
+                        ProcessPressurePadUpdate();
                         break;
-                    }
                     case var _ when Definition.IsWired:
-                    {
-                        if (LegacyDataString == "1")
-                        {
-                            LegacyDataString = "0";
-                            UpdateState(false, true);
-                        }
-                    }
+                        ProcessWiredResetUpdate();
                         break;
                     case var _ when Definition.IsCannon:
                         ProcessCannonUpdate();
@@ -597,6 +484,71 @@ public class Item
         }
 
         RequestUpdate(1, false);
+    }
+
+    private void ProcessBottleUpdate()
+    {
+        LegacyDataString = Random.Shared.Next(0, 8).ToString();
+        UpdateState();
+    }
+
+    private void ProcessDiceUpdate()
+    {
+        if (LegacyDataString == "-1")
+            LegacyDataString = RandomizeStrings(new[] { "1", "2", "3", "4", "5", "6" })[0];
+
+        UpdateState();
+    }
+
+    private void ProcessHabboWheelUpdate()
+    {
+        LegacyDataString = Random.Shared.Next(1, 10).ToString();
+        UpdateState();
+    }
+
+    private void ProcessLoveShufflerUpdate()
+    {
+        if (LegacyDataString == "0")
+        {
+            LegacyDataString = Random.Shared.Next(1, 5).ToString();
+            RequestUpdate(20, false);
+        }
+        else if (LegacyDataString != "-1")
+        {
+            LegacyDataString = "-1";
+        }
+
+        UpdateState(false, true);
+    }
+
+    private void ProcessAlertUpdate()
+    {
+        if (LegacyDataString != "1")
+            return;
+
+        LegacyDataString = "0";
+        UpdateState(false, true);
+    }
+
+    private void ProcessVendingMachineUpdate()
+    {
+        if (LegacyDataString != "1")
+            return;
+
+        var user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
+        if (user == null)
+            return;
+
+        user.UnlockWalking();
+        if (Definition.VendingIds.Count > 0)
+        {
+            var randomDrink = Definition.VendingIds[Random.Shared.Next(0, Definition.VendingIds.Count)];
+            user.CarryItem(randomDrink);
+        }
+
+        InteractingUser = 0;
+        LegacyDataString = "0";
+        UpdateState(false, true);
     }
 
     private void ProcessOneWayGateUpdate()
@@ -849,6 +801,87 @@ public class Item
         }
     }
 
+    private void ProcessBanzaiCounterUpdate()
+    {
+        if (string.IsNullOrEmpty(LegacyDataString))
+            return;
+
+        var seconds = ParseLegacySeconds();
+        if (seconds > 0)
+        {
+            if (InteractionCountHelper == 1)
+            {
+                seconds--;
+                InteractionCountHelper = 0;
+                if (GetRoom().GetBanzai().IsBanzaiActive)
+                {
+                    LegacyDataString = seconds.ToString();
+                    UpdateState();
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                InteractionCountHelper++;
+            }
+
+            UpdateCounter = 1;
+            return;
+        }
+
+        UpdateCounter = 0;
+        GetRoom().GetBanzai().BanzaiEnd();
+    }
+
+    private void ProcessBanzaiFloorUpdate()
+    {
+        if (Value != 3)
+            return;
+
+        if (InteractionCountHelper == 1)
+        {
+            InteractionCountHelper = 0;
+            LegacyDataString = Definition.GetBanzaiFloorPulseState(Team);
+        }
+        else
+        {
+            LegacyDataString = "";
+            InteractionCountHelper++;
+        }
+
+        UpdateState();
+        InteractionCount++;
+        UpdateCounter = InteractionCount < 16 ? 1 : 0;
+    }
+
+    private void ProcessBanzaiPuckUpdate()
+    {
+        if (InteractionCount > 4)
+        {
+            InteractionCount++;
+            UpdateCounter = 1;
+            return;
+        }
+
+        InteractionCount = 0;
+        UpdateCounter = 0;
+    }
+
+    private void ProcessFreezeTileUpdate()
+    {
+        if (InteractingUser <= 0)
+            return;
+
+        LegacyDataString = "11000";
+        UpdateState(false, true);
+        GetRoom().GetFreeze().OnFreezeTiles(this, FreezePowerUp);
+        InteractingUser = 0;
+        InteractionCountHelper = 0;
+    }
+
     private void ProcessCounterUpdate()
     {
         if (string.IsNullOrEmpty(LegacyDataString))
@@ -919,6 +952,21 @@ public class Item
             UpdateNeeded = false;
             GetRoom().GetFreeze().StopGame();
         }
+    }
+
+    private void ProcessPressurePadUpdate()
+    {
+        LegacyDataString = "1";
+        UpdateState();
+    }
+
+    private void ProcessWiredResetUpdate()
+    {
+        if (LegacyDataString != "1")
+            return;
+
+        LegacyDataString = "0";
+        UpdateState(false, true);
     }
 
     private void ProcessCannonUpdate()
