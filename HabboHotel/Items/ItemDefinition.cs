@@ -67,6 +67,8 @@ public class ItemDefinition
 
     public bool IsHopper => InteractionType == InteractionType.Hopper;
 
+    public bool IsPet => InteractionType == InteractionType.Pet;
+
     public bool IsFreezeTile => InteractionType == InteractionType.FreezeTile;
 
     public bool IsFreezeTileBlock => InteractionType == InteractionType.FreezeTileBlock;
@@ -92,6 +94,18 @@ public class ItemDefinition
     public bool IsStacktool => InteractionType == InteractionType.Stacktool;
 
     public bool IsPostIt => InteractionType == InteractionType.Postit;
+
+    public bool IsBadgeDisplay => InteractionType == InteractionType.BadgeDisplay;
+
+    public bool IsMannequin => InteractionType == InteractionType.Mannequin;
+
+    public bool IsTrophy => InteractionType == InteractionType.Trophy;
+
+    public bool IsPetBreedingBox => InteractionType == InteractionType.PetBreedingBox;
+
+    public bool IsPurchasableClothing => InteractionType == InteractionType.PurchasableClothing;
+
+    public bool IsMonsterplantSeed => InteractionType == InteractionType.MonsterplantSeed;
 
     public bool IsTeleport => InteractionType == InteractionType.Teleport;
 

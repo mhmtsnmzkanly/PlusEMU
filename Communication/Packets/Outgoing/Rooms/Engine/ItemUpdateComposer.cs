@@ -25,7 +25,7 @@ public class ItemUpdateComposer : IServerPacket
         packet.WriteString(item.WallCoordinates);
         switch (item.Definition.InteractionType)
         {
-            case InteractionType.Postit:
+            case var _ when item.Definition.IsPostIt:
                 packet.WriteString(item.LegacyDataString.Split(' ')[0]);
                 break;
             default:

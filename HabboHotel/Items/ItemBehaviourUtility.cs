@@ -49,8 +49,7 @@ internal static class ItemBehaviourUtility
                 packet.WriteInteger(0);
                 packet.WriteString("");
                 break;
-            case InteractionType.PetBreedingBox:
-            case InteractionType.PurchasableClothing:
+            case var _ when item.Definition.IsPetBreedingBox || item.Definition.IsPurchasableClothing:
                 packet.WriteInteger(0);
                 packet.WriteInteger(0);
                 packet.WriteString("0");
@@ -89,7 +88,7 @@ internal static class ItemBehaviourUtility
                     packet.WriteString(item.GetRoom().GetGroupManager().GetColourCode(group.Colour2, false));
                 }
                 break;
-            case InteractionType.Background:
+            case var _ when item.Definition.IsBackground:
                 packet.WriteInteger(0);
                 packet.WriteInteger(1);
                 if (!string.IsNullOrEmpty(item.LegacyDataString))
@@ -140,7 +139,7 @@ internal static class ItemBehaviourUtility
                 }
             }
                 break;
-            case InteractionType.Mannequin:
+            case var _ when item.Definition.IsMannequin:
                 packet.WriteInteger(0);
                 packet.WriteInteger(1);
                 packet.WriteInteger(3);
@@ -185,7 +184,7 @@ internal static class ItemBehaviourUtility
                     packet.WriteString(string.Empty);
                 }
                 break;
-            case InteractionType.BadgeDisplay:
+            case var _ when item.Definition.IsBadgeDisplay:
                 packet.WriteInteger(0);
                 packet.WriteInteger(2);
                 packet.WriteInteger(4);
@@ -234,7 +233,7 @@ internal static class ItemBehaviourUtility
                     packet.WriteString("0");
                 }
                 break;
-            case InteractionType.MonsterplantSeed:
+            case var _ when item.Definition.IsMonsterplantSeed:
                 packet.WriteInteger(0);
                 packet.WriteInteger(1);
                 packet.WriteInteger(1);

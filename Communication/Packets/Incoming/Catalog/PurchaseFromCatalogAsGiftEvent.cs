@@ -133,7 +133,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                 case InteractionType.None:
                     itemExtraData = "";
                     break;
-                case InteractionType.Pet:
+                case var _ when item.Definition.IsPet:
                     try
                     {
                         var bits = data.Split('\n');
@@ -165,19 +165,19 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                     }
                     itemExtraData = number.ToString(CultureInfo.CurrentCulture).Replace(',', '.');
                     break; // maintain extra data // todo: validate
-                case InteractionType.Postit:
+                case var _ when item.Definition.IsPostIt:
                     itemExtraData = "FFFF33";
                     break;
                 case var _ when item.Definition.IsMoodlight:
                     itemExtraData = "1,1,1,#000000,255";
                     break;
-                case InteractionType.Trophy:
+                case var _ when item.Definition.IsTrophy:
                     itemExtraData = $"{sender.Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}{Convert.ToChar(9)}{data}";
                     break;
-                case InteractionType.Mannequin:
+                case var _ when item.Definition.IsMannequin:
                     itemExtraData = $"m{Convert.ToChar(5)}.ch-210-1321.lg-285-92{Convert.ToChar(5)}Default Mannequin";
                     break;
-                case InteractionType.BadgeDisplay:
+                case var _ when item.Definition.IsBadgeDisplay:
                     if (!senderBadges.HasBadge(data))
                     {
                         session.Send(new BroadcastMessageAlertComposer("Oops, it appears that you do not own this badge."));
