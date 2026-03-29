@@ -72,7 +72,7 @@ internal sealed class RuntimeControlService : IRuntimeControlService
         {
             using var connection = _database.Connection();
             connection.Execute("TRUNCATE `catalog_marketplace_data`");
-            connection.Execute("UPDATE `users` SET `online` = false, `auth_ticket` = NULL");
+            connection.Execute("UPDATE `users` SET `online` = false, `auth_ticket` = ''");
             connection.Execute("UPDATE `rooms` SET `users_now` = '0' WHERE `users_now` > '0'");
             connection.Execute("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
         }

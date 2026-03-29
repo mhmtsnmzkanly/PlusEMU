@@ -85,6 +85,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - Local emulator startup no longer silently wedges in dependency resolution either: the remaining eager singleton traps around room/chat/runtime boot have been pushed behind lazy `IServiceProvider` lookups in `RoomFactory`, `RoomManager`, `RconSocket`, `ProcessComponent`, and `ChatManager`, so local boot now reaches the real runtime initialization path instead of hanging before the banner.
 - Startup failure handling is also cleaner in non-interactive runs now: `PlusEnvironment` no longer throws a second `Console.ReadKey` exception when the database check fails under redirected input, so smoke tests report the actual MySQL connectivity problem and stop there.
 - Room-model bootstrapping is aligned with the live SQL schema now too: `RoomManager` maps `room_models.club_only` / `wall_height` rows into `RoomModel` explicitly instead of relying on a stale `public_room` projection and Dapper constructor matching.
+- Login/logout cleanup is aligned with the live `users` schema now too: SSO reset paths clear `auth_ticket` with an empty string instead of `NULL`, matching the non-null column constraint used by the shipped SQL dumps.
 
 ## Migration Status: ✅ COMPLETE
 

@@ -77,7 +77,7 @@ internal class Authenticator : IAuthenticator
     private async Task ResetSso(int userId)
     {
         using var connection = _database.Connection();
-        await connection.ExecuteAsync("UPDATE users SET auth_ticket = NULL WHERE id = @userId", new { userId });
+        await connection.ExecuteAsync("UPDATE users SET auth_ticket = '' WHERE id = @userId", new { userId });
     }
 
     private async Task<bool> CanLogin(int userId)
