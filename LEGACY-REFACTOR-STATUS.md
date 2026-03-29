@@ -50,6 +50,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - `GameMap` special floor-effect handling is joining that same sweep too, with pool/skates style effect IDs now named on `ItemDefinition` instead of being hard-coded in the tile rebuild path.
 - Team-gate and room-user game-item flow are joining that same item-semantics cleanup too, so banzai/freeze gate detection plus arrow/effect item role checks now ride named `ItemDefinition` helpers instead of duplicated interaction branches.
 - Wall-item serialization is being tightened too, with post-it payload trimming now centralized behind one helper instead of being repeated in both item utility and outgoing composer code.
+- `Item` itself is now starting to consume the same semantic helper surface too, with interactor selection and the first runtime update branches moving off raw interaction-case duplication and onto named item-role predicates.
 - `RoomItemHandling` has started to be split into smaller load/remove helpers, but the broader room item lifecycle and roller/update logic is still legacy-heavy.
 - The first true `RoomItemHandling` extraction is now in place too: moved-item persistence lives in `RoomItemPersistenceService`, reducing direct database-write ownership inside the room item lifecycle class.
 - A second extraction is in place as well: floor-item placement and `CheckPosItem` validation now live in `RoomItemPlacementValidatorService`, pulling tile/user/stack/height rule evaluation out of `RoomItemHandling`.

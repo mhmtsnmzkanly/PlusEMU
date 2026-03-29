@@ -192,57 +192,49 @@ public class Item
             if (Definition.IsWired) return new InteractorWired();
             switch (Definition.InteractionType)
             {
-                case InteractionType.Gate:
+                case var _ when Definition.IsGate:
                     return new InteractorGate();
-                case InteractionType.Teleport:
+                case var _ when Definition.IsTeleport:
                     return new InteractorTeleport();
-                case InteractionType.Hopper:
+                case var _ when Definition.IsHopper:
                     return new InteractorHopper();
-                case InteractionType.Bottle:
+                case var _ when Definition.IsBottle:
                     return new InteractorSpinningBottle();
-                case InteractionType.Dice:
+                case var _ when Definition.IsDice:
                     return new InteractorDice();
-                case InteractionType.HabboWheel:
+                case var _ when Definition.IsHabboWheel:
                     return new InteractorHabboWheel();
-                case InteractionType.LoveShuffler:
+                case var _ when Definition.IsLoveShuffler:
                     return new InteractorLoveShuffler();
-                case InteractionType.OneWayGate:
+                case var _ when Definition.IsOneWayGate:
                     return new InteractorOneWayGate();
-                case InteractionType.Alert:
+                case var _ when Definition.IsAlert:
                     return new InteractorAlert();
-                case InteractionType.VendingMachine:
+                case var _ when Definition.IsVendingMachine:
                     return new InteractorVendor();
-                case InteractionType.Scoreboard:
+                case var _ when Definition.IsScoreboard:
                     return new InteractorScoreboard();
-                case InteractionType.PuzzleBox:
+                case var _ when Definition.IsPuzzleBox:
                     return new InteractorPuzzleBox();
-                case InteractionType.Mannequin:
+                case var _ when Definition.IsMannequin:
                     return new InteractorMannequin();
-                case InteractionType.Banzaicounter:
+                case var _ when Definition.IsBanzaiCounter:
                     return new InteractorBanzaiTimer();
-                case InteractionType.Freezetimer:
+                case var _ when Definition.IsFreezeTimer:
                     return new InteractorFreezeTimer();
-                case InteractionType.FreezeTileBlock:
-                case InteractionType.FreezeTile:
+                case var _ when Definition.IsFreezeTile || Definition.IsFreezeTileBlock:
                     return new InteractorFreezeTile();
-                case InteractionType.Footballcounterblue:
-                case InteractionType.Footballcountergreen:
-                case InteractionType.Footballcounterred:
-                case InteractionType.Footballcounteryellow:
+                case var _ when Definition.IsFootballCounter:
                     return new InteractorScoreCounter();
-                case InteractionType.Banzaiscoreblue:
-                case InteractionType.Banzaiscoregreen:
-                case InteractionType.Banzaiscorered:
-                case InteractionType.Banzaiscoreyellow:
+                case var _ when Definition.IsBanzaiScore:
                     return new InteractorBanzaiScoreCounter();
-                case InteractionType.WfFloorSwitch1:
-                case InteractionType.WfFloorSwitch2:
+                case var _ when Definition.IsFloorSwitch:
                     return new InteractorSwitch();
-                case InteractionType.Lovelock:
+                case var _ when Definition.IsLovelock:
                     return new InteractorLoveLock();
-                case InteractionType.Cannon:
+                case var _ when Definition.IsCannon:
                     return new InteractorCannon();
-                case InteractionType.Counter:
+                case var _ when Definition.IsCounter:
                     return new InteractorCounter();
                 case InteractionType.None:
                 default:
@@ -652,11 +644,11 @@ public class Item
                         RequestUpdate(1, false);
                         break;
                     }
-                    case InteractionType.Bottle:
+                    case var _ when Definition.IsBottle:
                         LegacyDataString = Random.Shared.Next(0, 8).ToString();
                         UpdateState();
                         break;
-                    case InteractionType.Dice:
+                    case var _ when Definition.IsDice:
                     {
                         var numbers = new[] { "1", "2", "3", "4", "5", "6" };
                         if (LegacyDataString == "-1")
@@ -664,11 +656,11 @@ public class Item
                         UpdateState();
                     }
                         break;
-                    case InteractionType.HabboWheel:
+                    case var _ when Definition.IsHabboWheel:
                         LegacyDataString = Random.Shared.Next(1, 10).ToString();
                         UpdateState();
                         break;
-                    case InteractionType.LoveShuffler:
+                    case var _ when Definition.IsLoveShuffler:
                         if (LegacyDataString == "0")
                         {
                             LegacyDataString = Random.Shared.Next(1, 5).ToString();
@@ -677,14 +669,14 @@ public class Item
                         else if (LegacyDataString != "-1") LegacyDataString = "-1";
                         UpdateState(false, true);
                         break;
-                    case InteractionType.Alert:
+                    case var _ when Definition.IsAlert:
                         if (LegacyDataString == "1")
                         {
                             LegacyDataString = "0";
                             UpdateState(false, true);
                         }
                         break;
-                    case InteractionType.VendingMachine:
+                    case var _ when Definition.IsVendingMachine:
                         if (LegacyDataString == "1")
                         {
                             user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
@@ -701,7 +693,7 @@ public class Item
                             UpdateState(false, true);
                         }
                         break;
-                    case InteractionType.Scoreboard:
+                    case var _ when Definition.IsScoreboard:
                     {
                         if (string.IsNullOrEmpty(LegacyDataString))
                             break;
@@ -728,7 +720,7 @@ public class Item
                             UpdateCounter = 0;
                         break;
                     }
-                    case InteractionType.Banzaicounter:
+                    case var _ when Definition.IsBanzaiCounter:
                     {
                         if (string.IsNullOrEmpty(LegacyDataString))
                             break;
@@ -828,7 +820,7 @@ public class Item
                         }
                         break;
                     }
-                    case InteractionType.FreezeTile:
+                    case var _ when Definition.IsFreezeTile:
                     {
                         if (InteractingUser > 0)
                         {
@@ -840,7 +832,7 @@ public class Item
                         }
                         break;
                     }
-                    case InteractionType.Counter:
+                    case var _ when Definition.IsCounter:
                     {
                         if (string.IsNullOrEmpty(LegacyDataString))
                             break;
@@ -875,7 +867,7 @@ public class Item
                         }
                         break;
                     }
-                    case InteractionType.Freezetimer:
+                    case var _ when Definition.IsFreezeTimer:
                     {
                         if (string.IsNullOrEmpty(LegacyDataString))
                             break;
@@ -910,7 +902,7 @@ public class Item
                         }
                         break;
                     }
-                    case InteractionType.PressurePad:
+                    case var _ when Definition.IsPressurePad:
                     {
                         LegacyDataString = "1";
                         UpdateState();
@@ -927,7 +919,7 @@ public class Item
                         }
                     }
                         break;
-                    case InteractionType.Cannon:
+                    case var _ when Definition.IsCannon:
                     {
                         if (LegacyDataString != "1")
                             break;

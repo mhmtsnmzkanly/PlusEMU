@@ -79,6 +79,8 @@ public class ItemDefinition
 
     public bool IsPet => InteractionType == InteractionType.Pet;
 
+    public bool IsPressurePad => InteractionType == InteractionType.PressurePad;
+
     public bool IsFreezeTile => InteractionType == InteractionType.FreezeTile;
 
     public bool IsFreezeTileBlock => InteractionType == InteractionType.FreezeTileBlock;
@@ -102,6 +104,20 @@ public class ItemDefinition
     public bool IsArrow => InteractionType == InteractionType.Arrow;
 
     public bool IsOneWayGate => InteractionType == InteractionType.OneWayGate;
+
+    public bool IsBottle => InteractionType == InteractionType.Bottle;
+
+    public bool IsHabboWheel => InteractionType == InteractionType.HabboWheel;
+
+    public bool IsLoveShuffler => InteractionType == InteractionType.LoveShuffler;
+
+    public bool IsAlert => InteractionType == InteractionType.Alert;
+
+    public bool IsVendingMachine => InteractionType == InteractionType.VendingMachine;
+
+    public bool IsScoreboard => InteractionType == InteractionType.Scoreboard;
+
+    public bool IsPuzzleBox => InteractionType == InteractionType.PuzzleBox;
 
     public bool IsStacktool => InteractionType == InteractionType.Stacktool;
 
@@ -169,6 +185,12 @@ public class ItemDefinition
             or InteractionType.Banzaiscorered
             or InteractionType.Banzaiscoreyellow;
 
+    public bool IsBanzaiCounter => InteractionType == InteractionType.Banzaicounter;
+
+    public bool IsBanzaiTimerOrScore => IsBanzaiCounter || IsBanzaiScore;
+
+    public bool IsFreezeTimer => InteractionType == InteractionType.Freezetimer;
+
     public bool IsTeamGate =>
         InteractionType is InteractionType.FreezeBlueGate
             or InteractionType.FreezeGreenGate
@@ -207,6 +229,10 @@ public class ItemDefinition
             or InteractionType.FreezeYellowGate;
 
     public bool IsEffectProviderFurni => InteractionType == InteractionType.Effect;
+
+    public bool IsCounter => InteractionType == InteractionType.Counter;
+
+    public bool IsCannon => InteractionType == InteractionType.Cannon;
 
     public bool IsMoodlight => InteractionType == InteractionType.Moodlight;
 
