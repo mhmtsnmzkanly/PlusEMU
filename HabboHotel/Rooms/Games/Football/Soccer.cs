@@ -210,26 +210,22 @@ public class Soccer
     {
         switch (item.Definition.InteractionType)
         {
-            case InteractionType.FootballGoalRed:
-            case InteractionType.Footballcounterred:
+            case var _ when item.Definition.InteractionType is InteractionType.FootballGoalRed or InteractionType.Footballcounterred:
             {
                 _room.GetGameManager().RemoveFurnitureFromTeam(item, Team.Red);
                 break;
             }
-            case InteractionType.FootballGoalGreen:
-            case InteractionType.Footballcountergreen:
+            case var _ when item.Definition.InteractionType is InteractionType.FootballGoalGreen or InteractionType.Footballcountergreen:
             {
                 _room.GetGameManager().RemoveFurnitureFromTeam(item, Team.Green);
                 break;
             }
-            case InteractionType.FootballGoalBlue:
-            case InteractionType.Footballcounterblue:
+            case var _ when item.Definition.InteractionType is InteractionType.FootballGoalBlue or InteractionType.Footballcounterblue:
             {
                 _room.GetGameManager().RemoveFurnitureFromTeam(item, Team.Blue);
                 break;
             }
-            case InteractionType.FootballGoalYellow:
-            case InteractionType.Footballcounteryellow:
+            case var _ when item.Definition.InteractionType is InteractionType.FootballGoalYellow or InteractionType.Footballcounteryellow:
             {
                 _room.GetGameManager().RemoveFurnitureFromTeam(item, Team.Yellow);
                 break;

@@ -47,7 +47,7 @@ public class GameManager
         Points[Convert.ToInt32(team)] = newPoints;
         foreach (var item in GetFurniItems(team).Values.ToList())
         {
-            if (!IsFootballGoal(item.Definition.InteractionType))
+            if (!item.Definition.IsFootballGoal)
             {
                 item.LegacyDataString = Points[Convert.ToInt32(team)].ToString();
                 item.UpdateState();
@@ -105,9 +105,6 @@ public class GameManager
         }
     }
 
-    private static bool IsFootballGoal(InteractionType type) => type == InteractionType.FootballGoalBlue || type == InteractionType.FootballGoalGreen || type == InteractionType.FootballGoalRed ||
-                                                                type == InteractionType.FootballGoalYellow;
-
     public void AddFurnitureToTeam(Item item, Team team)
     {
         switch (team)
@@ -164,11 +161,7 @@ public class GameManager
 
     private void LockGate(Item item)
     {
-        var type = item.Definition.InteractionType;
-        if (type == InteractionType.FreezeBlueGate || type == InteractionType.FreezeGreenGate ||
-            type == InteractionType.FreezeRedGate || type == InteractionType.FreezeYellowGate
-            || type == InteractionType.Banzaigateblue || type == InteractionType.Banzaigatered ||
-            type == InteractionType.Banzaigategreen || type == InteractionType.Banzaigateyellow)
+        if (item.Definition.IsTeamGate)
         {
             foreach (var user in _room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY))) user.SqState = 0;
             _room.GetGameMap().GameMap[item.GetX, item.GetY] = 0;
@@ -177,11 +170,7 @@ public class GameManager
 
     private void UnlockGate(Item item)
     {
-        var type = item.Definition.InteractionType;
-        if (type == InteractionType.FreezeBlueGate || type == InteractionType.FreezeGreenGate ||
-            type == InteractionType.FreezeRedGate || type == InteractionType.FreezeYellowGate
-            || type == InteractionType.Banzaigateblue || type == InteractionType.Banzaigatered ||
-            type == InteractionType.Banzaigategreen || type == InteractionType.Banzaigateyellow)
+        if (item.Definition.IsTeamGate)
         {
             foreach (var user in _room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY))) user.SqState = 1;
             _room.GetGameMap().GameMap[item.GetX, item.GetY] = 1;

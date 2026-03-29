@@ -66,6 +66,10 @@ public class ItemDefinition
 
     public bool IsHopper => InteractionType == InteractionType.Hopper;
 
+    public bool IsFreezeTile => InteractionType == InteractionType.FreezeTile;
+
+    public bool IsFreezeTileBlock => InteractionType == InteractionType.FreezeTileBlock;
+
     public bool IsPostIt => InteractionType == InteractionType.Postit;
 
     public bool IsTeleport => InteractionType == InteractionType.Teleport;
@@ -77,6 +81,36 @@ public class ItemDefinition
     public bool IsFloorSwitch =>
         InteractionType is InteractionType.WfFloorSwitch1
             or InteractionType.WfFloorSwitch2;
+
+    public bool IsFootballGoal =>
+        InteractionType is InteractionType.FootballGoalBlue
+            or InteractionType.FootballGoalGreen
+            or InteractionType.FootballGoalRed
+            or InteractionType.FootballGoalYellow;
+
+    public bool IsFootballCounter =>
+        InteractionType is InteractionType.Footballcounterblue
+            or InteractionType.Footballcountergreen
+            or InteractionType.Footballcounterred
+            or InteractionType.Footballcounteryellow;
+
+    public bool IsFootballGoalOrCounter => IsFootballGoal || IsFootballCounter;
+
+    public bool IsBanzaiScore =>
+        InteractionType is InteractionType.Banzaiscoreblue
+            or InteractionType.Banzaiscoregreen
+            or InteractionType.Banzaiscorered
+            or InteractionType.Banzaiscoreyellow;
+
+    public bool IsTeamGate =>
+        InteractionType is InteractionType.FreezeBlueGate
+            or InteractionType.FreezeGreenGate
+            or InteractionType.FreezeRedGate
+            or InteractionType.FreezeYellowGate
+            or InteractionType.Banzaigateblue
+            or InteractionType.Banzaigatered
+            or InteractionType.Banzaigategreen
+            or InteractionType.Banzaigateyellow;
 
     public bool IsStickyNoteOrPhoto =>
         InteractionType is InteractionType.Postit

@@ -191,18 +191,10 @@ public class BattleBanzai
     {
         foreach (var item in _room.GetRoomItemHandler().GetFloor.ToList())
         {
-            var type = item.Definition.InteractionType;
-            switch (type)
+            if (item.Definition.IsBanzaiScore)
             {
-                case InteractionType.Banzaiscoreblue:
-                case InteractionType.Banzaiscoregreen:
-                case InteractionType.Banzaiscorered:
-                case InteractionType.Banzaiscoreyellow:
-                {
-                    item.LegacyDataString = "0";
-                    item.UpdateState();
-                    break;
-                }
+                item.LegacyDataString = "0";
+                item.UpdateState();
             }
         }
     }

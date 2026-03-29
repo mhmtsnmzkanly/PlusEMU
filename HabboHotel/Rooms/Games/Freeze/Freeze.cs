@@ -261,25 +261,18 @@ public class Freeze
     {
         foreach (var item in items.ToList())
         {
-            switch (item.Definition.InteractionType)
+            if (item.Definition.IsFreezeTile)
             {
-                case InteractionType.FreezeTile:
-                {
-                    item.LegacyDataString = "11000";
-                    item.UpdateState(false, true);
-                    continue;
-                }
-                case InteractionType.FreezeTileBlock:
-                {
-                    SetRandomPowerUp(item);
-                    item.UpdateState(false, true);
-                    continue;
-                }
-                default:
-                {
-                    continue;
-                }
+                item.LegacyDataString = "11000";
+                item.UpdateState(false, true);
+                continue;
             }
+
+            if (!item.Definition.IsFreezeTileBlock)
+                continue;
+
+            SetRandomPowerUp(item);
+            item.UpdateState(false, true);
         }
     }
 
@@ -564,7 +557,7 @@ public class Freeze
     {
         foreach (var item in items)
         {
-            if (item.Definition.InteractionType == InteractionType.FreezeTile)
+            if (item.Definition.IsFreezeTile)
                 return true;
         }
         return false;
@@ -574,7 +567,7 @@ public class Freeze
     {
         foreach (var item in items)
         {
-            if (item.Definition.InteractionType == InteractionType.FreezeTileBlock)
+            if (item.Definition.IsFreezeTileBlock)
                 return true;
         }
         return false;
