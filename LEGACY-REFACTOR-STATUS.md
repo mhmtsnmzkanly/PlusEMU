@@ -298,3 +298,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - The `PlusEnvironment` static surface has been narrowed again: RCON parsing no longer reaches back through the global environment, and the unused `FigureManager` / `DatabaseManager` static exposure has been removed.
 - The remaining `PlusEnvironment` static surface has narrowed again: room promotion creation no longer pulls settings from the global environment, and outgoing room/group payloads no longer depend on the static username lookup helper.
 - The last static `Habbo` cache tail is gone from `PlusEnvironment`: the old `GetHabboById` / `GetHabboByUsername` helpers and their timer-driven cached-user cleanup path have been removed.
+- `Item` has also been trimmed a bit further: stale obsolete markers on actively used coordinate/roller helpers are gone, and the dead `BaseItem` compatibility field has been removed.

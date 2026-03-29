@@ -93,7 +93,6 @@ internal class OpenGiftEvent : IPacketEvent
                 "UPDATE `items` SET `base_item` = @baseItem, `extra_data` = @edata WHERE `id` = @itemId LIMIT 1",
                 new { baseItem = (int)row!.base_id, edata = (string?)row.extra_data, itemId = present!.Id });
             db.Execute("DELETE FROM `user_presents` WHERE `item_id` = @id LIMIT 1", new { id = present.Id });
-            present.BaseItem = (int)row.base_id;
             present.LegacyDataString = ((string?)row.extra_data) ?? string.Empty;
             var definition = present.Definition;
             if (definition == null) return;

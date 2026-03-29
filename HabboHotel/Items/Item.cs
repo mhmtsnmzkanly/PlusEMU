@@ -44,8 +44,6 @@ public class Item
     /// TODO @80O: Cleanup shit below
     public Room? Room { get; set; }
     private bool _updateNeeded;
-    [Obsolete]
-    public int BaseItem;
     public string Figure = string.Empty;
     public FreezePowerUp FreezePowerUp;
     public string Gender = string.Empty;
@@ -86,13 +84,10 @@ public class Item
         }
     }
     
-    [Obsolete("Will be removed in near future. @80O")]
-    public bool IsRoller { get; }
+    public bool IsRoller => Definition.InteractionType == InteractionType.Roller;
 
-    [Obsolete("Will be removed in near future. @80O")]
     public Point Coordinate => new(GetX, GetY);
 
-    [Obsolete("Will be removed in near future. @80O")]
     public List<Point> GetCoords
     {
         get
