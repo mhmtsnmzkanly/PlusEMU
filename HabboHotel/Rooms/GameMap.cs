@@ -300,7 +300,7 @@ public class Gamemap
                     if (GameMap[coord.X, coord.Y] != 3)
                         GameMap[coord.X, coord.Y] = 1;
                 }
-                else if (item.GetZ <= Model.SqFloorHeight[item.GetX, item.GetY] + 0.1 && item.Definition.InteractionType == InteractionType.Gate &&
+                else if (item.GetZ <= Model.SqFloorHeight[item.GetX, item.GetY] + 0.1 && item.Definition.IsGate &&
                          item.LegacyDataString == "1") // If this item is a gate, open, and on the floor, allow users to walk here.
                 {
                     if (GameMap[coord.X, coord.Y] != 3)

@@ -154,7 +154,7 @@ public class RoomItemPlacementValidatorService : IRoomItemPlacementValidatorServ
             if (stackedItem == null || stackedItem.Id == item.Id)
                 continue;
 
-            if (stackedItem.Definition.InteractionType == InteractionType.Stacktool)
+            if (stackedItem.Definition.IsStacktool)
             {
                 resolvedZ = stackedItem.GetZ;
                 break;

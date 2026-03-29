@@ -85,6 +85,12 @@ public class ItemDefinition
 
     public bool IsFootballGate => InteractionType == InteractionType.FootballGate;
 
+    public bool IsGate => InteractionType == InteractionType.Gate;
+
+    public bool IsOneWayGate => InteractionType == InteractionType.OneWayGate;
+
+    public bool IsStacktool => InteractionType == InteractionType.Stacktool;
+
     public bool IsPostIt => InteractionType == InteractionType.Postit;
 
     public bool IsTeleport => InteractionType == InteractionType.Teleport;
@@ -92,6 +98,10 @@ public class ItemDefinition
     public bool IsGnomeBox => InteractionType == InteractionType.GnomeBox;
 
     public bool IsLovelock => InteractionType == InteractionType.Lovelock;
+
+    public bool IsBackground => InteractionType == InteractionType.Background;
+
+    public bool IsFxProvider => InteractionType == InteractionType.FxProvider;
 
     public bool IsBedLike =>
         InteractionType is InteractionType.Bed

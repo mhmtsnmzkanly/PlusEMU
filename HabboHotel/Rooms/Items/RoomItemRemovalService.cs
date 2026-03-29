@@ -8,7 +8,7 @@ public class RoomItemRemovalService : IRoomItemRemovalService
 {
     public void PrepareItemRemoval(Room room, GameClient? session, Item item)
     {
-        if (item.Definition.InteractionType == InteractionType.FootballGate)
+        if (item.Definition.IsFootballGate)
             room.GetSoccer().UnRegisterGate(item);
 
         if (!item.Definition.IsGift)

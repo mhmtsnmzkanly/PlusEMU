@@ -22,7 +22,7 @@ internal class InteractorFreezeTile : IFurniInteractor
         {
             user.FreezeInteracting = true;
             item.InteractingUser = habbo.Id;
-            if (item.Definition.InteractionType == InteractionType.FreezeTileBlock)
+            if (item.Definition.IsFreezeTileBlock)
             {
                 if (Gamemap.TileDistance(user.X, user.Y, item.GetX, item.GetY) < 2)
                     item.GetRoom().GetFreeze().OnFreezeTiles(item, item.FreezePowerUp);

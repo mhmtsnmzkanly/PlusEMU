@@ -17,7 +17,7 @@ internal class SaveBrandingItemEvent : IPacketEvent
         var item = room.GetRoomItemHandler().GetItem(itemId);
         if (item == null)
             return Task.CompletedTask;
-        if (item.Definition.InteractionType == InteractionType.Background)
+        if (item.Definition.IsBackground)
         {
             var data = packet.ReadInt();
             var brandData = $"state{Convert.ToChar(9)}0";
@@ -25,7 +25,7 @@ internal class SaveBrandingItemEvent : IPacketEvent
                 brandData = brandData + Convert.ToChar(9) + packet.ReadString();
             item.LegacyDataString = brandData;
         }
-        else if (item.Definition.InteractionType == InteractionType.FxProvider)
+        else if (item.Definition.IsFxProvider)
         {
             /*int Unknown = Packet.PopInt();
             string Data = Packet.PopString();
