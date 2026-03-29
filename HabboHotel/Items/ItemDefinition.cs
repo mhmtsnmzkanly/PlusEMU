@@ -93,6 +93,10 @@ public class ItemDefinition
 
     public bool IsLovelock => InteractionType == InteractionType.Lovelock;
 
+    public bool IsBedLike =>
+        InteractionType is InteractionType.Bed
+            or InteractionType.TentSmall;
+
     public bool IsFloorSwitch =>
         InteractionType is InteractionType.WfFloorSwitch1
             or InteractionType.WfFloorSwitch2;
@@ -150,8 +154,7 @@ public class ItemDefinition
 
     public bool BlocksWalkAsOccupiedTile =>
         IsSeat
-        || InteractionType == InteractionType.Bed
-        || InteractionType == InteractionType.TentSmall;
+        || IsBedLike;
 
     public string? RoomDecorationKey =>
         InteractionType switch

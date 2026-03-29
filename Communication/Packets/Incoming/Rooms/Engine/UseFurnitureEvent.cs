@@ -28,7 +28,7 @@ internal class UseFurnitureEvent : RoomPacketEvent
         var item = room.GetRoomItemHandler().GetItem(itemId);
         if (item == null) return;
         var hasRights = room.CheckRights(session, false, true);
-        if (item.Definition.InteractionType == InteractionType.Banzaitele) return;
+        if (item.Definition.IsBanzaiTeleport) return;
         if (item.Definition.IsToner)
         {
             if (!room.CheckRights(session, true)) return;

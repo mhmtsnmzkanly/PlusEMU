@@ -949,8 +949,7 @@ public class RoomUserManager
                 }
                 switch (definition.InteractionType)
                 {
-                    case InteractionType.Bed:
-                    case InteractionType.TentSmall:
+                    case var _ when definition.IsBedLike:
                         {
                             if (!user!.Statusses.ContainsKey("lay"))
                                 user.Statusses.Add("lay", $"{TextHandling.GetString(definition.Height)} null");
@@ -1048,7 +1047,7 @@ public class RoomUserManager
                             }
                             break;
                         }
-                    case InteractionType.Banzaitele:
+                    case var _ when definition.IsBanzaiTeleport:
                         {
                             if (user!.Statusses.ContainsKey("mv"))
                                 _room.GetGameItemHandler().OnTeleportRoomUserEnter(user, item);

@@ -42,9 +42,9 @@ internal static class ItemBehaviourUtility
             default:
                 packet.WriteInteger(1);
                 packet.WriteInteger(0);
-                packet.WriteString(item.Definition.InteractionType != InteractionType.FootballGate ? item.LegacyDataString : string.Empty);
+                packet.WriteString(!item.Definition.IsFootballGate ? item.LegacyDataString : string.Empty);
                 break;
-            case InteractionType.GnomeBox:
+            case var _ when item.Definition.IsGnomeBox:
                 packet.WriteInteger(0);
                 packet.WriteInteger(0);
                 packet.WriteString("");
@@ -100,7 +100,7 @@ internal static class ItemBehaviourUtility
                 else
                     packet.WriteInteger(0);
                 break;
-            case InteractionType.Gift:
+            case var _ when item.Definition.IsGift:
             {
                 var extraData = item.LegacyDataString.Split(Convert.ToChar(5));
                 if (extraData.Length != 7)
@@ -213,7 +213,7 @@ internal static class ItemBehaviourUtility
                 //Message.WriteString("http://img.youtube.com/vi/" + PlusEnvironment.GetGame().GetTelevisionManager().TelevisionList.OrderBy(x => Guid.NewGuid()).FirstOrDefault().YouTubeId + "/3.jpg");
                 packet.WriteString("");
                 break;
-            case InteractionType.Lovelock:
+            case var _ when item.Definition.IsLovelock:
                 if (item.LegacyDataString.Contains(Convert.ToChar(5).ToString()))
                 {
                     var eData = item.LegacyDataString.Split((char)5);
@@ -251,7 +251,7 @@ internal static class ItemBehaviourUtility
             default:
                 message.WriteString(item.LegacyDataString);
                 break;
-            case InteractionType.Postit:
+            case var _ when item.Definition.IsPostIt:
                 message.WriteString(item.LegacyDataString.Split(' ')[0]);
                 break;
         }
