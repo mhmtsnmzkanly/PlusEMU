@@ -111,25 +111,46 @@ internal class CatalogService : ICatalogService
     {
         var habbo = session.GetHabbo();
         var inventory = habbo?.Inventory;
-        if (habbo?.Permissions == null || inventory == null || habbo.Effects == null) return;
+        if (habbo?.Permissions == null || inventory == null || habbo.Effects == null)
+        {
+            _logger.LogWarning("PurchaseItem aborted for session {sessionId}: missing habbo or components.", session.Id);
+            return;
+        }
 
         if (_settingsManager.TryGetValue("catalog.enabled") != "1")
         {
+            _logger.LogWarning("PurchaseItem aborted for session {sessionId}: catalog disabled.", session.Id);
             session.SendNotification("The hotel managers have disabled the catalogue");
             return;
         }
 
-        if (!_catalogManager.TryGetPage(pageId, out var page)) return;
-        if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || (page.MinimumVip > habbo.VipRank && habbo.Rank == 1)) return;
+        if (!_catalogManager.TryGetPage(pageId, out var page))
+        {
+            _logger.LogWarning("PurchaseItem aborted for session {sessionId}: page {pageId} not found.", session.Id, pageId);
+            return;
+        }
+        if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || (page.MinimumVip > habbo.VipRank && habbo.Rank == 1))
+        {
+            _logger.LogWarning("PurchaseItem aborted for session {sessionId}: page {pageId} not accessible.", session.Id, pageId);
+            return;
+        }
 
         if (!page.Items.TryGetValue(itemId, out var item))
         {
             if (page.ItemOffers.ContainsKey(itemId))
             {
                 item = page.ItemOffers[itemId];
-                if (item == null) return;
+                if (item == null)
+                {
+                    _logger.LogWarning("PurchaseItem aborted for session {sessionId}: page {pageId} offer {itemId} resolved null.", session.Id, pageId, itemId);
+                    return;
+                }
             }
-            else return;
+            else
+            {
+                _logger.LogWarning("PurchaseItem aborted for session {sessionId}: page {pageId} item/offer {itemId} not found.", session.Id, pageId, itemId);
+                return;
+            }
         }
 
         if (amount < 1 || amount > 100 || !item.HaveOffer) amount = 1;
@@ -139,7 +160,12 @@ internal class CatalogService : ICatalogService
         var totalPixelCost = amount > 1 ? item.CostPixels * amount - (int)Math.Floor((double)amount / 6) * item.CostPixels : item.CostPixels;
         var totalDiamondCost = amount > 1 ? item.CostDiamonds * amount - (int)Math.Floor((double)amount / 6) * item.CostDiamonds : item.CostDiamonds;
 
-        if (habbo.Credits < totalCreditsCost || habbo.Duckets < totalPixelCost || habbo.Diamonds < totalDiamondCost) return;
+        if (habbo.Credits < totalCreditsCost || habbo.Duckets < totalPixelCost || habbo.Diamonds < totalDiamondCost)
+        {
+            _logger.LogWarning("PurchaseItem aborted for session {sessionId}: insufficient balance. Credits {credits}/{neededCredits}, Duckets {duckets}/{neededDuckets}, Diamonds {diamonds}/{neededDiamonds}.",
+                session.Id, habbo.Credits, totalCreditsCost, habbo.Duckets, totalPixelCost, habbo.Diamonds, totalDiamondCost);
+            return;
+        }
 
         // Interaction Type validation and extraData normalization
         switch (item.Definition!.InteractionType)
@@ -262,6 +288,9 @@ internal class CatalogService : ICatalogService
                 else generatedItems.Add(_itemFactory.CreateSingleItemNullable(item.Definition, habbo, extraData, extraData, 0, selectionSells, selectionStack)!);
                 break;
         }
+
+        _logger.LogInformation("PurchaseItem delivery prepared for session {sessionId}. PageId: {pageId}. ItemId: {itemId}. GeneratedCount: {generatedCount}. Type: {itemType}.",
+            session.Id, item.PageId, item.Id, generatedItems.Count, item.Definition.Type);
 
         foreach (var purchasedItem in generatedItems)
             if (habbo.Inventory!.Furniture.AddItem(purchasedItem.ToInventoryItem()))

@@ -342,3 +342,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - added targeted room-entry and catalog purchase runtime tracing to isolate Nitro client flow mismatches in live testing
 - tightened avatar figure-update flow so filtered look data is persisted and echoed consistently, with live tracing for Nitro clothing-debug runs
 - aligned the live Nitro 1.6.6 room-enter follow-up header and catalog offer-id flow with the client renderer, removing two concrete protocol mismatches behind black-screen and silent purchase failures
+- corrected the room authorization flow back to original immediate-enter semantics and added targeted catalog purchase abort tracing so service extraction no longer hides silent protocol/lookup failures

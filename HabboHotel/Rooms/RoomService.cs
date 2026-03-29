@@ -12,6 +12,7 @@ using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Navigator;
 using Plus.HabboHotel.Rooms.Chat.Filter;
 using Plus.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -24,6 +25,7 @@ public class RoomService : IRoomService
     private readonly ILanguageManager _languageManager;
     private readonly IAchievementService _achievementService;
     private readonly IDatabase _database;
+    private readonly ILogger<RoomService> _logger;
 
     public RoomService(
         IRoomManager roomManager,
@@ -32,7 +34,8 @@ public class RoomService : IRoomService
         IWordFilterManager wordFilterManager,
         ILanguageManager languageManager,
         IAchievementService achievementService,
-        IDatabase database)
+        IDatabase database,
+        ILogger<RoomService> logger)
     {
         _roomManager = roomManager;
         _roomFactory = roomFactory;
@@ -41,6 +44,7 @@ public class RoomService : IRoomService
         _languageManager = languageManager;
         _achievementService = achievementService;
         _database = database;
+        _logger = logger;
     }
 
     public async Task PrepareRoom(GameClient session, uint roomId, string password)
@@ -84,7 +88,7 @@ public class RoomService : IRoomService
             return;
         }
 
-        if (!TryAuthorizeRoomEntry(session, habbo, room, password))
+        if (!await TryAuthorizeRoomEntry(session, habbo, room, password))
             return;
     }
 
@@ -195,26 +199,26 @@ public class RoomService : IRoomService
         room.GetRoomUserManager().RemoveUserFromRoom(session, notifyUser, notifyKick);
     }
 
-    private bool TryAuthorizeRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)
+    private async Task<bool> TryAuthorizeRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)
     {
         habbo.RoomAuthOk = false;
 
         if (room.Type == "public")
-            return TryAuthorizePublicRoomEntry(session, habbo, room);
+            return await TryAuthorizePublicRoomEntry(session, habbo, room);
 
         if (CanBypassPrivateRoomChecks(habbo, room))
-            return OpenAuthorizedRoom(session, habbo);
+            return await OpenAuthorizedRoom(session, habbo);
 
         if (room.Access == RoomAccess.Doorbell)
             return TryAuthorizeDoorbellRoomEntry(session, habbo, room);
 
         if (room.Access == RoomAccess.Password)
-            return TryAuthorizePasswordRoomEntry(session, habbo, room, password);
+            return await TryAuthorizePasswordRoomEntry(session, habbo, room, password);
 
-        return OpenAuthorizedRoom(session, habbo);
+        return await OpenAuthorizedRoom(session, habbo);
     }
 
-    private bool TryAuthorizePublicRoomEntry(GameClient session, Users.Habbo habbo, Room room)
+    private async Task<bool> TryAuthorizePublicRoomEntry(GameClient session, Users.Habbo habbo, Room room)
     {
         if (room.Access == RoomAccess.Doorbell && !(habbo.Permissions?.HasRight("room_enter_any_room") ?? false))
         {
@@ -223,7 +227,7 @@ public class RoomService : IRoomService
             return false;
         }
 
-        return OpenAuthorizedRoom(session, habbo);
+        return await OpenAuthorizedRoom(session, habbo);
     }
 
     private static bool CanBypassPrivateRoomChecks(Users.Habbo habbo, Room room)
@@ -249,20 +253,22 @@ public class RoomService : IRoomService
         return false;
     }
 
-    private static bool TryAuthorizePasswordRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)
+    private async Task<bool> TryAuthorizePasswordRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)
     {
         if (password.ToLower() == room.Password.ToLower() || habbo.RoomAuthOk)
-            return OpenAuthorizedRoom(session, habbo);
+            return await OpenAuthorizedRoom(session, habbo);
 
         session.Send(new GenericErrorComposer(-100002));
         session.Send(new CloseConnectionComposer());
         return false;
     }
 
-    private static bool OpenAuthorizedRoom(GameClient session, Users.Habbo habbo)
+    private async Task<bool> OpenAuthorizedRoom(GameClient session, Users.Habbo habbo)
     {
         habbo.RoomAuthOk = true;
         session.Send(new OpenConnectionComposer());
+        _logger.LogInformation("OpenAuthorizedRoom completed for session {sessionId}. Immediately entering prepared room.", session.Id);
+        await EnterRoom(session);
         return true;
     }
 }

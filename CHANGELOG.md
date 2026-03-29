@@ -407,3 +407,4 @@
 - added targeted runtime tracing for room-entry and catalog purchase handshakes to diagnose Nitro black-screen and purchase issues
 - fixed avatar look update persistence/composer consistency and added runtime tracing for figure updates
 - aligned Nitro 1.6.6 `GoToFlatEvent` header with the live renderer and fixed catalog offer-id mapping so room entry and purchases no longer depend on mismatched wire ids
+- restored original immediate room-enter behavior after room authorization and added targeted catalog purchase abort logging for silent failure diagnosis
