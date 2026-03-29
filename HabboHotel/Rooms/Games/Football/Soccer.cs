@@ -208,29 +208,9 @@ public class Soccer
 
     public void OnGateRemove(Item item)
     {
-        switch (item.Definition.InteractionType)
-        {
-            case var _ when item.Definition.InteractionType is InteractionType.FootballGoalRed or InteractionType.Footballcounterred:
-            {
-                _room.GetGameManager().RemoveFurnitureFromTeam(item, Team.Red);
-                break;
-            }
-            case var _ when item.Definition.InteractionType is InteractionType.FootballGoalGreen or InteractionType.Footballcountergreen:
-            {
-                _room.GetGameManager().RemoveFurnitureFromTeam(item, Team.Green);
-                break;
-            }
-            case var _ when item.Definition.InteractionType is InteractionType.FootballGoalBlue or InteractionType.Footballcounterblue:
-            {
-                _room.GetGameManager().RemoveFurnitureFromTeam(item, Team.Blue);
-                break;
-            }
-            case var _ when item.Definition.InteractionType is InteractionType.FootballGoalYellow or InteractionType.Footballcounteryellow:
-            {
-                _room.GetGameManager().RemoveFurnitureFromTeam(item, Team.Yellow);
-                break;
-            }
-        }
+        var team = item.Definition.GetTeamOrNone();
+        if (team != Team.None && item.Definition.IsFootballGoalOrCounter)
+            _room.GetGameManager().RemoveFurnitureFromTeam(item, team);
     }
 
     public void MoveBall(Item item, int newX, int newY, RoomUser user)

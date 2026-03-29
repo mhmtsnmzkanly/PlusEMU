@@ -1,4 +1,5 @@
 ﻿using Plus.HabboHotel.Items.Wired;
+using Plus.HabboHotel.Rooms.Games.Teams;
 using Plus.HabboHotel.Users.Inventory.Furniture;
 
 namespace Plus.HabboHotel.Items;
@@ -146,4 +147,32 @@ public class ItemDefinition
             InteractionType.Landscape => "landscape",
             _ => null
         };
+
+    public Team GetTeamOrNone()
+    {
+        return InteractionType switch
+        {
+            InteractionType.FootballGoalBlue or
+            InteractionType.Footballcounterblue or
+            InteractionType.Banzaiscoreblue or
+            InteractionType.Banzaigateblue or
+            InteractionType.FreezeBlueGate => Team.Blue,
+            InteractionType.FootballGoalRed or
+            InteractionType.Footballcounterred or
+            InteractionType.Banzaiscorered or
+            InteractionType.Banzaigatered or
+            InteractionType.FreezeRedGate => Team.Red,
+            InteractionType.FootballGoalGreen or
+            InteractionType.Footballcountergreen or
+            InteractionType.Banzaiscoregreen or
+            InteractionType.Banzaigategreen or
+            InteractionType.FreezeGreenGate => Team.Green,
+            InteractionType.FootballGoalYellow or
+            InteractionType.Footballcounteryellow or
+            InteractionType.Banzaiscoreyellow or
+            InteractionType.Banzaigateyellow or
+            InteractionType.FreezeYellowGate => Team.Yellow,
+            _ => Team.None
+        };
+    }
 }

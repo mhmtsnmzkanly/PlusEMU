@@ -55,22 +55,7 @@ public class GameManager
         }
         foreach (var item in _room.GetRoomItemHandler().GetFloor.ToList())
         {
-            if (team == Team.Blue && item.Definition.InteractionType == InteractionType.Banzaiscoreblue)
-            {
-                item.LegacyDataString = Points[Convert.ToInt32(team)].ToString();
-                item.UpdateState();
-            }
-            else if (team == Team.Red && item.Definition.InteractionType == InteractionType.Banzaiscorered)
-            {
-                item.LegacyDataString = Points[Convert.ToInt32(team)].ToString();
-                item.UpdateState();
-            }
-            else if (team == Team.Green && item.Definition.InteractionType == InteractionType.Banzaiscoregreen)
-            {
-                item.LegacyDataString = Points[Convert.ToInt32(team)].ToString();
-                item.UpdateState();
-            }
-            else if (team == Team.Yellow && item.Definition.InteractionType == InteractionType.Banzaiscoreyellow)
+            if (item.Definition.IsBanzaiScore && item.Definition.GetTeamOrNone() == team)
             {
                 item.LegacyDataString = Points[Convert.ToInt32(team)].ToString();
                 item.UpdateState();
