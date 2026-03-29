@@ -288,7 +288,7 @@ public class Item
                 RoomUser? user2 = null;
                 switch (Definition.InteractionType)
                 {
-                    case InteractionType.GuildGate:
+                    case var _ when Definition.IsGroupGate:
                     {
                         if (LegacyDataString == "1")
                         {
@@ -302,7 +302,7 @@ public class Item
                         }
                         break;
                     }
-                    case InteractionType.Effect:
+                    case var _ when Definition.IsEffectProviderFurni:
                     {
                         if (LegacyDataString == "1")
                         {
@@ -316,7 +316,7 @@ public class Item
                         }
                         break;
                     }
-                    case InteractionType.OneWayGate:
+                    case var _ when Definition.IsOneWayGate:
                         user = null;
                         if (InteractingUser > 0) user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
                         if (user != null && user.X == GetX && user.Y == GetY)

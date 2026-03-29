@@ -959,10 +959,7 @@ public class RoomUserManager
                             user.UpdateNeeded = true;
                             break;
                         }
-                    case InteractionType.Banzaigategreen:
-                    case InteractionType.Banzaigateblue:
-                    case InteractionType.Banzaigatered:
-                    case InteractionType.Banzaigateyellow:
+                    case var _ when definition.IsBanzaiGate:
                         {
                             if (cyclegameitems)
                             {
@@ -1003,10 +1000,7 @@ public class RoomUserManager
                             }
                             break;
                         }
-                    case InteractionType.FreezeYellowGate:
-                    case InteractionType.FreezeRedGate:
-                    case InteractionType.FreezeGreenGate:
-                    case InteractionType.FreezeBlueGate:
+                    case var _ when definition.IsFreezeGate:
                         {
                             if (cyclegameitems)
                             {
@@ -1053,7 +1047,7 @@ public class RoomUserManager
                                 _room.GetGameItemHandler().OnTeleportRoomUserEnter(user, item);
                             break;
                         }
-                    case InteractionType.Effect:
+                    case var _ when definition.IsEffectProviderFurni:
                         {
                             if (user == null)
                                 return;
@@ -1071,7 +1065,7 @@ public class RoomUserManager
                             }
                             break;
                         }
-                    case InteractionType.Arrow:
+                    case var _ when definition.IsArrow:
                         {
                             if (user!.GoalX == item.GetX && user.GoalY == item.GetY)
                             {

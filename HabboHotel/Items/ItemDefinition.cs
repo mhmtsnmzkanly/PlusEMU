@@ -99,6 +99,8 @@ public class ItemDefinition
 
     public bool IsGate => InteractionType == InteractionType.Gate;
 
+    public bool IsArrow => InteractionType == InteractionType.Arrow;
+
     public bool IsOneWayGate => InteractionType == InteractionType.OneWayGate;
 
     public bool IsStacktool => InteractionType == InteractionType.Stacktool;
@@ -191,6 +193,20 @@ public class ItemDefinition
             or InteractionType.GuildForum;
 
     public bool IsGroupGate => InteractionType == InteractionType.GuildGate;
+
+    public bool IsBanzaiGate =>
+        InteractionType is InteractionType.Banzaigateblue
+            or InteractionType.Banzaigatered
+            or InteractionType.Banzaigategreen
+            or InteractionType.Banzaigateyellow;
+
+    public bool IsFreezeGate =>
+        InteractionType is InteractionType.FreezeBlueGate
+            or InteractionType.FreezeGreenGate
+            or InteractionType.FreezeRedGate
+            or InteractionType.FreezeYellowGate;
+
+    public bool IsEffectProviderFurni => InteractionType == InteractionType.Effect;
 
     public bool IsMoodlight => InteractionType == InteractionType.Moodlight;
 

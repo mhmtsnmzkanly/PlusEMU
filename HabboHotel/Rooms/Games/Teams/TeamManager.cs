@@ -148,46 +148,20 @@ public class TeamManager
 
     private static bool TryGetBanzaiGateTeam(Item item, out Team team)
     {
-        switch (item.Definition.InteractionType)
-        {
-            case InteractionType.Banzaigateblue:
-                team = Team.Blue;
-                return true;
-            case InteractionType.Banzaigatered:
-                team = Team.Red;
-                return true;
-            case InteractionType.Banzaigategreen:
-                team = Team.Green;
-                return true;
-            case InteractionType.Banzaigateyellow:
-                team = Team.Yellow;
-                return true;
-            default:
-                team = Team.None;
-                return false;
-        }
+        team = item.Definition.IsBanzaiGate
+            ? item.Definition.GetTeamOrNone()
+            : Team.None;
+
+        return team != Team.None;
     }
 
     private static bool TryGetFreezeGateTeam(Item item, out Team team)
     {
-        switch (item.Definition.InteractionType)
-        {
-            case InteractionType.FreezeBlueGate:
-                team = Team.Blue;
-                return true;
-            case InteractionType.FreezeRedGate:
-                team = Team.Red;
-                return true;
-            case InteractionType.FreezeGreenGate:
-                team = Team.Green;
-                return true;
-            case InteractionType.FreezeYellowGate:
-                team = Team.Yellow;
-                return true;
-            default:
-                team = Team.None;
-                return false;
-        }
+        team = item.Definition.IsFreezeGate
+            ? item.Definition.GetTeamOrNone()
+            : Team.None;
+
+        return team != Team.None;
     }
 
     private static bool TryGetRoom(RoomUser user, out Room room)
