@@ -7,6 +7,7 @@ using Plus.Database;
 using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Quests;
+using Microsoft.Extensions.Logging;
 
 namespace Plus.Communication.Packets.Incoming.Users;
 
@@ -16,13 +17,15 @@ internal class UpdateFigureDataEvent : IPacketEvent
     private readonly IAchievementService _achievementService;
     private readonly IQuestService _questService;
     private readonly IDatabase _database;
+    private readonly ILogger<UpdateFigureDataEvent> _logger;
 
-    public UpdateFigureDataEvent(IFigureDataManager figureDataManager, IAchievementService achievementService, IQuestService questService, IDatabase database)
+    public UpdateFigureDataEvent(IFigureDataManager figureDataManager, IAchievementService achievementService, IQuestService questService, IDatabase database, ILogger<UpdateFigureDataEvent> logger)
     {
         _figureManager = figureDataManager;
         _achievementService = achievementService;
         _questService = questService;
         _database = database;
+        _logger = logger;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -31,8 +34,12 @@ internal class UpdateFigureDataEvent : IPacketEvent
             return;
 
         var gender = packet.ReadString().ToUpper();
-        var look = _figureManager.ProcessFigure(packet.ReadString(), gender, clothing.GetClothingParts, true);
-        if (look == habbo.Look)
+        var requestedLook = packet.ReadString();
+        var processedLook = _figureManager.ProcessFigure(requestedLook, gender, clothing.GetClothingParts, true);
+        var filteredLook = _figureManager.FilterFigure(processedLook);
+        _logger.LogInformation("UpdateFigureDataEvent received for session {sessionId}. Gender: {gender}. RequestedLookLength: {lookLength}.", session.Id, gender, requestedLook.Length);
+
+        if (filteredLook == habbo.Look)
             return;
         if ((DateTime.Now - habbo.LastClothingUpdateTime).TotalSeconds <= 2.0)
         {
@@ -54,13 +61,13 @@ internal class UpdateFigureDataEvent : IPacketEvent
         }
 
         await _questService.ProgressUserQuest(session, QuestType.ProfileChangeLook);
-        habbo.Look = _figureManager.FilterFigure(look);
+        habbo.Look = filteredLook;
         habbo.Gender = gender.ToLower();
         using var db = _database.Connection();
         db.Execute("UPDATE `users` SET `look` = @look, `gender` = @gender WHERE `id` = @id LIMIT 1",
-            new { look, gender, id = habbo.Id });
+            new { look = habbo.Look, gender = habbo.Gender, id = habbo.Id });
         await _achievementService.ProgressAchievement(session, "ACH_AvatarLooks", 1);
-        session.Send(new AvatarAspectUpdateComposer(look, gender));
+        session.Send(new AvatarAspectUpdateComposer(habbo.Look, habbo.Gender));
         if (habbo.Look.Contains("ha-1006"))
             await _questService.ProgressUserQuest(session, QuestType.WearHat);
         if (habbo.TryGetCurrentRoom(out var currentRoom))
