@@ -18,6 +18,7 @@ namespace Plus;
 public static class Program
 {
     private static readonly Dictionary<ServiceLifetime, IEnumerable<Type>> _defaultTypes = new();
+    private static IServiceProvider? _serviceProvider;
 
     public static async Task Main(string[] args)
     {
@@ -61,6 +62,7 @@ public static class Program
         });
 
         var serviceProvider = services.BuildServiceProvider();
+        _serviceProvider = serviceProvider;
         foreach (var plugin in pluginDefinitions)
             plugin.OnServiceProviderBuild(serviceProvider);
 
@@ -70,6 +72,7 @@ public static class Program
 
         // Start
         var environment = serviceProvider.GetRequiredService<IPlusEnvironment>();
+        var consoleCommandHandler = serviceProvider.GetRequiredService<IConsoleCommandHandler>();
         var started = await environment.Start();
         if (!started)
         {
@@ -84,8 +87,7 @@ public static class Program
                 var input = Console.ReadLine();
                 if (!string.IsNullOrWhiteSpace(input))
                 {
-                    var s = input.Split(' ')[0];
-                    ConsoleCommands.InvokeCommand(s);
+                    consoleCommandHandler.InvokeCommand(input);
                 }
             }
         }
@@ -154,15 +156,16 @@ public static class Program
     private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs args)
     {
         var logger = LogManager.GetLogger("Plus.Program");
+        var runtimeControlService = _serviceProvider?.GetService<IRuntimeControlService>();
         if (args.ExceptionObject is Exception e)
         {
             logger.Error(e, "Unhandled exception terminated the emulator.");
-            PlusEnvironment.PerformShutDown($"Unhandled exception: {e.GetType().Name}: {e.Message}");
+            runtimeControlService?.PerformShutdown($"Unhandled exception: {e.GetType().Name}: {e.Message}");
         }
         else
         {
             logger.Error("Unhandled non-exception object terminated the emulator: {exceptionObject}", args.ExceptionObject);
-            PlusEnvironment.PerformShutDown("Unhandled non-exception object");
+            runtimeControlService?.PerformShutdown("Unhandled non-exception object");
         }
     }
 }

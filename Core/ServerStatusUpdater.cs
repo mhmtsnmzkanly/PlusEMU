@@ -15,17 +15,19 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
     private readonly IGameClientManager _gameClientManager;
     private readonly IRoomManager _roomManager;
     private readonly IServerStatusSignal _serverStatusSignal;
+    private readonly IServerRuntimeState _serverRuntimeState;
     private int _lastPersistedUsers = -1;
     private int _lastPersistedRooms = -1;
     private DateTime _lastPersistedAt = DateTime.MinValue;
 
-    public ServerStatusUpdater(ILogger<ServerStatusUpdater> logger, IDatabase database, IGameClientManager gameClientManager, IRoomManager roomManager, IServerStatusSignal serverStatusSignal)
+    public ServerStatusUpdater(ILogger<ServerStatusUpdater> logger, IDatabase database, IGameClientManager gameClientManager, IRoomManager roomManager, IServerStatusSignal serverStatusSignal, IServerRuntimeState serverRuntimeState)
     {
         _logger = logger;
         _database = database;
         _gameClientManager = gameClientManager;
         _roomManager = roomManager;
         _serverStatusSignal = serverStatusSignal;
+        _serverRuntimeState = serverRuntimeState;
     }
 
     private Timer? _timer;
@@ -60,7 +62,7 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
     private void UpdateServerStatus()
     {
         var now = DateTime.Now;
-        var uptime = now - PlusEnvironment.ServerStarted;
+        var uptime = now - _serverRuntimeState.StartedAt;
         var usersOnline = _gameClientManager.Count;
         var roomCount = _roomManager.Count;
         Console.Title = $"PlusEMU - {usersOnline} users online - {roomCount} rooms loaded - {uptime.Days} day(s) {uptime.Hours} hour(s) uptime";

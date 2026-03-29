@@ -2,11 +2,17 @@
 
 namespace Plus.Core;
 
-public static class ConsoleCommands
+internal sealed class ConsoleCommandHandler : IConsoleCommandHandler
 {
     private static readonly ILogger Log = LogManager.GetLogger("Plus.Core.ConsoleCommands");
+    private readonly IRuntimeControlService _runtimeControlService;
 
-    public static void InvokeCommand(string inputData)
+    public ConsoleCommandHandler(IRuntimeControlService runtimeControlService)
+    {
+        _runtimeControlService = runtimeControlService;
+    }
+
+    public void InvokeCommand(string inputData)
     {
         if (string.IsNullOrEmpty(inputData))
             return;
@@ -19,13 +25,13 @@ public static class ConsoleCommands
                 case "shutdown":
                 {
                     Log.Warn("The server is saving users furniture, rooms, etc. WAIT FOR THE SERVER TO CLOSE, DO NOT EXIT THE PROCESS IN TASK MANAGER!!");
-                    PlusEnvironment.PerformShutDown("Console command: shutdown");
+                    _runtimeControlService.PerformShutdown("Console command: shutdown");
                     break;
                 }
                 case "alert":
                 {
                     var notice = inputData.Substring(6);
-                    PlusEnvironment.BroadcastAlert(notice);
+                    _runtimeControlService.BroadcastAlert(notice);
                     Log.Info("Alert successfully sent.");
                     break;
                 }
