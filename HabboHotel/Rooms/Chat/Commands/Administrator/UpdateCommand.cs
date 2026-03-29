@@ -1,5 +1,6 @@
 ﻿using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Core.FigureData;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Badges;
@@ -38,6 +39,7 @@ internal class UpdateCommand : IChatCommand
     private readonly IAchievementManager _achievementManager;
     private readonly IGameDataManager _gameDataManager;
     private readonly IFigureDataManager _figureDataManager;
+    private readonly ILanguageManager _languageManager;
     private readonly IBotManager _botManager;
     private readonly IBadgeManager _badgeManager;
     private readonly IRewardManager _rewardManager;
@@ -65,6 +67,7 @@ internal class UpdateCommand : IChatCommand
         IAchievementManager achievementManager,
         IGameDataManager gameDataManager,
         IFigureDataManager figureDataManager,
+        ILanguageManager languageManager,
         IBotManager botManager,
         IBadgeManager badgeManager,
         IRewardManager rewardManager,
@@ -86,6 +89,7 @@ internal class UpdateCommand : IChatCommand
         _achievementManager = achievementManager;
         _gameDataManager = gameDataManager;
         _figureDataManager = figureDataManager;
+        _languageManager = languageManager;
         _botManager = botManager;
         _badgeManager = badgeManager;
         _rewardManager = rewardManager;
@@ -307,7 +311,7 @@ internal class UpdateCommand : IChatCommand
                     session.SendWhisper("Oops, you do not have the 'command_update_locale' permission.");
                     break;
                 }
-                await PlusEnvironment.LanguageManager.Reload();
+                await _languageManager.Reload();
                 session.SendWhisper("Locale cache successfully updated.");
                 break;
             }

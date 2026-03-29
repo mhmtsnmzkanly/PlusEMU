@@ -305,7 +305,7 @@ public class PlusEnvironment : IPlusEnvironment
 
     public static void BroadcastAlert(string message)
     {
-        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer($"{LanguageManager.TryGetValue("server.console.alert")}\n\n{message}"));
+        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer($"{_languageManager.TryGetValue("server.console.alert")}\n\n{message}"));
     }
 
 
@@ -313,7 +313,7 @@ public class PlusEnvironment : IPlusEnvironment
     {
         Log.Info("Server shutting down... Reason: {reason}", string.IsNullOrWhiteSpace(reason) ? "Unspecified" : reason);
         Console.Title = "PLUSEMU: SHUTTING DOWN!";
-        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer(LanguageManager.TryGetValue("server.shutdown.message")));
+        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("server.shutdown.message")));
         _game.StopGameLoop();
         Thread.Sleep(2500);
         _flashServer.Stop();
@@ -340,8 +340,6 @@ public class PlusEnvironment : IPlusEnvironment
 
     [Obsolete("Inject IDatabase instead")]
     public static IDatabase DatabaseManager => _database;
-
-    public static ILanguageManager LanguageManager => _languageManager;
 
     public static ISettingsManager SettingsManager => _settingsManager;
 

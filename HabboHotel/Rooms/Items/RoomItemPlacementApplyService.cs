@@ -1,5 +1,6 @@
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Core;
+using Plus.Core.Language;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Rooms.PathFinding;
@@ -10,11 +11,13 @@ public class RoomItemPlacementApplyService : IRoomItemPlacementApplyService
 {
     private readonly IRoomItemPlacementPersistenceService _roomItemPlacementPersistenceService;
     private readonly IRoomItemStateService _roomItemStateService;
+    private readonly ILanguageManager _languageManager;
 
-    public RoomItemPlacementApplyService(IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomItemStateService roomItemStateService)
+    public RoomItemPlacementApplyService(IRoomItemPlacementPersistenceService roomItemPlacementPersistenceService, IRoomItemStateService roomItemStateService, ILanguageManager languageManager)
     {
         _roomItemPlacementPersistenceService = roomItemPlacementPersistenceService;
         _roomItemStateService = roomItemStateService;
+        _languageManager = languageManager;
     }
 
     public bool ApplyFloorPlacement(Room room, GameClient session, Item item, int newX, int newY, int newRot, double newZ, bool newItem, bool onRoller, bool sendMessage, bool updateRoomUserStatuses, Dictionary<int, ThreeDCoord> affectedTiles, IDictionary<uint, Item> floorItems, IDictionary<uint, Item> wallItems, Action<Item> markItemUpdated)
@@ -29,7 +32,7 @@ public class RoomItemPlacementApplyService : IRoomItemPlacementApplyService
             if (floorItems.ContainsKey(item.Id))
             {
                 if (session != null)
-                    session.SendNotification(PlusEnvironment.LanguageManager.TryGetValue("room.item.already_placed"));
+                    session.SendNotification(_languageManager.TryGetValue("room.item.already_placed"));
                 room.GetGameMap().RemoveFromMap(item);
                 return true;
             }
@@ -81,7 +84,7 @@ public class RoomItemPlacementApplyService : IRoomItemPlacementApplyService
 
         if (floorItems.ContainsKey(item.Id))
         {
-            session.SendNotification(PlusEnvironment.LanguageManager.TryGetValue("room.item.already_placed"));
+            session.SendNotification(_languageManager.TryGetValue("room.item.already_placed"));
             return true;
         }
 

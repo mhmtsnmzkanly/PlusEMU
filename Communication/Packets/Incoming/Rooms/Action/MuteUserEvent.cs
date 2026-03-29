@@ -24,7 +24,7 @@ internal class MuteUserEvent : IPacketEvent
         if (room.WhoCanMute == 0 && !room.CheckRights(session, true) && room.Group == null || room.WhoCanMute == 1 && !room.CheckRights(session) && room.Group == null ||
             room.Group != null && !room.CheckRights(session, false, true))
             return;
-        var target = room.GetRoomUserManager().GetRoomUserByHabbo(PlusEnvironment.GetUsernameById(userId));
+        var target = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
         var targetClient = target?.GetClient();
         if (targetClient?.GetHabbo() is not { } targetHabbo)
             return;

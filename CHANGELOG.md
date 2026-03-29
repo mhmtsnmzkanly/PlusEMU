@@ -356,3 +356,5 @@
 - Adjusted `FlashOutgoingPacket` for the newer framework/compiler combination and kept the full Release build at `0 Warning(s), 0 Error(s)`.
 - Collapsed `IGame` back down to its actual game-loop contract and removed the last `PlusEnvironment.Game` compatibility surface, switching shutdown/console alert flow onto directly injected managers instead of the old static game service bag.
 - Replaced the last active `PlusEnvironment.GetUnixTimestamp()` / `Now()` callers in messenger and room command flows with `UnixTimestamp.GetNow()`.
+- Removed the old static `PlusEnvironment.LanguageManager` surface, moving room item placement messaging and the `:update locale` flow onto injected `ILanguageManager`.
+- Simplified room mute handling by resolving the target room user directly by user id instead of round-tripping through the legacy static username lookup.
