@@ -70,4 +70,13 @@ public class ItemDefinition
     public bool IsMoodlight => InteractionType == InteractionType.Moodlight;
 
     public bool IsToner => InteractionType == InteractionType.Toner;
+
+    public string? RoomDecorationKey =>
+        InteractionType switch
+        {
+            InteractionType.Floor => "floor",
+            InteractionType.Wallpaper => "wallpaper",
+            InteractionType.Landscape => "landscape",
+            _ => null
+        };
 }

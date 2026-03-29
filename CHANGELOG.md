@@ -366,3 +366,4 @@
 - Cleaned up stale `Item` compatibility markers by removing the dead `BaseItem` field, promoting `IsRoller` to a real computed property, and dropping obsolete tags from actively used item coordinate helpers.
 - Added a first semantic helper layer to `ItemDefinition` and switched item, room-item, and catalog code over to `IsWired` / `IsTent` / `IsRoomDecoration` / `IsGroupGate` / `IsMoodlight` / `IsToner` instead of repeating the same raw `InteractionType` checks.
 - Extended that `ItemDefinition` helper layer with `IsDeal`, `IsBot`, and `IsGroupFurni`, then moved another catalog, group, and room-furni guard slice off repeated raw interaction comparisons.
+- Continued the same item cleanup into interaction-heavy runtime paths by routing decoration application, moodlight/toner packet guards, and item extradata generation through those newer `ItemDefinition` semantics instead of repeating hand-written interaction branches.

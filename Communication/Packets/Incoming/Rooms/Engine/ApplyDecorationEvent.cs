@@ -35,13 +35,9 @@ internal class ApplyDecorationEvent : RoomPacketEvent
         if (item == null || item.Definition == null)
             return;
 
-        var decorationKey = string.Empty;
-        switch (item.Definition.InteractionType)
-        {
-            case InteractionType.Floor: decorationKey = "floor"; break;
-            case InteractionType.Wallpaper: decorationKey = "wallpaper"; break;
-            case InteractionType.Landscape: decorationKey = "landscape"; break;
-        }
+        var decorationKey = item.Definition.RoomDecorationKey;
+        if (string.IsNullOrEmpty(decorationKey))
+            return;
 
         var data = (item.ExtraData is LegacyDataFormat legacyData ? legacyData.Data : string.Empty);
         if (string.IsNullOrWhiteSpace(data))

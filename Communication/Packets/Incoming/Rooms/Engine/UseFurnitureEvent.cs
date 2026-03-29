@@ -29,7 +29,7 @@ internal class UseFurnitureEvent : RoomPacketEvent
         if (item == null) return;
         var hasRights = room.CheckRights(session, false, true);
         if (item.Definition.InteractionType == InteractionType.Banzaitele) return;
-        if (item.Definition.InteractionType == InteractionType.Toner)
+        if (item.Definition.IsToner)
         {
             if (!room.CheckRights(session, true)) return;
             room.TonerData ??= new(item.Id, _database);

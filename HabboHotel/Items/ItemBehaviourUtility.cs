@@ -60,24 +60,17 @@ internal static class ItemBehaviourUtility
                 packet.WriteInteger(0);
                 packet.WriteString("");
                 break;
-            case InteractionType.Wallpaper:
-                packet.WriteInteger(2);
+            case var _ when item.Definition.IsRoomDecoration:
+                packet.WriteInteger(item.Definition.InteractionType switch
+                {
+                    InteractionType.Wallpaper => 2,
+                    InteractionType.Floor => 3,
+                    _ => 4
+                });
                 packet.WriteInteger(0);
                 packet.WriteString(item.LegacyDataString);
                 break;
-            case InteractionType.Floor:
-                packet.WriteInteger(3);
-                packet.WriteInteger(0);
-                packet.WriteString(item.LegacyDataString);
-                break;
-            case InteractionType.Landscape:
-                packet.WriteInteger(4);
-                packet.WriteInteger(0);
-                packet.WriteString(item.LegacyDataString);
-                break;
-            case InteractionType.GuildItem:
-            case InteractionType.GuildGate:
-            case InteractionType.GuildForum:
+            case var _ when item.Definition.IsGroupFurni:
                 if (!item.GetRoom().GetGroupManager().TryGetGroup(item.GroupId, out var group))
                 {
                     packet.WriteInteger(1);
