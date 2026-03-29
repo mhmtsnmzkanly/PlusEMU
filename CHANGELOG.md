@@ -404,3 +404,4 @@
 - Added one more helper slice for gate/background/stacktool style edge cases too, moving `OneWayGate`, `FreezeTileBlock`, `Background`, `FxProvider`, `Stacktool`, `Gate`, and `FootballGate` checks in packets, interactors, placement, game-map, and removal code onto named `ItemDefinition` predicates.
 - Trimmed another small display/composer slice too by naming pet-breeding-box, purchasable-clothing, mannequin, badge-display, monsterplant, and post-it wall-update behavior and moving those checks off raw interactions in item extradata and wall-item composers.
 - Reduced another small tail around rollers, teleports, and wired item typing by moving those checks behind named `ItemDefinition` helpers and reusing them in placement validation, teleporter lookup, and `WiredComponent` trigger/effect/condition classification.
+- added targeted runtime tracing for room-entry and catalog purchase handshakes to diagnose Nitro black-screen and purchase issues

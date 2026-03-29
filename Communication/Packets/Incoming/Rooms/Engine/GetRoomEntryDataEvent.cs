@@ -5,6 +5,7 @@ using Plus.HabboHotel.Items.Wired;
 using Plus.HabboHotel.Quests;
 using Plus.HabboHotel.Rooms;
 using Plus.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace Plus.Communication.Packets.Incoming.Rooms.Engine;
 
@@ -12,11 +13,13 @@ internal class GetRoomEntryDataEvent : IPacketEvent
 {
     private readonly IQuestService _questService;
     private readonly IRoomService _roomService;
+    private readonly ILogger<GetRoomEntryDataEvent> _logger;
 
-    public GetRoomEntryDataEvent(IQuestService questService, IRoomService roomService)
+    public GetRoomEntryDataEvent(IQuestService questService, IRoomService roomService, ILogger<GetRoomEntryDataEvent> logger)
     {
         _questService = questService;
         _roomService = roomService;
+        _logger = logger;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -24,11 +27,17 @@ internal class GetRoomEntryDataEvent : IPacketEvent
         var habbo = session.GetHabbo();
         if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
             return;
+
+        _logger.LogInformation("GetRoomEntryDataEvent received for session {sessionId}. RoomId: {roomId}.", session.Id, room.RoomId);
+
         if (!room.GetRoomUserManager().AddAvatarToRoom(session))
         {
+            _logger.LogWarning("Failed to add avatar to room {roomId} for session {sessionId}; leaving room.", room.RoomId, session.Id);
             await _roomService.LeaveRoom(session, false);
             return; //TODO: Remove?
         }
+
+        _logger.LogInformation("Room entry payload sending for session {sessionId}. RoomId: {roomId}.", session.Id, room.RoomId);
         room.SendObjects(session);
         if (habbo.Messenger != null)
             habbo.Messenger.NotifyChangesToFriends();

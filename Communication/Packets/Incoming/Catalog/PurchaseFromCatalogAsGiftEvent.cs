@@ -13,6 +13,7 @@ using Plus.HabboHotel.Items;
 using Plus.HabboHotel.Quests;
 using Plus.Utilities;
 using Dapper;
+using Microsoft.Extensions.Logging;
 
 namespace Plus.Communication.Packets.Incoming.Catalog;
 
@@ -27,6 +28,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
     private readonly IQuestService _questService;
     private readonly IItemFactory _itemFactory;
     private readonly IPetUtility _petUtility;
+    private readonly ILogger<PurchaseFromCatalogAsGiftEvent> _logger;
 
     public PurchaseFromCatalogAsGiftEvent(ICatalogManager catalogManager,
         ISettingsManager settingsManager,
@@ -36,7 +38,8 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         IGameClientManager gameClientManager,
         IQuestService questService,
         IItemFactory itemFactory,
-        IPetUtility petUtility)
+        IPetUtility petUtility,
+        ILogger<PurchaseFromCatalogAsGiftEvent> logger)
     {
         _catalogManager = catalogManager;
         _settingsManager = settingsManager;
@@ -47,6 +50,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         _questService = questService;
         _itemFactory = itemFactory;
         _petUtility = petUtility;
+        _logger = logger;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -63,6 +67,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         var ribbon = packet.ReadInt();
         var colour = packet.ReadInt();
         packet.ReadBool();
+        _logger.LogInformation("PurchaseFromCatalogAsGiftEvent received for session {sessionId}. PageId: {pageId}. ItemId: {itemId}. GiftUser: {giftUser}.", session.Id, pageId, itemId, giftUser);
         if (_settingsManager.TryGetValue("room.item.gifts.enabled") != "1")
         {
             session.SendNotification("The hotel managers have disabled gifting");
