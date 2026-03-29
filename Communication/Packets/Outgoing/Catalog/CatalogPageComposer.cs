@@ -34,7 +34,7 @@ public class CatalogPageComposer : IServerPacket
             packet.WriteInteger(_page.Items.Count);
             foreach (var item in _page.Items.Values)
             {
-                packet.WriteInteger(item.Id);
+                packet.WriteInteger(item.HaveOffer && item.OfferId > 0 ? item.OfferId : item.Id);
                 packet.WriteString(item.CatalogName ?? string.Empty);
                 packet.WriteBoolean(false); //IsRentable
                 packet.WriteInteger(item.CostCredits);

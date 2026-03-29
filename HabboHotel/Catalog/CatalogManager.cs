@@ -65,7 +65,7 @@ public class CatalogManager : ICatalogManager, IStartable
 
         using var connection = _database.Connection();
 
-        var items = await connection.QueryAsync<CatalogItem>("SELECT `id`,`item_id`,`catalog_name`,`cost_credits`,`cost_pixels`,`cost_diamonds`,`amount`,`page_id`,`limited_sells`,`limited_stack`,`offer_active`,`extradata`,`badge`,`offer_id` FROM `catalog_items`");
+        var items = await connection.QueryAsync<CatalogItem>("SELECT `id`,`item_id`,`catalog_name`,`cost_credits`,`cost_pixels`,`cost_diamonds`,`amount`,`page_id`,`limited_sells`,`limited_stack`,`offer_active` AS `HaveOffer`,`extradata`,`badge`,`offer_id` AS `OfferId` FROM `catalog_items`");
         foreach(CatalogItem item in items)
         {
             if (item.Amount <= 0)
@@ -135,7 +135,12 @@ public class CatalogManager : ICatalogManager, IStartable
         foreach (CatalogPage page in pages)
         {
             if (_items.ContainsKey(page.Id))
+            {
                 page.Items = _items[page.Id];
+                page.ItemOffers = page.Items.Values
+                    .Where(item => item.HaveOffer && item.OfferId > 0)
+                    .ToDictionary(item => item.OfferId, item => item);
+            }
 
             page.PageStringsList1 = !string.IsNullOrWhiteSpace(page.PageStrings1) ? page.PageStrings1!.Split("|").ToList() : new();
             page.PageStringsList2 = !string.IsNullOrWhiteSpace(page.PageStrings2) ? page.PageStrings2!.Split("|").ToList() : new();

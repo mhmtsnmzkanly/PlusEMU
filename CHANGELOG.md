@@ -406,3 +406,4 @@
 - Reduced another small tail around rollers, teleports, and wired item typing by moving those checks behind named `ItemDefinition` helpers and reusing them in placement validation, teleporter lookup, and `WiredComponent` trigger/effect/condition classification.
 - added targeted runtime tracing for room-entry and catalog purchase handshakes to diagnose Nitro black-screen and purchase issues
 - fixed avatar look update persistence/composer consistency and added runtime tracing for figure updates
+- aligned Nitro 1.6.6 `GoToFlatEvent` header with the live renderer and fixed catalog offer-id mapping so room entry and purchases no longer depend on mismatched wire ids

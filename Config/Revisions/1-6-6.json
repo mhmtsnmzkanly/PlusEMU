@@ -26,7 +26,7 @@
     "LookToEvent": 3301,
     "DropHandItemEvent": 2814,
     "OpenFlatConnectionEvent": 2312,
-    "GoToFlatEvent": 2947,
+    "GoToFlatEvent": 685,
     "ChatEvent": 1314,
     "ShoutEvent": 2085,
     "WhisperEvent": 1543,
