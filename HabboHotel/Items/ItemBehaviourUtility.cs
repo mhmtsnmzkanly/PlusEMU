@@ -35,6 +35,11 @@ internal static class ItemBehaviourUtility
         UniqueSeries = item.UniqueSeries
     };
 
+    public static string GetWallExtradataValue(this Item item) =>
+        item.Definition.IsPostIt
+            ? item.LegacyDataString.Split(' ')[0]
+            : item.LegacyDataString;
+
     public static void GenerateExtradata(Item item, IOutgoingPacket packet)
     {
         switch (item.Definition.InteractionType)
@@ -240,15 +245,7 @@ internal static class ItemBehaviourUtility
 
     public static void GenerateWallExtradata(Item item, IOutgoingPacket message)
     {
-        switch (item.Definition.InteractionType)
-        {
-            default:
-                message.WriteString(item.LegacyDataString);
-                break;
-            case var _ when item.Definition.IsPostIt:
-                message.WriteString(item.LegacyDataString.Split(' ')[0]);
-                break;
-        }
+        message.WriteString(item.GetWallExtradataValue());
     }
 
     public static IOutgoingPacket Serialize(IOutgoingPacket packet, IFurniObjectData stuffData, uint uniqueNumber, uint uniqueSeries)

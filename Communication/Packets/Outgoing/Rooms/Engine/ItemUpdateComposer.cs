@@ -23,15 +23,7 @@ public class ItemUpdateComposer : IServerPacket
         packet.WriteString(item.Id.ToString());
         packet.WriteInteger(item.Definition.SpriteId);
         packet.WriteString(item.WallCoordinates);
-        switch (item.Definition.InteractionType)
-        {
-            case var _ when item.Definition.IsPostIt:
-                packet.WriteString(item.LegacyDataString.Split(' ')[0]);
-                break;
-            default:
-                packet.WriteString(item.LegacyDataString);
-                break;
-        }
+        packet.WriteString(item.GetWallExtradataValue());
         packet.WriteInteger(-1);
         packet.WriteInteger(item.Definition.Modes > 1 ? 1 : 0);
         packet.WriteUInt(item.OwnerId);
