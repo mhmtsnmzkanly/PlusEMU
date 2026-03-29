@@ -32,7 +32,7 @@ internal class GetGroupFurniSettingsEvent : IPacketEvent
         if (item == null)
             return Task.CompletedTask;
 
-        if (item.Definition.InteractionType != InteractionType.GuildGate)
+        if (!item.Definition.IsGroupGate)
             return Task.CompletedTask;
         if (!_groupManager.TryGetGroup(groupId, out var group))
             return Task.CompletedTask;

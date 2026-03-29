@@ -365,3 +365,4 @@
 - Removed the stale `[Obsolete]` marker from `RoomItemHandling` now that its old monolithic behavior has been split into dedicated item, placement, roller, persistence, tracking, and queue services and the class acts as a room-item coordinator/facade instead of the original legacy god object.
 - Cleaned up stale `Item` compatibility markers by removing the dead `BaseItem` field, promoting `IsRoller` to a real computed property, and dropping obsolete tags from actively used item coordinate helpers.
 - Added a first semantic helper layer to `ItemDefinition` and switched item, room-item, and catalog code over to `IsWired` / `IsTent` / `IsRoomDecoration` / `IsGroupGate` / `IsMoodlight` / `IsToner` instead of repeating the same raw `InteractionType` checks.
+- Extended that `ItemDefinition` helper layer with `IsDeal`, `IsBot`, and `IsGroupFurni`, then moved another catalog, group, and room-furni guard slice off repeated raw interaction comparisons.

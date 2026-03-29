@@ -49,7 +49,7 @@ public class CatalogPageComposer : IServerPacket
                     packet.WriteInteger(0); // Type of PixelCost
                 }
                 packet.WriteBoolean(ItemUtility.CanGiftItem(item));
-                if (item.Definition.InteractionType == InteractionType.Deal || item.Definition.InteractionType == InteractionType.Roomdeal)
+                if (item.Definition.IsDeal)
                 {
                     CatalogDeal? deal = null;
                     if (!_catalogManager.TryGetDeal(item.Definition.BehaviourData, out deal))
@@ -86,7 +86,7 @@ public class CatalogPageComposer : IServerPacket
                         packet.WriteInteger(item.Definition.SpriteId);
                         if (item.Definition.IsRoomDecoration)
                             packet.WriteString((item.CatalogName ?? string.Empty).Split('_').ElementAtOrDefault(2) ?? string.Empty);
-                        else if (item.Definition.InteractionType == InteractionType.Bot) //Bots
+                        else if (item.Definition.IsBot) //Bots
                         {
                             CatalogBot? catalogBot = null;
                             if (!_catalogManager.TryGetBot(item.ItemId, out catalogBot))

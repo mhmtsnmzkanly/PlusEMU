@@ -54,6 +54,17 @@ public class ItemDefinition
             or InteractionType.Floor
             or InteractionType.Landscape;
 
+    public bool IsDeal =>
+        InteractionType is InteractionType.Deal
+            or InteractionType.Roomdeal;
+
+    public bool IsBot => InteractionType == InteractionType.Bot;
+
+    public bool IsGroupFurni =>
+        InteractionType is InteractionType.GuildItem
+            or InteractionType.GuildGate
+            or InteractionType.GuildForum;
+
     public bool IsGroupGate => InteractionType == InteractionType.GuildGate;
 
     public bool IsMoodlight => InteractionType == InteractionType.Moodlight;

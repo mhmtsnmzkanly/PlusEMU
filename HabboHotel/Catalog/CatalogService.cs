@@ -149,14 +149,12 @@ internal class CatalogService : ICatalogService
                 if (bits.Length < 3 || !_petUtility.CheckPetName(bits[0]) || bits[1].Length > 2 || bits[2].Length != 6) return;
                 await _achievementService.ProgressAchievement(session, "ACH_PetLover", 1);
                 break;
-            case InteractionType.Floor:
-            case InteractionType.Wallpaper:
-            case InteractionType.Landscape:
+            case var _ when item.Definition.IsRoomDecoration:
                 double.TryParse(extraData, NumberStyles.Any, PlusEnvironment.CultureInfo, out var number);
                 extraData = number.ToString(CultureInfo.InvariantCulture);
                 break;
             case InteractionType.Postit: extraData = "FFFF33"; break;
-            case InteractionType.Moodlight: extraData = "1,1,1,#000000,255"; break;
+            case var _ when item.Definition.IsMoodlight: extraData = "1,1,1,#000000,255"; break;
             case InteractionType.Trophy: extraData = $"{habbo.Username}{Convert.ToChar(9)}{DateTime.Now:dd-MM-yyyy}{Convert.ToChar(9)}{extraData}"; break;
             case InteractionType.Mannequin: extraData = $"m{Convert.ToChar(5)}.ch-210-1321.lg-285-92{Convert.ToChar(5)}Default Mannequin"; break;
             case InteractionType.BadgeDisplay:
@@ -247,15 +245,15 @@ internal class CatalogService : ICatalogService
             case InteractionType.Teleport:
                 for (var i = 0; i < amount; i++) generatedItems.AddRange(_itemFactory.CreateTeleporterItems(item.Definition, habbo)!);
                 break;
-            case InteractionType.Moodlight:
+            case var _ when item.Definition.IsMoodlight:
                 var moodItems = amount > 1 ? _itemFactory.CreateMultipleItems(item.Definition, habbo, extraData, amount) : new List<Item> { _itemFactory.CreateSingleItemNullable(item.Definition, habbo, extraData, extraData)! };
                 foreach (var i in moodItems!) { generatedItems.Add(i); _itemFactory.CreateMoodlightData(i); }
                 break;
-            case InteractionType.Toner:
+            case var _ when item.Definition.IsToner:
                 var tonerItems = amount > 1 ? _itemFactory.CreateMultipleItems(item.Definition, habbo, extraData, amount) : new List<Item> { _itemFactory.CreateSingleItemNullable(item.Definition, habbo, extraData, extraData)! };
                 foreach (var i in tonerItems!) { generatedItems.Add(i); _itemFactory.CreateTonerData(i); }
                 break;
-            case InteractionType.Deal:
+            case var _ when item.Definition.IsDeal:
                 if (_catalogManager.TryGetDeal(item.Definition.BehaviourData, out var deal))
                     foreach (var dealItem in deal.ItemDataList) generatedItems.AddRange(_itemFactory.CreateMultipleItems(dealItem.Definition, habbo, "", amount)!);
                 break;

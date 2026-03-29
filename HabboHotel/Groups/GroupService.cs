@@ -444,9 +444,7 @@ internal class GroupService : IGroupService
         {
             if (item?.Definition == null)
                 continue;
-            if (item.Definition.InteractionType != InteractionType.GuildItem &&
-                item.Definition.InteractionType != InteractionType.GuildGate &&
-                item.Definition.InteractionType != InteractionType.GuildForum)
+            if (!item.Definition.IsGroupFurni)
                 continue;
 
             currentRoom.SendPacket(new ObjectUpdateComposer(item));

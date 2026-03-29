@@ -50,7 +50,7 @@ public class CatalogOfferComposer : IServerPacket
                 packet.WriteString((_item.CatalogName ?? string.Empty).Split('_').ElementAtOrDefault(2) ?? string.Empty);
 
             // TODO @80O: Dont make this static hardcoded page 9
-            else if (_item.PageId == 9) //Bots
+            else if (_item.Definition.IsBot) //Bots
             {
                 CatalogBot? cataBot = null;
                 if (!_catalogManager.TryGetBot(_item.ItemId, out cataBot))
