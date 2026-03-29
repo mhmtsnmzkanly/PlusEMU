@@ -6,7 +6,7 @@
 		<Configurations>Debug;Release</Configurations>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>Plus</RootNamespace>
-		<AssemblyName>Plus Emulator</AssemblyName>
+		<AssemblyName>PlusEMU</AssemblyName>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>12</LangVersion>

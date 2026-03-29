@@ -35,7 +35,7 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
     public void Init()
     {
         _timer = new(OnTick, null, TimeSpan.FromSeconds(UpdateInSeconds), TimeSpan.FromSeconds(UpdateInSeconds));
-        Console.Title = "Plus Emulator - 0 users online - 0 rooms loaded - 0 day(s) 0 hour(s) uptime";
+        Console.Title = "PlusEMU - 0 users online - 0 rooms loaded - 0 day(s) 0 hour(s) uptime";
         _logger.LogInformation("Server Status Updater has been started.");
     }
 
@@ -49,7 +49,7 @@ public class ServerStatusUpdater : IDisposable, IServerStatusUpdater
         var uptime = DateTime.Now - PlusEnvironment.ServerStarted;
         var usersOnline = _gameClientManager.Count;
         var roomCount = _roomManager.Count;
-        Console.Title = $"Plus Emulator - {usersOnline} users online - {roomCount} rooms loaded - {uptime.Days} day(s) {uptime.Hours} hour(s) uptime";
+        Console.Title = $"PlusEMU - {usersOnline} users online - {roomCount} rooms loaded - {uptime.Days} day(s) {uptime.Hours} hour(s) uptime";
         using var db = _database.Connection();
         db.Execute(
             "UPDATE `server_status` SET `users_online` = @users, `loaded_rooms` = @loadedRooms LIMIT 1",

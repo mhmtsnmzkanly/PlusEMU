@@ -7,7 +7,7 @@ This file tracks the ongoing architecture cleanup that moved packet/business log
 ## Current Baseline
 
 - Project builds clean:
-  - `DOTNET_ROOT=/usr/share/dotnet PATH=/usr/share/dotnet:$PATH /usr/share/dotnet/dotnet build 'Plus Emulator.csproj' -c Release --no-restore -v q`
+  - `DOTNET_ROOT=/usr/share/dotnet PATH=/usr/share/dotnet:$PATH /usr/share/dotnet/dotnet build 'PlusEMU.csproj' -c Release --no-restore -v q`
 - Last confirmed result:
   - `0 Warning(s), 0 Error(s)`
 - Do not touch or commit these user-owned files unless explicitly requested:
@@ -253,7 +253,7 @@ All files below have been migrated off `GetQueryReactor()`.
 Build:
 
 ```bash
-DOTNET_ROOT=/usr/share/dotnet PATH=/usr/share/dotnet:$PATH /usr/share/dotnet/dotnet build 'Plus Emulator.csproj' -c Release --no-restore -v q
+DOTNET_ROOT=/usr/share/dotnet PATH=/usr/share/dotnet:$PATH /usr/share/dotnet/dotnet build 'PlusEMU.csproj' -c Release --no-restore -v q
 ```
 
 Verify no remaining legacy usage (should return empty):

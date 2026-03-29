@@ -350,6 +350,6 @@
 - Tightened another packet-handler sweep around established Habbo/session guards by normalizing respect, group management/member creation, ambassador alerts, and room connection entry points onto explicit `session.GetHabbo()` checks before continuing into room- or user-bound flows.
 - Added the runtime `revisions/example.json` snapshot to version the generated header mapping alongside the codebase.
 - Added a default constructor for `HabboStats` and removed the RP-specific packet/composer headers from `Resources/Revisions/1.6.6.json`.
-- Upgraded `Plus Emulator` and `PluginExample` from `.NET 7` to `.NET 10`.
+- Upgraded `PlusEMU` and `PluginExample` from `.NET 7` to `.NET 10`.
 - Updated the solution mapping from `x86` release output to `Any CPU` so Release builds now emit to `bin/Release/net10.0`.
 - Adjusted `FlashOutgoingPacket` for the newer framework/compiler combination and kept the full Release build at `0 Warning(s), 0 Error(s)`.

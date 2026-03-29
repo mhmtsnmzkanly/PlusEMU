@@ -9,6 +9,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Plus Emulator.csproj" ReferenceOutputAssembly="true" Private="false" />
+		<ProjectReference Include="..\PlusEMU.csproj" ReferenceOutputAssembly="true" Private="false" />
 	</ItemGroup>
 </Project>

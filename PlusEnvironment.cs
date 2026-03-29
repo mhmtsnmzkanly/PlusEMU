@@ -26,7 +26,7 @@ namespace Plus;
 
 public class PlusEnvironment : IPlusEnvironment
 {
-    public const string PrettyVersion = "Plus Emulator";
+    public const string PrettyVersion = "PlusEMU";
     public const string PrettyBuild = "3.4.3.0";
     private static readonly ILogger Log = LogManager.GetLogger("Plus.PlusEnvironment");
 
@@ -96,7 +96,7 @@ public class PlusEnvironment : IPlusEnvironment
         Console.WriteLine($"                                {PrettyVersion} <Build {PrettyBuild}>");
         Console.WriteLine("                                http://PlusIndustry.com");
         Console.WriteLine("");
-        Console.Title = "Loading Plus Emulator";
+        Console.Title = "Loading PlusEMU";
         _defaultEncoding = Encoding.Default;
         Console.WriteLine("");
         Console.WriteLine("");
@@ -295,7 +295,7 @@ public class PlusEnvironment : IPlusEnvironment
     public static void PerformShutDown(string? reason = null)
     {
         Log.Info("Server shutting down... Reason: {reason}", string.IsNullOrWhiteSpace(reason) ? "Unspecified" : reason);
-        Console.Title = "PLUS EMULATOR: SHUTTING DOWN!";
+        Console.Title = "PLUSEMU: SHUTTING DOWN!";
         Game.ClientManager.SendPacket(new BroadcastMessageAlertComposer(LanguageManager.TryGetValue("server.shutdown.message")));
         Game.StopGameLoop();
         Thread.Sleep(2500);
@@ -310,7 +310,7 @@ public class PlusEnvironment : IPlusEnvironment
             connection.Execute("UPDATE `rooms` SET `users_now` = '0' WHERE `users_now` > '0'");
             connection.Execute("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
         }
-        Log.Info("Plus Emulator has successfully shutdown.");
+        Log.Info("PlusEMU has successfully shutdown.");
         Thread.Sleep(1000);
         Environment.Exit(0);
     }
