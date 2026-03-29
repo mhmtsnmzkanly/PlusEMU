@@ -308,63 +308,10 @@ public class Item
                         break;
                     }
                     case var _ when Definition.IsOneWayGate:
-                        user = null;
-                        if (InteractingUser > 0) user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
-                        if (user != null && user.X == GetX && user.Y == GetY)
-                        {
-                            LegacyDataString = "1";
-                            user.MoveTo(SquareBehind);
-                            user.InteractingGate = false;
-                            user.GateId = 0;
-                            RequestUpdate(1, false);
-                            UpdateState(false, true);
-                        }
-                        else if (user != null && user.Coordinate == SquareBehind)
-                        {
-                            user.UnlockWalking();
-                            LegacyDataString = "0";
-                            InteractingUser = 0;
-                            user.InteractingGate = false;
-                            user.GateId = 0;
-                            UpdateState(false, true);
-                        }
-                        else if (LegacyDataString == "1")
-                        {
-                            LegacyDataString = "0";
-                            UpdateState(false, true);
-                        }
-                        if (user == null) InteractingUser = 0;
+                        ProcessOneWayGateUpdate();
                         break;
                     case var _ when Definition.IsGateVip:
-                        user = null;
-                        if (InteractingUser > 0) user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
-                        var newY = 0;
-                        var newX = 0;
-                        if (user != null && user.X == GetX && user.Y == GetY)
-                        {
-                            if (user.RotBody == 4)
-                                newY = 1;
-                            else if (user.RotBody == 0)
-                                newY = -1;
-                            else if (user.RotBody == 6)
-                                newX = -1;
-                            else if (user.RotBody == 2) newX = 1;
-                            user.MoveTo(user.X + newX, user.Y + newY);
-                            RequestUpdate(1, false);
-                        }
-                        else if (user != null && (user.Coordinate == SquareBehind || user.Coordinate == SquareInFront))
-                        {
-                            user.UnlockWalking();
-                            LegacyDataString = "0";
-                            InteractingUser = 0;
-                            UpdateState(false, true);
-                        }
-                        else if (LegacyDataString == "1")
-                        {
-                            LegacyDataString = "0";
-                            UpdateState(false, true);
-                        }
-                        if (user == null) InteractingUser = 0;
+                        ProcessVipGateUpdate();
                         break;
                     case var _ when Definition.IsHopper:
                         ProcessHopperUpdate();
@@ -422,32 +369,8 @@ public class Item
                         }
                         break;
                     case var _ when Definition.IsScoreboard:
-                    {
-                        if (string.IsNullOrEmpty(LegacyDataString))
-                            break;
-                        var seconds = 0;
-                        try
-                        {
-                            seconds = int.Parse(LegacyDataString);
-                        }
-                        catch { }
-                        if (seconds > 0)
-                        {
-                            if (InteractionCountHelper == 1)
-                            {
-                                seconds--;
-                                InteractionCountHelper = 0;
-                                LegacyDataString = seconds.ToString();
-                                UpdateState();
-                            }
-                            else
-                                InteractionCountHelper++;
-                            UpdateCounter = 1;
-                        }
-                        else
-                            UpdateCounter = 0;
+                        ProcessScoreboardUpdate();
                         break;
-                    }
                     case var _ when Definition.IsBanzaiCounter:
                     {
                         if (string.IsNullOrEmpty(LegacyDataString))
@@ -539,75 +462,11 @@ public class Item
                         break;
                     }
                     case var _ when Definition.IsCounter:
-                    {
-                        if (string.IsNullOrEmpty(LegacyDataString))
-                            break;
-                        var seconds = 0;
-                        try
-                        {
-                            seconds = int.Parse(LegacyDataString);
-                        }
-                        catch { }
-                        if (seconds > 0)
-                        {
-                            if (InteractionCountHelper == 1)
-                            {
-                                seconds--;
-                                InteractionCountHelper = 0;
-                                if (GetRoom().GetSoccer().GameIsStarted)
-                                {
-                                    LegacyDataString = seconds.ToString();
-                                    UpdateState();
-                                }
-                                else
-                                    break;
-                            }
-                            else
-                                InteractionCountHelper++;
-                            UpdateCounter = 1;
-                        }
-                        else
-                        {
-                            UpdateNeeded = false;
-                            GetRoom().GetSoccer().StopGame();
-                        }
+                        ProcessCounterUpdate();
                         break;
-                    }
                     case var _ when Definition.IsFreezeTimer:
-                    {
-                        if (string.IsNullOrEmpty(LegacyDataString))
-                            break;
-                        var seconds = 0;
-                        try
-                        {
-                            seconds = int.Parse(LegacyDataString);
-                        }
-                        catch { }
-                        if (seconds > 0)
-                        {
-                            if (InteractionCountHelper == 1)
-                            {
-                                seconds--;
-                                InteractionCountHelper = 0;
-                                if (GetRoom().GetFreeze().GameIsStarted)
-                                {
-                                    LegacyDataString = seconds.ToString();
-                                    UpdateState();
-                                }
-                                else
-                                    break;
-                            }
-                            else
-                                InteractionCountHelper++;
-                            UpdateCounter = 1;
-                        }
-                        else
-                        {
-                            UpdateNeeded = false;
-                            GetRoom().GetFreeze().StopGame();
-                        }
+                        ProcessFreezeTimerUpdate();
                         break;
-                    }
                     case var _ when Definition.IsPressurePad:
                     {
                         LegacyDataString = "1";
@@ -827,6 +686,86 @@ public class Item
         RequestUpdate(1, false);
     }
 
+    private void ProcessOneWayGateUpdate()
+    {
+        var user = InteractingUser > 0
+            ? GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser)
+            : null;
+
+        if (user != null && user.X == GetX && user.Y == GetY)
+        {
+            LegacyDataString = "1";
+            user.MoveTo(SquareBehind);
+            user.InteractingGate = false;
+            user.GateId = 0;
+            RequestUpdate(1, false);
+            UpdateState(false, true);
+        }
+        else if (user != null && user.Coordinate == SquareBehind)
+        {
+            user.UnlockWalking();
+            LegacyDataString = "0";
+            InteractingUser = 0;
+            user.InteractingGate = false;
+            user.GateId = 0;
+            UpdateState(false, true);
+        }
+        else
+        {
+            if (LegacyDataString == "1")
+            {
+                LegacyDataString = "0";
+                UpdateState(false, true);
+            }
+
+            if (user == null)
+                InteractingUser = 0;
+        }
+    }
+
+    private void ProcessVipGateUpdate()
+    {
+        var user = InteractingUser > 0
+            ? GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser)
+            : null;
+
+        var deltaY = 0;
+        var deltaX = 0;
+
+        if (user != null && user.X == GetX && user.Y == GetY)
+        {
+            if (user.RotBody == 4)
+                deltaY = 1;
+            else if (user.RotBody == 0)
+                deltaY = -1;
+            else if (user.RotBody == 6)
+                deltaX = -1;
+            else if (user.RotBody == 2)
+                deltaX = 1;
+
+            user.MoveTo(user.X + deltaX, user.Y + deltaY);
+            RequestUpdate(1, false);
+        }
+        else if (user != null && (user.Coordinate == SquareBehind || user.Coordinate == SquareInFront))
+        {
+            user.UnlockWalking();
+            LegacyDataString = "0";
+            InteractingUser = 0;
+            UpdateState(false, true);
+        }
+        else
+        {
+            if (LegacyDataString == "1")
+            {
+                LegacyDataString = "0";
+                UpdateState(false, true);
+            }
+
+            if (user == null)
+                InteractingUser = 0;
+        }
+    }
+
     private void ProcessTeleportUpdate()
     {
         RoomUser? user = null;
@@ -952,6 +891,121 @@ public class Item
         }
 
         RequestUpdate(1, false);
+    }
+
+    private int ParseLegacySeconds()
+    {
+        if (string.IsNullOrEmpty(LegacyDataString))
+            return 0;
+
+        try
+        {
+            return int.Parse(LegacyDataString);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private void ProcessScoreboardUpdate()
+    {
+        if (string.IsNullOrEmpty(LegacyDataString))
+            return;
+
+        var seconds = ParseLegacySeconds();
+        if (seconds > 0)
+        {
+            if (InteractionCountHelper == 1)
+            {
+                seconds--;
+                InteractionCountHelper = 0;
+                LegacyDataString = seconds.ToString();
+                UpdateState();
+            }
+            else
+            {
+                InteractionCountHelper++;
+            }
+
+            UpdateCounter = 1;
+        }
+        else
+        {
+            UpdateCounter = 0;
+        }
+    }
+
+    private void ProcessCounterUpdate()
+    {
+        if (string.IsNullOrEmpty(LegacyDataString))
+            return;
+
+        var seconds = ParseLegacySeconds();
+        if (seconds > 0)
+        {
+            if (InteractionCountHelper == 1)
+            {
+                seconds--;
+                InteractionCountHelper = 0;
+                if (GetRoom().GetSoccer().GameIsStarted)
+                {
+                    LegacyDataString = seconds.ToString();
+                    UpdateState();
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                InteractionCountHelper++;
+            }
+
+            UpdateCounter = 1;
+        }
+        else
+        {
+            UpdateNeeded = false;
+            GetRoom().GetSoccer().StopGame();
+        }
+    }
+
+    private void ProcessFreezeTimerUpdate()
+    {
+        if (string.IsNullOrEmpty(LegacyDataString))
+            return;
+
+        var seconds = ParseLegacySeconds();
+        if (seconds > 0)
+        {
+            if (InteractionCountHelper == 1)
+            {
+                seconds--;
+                InteractionCountHelper = 0;
+                if (GetRoom().GetFreeze().GameIsStarted)
+                {
+                    LegacyDataString = seconds.ToString();
+                    UpdateState();
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                InteractionCountHelper++;
+            }
+
+            UpdateCounter = 1;
+        }
+        else
+        {
+            UpdateNeeded = false;
+            GetRoom().GetFreeze().StopGame();
+        }
     }
 
     public static string[] RandomizeStrings(string[] arr)
