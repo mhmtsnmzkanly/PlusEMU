@@ -7,7 +7,7 @@ public static class ItemUtility
 {
     public static bool CanGiftItem(CatalogItem item)
     {
-        if (!item.Definition.AllowGift || item.IsLimited || item.Amount > 1 || item.Definition.InteractionType == InteractionType.Exchange ||
+        if (!item.Definition.AllowGift || item.IsLimited || item.Amount > 1 || item.Definition.IsExchange ||
             item.Definition.InteractionType == InteractionType.Badge || item.Definition.Type != ItemType.Floor && item.Definition.Type != ItemType.Wall || item.CostDiamonds > 0 ||
             item.Definition.InteractionType == InteractionType.Teleport || item.Definition.IsDeal)
             return false;
@@ -20,7 +20,7 @@ public static class ItemUtility
 
     public static bool CanSelectAmount(CatalogItem item)
     {
-        if (item.IsLimited || item.Amount > 1 || item.Definition.InteractionType == InteractionType.Exchange || !item.HaveOffer || item.Definition.InteractionType == InteractionType.Badge ||
+        if (item.IsLimited || item.Amount > 1 || item.Definition.IsExchange || !item.HaveOffer || item.Definition.InteractionType == InteractionType.Badge ||
             item.Definition.IsDeal)
             return false;
         return true;

@@ -376,7 +376,7 @@ internal class TradingService : ITradingService
             inventoryOne.RemoveItem(item.Id);
             clientOne.Send(new FurniListRemoveComposer(item.Id));
 
-            if (item.Definition.InteractionType == InteractionType.Exchange && autoRedeemExchangeables)
+            if (item.Definition.IsExchange && autoRedeemExchangeables)
             {
                 habboTwo.Credits += item.Definition.BehaviourData;
                 clientTwo.Send(new CreditBalanceComposer(habboTwo.Credits));
@@ -400,7 +400,7 @@ internal class TradingService : ITradingService
             inventoryTwo.RemoveItem(item.Id);
             clientTwo.Send(new FurniListRemoveComposer(item.Id));
 
-            if (item.Definition.InteractionType == InteractionType.Exchange && autoRedeemExchangeables)
+            if (item.Definition.IsExchange && autoRedeemExchangeables)
             {
                 habboOne.Credits += item.Definition.BehaviourData;
                 clientOne.Send(new CreditBalanceComposer(habboOne.Credits));

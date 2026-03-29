@@ -306,7 +306,7 @@ public class Gamemap
                     if (GameMap[coord.X, coord.Y] != 3)
                         GameMap[coord.X, coord.Y] = 1;
                 }
-                else if (item.Definition.IsSeat || item.Definition.InteractionType == InteractionType.Bed || item.Definition.InteractionType == InteractionType.TentSmall)
+                else if (item.Definition.BlocksWalkAsOccupiedTile)
                     GameMap[coord.X, coord.Y] = 3;
                 else // Finally, if it's none of those, block the square.
                 {
@@ -316,7 +316,7 @@ public class Gamemap
             }
 
             // Set bad maps
-            if (item.Definition.InteractionType == InteractionType.Bed || item.Definition.InteractionType == InteractionType.TentSmall)
+            if (item.Definition.BlocksWalkAsOccupiedTile && !item.Definition.IsSeat)
                 GameMap[coord.X, coord.Y] = 3;
         }
         catch (Exception e)
@@ -787,10 +787,10 @@ public class Gamemap
         var items = _room.GetGameMap().GetAllRoomItemForSquare(to.X, to.Y);
         if (items.Count > 0)
         {
-            var hasGroupGate = items.ToList().Count(x => x.Definition.InteractionType == InteractionType.GuildGate) > 0;
+            var hasGroupGate = items.ToList().Count(x => x.Definition.IsGroupGate) > 0;
             if (hasGroupGate)
             {
-                var I = items.FirstOrDefault(x => x.Definition.InteractionType == InteractionType.GuildGate);
+                var I = items.FirstOrDefault(x => x.Definition.IsGroupGate);
                 if (I != null)
                 {
                     if (!_room.GetGroupManager().TryGetGroup(I.GroupId, out var group))
@@ -866,7 +866,7 @@ public class Gamemap
         var items = _room.GetGameMap().GetAllRoomItemForSquare(to.X, to.Y);
         if (items.Count > 0)
         {
-            var hasGroupGate = items.ToList().Count(x => x != null && x.Definition.InteractionType == InteractionType.GuildGate) > 0;
+            var hasGroupGate = items.ToList().Count(x => x != null && x.Definition.IsGroupGate) > 0;
             if (hasGroupGate)
                 return true;
         }
@@ -939,7 +939,7 @@ public class Gamemap
                         continue;
                     if (item.TotalHeight > highestStack)
                     {
-                        if (item.Definition.IsSeat || item.Definition.InteractionType == InteractionType.Bed || item.Definition.InteractionType == InteractionType.TentSmall)
+                        if (item.Definition.BlocksWalkAsOccupiedTile)
                         {
                             deduct = true;
                             deductable = item.Definition.Height;

@@ -49,7 +49,7 @@ public class TradingUpdateComposer : IServerPacket
                     packet.WriteInteger(0);
             }
             packet.WriteInteger(user.OfferedItems.Count); //Item Count
-            packet.WriteInteger(user.OfferedItems.Values.Where(x => x.Definition.InteractionType == InteractionType.Exchange).Sum(t => t.Definition.BehaviourData));
+            packet.WriteInteger(user.OfferedItems.Values.Where(x => x.Definition.IsExchange).Sum(t => t.Definition.BehaviourData));
         }
 
     }

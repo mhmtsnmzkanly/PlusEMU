@@ -60,6 +60,8 @@ public class ItemDefinition
 
     public bool IsBot => InteractionType == InteractionType.Bot;
 
+    public bool IsExchange => InteractionType == InteractionType.Exchange;
+
     public bool IsGroupFurni =>
         InteractionType is InteractionType.GuildItem
             or InteractionType.GuildGate
@@ -70,6 +72,11 @@ public class ItemDefinition
     public bool IsMoodlight => InteractionType == InteractionType.Moodlight;
 
     public bool IsToner => InteractionType == InteractionType.Toner;
+
+    public bool BlocksWalkAsOccupiedTile =>
+        IsSeat
+        || InteractionType == InteractionType.Bed
+        || InteractionType == InteractionType.TentSmall;
 
     public string? RoomDecorationKey =>
         InteractionType switch
