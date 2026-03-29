@@ -36,7 +36,7 @@ internal class CreditFurniRedeemEvent : RoomPacketEvent
         var exchange = room.GetRoomItemHandler().GetItem(packet.ReadUInt());
         if (exchange == null)
             return Task.CompletedTask;
-        if (exchange.Definition.InteractionType != InteractionType.Exchange)
+        if (!exchange.Definition.IsExchange)
             return Task.CompletedTask;
 
         var value = exchange.Definition.BehaviourData;

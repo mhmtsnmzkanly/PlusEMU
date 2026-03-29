@@ -60,7 +60,7 @@ public class ItemService : IItemService
         if (item == null)
             return false;
 
-        if (item.Definition.InteractionType == InteractionType.Exchange && room.OwnerId != habbo.Id && !habbo.Permissions.HasRight("room_item_place_exchange_anywhere"))
+        if (item.Definition.IsExchange && room.OwnerId != habbo.Id && !habbo.Permissions.HasRight("room_item_place_exchange_anywhere"))
         {
             session.SendNotification("You cannot place exchange items in other people's rooms!");
             return false;
@@ -83,7 +83,7 @@ public class ItemService : IItemService
                     return false;
                 }
                 break;
-            case InteractionType.Hopper:
+            case var _ when item.Definition.IsHopper:
                 if (room.GetRoomItemHandler().HopperCount > 0)
                 {
                     session.SendNotification("You can only have one hopper per room!");
@@ -197,7 +197,7 @@ public class ItemService : IItemService
         var item = room.GetRoomItemHandler().GetItem(itemId);
         if (item == null) return false;
 
-        if (item.Definition.InteractionType == InteractionType.Postit) return false;
+        if (item.Definition.IsPostIt) return false;
 
         var itemRights = item.UserId == habbo.Id || room.CheckRights(session, false) || (room.Group != null && room.CheckRights(session, false, true)) || habbo.Permissions.HasRight("room_item_take");
 

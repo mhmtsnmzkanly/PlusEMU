@@ -62,6 +62,26 @@ public class ItemDefinition
 
     public bool IsExchange => InteractionType == InteractionType.Exchange;
 
+    public bool IsGift => InteractionType == InteractionType.Gift;
+
+    public bool IsHopper => InteractionType == InteractionType.Hopper;
+
+    public bool IsPostIt => InteractionType == InteractionType.Postit;
+
+    public bool IsTeleport => InteractionType == InteractionType.Teleport;
+
+    public bool IsGnomeBox => InteractionType == InteractionType.GnomeBox;
+
+    public bool IsLovelock => InteractionType == InteractionType.Lovelock;
+
+    public bool IsFloorSwitch =>
+        InteractionType is InteractionType.WfFloorSwitch1
+            or InteractionType.WfFloorSwitch2;
+
+    public bool IsStickyNoteOrPhoto =>
+        InteractionType is InteractionType.Postit
+            or InteractionType.CameraPicture;
+
     public bool IsRandomWiredAddon => WiredType == WiredBoxType.AddonRandomEffect;
 
     public bool IsRegenerateMapsWired => WiredType == WiredBoxType.EffectRegenerateMaps;

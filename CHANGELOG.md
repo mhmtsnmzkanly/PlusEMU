@@ -370,3 +370,4 @@
 - Extended the item semantics into game-map and trading flows too by naming exchangeable and occupied-tile behavior on `ItemDefinition`, then reusing those predicates in trade redemption, trade payload composition, and room movement/gate checks.
 - Trimmed the remaining item-tail repetition in gift purchase, room deletion, and extradata serialization by moving another small moodlight/toner/decoration slice onto the same `ItemDefinition` helper surface.
 - Narrowed the older `ItemDefinition` compatibility tail a bit further by giving `WiredType` and `ExtraRot` named semantic accessors, then routing the last hot regenerate-maps/addon/random-rotation checks through those helpers.
+- Added another small set of item helper predicates (`IsGift`, `IsHopper`, `IsPostIt`, `IsGnomeBox`, `IsLovelock`, `IsFloorSwitch`, `IsStickyNoteOrPhoto`) and used them to trim more raw interaction checks from packet, trade, sticky-note, and room-item service flows.

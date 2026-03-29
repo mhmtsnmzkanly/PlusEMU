@@ -20,7 +20,7 @@ internal class DeleteStickyNoteEvent : RoomPacketEvent
         if (!room.CheckRights(session)) return Task.CompletedTask;
         var item = room.GetRoomItemHandler().GetItem(packet.ReadUInt());
         if (item == null) return Task.CompletedTask;
-        if (item.Definition.InteractionType == InteractionType.Postit || item.Definition.InteractionType == InteractionType.CameraPicture)
+        if (item.Definition.IsStickyNoteOrPhoto)
         {
             room.GetRoomItemHandler().RemoveFurniture(session, item.Id);
             using var db = _database.Connection();

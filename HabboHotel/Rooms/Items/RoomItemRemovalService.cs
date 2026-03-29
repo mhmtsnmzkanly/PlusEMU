@@ -11,7 +11,7 @@ public class RoomItemRemovalService : IRoomItemRemovalService
         if (item.Definition.InteractionType == InteractionType.FootballGate)
             room.GetSoccer().UnRegisterGate(item);
 
-        if (item.Definition.InteractionType != InteractionType.Gift)
+        if (!item.Definition.IsGift)
             item.Interactor.OnRemove(session!, item);
 
         if (item.Definition.IsGroupGate)

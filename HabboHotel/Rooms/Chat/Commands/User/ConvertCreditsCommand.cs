@@ -48,7 +48,7 @@ internal class ConvertCreditsCommand : IChatCommand
             foreach (var itemId in items)
             {
                 var item = inventory.GetItem(itemId);
-                if (item == null || item.Definition.InteractionType != InteractionType.Exchange)
+                if (item == null || !item.Definition.IsExchange)
                     continue;
                 var value = item.Definition.BehaviourData;
                 connection.Execute("DELETE FROM `items` WHERE `id` = @id LIMIT 1", new { id = item.Id });

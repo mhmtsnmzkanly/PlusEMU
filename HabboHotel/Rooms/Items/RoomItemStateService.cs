@@ -29,7 +29,7 @@ public class RoomItemStateService : IRoomItemStateService
             return new();
         }
 
-        return item.Definition.InteractionType == InteractionType.Hopper
+        return item.Definition.IsHopper
             ? new() { HopperDelta = 1 }
             : new();
     }

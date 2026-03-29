@@ -40,10 +40,10 @@ internal class UseFurnitureEvent : RoomPacketEvent
             db.Execute("UPDATE `room_items_toner` SET `enabled` = @enabled LIMIT 1", new { enabled = room.TonerData.Enabled });
             return;
         }
-        if (item.Definition.InteractionType == InteractionType.GnomeBox && item.UserId == habbo?.Id)
+        if (item.Definition.IsGnomeBox && item.UserId == habbo?.Id)
             session.Send(new GnomeBoxComposer(item.Id));
         var toggle = true;
-        if (item.Definition.InteractionType == InteractionType.WfFloorSwitch1 || item.Definition.InteractionType == InteractionType.WfFloorSwitch2)
+        if (item.Definition.IsFloorSwitch)
         {
             var user = habbo == null ? null : item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user == null) return;
