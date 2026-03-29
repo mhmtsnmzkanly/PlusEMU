@@ -83,7 +83,7 @@ internal class GroupService : IGroupService
                 foreach (var client in groupAdmins)
                     client.Send(new GroupMembershipRequestedComposer(group.Id, habbo, 3));
 
-                session.Send(new GroupInfoComposer(group, session, _roomFactory));
+                session.Send(new GroupInfoComposer(group, session, _roomFactory, _cacheManager));
                 return;
             }
 
@@ -91,7 +91,7 @@ internal class GroupService : IGroupService
         }
 
         session.Send(new GroupFurniConfigComposer(_groupManager.GetGroupsForUser(habbo.Id), _groupManager));
-        session.Send(new GroupInfoComposer(group, session, _roomFactory));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory, _cacheManager));
         SendFavouriteGroupRefreshForHabbo(session, habbo);
     }
 
@@ -363,7 +363,7 @@ internal class GroupService : IGroupService
             }
         }
 
-        session.Send(new GroupInfoComposer(group, session, _roomFactory));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory, _cacheManager));
     }
 
     public async Task UpdateIdentity(GameClient session, int groupId, string name, string description)
@@ -386,7 +386,7 @@ internal class GroupService : IGroupService
 
         group.Name = filteredName;
         group.Description = filteredDescription;
-        session.Send(new GroupInfoComposer(group, session, _roomFactory));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory, _cacheManager));
     }
 
     public async Task UpdateBadge(GameClient session, int groupId, IReadOnlyCollection<(int baseId, int firstPart, int secondPart)> parts)
@@ -414,7 +414,7 @@ internal class GroupService : IGroupService
             "UPDATE `groups` SET `badge` = @badge WHERE `id` = @groupId LIMIT 1",
             new { badge = group.Badge, groupId = group.Id });
 
-        session.Send(new GroupInfoComposer(group, session, _roomFactory));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory, _cacheManager));
     }
 
     public async Task UpdateColours(GameClient session, int groupId, int mainColour, int secondaryColour)
@@ -435,7 +435,7 @@ internal class GroupService : IGroupService
 
         group.Colour1 = mainColour;
         group.Colour2 = secondaryColour;
-        session.Send(new GroupInfoComposer(group, session, _roomFactory));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory, _cacheManager));
 
         if (!habbo.TryGetCurrentRoom(out var currentRoom))
             return;
@@ -558,7 +558,7 @@ internal class GroupService : IGroupService
             "DELETE FROM `group_memberships` WHERE `group_id` = @groupId AND `user_id` = @userId",
             new { groupId = group.Id, userId });
 
-        session.Send(new GroupInfoComposer(group, session, _roomFactory));
+        session.Send(new GroupInfoComposer(group, session, _roomFactory, _cacheManager));
         if (habbo.HabboStats?.FavouriteGroupId != group.Id)
             return;
 

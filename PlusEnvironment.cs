@@ -334,8 +334,6 @@ public class PlusEnvironment : IPlusEnvironment
 
     public static Encoding GetDefaultEncoding() => _defaultEncoding;
 
-    public static ISettingsManager SettingsManager => _settingsManager;
-
     public static ICollection<Habbo> CachedUsers => _usersCached.Values;
 
     public static bool RemoveFromCache(int id, out Habbo? data) => _usersCached.TryRemove(id, out data);

@@ -136,7 +136,7 @@ internal class RoomCommand : IChatCommand
                             room.SendPacket(new UserRemoveComposer(roomUser.VirtualId));
 
                             //Add the new one, they won't even notice a thing!!11 8-)
-                            room.SendPacket(new UsersComposer(roomUser, _groupManager));
+                            room.SendPacket(new UsersComposer(roomUser, _groupManager, room.GetCacheManager()));
                         }
                     }
                 }

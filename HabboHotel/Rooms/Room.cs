@@ -690,7 +690,7 @@ public class Room : RoomData
         {
             if (user == null)
                 continue;
-            session.Send(new UsersComposer(user, _groupManager));
+            session.Send(new UsersComposer(user, _groupManager, _cacheManager));
             if (user.IsBot && user.BotData.DanceId > 0)
                 session.Send(new DanceComposer(user, user.BotData.DanceId));
             else if (!user.IsBot && !user.IsPet && user.IsDancing)

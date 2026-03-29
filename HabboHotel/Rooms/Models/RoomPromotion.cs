@@ -4,12 +4,12 @@ namespace Plus.HabboHotel.Rooms;
 
 public class RoomPromotion
 {
-    public RoomPromotion(string name, string description, int categoryId)
+    public RoomPromotion(string name, string description, int categoryId, int lifespanMinutes)
     {
         Name = name;
         Description = description;
         TimestampStarted = UnixTimestamp.GetNow();
-        TimestampExpires = UnixTimestamp.GetNow() + Convert.ToInt32(PlusEnvironment.SettingsManager.TryGetValue("room.promotion.lifespan")) * 60;
+        TimestampExpires = UnixTimestamp.GetNow() + lifespanMinutes * 60;
         CategoryId = categoryId;
     }
 

@@ -1,3 +1,4 @@
+using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Groups;
 using Plus.HabboHotel.Rooms;
@@ -9,15 +10,17 @@ public class GroupInfoComposer : IServerPacket
     private readonly Group _group;
     private readonly GameClient _session;
     private readonly IRoomFactory _roomFactory;
+    private readonly ICacheManager _cacheManager;
     private readonly bool _newWindow;
 
     public uint MessageId => ServerPacketHeader.GroupInfoComposer;
 
-    public GroupInfoComposer(Group group, GameClient session, IRoomFactory roomFactory, bool newWindow = false)
+    public GroupInfoComposer(Group group, GameClient session, IRoomFactory roomFactory, ICacheManager cacheManager, bool newWindow = false)
     {
         _group = @group;
         _session = session;
         _roomFactory = roomFactory;
+        _cacheManager = cacheManager;
         _newWindow = newWindow;
     }
 
@@ -41,7 +44,7 @@ public class GroupInfoComposer : IServerPacket
         packet.WriteString($"{origin.Day}-{origin.Month}-{origin.Year}");
         packet.WriteBoolean(_group.CreatorId == habboId);
         packet.WriteBoolean(_group.IsAdmin(habboId)); // admin
-        packet.WriteString(PlusEnvironment.GetUsernameById(_group.CreatorId));
+        packet.WriteString(_cacheManager.GenerateUser(_group.CreatorId)?.Username ?? "Unknown User");
         packet.WriteBoolean(_newWindow); // Show group info
         packet.WriteBoolean(_group.AdminOnlyDeco == 0); // Any user can place furni in home room
         packet.WriteInteger(_group.CreatorId == habboId ? _group.RequestCount :

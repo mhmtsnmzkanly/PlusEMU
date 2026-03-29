@@ -1,4 +1,5 @@
 using System.Globalization;
+using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Groups;
 using Plus.HabboHotel.Rooms;
@@ -10,19 +11,22 @@ public class UsersComposer : IServerPacket
 {
     private readonly ICollection<RoomUser> _users;
     private readonly IGroupManager _groupManager;
+    private readonly ICacheManager _cacheManager;
 
     public uint MessageId => ServerPacketHeader.UsersComposer;
 
-    public UsersComposer(ICollection<RoomUser> users, IGroupManager groupManager)
+    public UsersComposer(ICollection<RoomUser> users, IGroupManager groupManager, ICacheManager cacheManager)
     {
         _users = users;
         _groupManager = groupManager;
+        _cacheManager = cacheManager;
     }
 
-    public UsersComposer(RoomUser user, IGroupManager groupManager)
+    public UsersComposer(RoomUser user, IGroupManager groupManager, ICacheManager cacheManager)
     {
         _users = new List<RoomUser>() { user };
         _groupManager = groupManager;
+        _cacheManager = cacheManager;
     }
 
     public void Compose(IOutgoingPacket packet)
@@ -115,7 +119,7 @@ public class UsersComposer : IServerPacket
             packet.WriteInteger(user.BotData.AiType == BotAiType.Pet ? 2 : 4);
             packet.WriteString((user.BotData.Gender ?? string.Empty).ToLower()); // ?
             packet.WriteInteger(user.BotData.OwnerId); //Owner Id
-            packet.WriteString(PlusEnvironment.GetUsernameById(user.BotData.OwnerId)); // Owner name
+            packet.WriteString(_cacheManager.GenerateUser(user.BotData.OwnerId)?.Username ?? "Unknown User"); // Owner name
             packet.WriteInteger(5); //Action Count
             packet.WriteShort(1); //Copy looks
             packet.WriteShort(2); //Setup speech

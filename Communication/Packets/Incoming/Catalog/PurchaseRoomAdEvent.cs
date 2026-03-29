@@ -1,6 +1,7 @@
 using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Database;
+using Plus.Core.Settings;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Rooms.Chat.Filter;
@@ -18,14 +19,16 @@ public class PurchaseRoomAdEvent : IPacketEvent
     private readonly IBadgeManager _badgeManager;
     private readonly IMessengerDataLoader _messengerDataLoader;
     private readonly IRoomFactory _roomFactory;
+    private readonly ISettingsManager _settingsManager;
 
-    public PurchaseRoomAdEvent(IWordFilterManager wordFilterManager, IDatabase database, IBadgeManager badgeManager, IMessengerDataLoader messengerDataLoader, IRoomFactory roomFactory)
+    public PurchaseRoomAdEvent(IWordFilterManager wordFilterManager, IDatabase database, IBadgeManager badgeManager, IMessengerDataLoader messengerDataLoader, IRoomFactory roomFactory, ISettingsManager settingsManager)
     {
         _wordFilterManager = wordFilterManager;
         _database = database;
         _badgeManager = badgeManager;
         _messengerDataLoader = messengerDataLoader;
         _roomFactory = roomFactory;
+        _settingsManager = settingsManager;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -45,7 +48,7 @@ public class PurchaseRoomAdEvent : IPacketEvent
         if (data!.OwnerId != habbo.Id)
             return;
         if (data.Promotion == null)
-            data.Promotion = new(name, desc, categoryId);
+            data.Promotion = new(name, desc, categoryId, Convert.ToInt32(_settingsManager.TryGetValue("room.promotion.lifespan")));
         else
         {
             data.Promotion.Name = name;

@@ -146,7 +146,7 @@ internal class RoomCreatureService : IRoomCreatureService
 
             targetHabbo.PetId = 0;
             room.SendPacket(new UserRemoveComposer(targetUser.VirtualId));
-            room.SendPacket(new UsersComposer(targetUser, _groupManager));
+            room.SendPacket(new UsersComposer(targetUser, _groupManager, room.GetCacheManager()));
             return Task.CompletedTask;
         }
 
@@ -406,7 +406,7 @@ internal class RoomCreatureService : IRoomCreatureService
             UpdateHorsePetAndConsumeItem(petUser.PetData.PetId, item.Id, room, session, item, "race", petUser.PetData.Race);
         }
 
-        room.SendPacket(new UsersComposer(petUser, _groupManager));
+        room.SendPacket(new UsersComposer(petUser, _groupManager, room.GetCacheManager()));
         room.SendPacket(new PetHorseFigureInformationComposer(petUser));
         return Task.CompletedTask;
     }
@@ -438,7 +438,7 @@ internal class RoomCreatureService : IRoomCreatureService
             session.Send(new FurniListUpdateComposer());
         }
 
-        room.SendPacket(new UsersComposer(petUser, _groupManager));
+        room.SendPacket(new UsersComposer(petUser, _groupManager, room.GetCacheManager()));
         room.SendPacket(new PetHorseFigureInformationComposer(petUser));
         return Task.CompletedTask;
     }
@@ -614,7 +614,7 @@ internal class RoomCreatureService : IRoomCreatureService
                     connection.Execute(
                         "UPDATE `bots` SET `name` = @name WHERE `id` = @id LIMIT 1",
                         new { name = dataString, id = roomBot.Id });
-                room.SendPacket(new UsersComposer(bot, _groupManager));
+                room.SendPacket(new UsersComposer(bot, _groupManager, room.GetCacheManager()));
                 break;
         }
         return Task.CompletedTask;
