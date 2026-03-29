@@ -483,94 +483,7 @@ public class Item
                     }
                         break;
                     case var _ when Definition.IsCannon:
-                    {
-                        if (LegacyDataString != "1")
-                            break;
-                        var targetStart = Coordinate;
-                        var targetSquares = new List<Point>();
-                        switch (Rotation)
-                        {
-                            case 0:
-                            {
-                                targetStart = new(GetX - 1, GetY);
-                                if (!targetSquares.Contains(targetStart))
-                                    targetSquares.Add(targetStart);
-                                for (var I = 1; I <= 3; I++)
-                                {
-                                    var targetSquare = new Point(targetStart.X - I, targetStart.Y);
-                                    if (!targetSquares.Contains(targetSquare))
-                                        targetSquares.Add(targetSquare);
-                                }
-                                break;
-                            }
-                            case 2:
-                            {
-                                targetStart = new(GetX, GetY - 1);
-                                if (!targetSquares.Contains(targetStart))
-                                    targetSquares.Add(targetStart);
-                                for (var I = 1; I <= 3; I++)
-                                {
-                                    var targetSquare = new Point(targetStart.X, targetStart.Y - I);
-                                    if (!targetSquares.Contains(targetSquare))
-                                        targetSquares.Add(targetSquare);
-                                }
-                                break;
-                            }
-                            case 4:
-                            {
-                                targetStart = new(GetX + 2, GetY);
-                                if (!targetSquares.Contains(targetStart))
-                                    targetSquares.Add(targetStart);
-                                for (var I = 1; I <= 3; I++)
-                                {
-                                    var targetSquare = new Point(targetStart.X + I, targetStart.Y);
-                                    if (!targetSquares.Contains(targetSquare))
-                                        targetSquares.Add(targetSquare);
-                                }
-                                break;
-                            }
-                            case 6:
-                            {
-                                targetStart = new(GetX, GetY + 2);
-                                if (!targetSquares.Contains(targetStart))
-                                    targetSquares.Add(targetStart);
-                                for (var I = 1; I <= 3; I++)
-                                {
-                                    var targetSquare = new Point(targetStart.X, targetStart.Y + I);
-                                    if (!targetSquares.Contains(targetSquare))
-                                        targetSquares.Add(targetSquare);
-                                }
-                                break;
-                            }
-                        }
-                        if (targetSquares.Count > 0)
-                        {
-                            var room = GetRoom();
-                            foreach (var square in targetSquares.ToList())
-                            {
-                                var affectedUsers = room.GetGameMap().GetRoomUsers(square).ToList();
-                                if (affectedUsers.Count == 0)
-                                    continue;
-                                foreach (var target in affectedUsers)
-                                {
-                                    if (target == null || target.IsBot || target.IsPet)
-                                        continue;
-                                    var targetClient = target.GetClient();
-                                    var targetHabbo = GetHabbo(target);
-                                    if (targetHabbo == null || targetClient == null)
-                                        continue;
-                                    if (room.CheckRights(targetClient, true))
-                                        continue;
-                                    target.ApplyEffect(4);
-                                    targetClient.Send(new RoomNotificationComposer("Kicked from room", "You were hit by a cannonball!", "room_kick_cannonball", ""));
-                                    target.ApplyEffect(0);
-                                    _ = room.GetRoomService().LeaveRoom(targetClient);
-                                }
-                            }
-                        }
-                        LegacyDataString = "2";
-                        UpdateState(false, true);
-                    }
+                        ProcessCannonUpdate();
                         break;
                 }
             }
@@ -1006,6 +919,84 @@ public class Item
             UpdateNeeded = false;
             GetRoom().GetFreeze().StopGame();
         }
+    }
+
+    private void ProcessCannonUpdate()
+    {
+        if (LegacyDataString != "1")
+            return;
+
+        var room = GetRoom();
+        foreach (var square in GetCannonTargetSquares())
+        {
+            var affectedUsers = room.GetGameMap().GetRoomUsers(square).ToList();
+            if (affectedUsers.Count == 0)
+                continue;
+
+            foreach (var target in affectedUsers)
+            {
+                if (target == null || target.IsBot || target.IsPet)
+                    continue;
+
+                var targetClient = target.GetClient();
+                var targetHabbo = GetHabbo(target);
+                if (targetHabbo == null || targetClient == null)
+                    continue;
+
+                if (room.CheckRights(targetClient, true))
+                    continue;
+
+                target.ApplyEffect(4);
+                targetClient.Send(new RoomNotificationComposer("Kicked from room", "You were hit by a cannonball!", "room_kick_cannonball", ""));
+                target.ApplyEffect(0);
+                _ = room.GetRoomService().LeaveRoom(targetClient);
+            }
+        }
+
+        LegacyDataString = "2";
+        UpdateState(false, true);
+    }
+
+    private List<Point> GetCannonTargetSquares()
+    {
+        var targetStart = Coordinate;
+        var targetSquares = new List<Point>();
+
+        switch (Rotation)
+        {
+            case 0:
+                targetStart = new(GetX - 1, GetY);
+                break;
+            case 2:
+                targetStart = new(GetX, GetY - 1);
+                break;
+            case 4:
+                targetStart = new(GetX + 2, GetY);
+                break;
+            case 6:
+                targetStart = new(GetX, GetY + 2);
+                break;
+        }
+
+        if (!targetSquares.Contains(targetStart))
+            targetSquares.Add(targetStart);
+
+        for (var offset = 1; offset <= 3; offset++)
+        {
+            Point targetSquare = Rotation switch
+            {
+                0 => new(targetStart.X - offset, targetStart.Y),
+                2 => new(targetStart.X, targetStart.Y - offset),
+                4 => new(targetStart.X + offset, targetStart.Y),
+                6 => new(targetStart.X, targetStart.Y + offset),
+                _ => targetStart
+            };
+
+            if (!targetSquares.Contains(targetSquare))
+                targetSquares.Add(targetSquare);
+        }
+
+        return targetSquares;
     }
 
     public static string[] RandomizeStrings(string[] arr)
