@@ -334,13 +334,6 @@ public class PlusEnvironment : IPlusEnvironment
 
     public static Encoding GetDefaultEncoding() => _defaultEncoding;
 
-    public static IRconSocket RconSocket => _rcon;
-
-    public static IFigureDataManager FigureManager => _figureManager;
-
-    [Obsolete("Inject IDatabase instead")]
-    public static IDatabase DatabaseManager => _database;
-
     public static ISettingsManager SettingsManager => _settingsManager;
 
     public static ICollection<Habbo> CachedUsers => _usersCached.Values;

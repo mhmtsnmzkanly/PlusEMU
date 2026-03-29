@@ -358,3 +358,4 @@
 - Replaced the last active `PlusEnvironment.GetUnixTimestamp()` / `Now()` callers in messenger and room command flows with `UnixTimestamp.GetNow()`.
 - Removed the old static `PlusEnvironment.LanguageManager` surface, moving room item placement messaging and the `:update locale` flow onto injected `ILanguageManager`.
 - Simplified room mute handling by resolving the target room user directly by user id instead of round-tripping through the legacy static username lookup.
+- Removed the last active `PlusEnvironment.RconSocket` dependency by wiring RCON command parsing directly through the socket-owned command manager, and dropped the now-unused static `FigureManager` / `DatabaseManager` exposure from `PlusEnvironment`.
