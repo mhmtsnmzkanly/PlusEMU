@@ -24,6 +24,19 @@ namespace Plus.HabboHotel.Rooms;
 
 public class RoomManager : IRoomManager
 {
+    private sealed class RoomModelRow
+    {
+        public string Id { get; init; } = string.Empty;
+        public int DoorX { get; init; }
+        public int DoorY { get; init; }
+        public double DoorZ { get; init; }
+        public int DoorOrientation { get; init; }
+        public string Heightmap { get; init; } = string.Empty;
+        public int ClubOnly { get; init; }
+        public int WallHeight { get; init; }
+        public int Custom { get; init; }
+    }
+
     private readonly ILogger<RoomManager> _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IDatabase _database;
@@ -169,8 +182,8 @@ public class RoomManager : IRoomManager
     {
         _roomModels.Clear();
         using var connection = _database.Connection();
-        var models = connection.Query<RoomModel>("SELECT `id`, `door_x`, `door_y`, `door_z`, `door_dir`, `heightmap`, `public_room` = '1' as `is_public` FROM `room_models` WHERE `custom` = '0'");
-        foreach (var model in models)
+        var models = connection.Query<RoomModelRow>(GetRoomModelProjectionSql("WHERE `custom` = '0'"));
+        foreach (var model in models.Select(MapRoomModel))
         {
             _roomModels.Add(model.Id, model);
         }
@@ -180,11 +193,46 @@ public class RoomManager : IRoomManager
     public void ReloadModel(string id)
     {
         using var connection = _database.Connection();
-        var model = connection.QuerySingleOrDefault<RoomModel>("SELECT `id`, `door_x`, `door_y`, `door_z`, `door_dir`, `heightmap`, `public_room` = '1' as `is_public` FROM `room_models` WHERE `id` = @id LIMIT 1", new { id });
+        var model = connection.QuerySingleOrDefault<RoomModelRow>(
+            $"{GetRoomModelProjectionSql("WHERE `id` = @id")} LIMIT 1",
+            new { id });
         if (model != null)
         {
-            _roomModels[id] = model;
+            _roomModels[id] = MapRoomModel(model);
         }
+    }
+
+    private static RoomModel MapRoomModel(RoomModelRow row)
+    {
+        return new RoomModel(
+            row.Id,
+            row.DoorX,
+            row.DoorY,
+            row.DoorZ,
+            row.DoorOrientation,
+            row.Heightmap,
+            row.ClubOnly == 1,
+            row.WallHeight,
+            row.Custom == 1);
+    }
+
+    private static string GetRoomModelProjectionSql(string whereClause)
+    {
+        return
+            $"""
+            SELECT
+                `id` AS `id`,
+                `door_x` AS `doorX`,
+                `door_y` AS `doorY`,
+                `door_z` AS `doorZ`,
+                `door_dir` AS `doorOrientation`,
+                `heightmap` AS `heightmap`,
+                `club_only` = '1' AS `clubOnly`,
+                `wall_height` AS `wallHeight`,
+                `custom` = '1' AS `custom`
+            FROM `room_models`
+            {whereClause}
+            """;
     }
 
     public bool TryGetModel(string id, out RoomModel model) => _roomModels.TryGetValue(id, out model!);
