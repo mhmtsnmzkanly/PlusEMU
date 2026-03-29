@@ -44,90 +44,19 @@ public class TeamManager
             YellowTeam.Add(user);
         else if (user.Team.Equals(Team.Green) && !GreenTeam.Contains(user))
             GreenTeam.Add(user);
+        if (!TryGetRoom(user, out var room))
+            return;
+
         switch (Game.ToLower())
         {
             case "banzai":
             {
-                if (!TryGetRoom(user, out var room))
-                    return;
-                foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
-                {
-                    if (item == null)
-                        continue;
-                    if (item.Definition.InteractionType.Equals(InteractionType.Banzaigateblue))
-                    {
-                        item.LegacyDataString = BlueTeam.Count.ToString();
-                        item.UpdateState();
-                        if (BlueTeam.Count == 5)
-                        {
-                            foreach (var sser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY))) sser.SqState = 0;
-                            room.GetGameMap().GameMap[item.GetX, item.GetY] = 0;
-                        }
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.Banzaigatered))
-                    {
-                        item.LegacyDataString = RedTeam.Count.ToString();
-                        item.UpdateState();
-                        if (RedTeam.Count == 5)
-                        {
-                            foreach (var sser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY))) sser.SqState = 0;
-                            room.GetGameMap().GameMap[item.GetX, item.GetY] = 0;
-                        }
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.Banzaigategreen))
-                    {
-                        item.LegacyDataString = GreenTeam.Count.ToString();
-                        item.UpdateState();
-                        if (GreenTeam.Count == 5)
-                        {
-                            foreach (var sser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY)))
-                                sser.SqState = 0;
-                            room.GetGameMap().GameMap[item.GetX, item.GetY] = 0;
-                        }
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.Banzaigateyellow))
-                    {
-                        item.LegacyDataString = YellowTeam.Count.ToString();
-                        item.UpdateState();
-                        if (YellowTeam.Count == 5)
-                        {
-                            foreach (var sser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY)))
-                                sser.SqState = 0;
-                            room.GetGameMap().GameMap[item.GetX, item.GetY] = 0;
-                        }
-                    }
-                }
+                UpdateBanzaiGateCounts(room, lockFullGates: true);
                 break;
             }
             case "freeze":
             {
-                if (!TryGetRoom(user, out var room))
-                    return;
-                foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
-                {
-                    if (item == null)
-                        continue;
-                    if (item.Definition.InteractionType.Equals(InteractionType.FreezeBlueGate))
-                    {
-                        item.LegacyDataString = BlueTeam.Count.ToString();
-                        item.UpdateState();
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.FreezeRedGate))
-                    {
-                        item.LegacyDataString = RedTeam.Count.ToString();
-                        item.UpdateState();
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.FreezeGreenGate))
-                    {
-                        item.LegacyDataString = GreenTeam.Count.ToString();
-                        item.UpdateState();
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.FreezeYellowGate))
-                    {
-                        item.LegacyDataString = YellowTeam.Count.ToString();
-                        item.UpdateState();
-                    }
-                }
+                UpdateFreezeGateCounts(room);
                 break;
             }
         }
@@ -144,94 +73,120 @@ public class TeamManager
             YellowTeam.Remove(user);
         else if (user.Team.Equals(Team.Green) && GreenTeam.Contains(user))
             GreenTeam.Remove(user);
+        if (!TryGetRoom(user, out var room))
+            return;
+
         switch (Game.ToLower())
         {
             case "banzai":
             {
-                if (!TryGetRoom(user, out var room))
-                    return;
-                foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
-                {
-                    if (item == null)
-                        continue;
-                    if (item.Definition.InteractionType.Equals(InteractionType.Banzaigateblue))
-                    {
-                        item.LegacyDataString = BlueTeam.Count.ToString();
-                        item.UpdateState();
-                        if (room.GetGameMap().GameMap[item.GetX, item.GetY] == 0)
-                        {
-                            foreach (var sser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY)))
-                                sser.SqState = 1;
-                            room.GetGameMap().GameMap[item.GetX, item.GetY] = 1;
-                        }
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.Banzaigatered))
-                    {
-                        item.LegacyDataString = RedTeam.Count.ToString();
-                        item.UpdateState();
-                        if (room.GetGameMap().GameMap[item.GetX, item.GetY] == 0)
-                        {
-                            foreach (var sser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY)))
-                                sser.SqState = 1;
-                            room.GetGameMap().GameMap[item.GetX, item.GetY] = 1;
-                        }
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.Banzaigategreen))
-                    {
-                        item.LegacyDataString = GreenTeam.Count.ToString();
-                        item.UpdateState();
-                        if (room.GetGameMap().GameMap[item.GetX, item.GetY] == 0)
-                        {
-                            foreach (var sser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY)))
-                                sser.SqState = 1;
-                            room.GetGameMap().GameMap[item.GetX, item.GetY] = 1;
-                        }
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.Banzaigateyellow))
-                    {
-                        item.LegacyDataString = YellowTeam.Count.ToString();
-                        item.UpdateState();
-                        if (room.GetGameMap().GameMap[item.GetX, item.GetY] == 0)
-                        {
-                            foreach (var sser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY)))
-                                sser.SqState = 1;
-                            room.GetGameMap().GameMap[item.GetX, item.GetY] = 1;
-                        }
-                    }
-                }
+                UpdateBanzaiGateCounts(room, lockFullGates: false);
                 break;
             }
             case "freeze":
             {
-                if (!TryGetRoom(user, out var room))
-                    return;
-                foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
-                {
-                    if (item == null)
-                        continue;
-                    if (item.Definition.InteractionType.Equals(InteractionType.FreezeBlueGate))
-                    {
-                        item.LegacyDataString = BlueTeam.Count.ToString();
-                        item.UpdateState();
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.FreezeRedGate))
-                    {
-                        item.LegacyDataString = RedTeam.Count.ToString();
-                        item.UpdateState();
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.FreezeGreenGate))
-                    {
-                        item.LegacyDataString = GreenTeam.Count.ToString();
-                        item.UpdateState();
-                    }
-                    else if (item.Definition.InteractionType.Equals(InteractionType.FreezeYellowGate))
-                    {
-                        item.LegacyDataString = YellowTeam.Count.ToString();
-                        item.UpdateState();
-                    }
-                }
+                UpdateFreezeGateCounts(room);
                 break;
             }
+        }
+    }
+
+    private void UpdateBanzaiGateCounts(Room room, bool lockFullGates)
+    {
+        foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
+        {
+            if (item == null || !TryGetBanzaiGateTeam(item, out var team))
+                continue;
+
+            item.LegacyDataString = GetTeamCount(team).ToString();
+            item.UpdateState();
+
+            if (lockFullGates)
+            {
+                if (GetTeamCount(team) == 5)
+                    SetGateWalkState(room, item, canWalk: false);
+            }
+            else if (room.GetGameMap().GameMap[item.GetX, item.GetY] == 0)
+            {
+                SetGateWalkState(room, item, canWalk: true);
+            }
+        }
+    }
+
+    private void UpdateFreezeGateCounts(Room room)
+    {
+        foreach (var item in room.GetRoomItemHandler().GetFloor.ToList())
+        {
+            if (item == null || !TryGetFreezeGateTeam(item, out var team))
+                continue;
+
+            item.LegacyDataString = GetTeamCount(team).ToString();
+            item.UpdateState();
+        }
+    }
+
+    private int GetTeamCount(Team team)
+    {
+        return team switch
+        {
+            Team.Blue => BlueTeam.Count,
+            Team.Red => RedTeam.Count,
+            Team.Yellow => YellowTeam.Count,
+            Team.Green => GreenTeam.Count,
+            _ => 0
+        };
+    }
+
+    private static void SetGateWalkState(Room room, Item item, bool canWalk)
+    {
+        var walkState = (byte)(canWalk ? 1 : 0);
+        foreach (var roomUser in room.GetGameMap().GetRoomUsers(new(item.GetX, item.GetY)))
+            roomUser.SqState = walkState;
+
+        room.GetGameMap().GameMap[item.GetX, item.GetY] = walkState;
+    }
+
+    private static bool TryGetBanzaiGateTeam(Item item, out Team team)
+    {
+        switch (item.Definition.InteractionType)
+        {
+            case InteractionType.Banzaigateblue:
+                team = Team.Blue;
+                return true;
+            case InteractionType.Banzaigatered:
+                team = Team.Red;
+                return true;
+            case InteractionType.Banzaigategreen:
+                team = Team.Green;
+                return true;
+            case InteractionType.Banzaigateyellow:
+                team = Team.Yellow;
+                return true;
+            default:
+                team = Team.None;
+                return false;
+        }
+    }
+
+    private static bool TryGetFreezeGateTeam(Item item, out Team team)
+    {
+        switch (item.Definition.InteractionType)
+        {
+            case InteractionType.FreezeBlueGate:
+                team = Team.Blue;
+                return true;
+            case InteractionType.FreezeRedGate:
+                team = Team.Red;
+                return true;
+            case InteractionType.FreezeGreenGate:
+                team = Team.Green;
+                return true;
+            case InteractionType.FreezeYellowGate:
+                team = Team.Yellow;
+                return true;
+            default:
+                team = Team.None;
+                return false;
         }
     }
 
