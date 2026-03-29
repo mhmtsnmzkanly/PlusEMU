@@ -16,7 +16,6 @@ using Plus.Core.Settings;
 using Plus.Database;
 using Plus.HabboHotel;
 using Plus.HabboHotel.Achievements;
-using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.Catalog;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
@@ -38,15 +37,14 @@ public class PlusEnvironment : IPlusEnvironment
     private static IGame _game = null!;
     private static IGameClientManager _gameClientManager = null!;
     private static IRoomManager _roomManager = null!;
-    private static ICacheManager _cacheManager = null!;
     private static ILanguageManager _languageManager = null!;
-    private static ISettingsManager _settingsManager = null!;
     private static IDatabase _database = null!;
-    private static IRconSocket _rcon = null!;
     private static IFlashServer _flashServer = null!;
+    private readonly ISettingsManager _settingsManager;
+    private readonly IFigureDataManager _figureManager;
+    private readonly IRconSocket _rcon;
+    private readonly IItemDataManager _itemDataManager;
     private readonly INitroServer _nitroServer;
-    private static IFigureDataManager _figureManager = null!;
-    private static IItemDataManager _itemDataManager = null!;
 
     public static DateTime ServerStarted;
 
@@ -67,7 +65,6 @@ public class PlusEnvironment : IPlusEnvironment
         IGame game,
         IGameClientManager gameClientManager,
         IRoomManager roomManager,
-        ICacheManager cacheManager,
         IEnumerable<IStartable> startableTasks,
         IRconSocket rconSocket,
         IOptions<RconConfiguration> rconConfiguration,
@@ -82,7 +79,6 @@ public class PlusEnvironment : IPlusEnvironment
         _game = game;
         _gameClientManager = gameClientManager;
         _roomManager = roomManager;
-        _cacheManager = cacheManager;
         _startableTasks = startableTasks;
         _rcon = rconSocket;
         _flashServer = flashServer;
