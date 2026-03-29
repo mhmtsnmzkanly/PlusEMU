@@ -153,9 +153,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                         return;
                     }
                     break;
-                case InteractionType.Floor:
-                case InteractionType.Wallpaper:
-                case InteractionType.Landscape:
+                case var _ when item.Definition.IsRoomDecoration:
                     double number = 0;
                     try
                     {
@@ -170,7 +168,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                 case InteractionType.Postit:
                     itemExtraData = "FFFF33";
                     break;
-                case InteractionType.Moodlight:
+                case var _ when item.Definition.IsMoodlight:
                     itemExtraData = "1,1,1,#000000,255";
                     break;
                 case InteractionType.Trophy:

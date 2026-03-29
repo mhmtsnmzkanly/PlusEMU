@@ -70,7 +70,7 @@ internal class DeleteRoomEvent : IPacketEvent
             if (item == null)
                 continue;
 
-            if (item.Definition.InteractionType == InteractionType.Moodlight)
+            if (item.Definition.IsMoodlight)
             {
                 using var db = _database.Connection();
                 db.Execute("DELETE FROM `room_items_moodlight` WHERE `item_id` = @itemId LIMIT 1", new { itemId = item.Id });

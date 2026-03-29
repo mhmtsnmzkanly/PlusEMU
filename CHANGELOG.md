@@ -368,3 +368,4 @@
 - Extended that `ItemDefinition` helper layer with `IsDeal`, `IsBot`, and `IsGroupFurni`, then moved another catalog, group, and room-furni guard slice off repeated raw interaction comparisons.
 - Continued the same item cleanup into interaction-heavy runtime paths by routing decoration application, moodlight/toner packet guards, and item extradata generation through those newer `ItemDefinition` semantics instead of repeating hand-written interaction branches.
 - Extended the item semantics into game-map and trading flows too by naming exchangeable and occupied-tile behavior on `ItemDefinition`, then reusing those predicates in trade redemption, trade payload composition, and room movement/gate checks.
+- Trimmed the remaining item-tail repetition in gift purchase, room deletion, and extradata serialization by moving another small moodlight/toner/decoration slice onto the same `ItemDefinition` helper surface.

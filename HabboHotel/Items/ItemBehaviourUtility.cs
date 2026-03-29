@@ -164,7 +164,7 @@ internal static class ItemBehaviourUtility
                     packet.WriteString("");
                 }
                 break;
-            case InteractionType.Toner:
+            case var _ when item.Definition.IsToner:
                 if (item.RoomId != 0)
                 {
                     var room = item.GetRoom();
