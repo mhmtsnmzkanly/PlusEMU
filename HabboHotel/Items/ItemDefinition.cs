@@ -31,13 +31,13 @@ public class ItemDefinition
     public List<double> AdjustableHeights { get; set; } = [];
     public int EffectId { get; set; }
 
-    /// TODO @80O: Should be removed, use unique interaction name instead.
+    /// Legacy Wired box identity. Prefer interaction and helper predicates where possible.
     public WiredBoxType WiredType { get; set; }
 
-    /// TODO @80O: This is dumb, remove it.
+    /// Catalog/display compatibility flag for rare items.
     public bool IsRare { get; set; }
 
-    /// TODO @80O: I think this can be removed. Seems useless and unclear what its supposed to do.
+    /// Allows non-cardinal rotation values on floor placement.
     public bool ExtraRot { get; set; }
 
     public bool IsWired =>
@@ -62,6 +62,10 @@ public class ItemDefinition
 
     public bool IsExchange => InteractionType == InteractionType.Exchange;
 
+    public bool IsRandomWiredAddon => WiredType == WiredBoxType.AddonRandomEffect;
+
+    public bool IsRegenerateMapsWired => WiredType == WiredBoxType.EffectRegenerateMaps;
+
     public bool IsGroupFurni =>
         InteractionType is InteractionType.GuildItem
             or InteractionType.GuildGate
@@ -72,6 +76,8 @@ public class ItemDefinition
     public bool IsMoodlight => InteractionType == InteractionType.Moodlight;
 
     public bool IsToner => InteractionType == InteractionType.Toner;
+
+    public bool AllowsExtraRotation => ExtraRot;
 
     public bool BlocksWalkAsOccupiedTile =>
         IsSeat

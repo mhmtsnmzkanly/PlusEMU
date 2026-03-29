@@ -11,8 +11,8 @@ public class RoomItemPlacementValidatorService : IRoomItemPlacementValidatorServ
         if (!newItem || !item.IsWired)
             return true;
 
-        return item.Definition.WiredType != WiredBoxType.EffectRegenerateMaps ||
-               room.GetRoomItemHandler().GetFloor.Count(x => x.Definition.WiredType == WiredBoxType.EffectRegenerateMaps) == 0;
+        return !item.Definition.IsRegenerateMapsWired ||
+               room.GetRoomItemHandler().GetFloor.Count(x => x.Definition.IsRegenerateMapsWired) == 0;
     }
 
     public bool HasConflictingRoller(Item item, List<Item> itemsOnTile) =>
@@ -137,7 +137,7 @@ public class RoomItemPlacementValidatorService : IRoomItemPlacementValidatorServ
 
     private static int NormalizeFloorItemRotation(Item item, int newRot)
     {
-        if (newRot != 0 && newRot != 2 && newRot != 4 && newRot != 6 && newRot != 8 && !item.Definition.ExtraRot)
+        if (newRot != 0 && newRot != 2 && newRot != 4 && newRot != 6 && newRot != 8 && !item.Definition.AllowsExtraRotation)
             return 0;
 
         return newRot;

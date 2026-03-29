@@ -304,3 +304,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - The same item semantics are now starting to reach the more interaction-heavy paths too, including decoration application, moodlight/toner packet guards, and item extradata serialization.
 - Game-map and trading code is joining that same cleanup as well: exchange and occupied-tile behavior now have named item-definition predicates instead of being repeated inline in movement and trade flows.
 - A smaller item-tail cleanup is underway too around gift purchase and room teardown paths, where moodlight/toner/decoration guards are being folded into those same named predicates instead of staying hand-written.
+- Even the smaller `ItemDefinition` compatibility tail is starting to get names now too: regenerate-maps wired checks, random wired addon checks, and extra-rotation placement checks are moving behind explicit semantic accessors instead of raw field reads.
