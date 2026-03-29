@@ -39,4 +39,24 @@ public class ItemDefinition
 
     /// TODO @80O: I think this can be removed. Seems useless and unclear what its supposed to do.
     public bool ExtraRot { get; set; }
+
+    public bool IsWired =>
+        InteractionType is InteractionType.WiredEffect
+            or InteractionType.WiredCondition
+            or InteractionType.WiredTrigger;
+
+    public bool IsTent =>
+        InteractionType is InteractionType.Tent
+            or InteractionType.TentSmall;
+
+    public bool IsRoomDecoration =>
+        InteractionType is InteractionType.Wallpaper
+            or InteractionType.Floor
+            or InteractionType.Landscape;
+
+    public bool IsGroupGate => InteractionType == InteractionType.GuildGate;
+
+    public bool IsMoodlight => InteractionType == InteractionType.Moodlight;
+
+    public bool IsToner => InteractionType == InteractionType.Toner;
 }

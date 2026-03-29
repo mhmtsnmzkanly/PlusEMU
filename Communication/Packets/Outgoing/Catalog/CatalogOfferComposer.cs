@@ -46,7 +46,7 @@ public class CatalogOfferComposer : IServerPacket
         else
         {
             packet.WriteInteger(_item.Definition.SpriteId);
-            if (_item.Definition.InteractionType == InteractionType.Wallpaper || _item.Definition.InteractionType == InteractionType.Floor || _item.Definition.InteractionType == InteractionType.Landscape)
+            if (_item.Definition.IsRoomDecoration)
                 packet.WriteString((_item.CatalogName ?? string.Empty).Split('_').ElementAtOrDefault(2) ?? string.Empty);
 
             // TODO @80O: Dont make this static hardcoded page 9

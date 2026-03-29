@@ -9,14 +9,14 @@ public class RoomItemStateService : IRoomItemStateService
         if (item.IsRoller)
             return new() { HasRoller = true };
 
-        if (item.Definition.InteractionType == InteractionType.Moodlight)
+        if (item.Definition.IsMoodlight)
         {
             if (room.MoodlightData == null)
                 room.MoodlightData = new(item.Id, room.GetDatabase());
             return new();
         }
 
-        if (item.Definition.InteractionType == InteractionType.Toner)
+        if (item.Definition.IsToner)
         {
             if (room.TonerData == null)
                 room.TonerData = new(item.Id, room.GetDatabase());
@@ -36,7 +36,7 @@ public class RoomItemStateService : IRoomItemStateService
 
     public void InitializeWallItemState(Room room, Item item)
     {
-        if (item.Definition.InteractionType != InteractionType.Moodlight)
+        if (!item.Definition.IsMoodlight)
             return;
 
         if (room.MoodlightData == null)
@@ -48,7 +48,7 @@ public class RoomItemStateService : IRoomItemStateService
 
     public void EnsureTonerData(Room room, Item item)
     {
-        if (item.Definition.InteractionType != InteractionType.Toner)
+        if (!item.Definition.IsToner)
             return;
 
         if (room.TonerData == null)

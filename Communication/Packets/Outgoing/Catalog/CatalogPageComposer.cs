@@ -84,7 +84,7 @@ public class CatalogPageComposer : IServerPacket
                     else
                     {
                         packet.WriteInteger(item.Definition.SpriteId);
-                        if (item.Definition.InteractionType == InteractionType.Wallpaper || item.Definition.InteractionType == InteractionType.Floor || item.Definition.InteractionType == InteractionType.Landscape)
+                        if (item.Definition.IsRoomDecoration)
                             packet.WriteString((item.CatalogName ?? string.Empty).Split('_').ElementAtOrDefault(2) ?? string.Empty);
                         else if (item.Definition.InteractionType == InteractionType.Bot) //Bots
                         {

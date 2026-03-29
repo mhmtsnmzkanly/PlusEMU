@@ -57,7 +57,7 @@ public class RoomItemPlacementApplyService : IRoomItemPlacementApplyService
             updateRoomUserStatuses = true;
         if (updateRoomUserStatuses)
             room.GetRoomUserManager().UpdateUserStatusses();
-        if (item.Definition.InteractionType == InteractionType.Tent || item.Definition.InteractionType == InteractionType.TentSmall)
+        if (item.Definition.IsTent)
         {
             room.RemoveTent(item.Id);
             room.AddTent(item.Id);

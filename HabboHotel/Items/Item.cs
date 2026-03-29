@@ -189,7 +189,7 @@ public class Item
     {
         get
         {
-            if (IsWired) return new InteractorWired();
+            if (Definition.IsWired) return new InteractorWired();
             switch (Definition.InteractionType)
             {
                 case InteractionType.Gate:
@@ -252,19 +252,7 @@ public class Item
     }
 
     public bool IsWired
-    {
-        get
-        {
-            switch (Definition.InteractionType)
-            {
-                case InteractionType.WiredEffect:
-                case InteractionType.WiredTrigger:
-                case InteractionType.WiredCondition:
-                    return true;
-            }
-            return false;
-        }
-    }
+        => Definition.IsWired;
 
     public List<Point> GetSides()
     {
@@ -1108,7 +1096,7 @@ public class Item
         var habbo = GetHabbo(user);
         if (habbo == null)
             return;
-        if (Definition.InteractionType == InteractionType.Tent || Definition.InteractionType == InteractionType.TentSmall) GetRoom().AddUserToTent(Id, user);
+        if (Definition.IsTent) GetRoom().AddUserToTent(Id, user);
         GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerWalkOnFurni, habbo, this);
         user.LastItem = this;
     }
@@ -1118,7 +1106,7 @@ public class Item
         var habbo = GetHabbo(user);
         if (habbo == null)
             return;
-        if (Definition.InteractionType == InteractionType.Tent || Definition.InteractionType == InteractionType.TentSmall)
+        if (Definition.IsTent)
             GetRoom().RemoveUserFromTent(Id, user);
         GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerWalkOffFurni, habbo, this);
     }

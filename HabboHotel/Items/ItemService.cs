@@ -69,14 +69,14 @@ public class ItemService : IItemService
         // Interaction specific checks
         switch (item.Definition.InteractionType)
         {
-            case InteractionType.Moodlight:
+            case var _ when item.Definition.IsMoodlight:
                 if (room.MoodlightData != null && room.GetRoomItemHandler().GetItem(room.MoodlightData.ItemId) != null)
                 {
                     session.SendNotification("You can only have one background moodlight per room!");
                     return false;
                 }
                 break;
-            case InteractionType.Toner:
+            case var _ when item.Definition.IsToner:
                 if (room.TonerData != null && room.GetRoomItemHandler().GetItem(room.TonerData.ItemId) != null)
                 {
                     session.SendNotification("You can only have one background toner per room!");
@@ -90,8 +90,7 @@ public class ItemService : IItemService
                     return false;
                 }
                 break;
-            case InteractionType.Tent:
-            case InteractionType.TentSmall:
+            case var _ when item.Definition.IsTent:
                 room.AddTent(item.Id);
                 break;
         }
@@ -205,12 +204,12 @@ public class ItemService : IItemService
         if (!itemRights) return false;
 
         using var connection = _database.Connection();
-        if (item.Definition.InteractionType == InteractionType.Tent || item.Definition.InteractionType == InteractionType.TentSmall)
+        if (item.Definition.IsTent)
             room.RemoveTent(item.Id);
         
-        if (item.Definition.InteractionType == InteractionType.Moodlight)
+        if (item.Definition.IsMoodlight)
             await connection.ExecuteAsync("DELETE FROM `room_items_moodlight` WHERE `item_id` = @id LIMIT 1", new { id = item.Id });
-        else if (item.Definition.InteractionType == InteractionType.Toner)
+        else if (item.Definition.IsToner)
             await connection.ExecuteAsync("DELETE FROM `room_items_toner` WHERE `id` = @id LIMIT 1", new { id = item.Id });
 
         if (item.UserId == habbo.Id || habbo.Permissions.HasRight("room_item_take"))

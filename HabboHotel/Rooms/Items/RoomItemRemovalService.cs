@@ -14,7 +14,7 @@ public class RoomItemRemovalService : IRoomItemRemovalService
         if (item.Definition.InteractionType != InteractionType.Gift)
             item.Interactor.OnRemove(session!, item);
 
-        if (item.Definition.InteractionType == InteractionType.GuildGate)
+        if (item.Definition.IsGroupGate)
         {
             item.UpdateCounter = 0;
             item.UpdateNeeded = false;

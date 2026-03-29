@@ -364,3 +364,4 @@
 - Removed the dead in-memory `Habbo` cache tail from `PlusEnvironment`, deleting the unused `GetHabboById` / `GetHabboByUsername` helpers and the process-timer pass that walked the old static cached-user list.
 - Removed the stale `[Obsolete]` marker from `RoomItemHandling` now that its old monolithic behavior has been split into dedicated item, placement, roller, persistence, tracking, and queue services and the class acts as a room-item coordinator/facade instead of the original legacy god object.
 - Cleaned up stale `Item` compatibility markers by removing the dead `BaseItem` field, promoting `IsRoller` to a real computed property, and dropping obsolete tags from actively used item coordinate helpers.
+- Added a first semantic helper layer to `ItemDefinition` and switched item, room-item, and catalog code over to `IsWired` / `IsTent` / `IsRoomDecoration` / `IsGroupGate` / `IsMoodlight` / `IsToner` instead of repeating the same raw `InteractionType` checks.
