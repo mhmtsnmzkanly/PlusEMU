@@ -39,9 +39,10 @@ public class PlusEnvironment : IPlusEnvironment
     private static IFlashServer _flashServer = null!;
     private readonly ISettingsManager _settingsManager;
     private readonly IFigureDataManager _figureManager;
-    private readonly IRconSocket _rcon;
+    private static IRconSocket _rcon = null!;
     private readonly IItemDataManager _itemDataManager;
-    private readonly INitroServer _nitroServer;
+    private static INitroServer _nitroServer = null!;
+    private static IServerStatusUpdater _serverStatusUpdater = null!;
 
     public static DateTime ServerStarted;
 
@@ -67,7 +68,8 @@ public class PlusEnvironment : IPlusEnvironment
         IOptions<RconConfiguration> rconConfiguration,
         IItemDataManager itemDataManager,
         IFlashServer flashServer,
-        INitroServer nitroServer)
+        INitroServer nitroServer,
+        IServerStatusUpdater serverStatusUpdater)
     {
         _database = database;
         _languageManager = languageManager;
@@ -80,6 +82,7 @@ public class PlusEnvironment : IPlusEnvironment
         _rcon = rconSocket;
         _flashServer = flashServer;
         _nitroServer = nitroServer;
+        _serverStatusUpdater = serverStatusUpdater;
         _rconConfiguration = rconConfiguration.Value;
         _itemDataManager = itemDataManager;
     }
@@ -202,6 +205,9 @@ public class PlusEnvironment : IPlusEnvironment
         _game.StopGameLoop();
         Thread.Sleep(2500);
         _flashServer.Stop();
+        _nitroServer.Stop();
+        _rcon.Stop();
+        _serverStatusUpdater.Dispose();
         _gameClientManager.CloseAll(); //Close all connections
         _roomManager.Dispose(); //Stop the game loop.
         if (!Debugger.IsAttached)

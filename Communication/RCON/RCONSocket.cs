@@ -32,6 +32,23 @@ public class RconSocket : IRconSocket
         }
     }
 
+    public void Stop()
+    {
+        try
+        {
+            _musSocket?.Close();
+            _musSocket?.Dispose();
+        }
+        catch
+        {
+            // ignored
+        }
+        finally
+        {
+            _musSocket = null;
+        }
+    }
+
     private void OnCallBack(IAsyncResult iAr)
     {
         try
@@ -57,7 +74,8 @@ public class RconSocket : IRconSocket
         {
             // ignored
         }
-        _musSocket?.BeginAccept(OnCallBack, _musSocket);
+        if (_musSocket != null)
+            _musSocket.BeginAccept(OnCallBack, _musSocket);
     }
 
     public ICommandManager GetCommands() => _commands;

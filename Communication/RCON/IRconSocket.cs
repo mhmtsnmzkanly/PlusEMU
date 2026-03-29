@@ -5,5 +5,6 @@ namespace Plus.Communication.RCON;
 public interface IRconSocket
 {
     void Init(string host, int port, IEnumerable<string> allowedConnections);
+    void Stop();
     ICommandManager GetCommands();
 }
