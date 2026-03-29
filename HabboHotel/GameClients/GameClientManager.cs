@@ -14,6 +14,7 @@ using Plus.Communication.Packets.Outgoing.Handshake;
 using Plus.Communication.Packets.Outgoing.Notifications;
 using Plus.Database;
 using Plus.HabboHotel.Users.Messenger;
+using Plus.Core;
 
 namespace Plus.HabboHotel.GameClients;
 
@@ -21,6 +22,7 @@ public class GameClientManager : IGameClientManager
 {
     private readonly IDatabase _database;
     private readonly ILogger<GameClientManager> _logger;
+    private readonly IServerStatusSignal _serverStatusSignal;
 
     private readonly Stopwatch _clientPingStopwatch;
 
@@ -30,10 +32,11 @@ public class GameClientManager : IGameClientManager
     private readonly ConcurrentDictionary<int, GameClient> _userIdRegister;
     private readonly ConcurrentDictionary<string, GameClient> _usernameRegister;
 
-    public GameClientManager(IDatabase database, ILogger<GameClientManager> logger)
+    public GameClientManager(IDatabase database, ILogger<GameClientManager> logger, IServerStatusSignal serverStatusSignal)
     {
         _database = database;
         _logger = logger;
+        _serverStatusSignal = serverStatusSignal;
         _clients = new();
         _userIdRegister = new();
         _usernameRegister = new();
@@ -190,12 +193,14 @@ public class GameClientManager : IGameClientManager
             _userIdRegister[userId] = client;
         else
             _userIdRegister.TryAdd(userId, client);
+        _serverStatusSignal.MarkDirty();
     }
 
     public void UnregisterClient(int userid, string username)
     {
         _userIdRegister.TryRemove(userid, out _);
         _usernameRegister.TryRemove(username.ToLower(), out _);
+        _serverStatusSignal.MarkDirty();
     }
 
     public void CloseAll()

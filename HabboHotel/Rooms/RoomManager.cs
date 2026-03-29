@@ -17,6 +17,7 @@ using Plus.HabboHotel.Users.UserData;
 using Microsoft.Extensions.Logging;
 using Dapper;
 using System.Data;
+using Plus.Core;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -52,6 +53,7 @@ public class RoomManager : IRoomManager
     private readonly IItemHopperFinder _itemHopperFinder;
     private readonly IBadgeManager _badgeManager;
     private readonly IUserDataFactory _userDataFactory;
+    private readonly IServerStatusSignal _serverStatusSignal;
 
     private readonly object _roomLoadingSync;
     private readonly Dictionary<string, RoomModel> _roomModels;
@@ -86,6 +88,7 @@ public class RoomManager : IRoomManager
         IItemHopperFinder itemHopperFinder,
         IBadgeManager badgeManager,
         IUserDataFactory userDataFactory,
+        IServerStatusSignal serverStatusSignal,
         ILoggerFactory loggerFactory,
         ILogger<RoomManager> logger)
     {
@@ -117,6 +120,7 @@ public class RoomManager : IRoomManager
         _itemHopperFinder = itemHopperFinder;
         _badgeManager = badgeManager;
         _userDataFactory = userDataFactory;
+        _serverStatusSignal = serverStatusSignal;
         _loggerFactory = loggerFactory;
         _logger = logger;
         _rooms = new();
@@ -191,7 +195,10 @@ public class RoomManager : IRoomManager
     public void UnloadRoom(uint roomId)
     {
         if (_rooms.TryRemove(roomId, out var room))
+        {
+            _serverStatusSignal.MarkDirty();
             DisposeRoom(room);
+        }
     }
 
     public bool TryLoadRoom(uint roomId, out Room room)
@@ -239,6 +246,7 @@ public class RoomManager : IRoomManager
         if (!_rooms.TryAdd(roomId, instance))
             return false;
 
+        _serverStatusSignal.MarkDirty();
         room = instance;
         return true;
     }
@@ -275,5 +283,6 @@ public class RoomManager : IRoomManager
             room.Dispose();
         }
         _rooms.Clear();
+        _serverStatusSignal.MarkDirty();
     }
 }
