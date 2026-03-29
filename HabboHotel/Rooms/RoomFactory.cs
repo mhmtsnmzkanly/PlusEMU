@@ -1,4 +1,5 @@
 using Dapper;
+using Microsoft.Extensions.DependencyInjection;
 using Plus.Database;
 using Plus.HabboHotel.Groups;
 using Plus.HabboHotel.GameClients;
@@ -56,14 +57,12 @@ public class RoomFactory : IRoomFactory
     }
 
     private readonly IDatabase _database;
-    private readonly IRoomManager _roomManager;
-    private readonly IGroupManager _groupManager;
+    private readonly IServiceProvider _serviceProvider;
 
-    public RoomFactory(IDatabase database, IRoomManager roomManager, IGroupManager groupManager)
+    public RoomFactory(IDatabase database, IServiceProvider serviceProvider)
     {
         _database = database;
-        _roomManager = roomManager;
-        _groupManager = groupManager;
+        _serviceProvider = serviceProvider;
     }
 
     public List<RoomData> GetRoomsDataByOwnerSortByName(int ownerId)
@@ -145,7 +144,7 @@ public class RoomFactory : IRoomFactory
 
     private RoomData ResolveRoomData(RoomFactoryRow row)
     {
-        if (_roomManager.TryGetRoom(row.Id, out var roomInstance))
+        if (GetRoomManager().TryGetRoom(row.Id, out var roomInstance))
             return roomInstance.Data;
 
         return Map(row);
@@ -205,7 +204,7 @@ public class RoomFactory : IRoomFactory
 
     private RoomData Map(RoomFactoryRow row)
     {
-        _roomManager.TryGetModel(row.ModelName, out var model);
+        GetRoomManager().TryGetModel(row.ModelName, out var model);
         var data = new RoomData(row.Id, row.Caption, row.ModelName, row.Username, row.Owner, row.Password, row.Score, row.RoomType, row.State, row.UsersNow, row.UsersMax, row.Category, row.Description,
             row.Tags, row.Floor, row.Landscape, row.AllowPets == "1", row.AllowPetsEat == "1", row.RoomBlockingDisabled == "1", row.AllowHidewall == "1", row.WallThick, row.FloorThick, row.Wallpaper,
             row.MuteSettings, row.BanSettings, row.KickSettings, row.ChatMode, row.ChatSize, row.ChatSpeed, row.ChatExtraFlood, row.ChatHearingDistance, row.TradeSettings, row.PushEnabled == "1",
@@ -214,10 +213,13 @@ public class RoomFactory : IRoomFactory
 
         if (row.GroupId > 0)
         {
-            _groupManager.TryGetGroup(row.GroupId, out var group);
+            GetGroupManager().TryGetGroup(row.GroupId, out var group);
             data.Group = group;
         }
 
         return data;
     }
+
+    private IRoomManager GetRoomManager() => _serviceProvider.GetRequiredService<IRoomManager>();
+    private IGroupManager GetGroupManager() => _serviceProvider.GetRequiredService<IGroupManager>();
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Plus.HabboHotel.Rooms.Chat.Commands;
 using Plus.HabboHotel.Rooms.Chat.Emotions;
 using Plus.HabboHotel.Rooms.Chat.Filter;
@@ -21,7 +22,8 @@ public sealed class ChatManager : IChatManager
     /// <summary>
     /// Commands.
     /// </summary>
-    private readonly ICommandManager _commands;
+    private readonly IServiceProvider _serviceProvider;
+    private ICommandManager? _commands;
 
     /// <summary>
     /// Chat Emoticons.
@@ -52,7 +54,7 @@ public sealed class ChatManager : IChatManager
     /// Initializes a new instance of the ChatManager class.
     /// </summary>
     public ChatManager(IChatStyleManager chatStyleManager,
-        ICommandManager commandManager,
+        IServiceProvider serviceProvider,
         IChatEmotionsManager chatEmotionsManager,
         IChatlogManager chatlogManager,
         IWordFilterManager wordFilterManager,
@@ -63,7 +65,7 @@ public sealed class ChatManager : IChatManager
         _emotions = chatEmotionsManager;
         _logs = chatlogManager;
         _filter = wordFilterManager;
-        _commands = commandManager;
+        _serviceProvider = serviceProvider;
         _petCommands = petCommandManager;
         _petLocale = petLocale;
         _chatStyles = chatStyleManager;
@@ -85,7 +87,7 @@ public sealed class ChatManager : IChatManager
 
     public IWordFilterManager GetFilter() => _filter;
 
-    public ICommandManager GetCommands() => _commands;
+    public ICommandManager GetCommands() => _commands ??= _serviceProvider.GetRequiredService<ICommandManager>();
 
     public IPetCommandManager GetPetCommands() => _petCommands;
 

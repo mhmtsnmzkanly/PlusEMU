@@ -12,6 +12,29 @@ using Plus.Database;
 using Plus.Plugins;
 using Plus.Utilities.DependencyInjection;
 using Scrutor;
+using Plus.Core.FigureData;
+using Plus.Core.Language;
+using Plus.Core.Settings;
+using Plus.HabboHotel;
+using Plus.HabboHotel.Items;
+using Plus.HabboHotel.Achievements;
+using Plus.HabboHotel.Badges;
+using Plus.HabboHotel.Bots;
+using Plus.HabboHotel.Cache;
+using Plus.HabboHotel.Catalog;
+using Plus.HabboHotel.Games;
+using Plus.HabboHotel.Groups;
+using Plus.HabboHotel.Items.Televisions;
+using Plus.HabboHotel.Moderation;
+using Plus.HabboHotel.Navigator;
+using Plus.HabboHotel.Permissions;
+using Plus.HabboHotel.Quests;
+using Plus.HabboHotel.Rewards;
+using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Rooms.Chat;
+using Plus.HabboHotel.Subscriptions;
+using Plus.HabboHotel.Talents;
+using Plus.HabboHotel.Users.UserData;
 
 namespace Plus;
 
@@ -70,9 +93,7 @@ public static class Program
         Console.CursorVisible = false;
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
-        // Start
         var environment = serviceProvider.GetRequiredService<IPlusEnvironment>();
-        var consoleCommandHandler = serviceProvider.GetRequiredService<IConsoleCommandHandler>();
         var started = await environment.Start();
         if (!started)
         {
@@ -87,7 +108,7 @@ public static class Program
                 var input = Console.ReadLine();
                 if (!string.IsNullOrWhiteSpace(input))
                 {
-                    consoleCommandHandler.InvokeCommand(input);
+                    serviceProvider.GetRequiredService<IConsoleCommandHandler>().InvokeCommand(input);
                 }
             }
         }

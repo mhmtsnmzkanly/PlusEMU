@@ -87,7 +87,7 @@ public class PlusEnvironment : IPlusEnvironment
             if (!_database.IsConnected())
             {
                 Log.Error("Failed to Connect to the specified MySQL server.");
-                Console.ReadKey(true);
+                WaitForExitKeyIfInteractive();
                 return false;
             }
             Log.Info("Connected to Database!");
@@ -127,21 +127,21 @@ public class PlusEnvironment : IPlusEnvironment
         {
             Log.Error("Please check your configuration file - some values appear to be missing.");
             Log.Error("Press any key to shut down ...");
-            Console.ReadKey(true);
+            WaitForExitKeyIfInteractive();
             return false;
         }
         catch (InvalidOperationException e)
         {
             Log.Error($"Failed to initialize PlusEmulator: {e.Message}");
             Log.Error("Press any key to shut down ...");
-            Console.ReadKey(true);
+            WaitForExitKeyIfInteractive();
             return false;
         }
         catch (Exception e)
         {
             Log.Error($"Fatal error during startup: {e}");
             Log.Error("Press a key to exit");
-            Console.ReadKey();
+            WaitForExitKeyIfInteractive();
             return false;
         }
 
@@ -155,5 +155,17 @@ public class PlusEnvironment : IPlusEnvironment
         await connection.ExecuteAsync("UPDATE `rooms` SET `users_now` = '0' WHERE `users_now` > '0';");
         await connection.ExecuteAsync("UPDATE `users` SET `online` = false WHERE `online` = true");
         await connection.ExecuteAsync("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
+    }
+
+    private static void WaitForExitKeyIfInteractive()
+    {
+        try
+        {
+            if (!Console.IsInputRedirected)
+                Console.ReadKey(true);
+        }
+        catch (InvalidOperationException)
+        {
+        }
     }
 }

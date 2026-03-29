@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Plus.HabboHotel.Cache;
 using Plus.Core;
 
@@ -7,12 +8,12 @@ namespace Plus.HabboHotel.Cache.Process;
 public sealed class ProcessComponent : IProcessComponent
 {
     private readonly ILogger<ProcessComponent> _logger;
-    private readonly ICacheManager _cacheManager;
+    private readonly IServiceProvider _serviceProvider;
 
-    public ProcessComponent(ILogger<ProcessComponent> logger, ICacheManager cacheManager)
+    public ProcessComponent(ILogger<ProcessComponent> logger, IServiceProvider serviceProvider)
     {
         _logger = logger;
-        _cacheManager = cacheManager;
+        _serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -56,6 +57,7 @@ public sealed class ProcessComponent : IProcessComponent
     {
         try
         {
+            var cacheManager = _serviceProvider.GetRequiredService<ICacheManager>();
             if (_disabled)
                 return;
             if (_timerRunning)
@@ -66,7 +68,7 @@ public sealed class ProcessComponent : IProcessComponent
             _resetEvent.Reset();
 
             // BEGIN CODE
-            var cacheList = _cacheManager.GetUserCache().ToList();
+            var cacheList = cacheManager.GetUserCache().ToList();
             if (cacheList.Count > 0)
             {
                 foreach (var cache in cacheList)
@@ -76,7 +78,7 @@ public sealed class ProcessComponent : IProcessComponent
                         if (cache == null)
                             continue;
                         if (cache.IsExpired)
-                            _cacheManager.TryRemoveUser(cache.Id, out _);
+                            cacheManager.TryRemoveUser(cache.Id, out _);
                     }
                     catch (Exception e)
                     {

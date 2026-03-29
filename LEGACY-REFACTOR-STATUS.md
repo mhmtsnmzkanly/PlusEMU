@@ -82,6 +82,8 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - That cleanup line has now crossed the old threshold too: `RoomItemHandling` is no longer marked obsolete, because its original god-object behavior has been split behind dedicated services and the remaining class now primarily coordinates room-item workflows.
 - Naming/grouping cleanup is also in place now: shared wall-position defaults, loaded-item lookup, and per-item floor initialization no longer repeat tiny ad hoc patterns.
 - The active Wired runtime now includes room-local queue observability in `WiredComponent`, so enqueue, batch processing, saturation, and slow-cycle behavior can be traced through the standard logger pipeline while the broader room/habbo cleanup continues.
+- Local emulator startup no longer silently wedges in dependency resolution either: the remaining eager singleton traps around room/chat/runtime boot have been pushed behind lazy `IServiceProvider` lookups in `RoomFactory`, `RoomManager`, `RconSocket`, `ProcessComponent`, and `ChatManager`, so local boot now reaches the real runtime initialization path instead of hanging before the banner.
+- Startup failure handling is also cleaner in non-interactive runs now: `PlusEnvironment` no longer throws a second `Console.ReadKey` exception when the database check fails under redirected input, so smoke tests report the actual MySQL connectivity problem and stop there.
 
 ## Migration Status: ✅ COMPLETE
 
