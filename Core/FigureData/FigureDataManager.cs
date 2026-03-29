@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Plus.Core.FigureData.Types;
 using Plus.HabboHotel.Catalog;
+using Plus.HabboHotel.Catalog.Clothing;
 using Plus.HabboHotel.Users.Clothing.Parts;
 using Plus.Utilities;
 
@@ -9,16 +10,16 @@ namespace Plus.Core.FigureData;
 
 public class FigureDataManager : IFigureDataManager
 {
-    private readonly ICatalogManager _catalogManager;
+    private readonly IClothingManager _clothingManager;
     private readonly ILogger<FigureDataManager> _logger;
     private readonly Dictionary<int, Palette> _palettes; //pallet id, Pallet
 
     private readonly List<string> _requirements;
     private readonly Dictionary<string, FigureSet> _setTypes; //type (hr, ch, etc), Set
 
-    public FigureDataManager(ICatalogManager catalogManager, ILogger<FigureDataManager> logger)
+    public FigureDataManager(IClothingManager clothingManager, ILogger<FigureDataManager> logger)
     {
-        _catalogManager = catalogManager;
+        _clothingManager = clothingManager;
         _logger = logger;
         _palettes = new();
         _setTypes = new();
@@ -205,7 +206,7 @@ public class FigureDataManager : IFigureDataManager
         }
         if (clothingParts != null)
         {
-            var purchasableParts = _catalogManager.ClothingManager.GetClothingAllParts;
+            var purchasableParts = _clothingManager.GetClothingAllParts;
             figureParts = rebuildFigure.TrimEnd('.').Split('.');
             foreach (var part in figureParts.ToList())
             {

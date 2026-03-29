@@ -6,6 +6,7 @@ using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Badges;
 using Plus.HabboHotel.Bots;
 using Plus.HabboHotel.Catalog;
+using Plus.HabboHotel.Catalog.Vouchers;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Games;
 using Plus.HabboHotel.Items;
@@ -45,6 +46,7 @@ internal class UpdateCommand : IChatCommand
     private readonly IRewardManager _rewardManager;
     private readonly IPetLocale _petLocale;
     private readonly IChatStyleManager _chatStyleManager;
+    private readonly IVoucherManager _voucherManager;
     public string Key => "update";
     public string PermissionRequired => "command_update";
 
@@ -72,7 +74,8 @@ internal class UpdateCommand : IChatCommand
         IBadgeManager badgeManager,
         IRewardManager rewardManager,
         IPetLocale petLocale,
-        IChatStyleManager chatStyleManager)
+        IChatStyleManager chatStyleManager,
+        IVoucherManager voucherManager)
     {
         _catalogManager = catalogManager;
         _clientManager = clientManager;
@@ -95,6 +98,7 @@ internal class UpdateCommand : IChatCommand
         _rewardManager = rewardManager;
         _petLocale = petLocale;
         _chatStyleManager = chatStyleManager;
+        _voucherManager = voucherManager;
     }
 
     public async Task Execute(GameClient session, Room room, string[] parameters)
@@ -276,7 +280,7 @@ internal class UpdateCommand : IChatCommand
                     session.SendWhisper("Oops, you do not have the 'command_update_vouchers' permission.");
                     break;
                 }
-                _catalogManager.VoucherManager.Init();
+                _voucherManager.Init();
                 session.SendWhisper("Catalogue vouche cache successfully updated.");
                 break;
             }

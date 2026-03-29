@@ -55,6 +55,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - `Item.ProcessUpdates()` itself is starting to be broken apart too: the hopper and teleporter branches now sit behind dedicated helper methods instead of living inline inside the main runtime switch.
 - That `Item.ProcessUpdates()` cleanup now covers gate and timer branches too, with one-way gate, VIP gate, scoreboard, soccer counter, and freeze timer logic extracted into dedicated helpers plus one shared legacy-second parser.
 - The cannon/forced-kick branch has also been isolated from `Item.ProcessUpdates()`, including its target-square calculation, further reducing the last dense runtime switch in the item domain.
+- The old `ICatalogManager` compatibility bag is being retired too: clothing and voucher consumers are moving onto direct DI so catalog-adjacent code no longer depends on deprecated manager passthrough properties.
 - `RoomItemHandling` has started to be split into smaller load/remove helpers, but the broader room item lifecycle and roller/update logic is still legacy-heavy.
 - The first true `RoomItemHandling` extraction is now in place too: moved-item persistence lives in `RoomItemPersistenceService`, reducing direct database-write ownership inside the room item lifecycle class.
 - A second extraction is in place as well: floor-item placement and `CheckPosItem` validation now live in `RoomItemPlacementValidatorService`, pulling tile/user/stack/height rule evaluation out of `RoomItemHandling`.

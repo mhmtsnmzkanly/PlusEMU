@@ -198,12 +198,4 @@ public class CatalogManager : ICatalogManager, IStartable
     public ICollection<CatalogPage> Pages => _pages.Values;
 
     public ICollection<CatalogPromotion> Promotions => _promotions.Values;
-
-    public IMarketplaceManager Marketplace => _marketplace;
-
-    public IPetRaceManager PetRaceManager => _petRaceManager;
-
-    public IVoucherManager VoucherManager => _voucherManager;
-
-    public IClothingManager ClothingManager => _clothingManager;
 }
