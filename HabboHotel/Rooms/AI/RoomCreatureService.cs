@@ -372,29 +372,29 @@ internal class RoomCreatureService : IRoomCreatureService
         if (habbo == null || item == null || !room.GetRoomUserManager().TryGetPet(petId, out var petUser) || petUser.PetData == null || petUser.PetData.OwnerId != habbo.Id)
             return Task.CompletedTask;
 
-        if (item.Definition.InteractionType == InteractionType.HorseSaddle1)
+        if (item.Definition.IsHorseSaddle1)
         {
             petUser.PetData.Saddle = 9;
             UpdateHorsePetAndConsumeItem(petUser.PetData.PetId, item.Id, room, session, item, "have_saddle", "9");
         }
-        else if (item.Definition.InteractionType == InteractionType.HorseSaddle2)
+        else if (item.Definition.IsHorseSaddle2)
         {
             petUser.PetData.Saddle = 10;
             UpdateHorsePetAndConsumeItem(petUser.PetData.PetId, item.Id, room, session, item, "have_saddle", "10");
         }
-        else if (item.Definition.InteractionType == InteractionType.HorseHairstyle)
+        else if (item.Definition.IsHorseHairstyle)
         {
             var parse = 100 + int.Parse(item.Definition.ItemName.Split('_')[2]);
             petUser.PetData.PetHair = parse;
             UpdateHorsePetAndConsumeItem(petUser.PetData.PetId, item.Id, room, session, item, "pethair", petUser.PetData.PetHair.ToString());
         }
-        else if (item.Definition.InteractionType == InteractionType.HorseHairDye)
+        else if (item.Definition.IsHorseHairDye)
         {
             var hairDye = 48 + int.Parse(item.Definition.ItemName.Split('_')[2]);
             petUser.PetData.HairDye = hairDye;
             UpdateHorsePetAndConsumeItem(petUser.PetData.PetId, item.Id, room, session, item, "hairdye", petUser.PetData.HairDye.ToString());
         }
-        else if (item.Definition.InteractionType == InteractionType.HorseBodyDye)
+        else if (item.Definition.IsHorseBodyDye)
         {
             var parse = int.Parse(item.Definition.ItemName.Split('_')[2]);
             var raceLast = 2 + parse * 4 - 4;

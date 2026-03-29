@@ -241,11 +241,11 @@ public class WiredComponent
         return null!;
     }
 
-    public bool IsTrigger(Item item) => item.Definition.InteractionType == InteractionType.WiredTrigger;
+    public bool IsTrigger(Item item) => item.Definition.IsWiredTrigger;
 
-    public bool IsEffect(Item item) => item.Definition.InteractionType == InteractionType.WiredEffect;
+    public bool IsEffect(Item item) => item.Definition.IsWiredEffect;
 
-    public bool IsCondition(Item item) => item.Definition.InteractionType == InteractionType.WiredCondition;
+    public bool IsCondition(Item item) => item.Definition.IsWiredCondition;
 
     public bool OtherBoxHasItem(IWiredItem box, uint itemId)
     {

@@ -16,8 +16,8 @@ public class RoomItemPlacementValidatorService : IRoomItemPlacementValidatorServ
     }
 
     public bool HasConflictingRoller(Item item, List<Item> itemsOnTile) =>
-        item.Definition.InteractionType == InteractionType.Roller &&
-        itemsOnTile.Count(x => x.Definition.InteractionType == InteractionType.Roller && x.Id != item.Id) > 0;
+        item.IsRoller &&
+        itemsOnTile.Count(x => x.Definition.IsRoller && x.Id != item.Id) > 0;
 
     public bool ValidateFloorPlacement(Room room, Item item, int newX, int newY, bool onRoller, Dictionary<int, ThreeDCoord> affectedTiles)
     {

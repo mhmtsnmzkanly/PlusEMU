@@ -46,6 +46,12 @@ public class ItemDefinition
             or InteractionType.WiredCondition
             or InteractionType.WiredTrigger;
 
+    public bool IsWiredTrigger => InteractionType == InteractionType.WiredTrigger;
+
+    public bool IsWiredEffect => InteractionType == InteractionType.WiredEffect;
+
+    public bool IsWiredCondition => InteractionType == InteractionType.WiredCondition;
+
     public bool IsTent =>
         InteractionType is InteractionType.Tent
             or InteractionType.TentSmall;
@@ -65,7 +71,11 @@ public class ItemDefinition
 
     public bool IsGift => InteractionType == InteractionType.Gift;
 
+    public bool IsDice => InteractionType == InteractionType.Dice;
+
     public bool IsHopper => InteractionType == InteractionType.Hopper;
+
+    public bool IsRoller => InteractionType == InteractionType.Roller;
 
     public bool IsPet => InteractionType == InteractionType.Pet;
 
@@ -108,6 +118,16 @@ public class ItemDefinition
     public bool IsMonsterplantSeed => InteractionType == InteractionType.MonsterplantSeed;
 
     public bool IsTeleport => InteractionType == InteractionType.Teleport;
+
+    public bool IsHorseSaddle1 => InteractionType == InteractionType.HorseSaddle1;
+
+    public bool IsHorseSaddle2 => InteractionType == InteractionType.HorseSaddle2;
+
+    public bool IsHorseHairstyle => InteractionType == InteractionType.HorseHairstyle;
+
+    public bool IsHorseHairDye => InteractionType == InteractionType.HorseHairDye;
+
+    public bool IsHorseBodyDye => InteractionType == InteractionType.HorseBodyDye;
 
     public bool IsGnomeBox => InteractionType == InteractionType.GnomeBox;
 

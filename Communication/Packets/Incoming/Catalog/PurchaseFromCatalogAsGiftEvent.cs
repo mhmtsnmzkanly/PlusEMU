@@ -85,7 +85,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         }
         if (!ItemUtility.CanGiftItem(item))
             return;
-        if (!_itemManager.Gifts.TryGetValue(spriteId, out var presentId) || !_itemManager.Items.TryGetValue(presentId, out var presentData) || presentData.InteractionType != InteractionType.Gift)
+        if (!_itemManager.Gifts.TryGetValue(spriteId, out var presentId) || !_itemManager.Items.TryGetValue(presentId, out var presentData) || !presentData.IsGift)
             return;
         if (sender.Credits < item.CostCredits)
         {

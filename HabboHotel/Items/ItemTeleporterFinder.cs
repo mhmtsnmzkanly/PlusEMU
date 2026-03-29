@@ -38,7 +38,7 @@ public class ItemTeleporterFinder : IItemTeleporterFinder
         var linkId = GetLinkedTele(teleId);
         if (linkId == 0) return false;
         var item = room.GetRoomItemHandler().GetItem(linkId);
-        if (item != null && item.Definition.InteractionType == InteractionType.Teleport)
+        if (item != null && item.Definition.IsTeleport)
             return true;
         var roomId = GetTeleRoomId(linkId, room);
         if (roomId == 0) return false;

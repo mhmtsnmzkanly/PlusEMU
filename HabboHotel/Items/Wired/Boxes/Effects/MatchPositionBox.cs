@@ -129,7 +129,7 @@ internal class MatchPositionBox : IWiredItem, IWiredCycle, IWiredEmptyExecutable
     {
         if (item.LegacyDataString == extradata)
             return;
-        if (item.Definition.InteractionType == InteractionType.Dice)
+        if (item.Definition.IsDice)
             return;
         item.LegacyDataString = extradata;
         item.UpdateState(false, true);

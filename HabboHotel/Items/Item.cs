@@ -84,7 +84,7 @@ public class Item
         }
     }
     
-    public bool IsRoller => Definition.InteractionType == InteractionType.Roller;
+    public bool IsRoller => Definition.IsRoller;
 
     public Point Coordinate => new(GetX, GetY);
 
