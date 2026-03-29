@@ -274,25 +274,7 @@ public class Gamemap
             if (_itemHeightMap[coord.X, coord.Y] <= item.TotalHeight)
             {
                 _itemHeightMap[coord.X, coord.Y] = item.TotalHeight - Model.SqFloorHeight[item.GetX, item.GetY];
-                EffectMap[coord.X, coord.Y] = 0;
-                switch (item.Definition.InteractionType)
-                {
-                    case InteractionType.Pool:
-                        EffectMap[coord.X, coord.Y] = 1;
-                        break;
-                    case InteractionType.NormalSkates:
-                        EffectMap[coord.X, coord.Y] = 2;
-                        break;
-                    case InteractionType.IceSkates:
-                        EffectMap[coord.X, coord.Y] = 3;
-                        break;
-                    case InteractionType.Lowpool:
-                        EffectMap[coord.X, coord.Y] = 4;
-                        break;
-                    case InteractionType.Haloweenpool:
-                        EffectMap[coord.X, coord.Y] = 5;
-                        break;
-                }
+                EffectMap[coord.X, coord.Y] = item.Definition.RoomEffectMapType;
 
                 //SwimHalloween
                 if (item.Definition.Walkable) // If this item is walkable and on the floor, allow users to walk here.

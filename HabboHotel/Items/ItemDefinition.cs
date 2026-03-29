@@ -220,6 +220,17 @@ public class ItemDefinition
             _ => 0
         };
 
+    public byte RoomEffectMapType =>
+        InteractionType switch
+        {
+            InteractionType.Pool => 1,
+            InteractionType.NormalSkates => 2,
+            InteractionType.IceSkates => 3,
+            InteractionType.Lowpool => 4,
+            InteractionType.Haloweenpool => 5,
+            _ => 0
+        };
+
     public Team GetTeamOrNone()
     {
         return InteractionType switch
