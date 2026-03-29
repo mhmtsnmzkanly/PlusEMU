@@ -211,7 +211,6 @@ internal class UpdateCommand : IChatCommand
                     var clientPermissions = clientHabbo?.Permissions;
                     if (clientHabbo == null || clientPermissions == null)
                         continue;
-                    clientPermissions.Init(clientHabbo);
                 }
                 session.SendWhisper("Rank definitions successfully updated.");
                 break;

@@ -18,16 +18,6 @@ public sealed class PermissionComponent
     }
 
     /// <summary>
-    /// Initialize the PermissionComponent.
-    /// </summary>
-    /// <param name="habbo"></param>
-    [Obsolete]
-    public bool Init(Habbo habbo)
-    {
-        return true;
-    }
-
-    /// <summary>
     /// Checks if the user has the specified right.
     /// </summary>
     /// <param name="right"></param>

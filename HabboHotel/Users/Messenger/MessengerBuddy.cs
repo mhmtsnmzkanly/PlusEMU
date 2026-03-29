@@ -5,8 +5,6 @@ namespace Plus.HabboHotel.Users.Messenger;
 
 public class MessengerBuddy
 {
-    [Obsolete("Should be removed")]
-    public GameClient? Client;
     private Habbo? _habbo;
 
     public Habbo? Habbo

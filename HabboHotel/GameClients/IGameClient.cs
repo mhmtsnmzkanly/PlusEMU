@@ -13,7 +13,6 @@ public interface IGameClient
     bool IsAuthenticated { get; set; }
     DateTime TimeConnected { get; set; }
     string MachineId { get; set; }
-    int PingCount { get; set; }
     Revision Revision { get; set; }
     Habbo GetHabbo();
     void SetHabbo(Habbo habbo);

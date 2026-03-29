@@ -25,7 +25,6 @@ internal class ReloadRanksCommand : IRconCommand
             var habbo = client?.GetHabbo();
             if (habbo?.Permissions == null)
                 continue;
-            habbo.Permissions.Init(habbo);
         }
         return Task.FromResult(true);
     }

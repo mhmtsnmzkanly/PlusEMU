@@ -23,11 +23,7 @@ public abstract class GameClient
     public bool IsAuthenticated { get; set; } = false;
     public DateTime TimeConnected { get; set; }
 
-    [Obsolete("Will be removed")]
     public string MachineId { get; set; } = string.Empty;
-
-    [Obsolete("Will be removed")]
-    public int PingCount { get; set; }
 
     public Revision Revision { get; set; } = null!;
     public string? ClientBuild { get; set; }
