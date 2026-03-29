@@ -1,7 +1,6 @@
-using Plus.HabboHotel.Cache;
 ﻿using Microsoft.Extensions.Logging;
+using Plus.HabboHotel.Cache;
 using Plus.Core;
-using Plus.HabboHotel.Users;
 
 namespace Plus.HabboHotel.Cache.Process;
 
@@ -78,27 +77,6 @@ public sealed class ProcessComponent : IProcessComponent
                             continue;
                         if (cache.IsExpired)
                             _cacheManager.TryRemoveUser(cache.Id, out _);
-                    }
-                    catch (Exception e)
-                    {
-                        ExceptionLogger.LogException(e);
-                    }
-                }
-            }
-            var cachedUsers = PlusEnvironment.CachedUsers.ToList();
-            if (cachedUsers.Count > 0)
-            {
-                foreach (var data in cachedUsers)
-                {
-                    try
-                    {
-                        if (data == null)
-                            continue;
-                        Habbo? temp = null;
-                        if (data.CacheExpired(data.SessionStart))
-                            PlusEnvironment.RemoveFromCache(data.Id, out temp);
-                        if (temp != null)
-                            temp.Dispose();
                     }
                     catch (Exception e)
                     {

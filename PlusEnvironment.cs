@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -57,8 +56,6 @@ public class PlusEnvironment : IPlusEnvironment
         'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
         'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '.'
     });
-
-    private static readonly ConcurrentDictionary<int, Habbo> _usersCached = new();
 
     private readonly IEnumerable<IStartable> _startableTasks;
     private readonly RconConfiguration _rconConfiguration;
@@ -240,69 +237,6 @@ public class PlusEnvironment : IPlusEnvironment
         return name;
     }
 
-    [Obsolete("Use GameClientManager instead")]
-    public static Habbo? GetHabboById(int userId)
-    {
-        try
-        {
-            var client = _gameClientManager.GetClientByUserId(userId);
-            if (client != null)
-            {
-                var user = client.GetHabbo();
-                if (user != null && user.Id > 0)
-                {
-                    if (_usersCached.ContainsKey(userId))
-                        _usersCached.TryRemove(userId, out user);
-                    return user;
-                }
-            }
-            else
-            {
-                try
-                {
-                    if (_usersCached.ContainsKey(userId))
-                        return _usersCached[userId];
-                    //var data = UserDataFactory.GetUserData(userId);
-                    //if (data != null)
-                    //{
-                    //    var generated = data.User;
-                    //    if (generated != null)
-                    //    {
-                    //        generated.InitInformation(data);
-                    //        _usersCached.TryAdd(userId, generated);
-                    //        return generated;
-                    //    }
-                    //}
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-            return null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    public static Habbo? GetHabboByUsername(string userName)
-    {
-        try
-        {
-            using var connection = _database.Connection();
-            var id = connection.QuerySingleOrDefault<int>("SELECT `id` FROM `users` WHERE `username` = @user LIMIT 1", new { user = userName });
-            if (id > 0)
-                return GetHabboById(id);
-            return null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     public static void BroadcastAlert(string message)
     {
         _gameClientManager.SendPacket(new BroadcastMessageAlertComposer($"{_languageManager.TryGetValue("server.console.alert")}\n\n{message}"));
@@ -333,8 +267,4 @@ public class PlusEnvironment : IPlusEnvironment
     }
 
     public static Encoding GetDefaultEncoding() => _defaultEncoding;
-
-    public static ICollection<Habbo> CachedUsers => _usersCached.Values;
-
-    public static bool RemoveFromCache(int id, out Habbo? data) => _usersCached.TryRemove(id, out data);
 }
