@@ -185,27 +185,6 @@ public class PlusEnvironment : IPlusEnvironment
         await connection.ExecuteAsync("UPDATE `server_status` SET `users_online` = '0', `loaded_rooms` = '0'");
     }
 
-    [Obsolete]
-    public static bool EnumToBool(string @enum) => @enum == "1";
-
-    [Obsolete]
-    public static string BoolToEnum(bool @bool) => @bool ? "1" : "0";
-
-    [Obsolete]
-    public static double GetUnixTimestamp()
-    {
-        var ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0);
-        return ts.TotalSeconds;
-    }
-
-    [Obsolete]
-    public static long Now()
-    {
-        var ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0);
-        var unixTime = ts.TotalMilliseconds;
-        return (long)unixTime;
-    }
-
     public static string FilterFigure(string figure)
     {
         foreach (var character in figure)
@@ -217,25 +196,6 @@ public class PlusEnvironment : IPlusEnvironment
     }
 
     private static bool IsValid(char character) => Allowedchars.Contains(character);
-
-    [Obsolete($"Use {nameof(IUserDataFactory.GetUsernameForHabboById)}")]
-    public static string GetUsernameById(int userId)
-    {
-        var name = "Unknown User";
-        var client = _gameClientManager.GetClientByUserId(userId);
-        if (client != null && client.GetHabbo() != null)
-            return client.GetHabbo().Username;
-        var user = _cacheManager.GenerateUser(userId);
-        if (user != null)
-            return user.Username;
-        using var connection = _database.Connection();
-        var nameResult = connection.QuerySingleOrDefault<string>("SELECT `username` FROM `users` WHERE `id` = @id LIMIT 1", new { id = userId });
-        if (!string.IsNullOrEmpty(nameResult))
-            name = nameResult;
-        if (string.IsNullOrEmpty(name))
-            name = "Unknown User";
-        return name;
-    }
 
     public static void BroadcastAlert(string message)
     {
