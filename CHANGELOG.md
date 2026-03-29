@@ -362,3 +362,4 @@
 - Moved room promotion lifespan resolution off `PlusEnvironment.SettingsManager` and into the promotion purchase flow, so `RoomPromotion` no longer reaches back into the global environment for settings.
 - Replaced the last active `PlusEnvironment.GetUsernameById` lookups with `ICacheManager`-backed resolution in room/group outgoing composers.
 - Removed the dead in-memory `Habbo` cache tail from `PlusEnvironment`, deleting the unused `GetHabboById` / `GetHabboByUsername` helpers and the process-timer pass that walked the old static cached-user list.
+- Removed the stale `[Obsolete]` marker from `RoomItemHandling` now that its old monolithic behavior has been split into dedicated item, placement, roller, persistence, tracking, and queue services and the class acts as a room-item coordinator/facade instead of the original legacy god object.
