@@ -86,6 +86,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - Startup failure handling is also cleaner in non-interactive runs now: `PlusEnvironment` no longer throws a second `Console.ReadKey` exception when the database check fails under redirected input, so smoke tests report the actual MySQL connectivity problem and stop there.
 - Room-model bootstrapping is aligned with the live SQL schema now too: `RoomManager` maps `room_models.club_only` / `wall_height` rows into `RoomModel` explicitly instead of relying on a stale `public_room` projection and Dapper constructor matching.
 - Login/logout cleanup is aligned with the live `users` schema now too: SSO reset paths clear `auth_ticket` with an empty string instead of `NULL`, matching the non-null column constraint used by the shipped SQL dumps.
+- Optional seasonal user-data loading is more robust now too: missing `user_xmas15_calendar` tables are treated as absent legacy content instead of fatal login blockers, so SSO authentication can continue with an empty calendar state.
 
 ## Migration Status: ✅ COMPLETE
 
