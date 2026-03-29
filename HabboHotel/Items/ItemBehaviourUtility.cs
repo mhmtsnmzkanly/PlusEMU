@@ -60,12 +60,7 @@ internal static class ItemBehaviourUtility
                 packet.WriteString("");
                 break;
             case var _ when item.Definition.IsRoomDecoration:
-                packet.WriteInteger(item.Definition.InteractionType switch
-                {
-                    InteractionType.Wallpaper => 2,
-                    InteractionType.Floor => 3,
-                    _ => 4
-                });
+                packet.WriteInteger(item.Definition.RoomDecorationExtradataType);
                 packet.WriteInteger(0);
                 packet.WriteString(item.LegacyDataString);
                 break;
@@ -204,7 +199,7 @@ internal static class ItemBehaviourUtility
                     packet.WriteString("13-13-1337"); //Date
                 }
                 break;
-            case InteractionType.Television:
+            case var _ when item.Definition.IsTelevision:
                 packet.WriteInteger(0);
                 packet.WriteInteger(1);
                 packet.WriteInteger(1);

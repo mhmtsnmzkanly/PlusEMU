@@ -137,6 +137,8 @@ public class ItemDefinition
 
     public bool IsFxProvider => InteractionType == InteractionType.FxProvider;
 
+    public bool IsTelevision => InteractionType == InteractionType.Television;
+
     public bool IsBedLike =>
         InteractionType is InteractionType.Bed
             or InteractionType.TentSmall;
@@ -207,6 +209,15 @@ public class ItemDefinition
             InteractionType.Wallpaper => "wallpaper",
             InteractionType.Landscape => "landscape",
             _ => null
+        };
+
+    public int RoomDecorationExtradataType =>
+        InteractionType switch
+        {
+            InteractionType.Wallpaper => 2,
+            InteractionType.Floor => 3,
+            InteractionType.Landscape => 4,
+            _ => 0
         };
 
     public Team GetTeamOrNone()
