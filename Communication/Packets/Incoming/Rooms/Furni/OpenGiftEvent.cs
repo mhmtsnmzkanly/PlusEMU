@@ -26,7 +26,7 @@ internal class OpenGiftEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (session.GetHabbo() is not { InRoom: true, Inventory.Furniture: { } furniture } habbo || !habbo.TryGetCurrentRoom(out var room))
+        if (session.GetHabbo() is not { Inventory.Furniture: { } furniture } habbo || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
 
         var presentId = packet.ReadUInt();

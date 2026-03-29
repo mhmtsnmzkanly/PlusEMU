@@ -12,7 +12,7 @@ internal class GetHabboGroupBadgesEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (session.GetHabbo() is not { InRoom: true } habbo || !habbo.TryGetCurrentRoom(out var room))
+        if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
 
         var badges = _groupManager.GetAllBadgesInRoom(room);

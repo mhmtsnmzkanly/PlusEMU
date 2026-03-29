@@ -8,7 +8,7 @@ internal abstract class SaveWiredConfigEvent : IPacketEvent
 {
     public virtual Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (session.GetHabbo() is not { InRoom: true } habbo || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, false, true))
+        if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var room) || !room.CheckRights(session, false, true))
             return Task.CompletedTask;
 
         var permissions = habbo.Permissions;

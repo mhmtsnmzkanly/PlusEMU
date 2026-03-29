@@ -12,7 +12,7 @@ internal class AvatarEffectSelectedEvent : IPacketEvent
         var effectId = packet.ReadInt();
         if (effectId < 0)
             effectId = 0;
-        if (!habbo.InRoom || !habbo.TryGetCurrentRoom(out var room))
+        if (!habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
 
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);

@@ -27,12 +27,12 @@ internal class ReloadUserMottoCommand : IRconCommand
         using var db = _database.Connection();
         client.GetHabbo().Motto = db.QueryFirstOrDefault<string>(
             "SELECT `motto` FROM `users` WHERE `id` = @userId LIMIT 1", new { userId }) ?? string.Empty;
-        if (!client.GetHabbo().InRoom)
+        var habbo = client.GetHabbo();
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
             return Task.FromResult(true);
-        var room = client.GetHabbo().CurrentRoom;
         if (room != null)
         {
-            var user = room.GetRoomUserManager().GetRoomUserByHabbo(client.GetHabbo().Id);
+            var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user != null)
             {
                 room.SendPacket(new UserChangeComposer(user, false));

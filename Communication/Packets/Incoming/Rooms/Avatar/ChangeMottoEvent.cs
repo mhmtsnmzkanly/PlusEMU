@@ -41,7 +41,7 @@ internal class ChangeMottoEvent : IPacketEvent
         db.Execute("UPDATE `users` SET `motto` = @motto WHERE `id` = @userId LIMIT 1", new { motto = newMotto, userId = habbo.Id });
         await _questService.ProgressUserQuest(session, QuestType.ProfileChangeMotto);
         await _achievementService.ProgressAchievement(session, "ACH_Motto", 1);
-        if (habbo.InRoom && habbo.TryGetCurrentRoom(out var room))
+        if (habbo.TryGetCurrentRoom(out var room))
         {
             var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user == null || user.GetClient() == null) return;

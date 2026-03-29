@@ -35,14 +35,10 @@ public class MessengerBuddy
     public int Gender { get; set; }
     public int Id { get; set; }
 
-    public bool InRoom => CurrentRoom != null;
-
-    public Room? CurrentRoom { get; set; }
-
     public bool TryGetCurrentRoom(out Room room)
     {
-        room = CurrentRoom!;
-        return room != null;
+        room = null!;
+        return Habbo != null && Habbo.TryGetCurrentRoom(out room);
     }
 
     public void Serialize(IOutgoingPacket message)

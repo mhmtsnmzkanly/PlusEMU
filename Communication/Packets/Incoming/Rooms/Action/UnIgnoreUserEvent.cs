@@ -13,7 +13,7 @@ internal class UnIgnoreUserEvent : IPacketEvent
 
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (session.GetHabbo() is not { InRoom: true, IgnoresComponent: { } ignoresComponent } habbo || !habbo.TryGetCurrentRoom(out _))
+        if (session.GetHabbo() is not { IgnoresComponent: { } ignoresComponent } habbo || !habbo.TryGetCurrentRoom(out _))
             return Task.CompletedTask;
 
         var username = packet.ReadString();

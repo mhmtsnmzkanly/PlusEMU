@@ -24,6 +24,8 @@ namespace Plus.HabboHotel.Users;
 
 public class Habbo
 {
+    private Room? _currentRoom;
+
     public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
     public int Rank { get; set; }
@@ -80,7 +82,6 @@ public class Habbo
     public IgnoresComponent? IgnoresComponent { get; set; }
     public PermissionComponent? Permissions { get; set; }
     public GameClient? Client { get; set; }
-    public Room? CurrentRoom { get; set; }
     public NavigatorPreferences? NavigatorPreferences { get; set; }
 
     public ConcurrentDictionary<string, UserAchievement> Achievements = new();
@@ -88,7 +89,6 @@ public class Habbo
     public Dictionary<int, int> Quests = new();
     public List<uint> RatedRooms = new();
 
-    public bool InRoom => CurrentRoom != null;
     public double FloodTime { get; set; }
     public int MessengerSpamCount { get; set; }
     public double MessengerSpamTime { get; set; }
@@ -170,7 +170,7 @@ public class Habbo
 
     public void EnterRoom(Room room)
     {
-        CurrentRoom = room;
+        _currentRoom = room;
     }
 
     public void LeaveRoom()
@@ -178,14 +178,14 @@ public class Habbo
         if (TentId > 0)
             TentId = 0;
 
-        CurrentRoom = null;
+        _currentRoom = null;
     }
 
-    public bool IsInRoom(Room room) => CurrentRoom == room;
+    public bool IsInRoom(Room room) => _currentRoom == room;
 
     public bool TryGetCurrentRoom(out Room room)
     {
-        room = CurrentRoom!;
+        room = _currentRoom!;
         return room != null;
     }
 

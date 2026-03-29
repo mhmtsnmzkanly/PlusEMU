@@ -8,7 +8,7 @@ internal class UpdateMagicTileEvent : IPacketEvent
 {
     public Task Parse(GameClient session, IIncomingPacket packet)
     {
-        if (session.GetHabbo() is not { InRoom: true } habbo || !habbo.TryGetCurrentRoom(out var room))
+        if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
         var permissions = habbo.Permissions;
         if (!room.CheckRights(session, false, true) && !(permissions?.HasRight("room_item_use_any_stack_tile") ?? false))
