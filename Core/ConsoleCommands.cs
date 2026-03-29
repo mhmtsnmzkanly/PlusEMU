@@ -1,5 +1,4 @@
 ﻿using NLog;
-using Plus.Communication.Packets.Outgoing.Moderation;
 
 namespace Plus.Core;
 
@@ -26,8 +25,7 @@ public static class ConsoleCommands
                 case "alert":
                 {
                     var notice = inputData.Substring(6);
-                    PlusEnvironment.Game.ClientManager
-                        .SendPacket(new BroadcastMessageAlertComposer($"{PlusEnvironment.LanguageManager.TryGetValue("server.console.alert")}\n\n{notice}"));
+                    PlusEnvironment.BroadcastAlert(notice);
                     Log.Info("Alert successfully sent.");
                     break;
                 }

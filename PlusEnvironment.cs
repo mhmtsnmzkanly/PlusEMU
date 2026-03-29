@@ -17,8 +17,11 @@ using Plus.Core.Settings;
 using Plus.Database;
 using Plus.HabboHotel;
 using Plus.HabboHotel.Achievements;
+using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.Catalog;
+using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
+using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Users;
 using Plus.HabboHotel.Users.UserData;
 
@@ -34,6 +37,9 @@ public class PlusEnvironment : IPlusEnvironment
     public static CultureInfo CultureInfo = CultureInfo.InvariantCulture;
 
     private static IGame _game = null!;
+    private static IGameClientManager _gameClientManager = null!;
+    private static IRoomManager _roomManager = null!;
+    private static ICacheManager _cacheManager = null!;
     private static ILanguageManager _languageManager = null!;
     private static ISettingsManager _settingsManager = null!;
     private static IDatabase _database = null!;
@@ -62,6 +68,9 @@ public class PlusEnvironment : IPlusEnvironment
         ISettingsManager settingsManager,
         IFigureDataManager figureDataManager,
         IGame game,
+        IGameClientManager gameClientManager,
+        IRoomManager roomManager,
+        ICacheManager cacheManager,
         IEnumerable<IStartable> startableTasks,
         IRconSocket rconSocket,
         IOptions<RconConfiguration> rconConfiguration,
@@ -74,6 +83,9 @@ public class PlusEnvironment : IPlusEnvironment
         _settingsManager = settingsManager;
         _figureManager = figureDataManager;
         _game = game;
+        _gameClientManager = gameClientManager;
+        _roomManager = roomManager;
+        _cacheManager = cacheManager;
         _startableTasks = startableTasks;
         _rcon = rconSocket;
         _flashServer = flashServer;
@@ -213,10 +225,10 @@ public class PlusEnvironment : IPlusEnvironment
     public static string GetUsernameById(int userId)
     {
         var name = "Unknown User";
-        var client = Game.ClientManager.GetClientByUserId(userId);
+        var client = _gameClientManager.GetClientByUserId(userId);
         if (client != null && client.GetHabbo() != null)
             return client.GetHabbo().Username;
-        var user = Game.CacheManager.GenerateUser(userId);
+        var user = _cacheManager.GenerateUser(userId);
         if (user != null)
             return user.Username;
         using var connection = _database.Connection();
@@ -233,7 +245,7 @@ public class PlusEnvironment : IPlusEnvironment
     {
         try
         {
-            var client = Game.ClientManager.GetClientByUserId(userId);
+            var client = _gameClientManager.GetClientByUserId(userId);
             if (client != null)
             {
                 var user = client.GetHabbo();
@@ -291,17 +303,22 @@ public class PlusEnvironment : IPlusEnvironment
         }
     }
 
+    public static void BroadcastAlert(string message)
+    {
+        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer($"{LanguageManager.TryGetValue("server.console.alert")}\n\n{message}"));
+    }
+
 
     public static void PerformShutDown(string? reason = null)
     {
         Log.Info("Server shutting down... Reason: {reason}", string.IsNullOrWhiteSpace(reason) ? "Unspecified" : reason);
         Console.Title = "PLUSEMU: SHUTTING DOWN!";
-        Game.ClientManager.SendPacket(new BroadcastMessageAlertComposer(LanguageManager.TryGetValue("server.shutdown.message")));
-        Game.StopGameLoop();
+        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer(LanguageManager.TryGetValue("server.shutdown.message")));
+        _game.StopGameLoop();
         Thread.Sleep(2500);
         _flashServer.Stop();
-        Game.ClientManager.CloseAll(); //Close all connections
-        Game.RoomManager.Dispose(); //Stop the game loop.
+        _gameClientManager.CloseAll(); //Close all connections
+        _roomManager.Dispose(); //Stop the game loop.
         if (!Debugger.IsAttached)
         {
             using var connection = _database.Connection();
@@ -316,9 +333,6 @@ public class PlusEnvironment : IPlusEnvironment
     }
 
     public static Encoding GetDefaultEncoding() => _defaultEncoding;
-
-    [Obsolete("Use dependency injection instead and inject required services.")]
-    public static IGame Game => _game;
 
     public static IRconSocket RconSocket => _rcon;
 

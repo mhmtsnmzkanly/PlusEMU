@@ -5,6 +5,7 @@ using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Dapper;
 using Plus.HabboHotel.Items.Wired;
+using Plus.Utilities;
 
 namespace Plus.HabboHotel.Rooms.Chat.Commands;
 
@@ -142,7 +143,7 @@ public class CommandManager : ICommandManager
     {
         using var connection = _database.Connection();
         connection.Execute("INSERT INTO `logs_client_staff` (`user_id`,`data_string`,`machine_id`, `timestamp`) VALUES (@UserId,@Data,@MachineId,@Timestamp)", 
-            new { UserId = userId, Data = data, MachineId = machineId ?? string.Empty, Timestamp = PlusEnvironment.GetUnixTimestamp() });
+            new { UserId = userId, Data = data, MachineId = machineId ?? string.Empty, Timestamp = UnixTimestamp.GetNow() });
     }
 
     public bool TryGetCommand(string command, out ICommandBase chatCommand)

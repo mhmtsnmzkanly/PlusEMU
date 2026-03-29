@@ -168,27 +168,4 @@ public class Game : IGame
         while (!_cycleEnded) Thread.Sleep(_cycleSleepTime);
     }
 
-    public IBadgeManager BadgeManager => _badgeManager;
-    public IGameClientManager ClientManager => _clientManager;
-    public ICatalogManager Catalog => _catalogManager;
-    public INavigatorManager Navigator => _navigatorManager;
-    public IItemDataManager ItemManager => _itemDataManager;
-    public IRoomManager RoomManager => _roomManager;
-    public IAchievementManager AchievementManager => _achievementManager;
-    public ISubscriptionManager SubscriptionManager => _subscriptionManager;
-    public IQuestManager QuestManager => _questManager;
-    public IQuestService QuestService => _questService;
-    public ICatalogService CatalogService => _catalogService;
-    public IAchievementService AchievementService => _achievementService;
-    public IGroupManager GroupManager => _groupManager;
-    public IChatManager ChatManager => _chatManager;
-    public IGameDataManager GameDataManager => _gameDataManager;
-    public IBotManager BotManager => _botManager;
-    public ICacheManager CacheManager => _cacheManager;
-    public IRoomService RoomService => _roomService;
-    public IRoomFactory RoomFactory => _roomFactory;
-    public IRoomAppender RoomAppender => _roomAppender;
-    public IItemService ItemService => _itemService;
-    public IBotUtility BotUtility => _botUtility;
-    public IPetUtility PetUtility => _petUtility;
 }

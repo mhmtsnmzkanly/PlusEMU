@@ -354,3 +354,5 @@
 - Upgraded `PlusEMU` and `PluginExample` from `.NET 7` to `.NET 10`.
 - Updated the solution mapping from `x86` release output to `Any CPU` so Release builds now emit to `bin/Release/net10.0`.
 - Adjusted `FlashOutgoingPacket` for the newer framework/compiler combination and kept the full Release build at `0 Warning(s), 0 Error(s)`.
+- Collapsed `IGame` back down to its actual game-loop contract and removed the last `PlusEnvironment.Game` compatibility surface, switching shutdown/console alert flow onto directly injected managers instead of the old static game service bag.
+- Replaced the last active `PlusEnvironment.GetUnixTimestamp()` / `Now()` callers in messenger and room command flows with `UnixTimestamp.GetNow()`.
