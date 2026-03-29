@@ -373,113 +373,137 @@ public class Gamemap
 
     private void AddSpecialItems(Item item)
     {
-        switch (item.Definition.InteractionType)
+        if (item.Definition.IsFootballGate)
         {
-            case InteractionType.FootballGate:
-                //IsTrans = true;
-                _room.GetSoccer().RegisterGate(item);
-                var splittedExtraData = item.LegacyDataString.Split(':');
-                if (string.IsNullOrEmpty(item.LegacyDataString) || splittedExtraData.Length <= 1)
+            //IsTrans = true;
+            _room.GetSoccer().RegisterGate(item);
+            var splittedExtraData = item.LegacyDataString.Split(':');
+            if (string.IsNullOrEmpty(item.LegacyDataString) || splittedExtraData.Length <= 1)
+            {
+                item.Gender = "M";
+                switch (item.Team)
                 {
-                    item.Gender = "M";
-                    switch (item.Team)
-                    {
-                        case Team.Yellow:
-                            item.Figure = "lg-275-93.hr-115-61.hd-207-14.ch-265-93.sh-305-62";
-                            break;
-                        case Team.Red:
-                            item.Figure = "lg-275-96.hr-115-61.hd-180-3.ch-265-96.sh-305-62";
-                            break;
-                        case Team.Green:
-                            item.Figure = "lg-275-102.hr-115-61.hd-180-3.ch-265-102.sh-305-62";
-                            break;
-                        case Team.Blue:
-                            item.Figure = "lg-275-108.hr-115-61.hd-180-3.ch-265-108.sh-305-62";
-                            break;
-                    }
+                    case Team.Yellow:
+                        item.Figure = "lg-275-93.hr-115-61.hd-207-14.ch-265-93.sh-305-62";
+                        break;
+                    case Team.Red:
+                        item.Figure = "lg-275-96.hr-115-61.hd-180-3.ch-265-96.sh-305-62";
+                        break;
+                    case Team.Green:
+                        item.Figure = "lg-275-102.hr-115-61.hd-180-3.ch-265-102.sh-305-62";
+                        break;
+                    case Team.Blue:
+                        item.Figure = "lg-275-108.hr-115-61.hd-180-3.ch-265-108.sh-305-62";
+                        break;
                 }
-                else
-                {
-                    item.Gender = splittedExtraData[0];
-                    item.Figure = splittedExtraData[1];
-                }
-                break;
-            case InteractionType.Banzaifloor:
-            {
-                _room.GetBanzai().AddTile(item, item.Id);
-                break;
             }
-            case InteractionType.Banzaipyramid:
+            else
             {
-                _room.GetGameItemHandler().AddPyramid(item, item.Id);
-                break;
+                item.Gender = splittedExtraData[0];
+                item.Figure = splittedExtraData[1];
             }
-            case InteractionType.Banzaitele:
-            {
-                _room.GetGameItemHandler().AddTeleport(item, item.Id);
-                item.LegacyDataString = "";
-                break;
-            }
-            case InteractionType.Banzaipuck:
-            {
-                _room.GetBanzai().AddPuck(item);
-                break;
-            }
-            case InteractionType.Football:
-            {
-                _room.GetSoccer().AddBall(item);
-                break;
-            }
-            case InteractionType.FreezeTileBlock:
-            {
-                _room.GetFreeze().AddFreezeBlock(item);
-                break;
-            }
-            case InteractionType.FreezeTile:
-            {
-                _room.GetFreeze().AddFreezeTile(item);
-                break;
-            }
-            case InteractionType.Freezeexit:
-            {
-                _room.GetFreeze().AddExitTile(item);
-                break;
-            }
+            return;
         }
+
+        if (item.Definition.IsBanzaiFloor)
+        {
+            _room.GetBanzai().AddTile(item, item.Id);
+            return;
+        }
+
+        if (item.Definition.IsBanzaiPyramid)
+        {
+            _room.GetGameItemHandler().AddPyramid(item, item.Id);
+            return;
+        }
+
+        if (item.Definition.IsBanzaiTeleport)
+        {
+            _room.GetGameItemHandler().AddTeleport(item, item.Id);
+            item.LegacyDataString = "";
+            return;
+        }
+
+        if (item.Definition.IsBanzaiPuck)
+        {
+            _room.GetBanzai().AddPuck(item);
+            return;
+        }
+
+        if (item.Definition.IsFootball)
+        {
+            _room.GetSoccer().AddBall(item);
+            return;
+        }
+
+        if (item.Definition.IsFreezeTileBlock)
+        {
+            _room.GetFreeze().AddFreezeBlock(item);
+            return;
+        }
+
+        if (item.Definition.IsFreezeTile)
+        {
+            _room.GetFreeze().AddFreezeTile(item);
+            return;
+        }
+
+        if (item.Definition.IsFreezeExit)
+            _room.GetFreeze().AddExitTile(item);
     }
 
     private void RemoveSpecialItem(Item item)
     {
-        switch (item.Definition.InteractionType)
+        if (item.Definition.IsFootballGate)
         {
-            case InteractionType.FootballGate:
-                _room.GetSoccer().UnRegisterGate(item);
-                break;
-            case InteractionType.Banzaifloor:
-                _room.GetBanzai().RemoveTile(item.Id);
-                break;
-            case InteractionType.Banzaipuck:
-                _room.GetBanzai().RemovePuck(item.Id);
-                break;
-            case InteractionType.Banzaipyramid:
-                _room.GetGameItemHandler().RemovePyramid(item.Id);
-                break;
-            case InteractionType.Banzaitele:
-                _room.GetGameItemHandler().RemoveTeleport(item.Id);
-                break;
-            case InteractionType.Football:
-                _room.GetSoccer().RemoveBall(item.Id);
-                break;
-            case InteractionType.FreezeTile:
-                _room.GetFreeze().RemoveFreezeTile(item.Id);
-                break;
-            case InteractionType.FreezeTileBlock:
-                _room.GetFreeze().RemoveFreezeBlock(item.Id);
-                break;
-            case InteractionType.Freezeexit:
-                _room.GetFreeze().RemoveExitTile(item.Id);
-                break;
+            _room.GetSoccer().UnRegisterGate(item);
+            return;
         }
+
+        if (item.Definition.IsBanzaiFloor)
+        {
+            _room.GetBanzai().RemoveTile(item.Id);
+            return;
+        }
+
+        if (item.Definition.IsBanzaiPuck)
+        {
+            _room.GetBanzai().RemovePuck(item.Id);
+            return;
+        }
+
+        if (item.Definition.IsBanzaiPyramid)
+        {
+            _room.GetGameItemHandler().RemovePyramid(item.Id);
+            return;
+        }
+
+        if (item.Definition.IsBanzaiTeleport)
+        {
+            _room.GetGameItemHandler().RemoveTeleport(item.Id);
+            return;
+        }
+
+        if (item.Definition.IsFootball)
+        {
+            _room.GetSoccer().RemoveBall(item.Id);
+            return;
+        }
+
+        if (item.Definition.IsFreezeTile)
+        {
+            _room.GetFreeze().RemoveFreezeTile(item.Id);
+            return;
+        }
+
+        if (item.Definition.IsFreezeTileBlock)
+        {
+            _room.GetFreeze().RemoveFreezeBlock(item.Id);
+            return;
+        }
+
+        if (item.Definition.IsFreezeExit)
+            _room.GetFreeze().RemoveExitTile(item.Id);
     }
 
     public bool RemoveFromMap(Item item, bool handleGameItem)
@@ -526,63 +550,15 @@ public class Gamemap
         if (handleGameItem)
         {
             AddSpecialItems(item);
-            switch (item.Definition.InteractionType)
+            var team = item.Definition.GetTeamOrNone();
+            if (team != Team.None && !_room.GetRoomItemHandler().GetFloor.Contains(item))
             {
-                case InteractionType.FootballGoalRed:
-                case InteractionType.Footballcounterred:
-                case InteractionType.Banzaiscorered:
-                case InteractionType.Banzaigatered:
-                case InteractionType.Freezeredcounter:
-                case InteractionType.FreezeRedGate:
-                {
-                    if (!_room.GetRoomItemHandler().GetFloor.Contains(item))
-                        _room.GetGameManager().AddFurnitureToTeam(item, Team.Red);
-                    break;
-                }
-                case InteractionType.FootballGoalGreen:
-                case InteractionType.Footballcountergreen:
-                case InteractionType.Banzaiscoregreen:
-                case InteractionType.Banzaigategreen:
-                case InteractionType.Freezegreencounter:
-                case InteractionType.FreezeGreenGate:
-                {
-                    if (!_room.GetRoomItemHandler().GetFloor.Contains(item))
-                        _room.GetGameManager().AddFurnitureToTeam(item, Team.Green);
-                    break;
-                }
-                case InteractionType.FootballGoalBlue:
-                case InteractionType.Footballcounterblue:
-                case InteractionType.Banzaiscoreblue:
-                case InteractionType.Banzaigateblue:
-                case InteractionType.Freezebluecounter:
-                case InteractionType.FreezeBlueGate:
-                {
-                    if (!_room.GetRoomItemHandler().GetFloor.Contains(item))
-                        _room.GetGameManager().AddFurnitureToTeam(item, Team.Blue);
-                    break;
-                }
-                case InteractionType.FootballGoalYellow:
-                case InteractionType.Footballcounteryellow:
-                case InteractionType.Banzaiscoreyellow:
-                case InteractionType.Banzaigateyellow:
-                case InteractionType.Freezeyellowcounter:
-                case InteractionType.FreezeYellowGate:
-                {
-                    if (!_room.GetRoomItemHandler().GetFloor.Contains(item))
-                        _room.GetGameManager().AddFurnitureToTeam(item, Team.Yellow);
-                    break;
-                }
-                case InteractionType.Freezeexit:
-                {
-                    _room.GetFreeze().AddExitTile(item);
-                    break;
-                }
-                case InteractionType.Roller:
-                {
-                    if (!_room.GetRoomItemHandler().GetRollers().Contains(item))
-                        _room.GetRoomItemHandler().TryAddRoller(item.Id, item);
-                    break;
-                }
+                _room.GetGameManager().AddFurnitureToTeam(item, team);
+            }
+
+            if (item.IsRoller && !_room.GetRoomItemHandler().GetRollers().Contains(item))
+            {
+                _room.GetRoomItemHandler().TryAddRoller(item.Id, item);
             }
         }
         if (item.Definition.Type != ItemType.Floor)

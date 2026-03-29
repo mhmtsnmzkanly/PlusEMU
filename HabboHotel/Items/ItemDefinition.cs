@@ -71,6 +71,20 @@ public class ItemDefinition
 
     public bool IsFreezeTileBlock => InteractionType == InteractionType.FreezeTileBlock;
 
+    public bool IsFreezeExit => InteractionType == InteractionType.Freezeexit;
+
+    public bool IsBanzaiFloor => InteractionType == InteractionType.Banzaifloor;
+
+    public bool IsBanzaiPyramid => InteractionType == InteractionType.Banzaipyramid;
+
+    public bool IsBanzaiTeleport => InteractionType == InteractionType.Banzaitele;
+
+    public bool IsBanzaiPuck => InteractionType == InteractionType.Banzaipuck;
+
+    public bool IsFootball => InteractionType == InteractionType.Football;
+
+    public bool IsFootballGate => InteractionType == InteractionType.FootballGate;
+
     public bool IsPostIt => InteractionType == InteractionType.Postit;
 
     public bool IsTeleport => InteractionType == InteractionType.Teleport;
@@ -156,22 +170,26 @@ public class ItemDefinition
             InteractionType.Footballcounterblue or
             InteractionType.Banzaiscoreblue or
             InteractionType.Banzaigateblue or
-            InteractionType.FreezeBlueGate => Team.Blue,
+            InteractionType.FreezeBlueGate or
+            InteractionType.Freezebluecounter => Team.Blue,
             InteractionType.FootballGoalRed or
             InteractionType.Footballcounterred or
             InteractionType.Banzaiscorered or
             InteractionType.Banzaigatered or
-            InteractionType.FreezeRedGate => Team.Red,
+            InteractionType.FreezeRedGate or
+            InteractionType.Freezeredcounter => Team.Red,
             InteractionType.FootballGoalGreen or
             InteractionType.Footballcountergreen or
             InteractionType.Banzaiscoregreen or
             InteractionType.Banzaigategreen or
-            InteractionType.FreezeGreenGate => Team.Green,
+            InteractionType.FreezeGreenGate or
+            InteractionType.Freezegreencounter => Team.Green,
             InteractionType.FootballGoalYellow or
             InteractionType.Footballcounteryellow or
             InteractionType.Banzaiscoreyellow or
             InteractionType.Banzaigateyellow or
-            InteractionType.FreezeYellowGate => Team.Yellow,
+            InteractionType.FreezeYellowGate or
+            InteractionType.Freezeyellowcounter => Team.Yellow,
             _ => Team.None
         };
     }

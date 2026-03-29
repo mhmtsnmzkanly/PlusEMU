@@ -346,7 +346,7 @@ public class BattleBanzai
         {
             if (item == null)
                 continue;
-            if (item.Definition.InteractionType != InteractionType.Banzaifloor)
+            if (!item.Definition.IsBanzaiFloor)
             {
                 user.Team = Team.None;
                 user.ApplyEffect(0);
@@ -379,7 +379,7 @@ public class BattleBanzai
         {
             if (item == null)
                 continue;
-            if (item.Definition.InteractionType != InteractionType.Banzaifloor)
+            if (!item.Definition.IsBanzaiFloor)
                 continue;
             if (item.GetX != coord.X || item.GetY != coord.Y)
                 continue;
