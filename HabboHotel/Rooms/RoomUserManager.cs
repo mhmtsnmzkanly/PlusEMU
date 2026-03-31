@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using Plus.Communication.Packets.Outgoing.Handshake;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
 using Plus.HabboHotel.Groups;
@@ -831,14 +832,14 @@ public class RoomUserManager
                                 var horse = GetRoomUserByVirtualId(user.HorseId);
                                 if (horse != null)
                                 {
-                                    horse.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
+                                    horse.SetStatus("mv", $"{nextX},{nextY},{nextZ.ToString("0.00", CultureInfo.InvariantCulture)}");
                                     horse.UpdateNeeded = true;
                                 }
-                                user.SetStatus("mv", $"{+nextX},{nextY},{TextHandling.GetString(nextZ + 1)}");
+                                user.SetStatus("mv", $"{+nextX},{nextY},{(nextZ + 1).ToString("0.00", CultureInfo.InvariantCulture)}");
                                 user.UpdateNeeded = true;
                             }
                             else
-                                user.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
+                                user.SetStatus("mv", $"{nextX},{nextY},{nextZ.ToString("0.00", CultureInfo.InvariantCulture)}");
                             var newRot = Rotation.Calculate(user.X, user.Y, nextX, nextY, user.MoonwalkEnabled);
                             user.RotBody = newRot;
                             user.RotHead = newRot;

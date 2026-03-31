@@ -23,7 +23,7 @@ public class UserUpdateComposer : IServerPacket
             packet.WriteInteger(user.VirtualId);
             packet.WriteInteger(user.X);
             packet.WriteInteger(user.Y);
-            packet.WriteString(user.Z.ToString(CultureInfo.InvariantCulture));
+            packet.WriteString(user.Z.ToString("0.00", CultureInfo.InvariantCulture));
             packet.WriteInteger(user.RotHead);
             packet.WriteInteger(user.RotBody);
             var statusComposer = new StringBuilder();
