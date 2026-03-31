@@ -52,7 +52,7 @@ public class BansComponent
             connection.Execute("REPLACE INTO `room_bans` (`user_id`,`room_id`,`expire`) VALUES (@uid, @rid, @expire);",
                 new { rid = _instance.Id, uid = avatar.UserId, expire = banTime });
         }
-        _instance.GetRoomUserManager().RemoveUserFromRoom(avatar.GetClient(), true, true);
+        _ = _instance.GetRoomService().KickFromRoom(avatar.GetClient(), true);
     }
 
     public bool IsBanned(int userId)

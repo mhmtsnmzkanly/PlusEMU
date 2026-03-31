@@ -2,7 +2,7 @@
 
 internal class Part
 {
-    public Part(int id, SetType setType, bool colorable, int index, int colorIndex)
+    public Part(long id, SetType setType, bool colorable, int index, int colorIndex)
     {
         Id = id;
         SetType = setType;
@@ -11,7 +11,7 @@ internal class Part
         ColorIndex = colorIndex;
     }
 
-    public int Id { get; set; }
+    public long Id { get; set; }
     public SetType SetType { get; set; }
     public bool Colorable { get; set; }
     public int Index { get; set; }

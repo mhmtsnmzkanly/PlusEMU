@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using System.Text;
 using Microsoft.IO;
 using NLog;
 using Plus.Communication.Encryption.Crypto.Prng;
@@ -53,8 +54,8 @@ public abstract class GameClient
         if (habbo == null)
             return null;
 
-        habbo.DetachClient();
         habbo.OnDisconnect();
+        habbo.DetachClient();
         return habbo;
     }
 
@@ -88,7 +89,7 @@ public abstract class GameClient
                 }
                 else
                 {
-                    LogUnknownIncomingPacket(messageId, length);
+                    LogUnknownIncomingPacket(messageId, memory.Slice(headerLength, length));
                 }
             }
             catch (Exception exception)
@@ -116,6 +117,12 @@ public abstract class GameClient
 
     public void Send(IServerPacket composer)
     {
+        if (_hasDisconnected)
+        {
+            Log.Debug("Dropped Packet: {PacketName} because session {SessionId} is disconnected.", composer.GetType().Name, Id);
+            return;
+        }
+
         var outgoingMessageId = Revision.InternalIdToOutgoingIdMapping[composer.MessageId];
         var stream = PlusMemoryStream.GetStream();
         stream.Position = 0;
@@ -125,23 +132,45 @@ public abstract class GameClient
         var memory = stream.GetBuffer().AsMemory().Slice(0, (int)stream.Length);
         CreateHeader(memory, outgoingMessageId);
         args.SetBuffer(memory);
-        SendCallback(args);
-        Log.Debug($"Send Packet: {composer.GetType().Name} (EmuId: {composer.MessageId}, ClientId: {outgoingMessageId})");
+        var sent = SendCallback(args);
+        if (sent)
+            Log.Debug($"Send Packet: {composer.GetType().Name} (EmuId: {composer.MessageId}, ClientId: {outgoingMessageId})");
+        else
+            Log.Debug("Dropped Packet: {PacketName} (EmuId: {EmuId}, ClientId: {ClientId}) for session {SessionId} because transport rejected the send.", composer.GetType().Name, composer.MessageId, outgoingMessageId, Id);
         stream.Dispose();
     }
 
-    private void LogUnknownIncomingPacket(uint messageId, int length)
+    private void LogUnknownIncomingPacket(uint messageId, ReadOnlyMemory<byte> payload)
     {
         var habbo = _habbo;
+        var revisionPacketName = Revision.IncomingHeaders.FirstOrDefault(header => header.Value == messageId).Key;
+        var previewLength = Math.Min(payload.Length, 32);
+        var previewBytes = payload.Span[..previewLength].ToArray();
+        var hexPreview = Convert.ToHexString(previewBytes);
+        var utf8Preview = SanitizePayloadPreview(Encoding.UTF8.GetString(previewBytes));
         Log.Warn(
-            "Unknown incoming packet received. SessionId={SessionId}, UserId={UserId}, Username={Username}, Revision={Revision}, Build={Build}, ClientHeader={ClientHeader}, Length={Length}",
+            "Unknown incoming packet received. SessionId={SessionId}, UserId={UserId}, Username={Username}, Revision={Revision}, Build={Build}, ClientHeader={ClientHeader}, RevisionPacket={RevisionPacket}, Length={Length}, HexPreview={HexPreview}, Utf8Preview={Utf8Preview}",
             Id,
             habbo?.Id,
             habbo?.Username ?? "<unauthenticated>",
             Revision.Name,
             ClientBuild ?? "<unknown>",
             messageId,
-            length);
+            string.IsNullOrWhiteSpace(revisionPacketName) ? "<unmapped-in-revision>" : revisionPacketName,
+            payload.Length,
+            hexPreview,
+            utf8Preview);
+    }
+
+    private static string SanitizePayloadPreview(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        var builder = new StringBuilder(value.Length);
+        foreach (var character in value)
+            builder.Append(char.IsControl(character) ? '.' : character);
+        return builder.ToString();
     }
 
     private void LogPacketHandlingFailure(uint messageId, Exception exception)

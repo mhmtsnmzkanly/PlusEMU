@@ -1,6 +1,8 @@
 ﻿using Dapper;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Users.Clothing;
+using Plus.HabboHotel.Users.Effects;
 using Plus.HabboHotel.Users.UserData;
 using System.Diagnostics;
 
@@ -63,7 +65,23 @@ internal class Authenticator : IAuthenticator
         session.SetHabbo(habbo);
 
         habbo.AttachClient(session);
+        EnsureRuntimeComponents(habbo);
         _gameClientManager.RegisterClient(session, habbo.Id, habbo.Username);
+    }
+
+    private void EnsureRuntimeComponents(Habbo habbo)
+    {
+        if (habbo.Effects == null)
+        {
+            habbo.Effects = new EffectsComponent();
+            habbo.Effects.Init(habbo, _database);
+        }
+
+        if (habbo.Clothing == null)
+        {
+            habbo.Clothing = new ClothingComponent();
+            habbo.Clothing.Init(habbo, _database);
+        }
     }
 
     private Task CompleteLogin(Habbo habbo) => RaiseHabboLoggedIn(habbo);

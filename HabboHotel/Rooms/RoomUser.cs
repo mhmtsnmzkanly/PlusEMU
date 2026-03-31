@@ -560,8 +560,24 @@ public class RoomUser
 
     public GameClient GetClient()
     {
-        if (IsBot) return null!;
+        if (IsBot)
+            return null!;
+        if (_mRoom == null || _mRoom.MDisposed || _mRoom.Unloaded)
+        {
+            _mClient = null!;
+            return _mClient;
+        }
+        if (_mClient == null && _mRoom != null)
+            _mClient = _mRoom.GetClientManager().GetClientByUserId(HabboId)!;
+        if (_mClient != null && _mClient.GetHabboOrNull() == null)
+            _mClient = null!;
         return _mClient;
+    }
+
+    public void BindClient(GameClient client)
+    {
+        if (!IsBot)
+            _mClient = client;
     }
 
     private Habbo GetHabbo()

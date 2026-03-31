@@ -897,7 +897,7 @@ public class Gamemap
                         continue;
                     if (item.TotalHeight > highestStack)
                     {
-                        if (item.Definition.BlocksWalkAsOccupiedTile)
+                        if (item.Definition.IsSeat || item.Definition.IsBedLike)
                         {
                             deduct = true;
                             deductable = item.Definition.Height;

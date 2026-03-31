@@ -65,9 +65,27 @@ public class CatalogManager : ICatalogManager, IStartable
 
         using var connection = _database.Connection();
 
-        var items = await connection.QueryAsync<CatalogItem>("SELECT `id`,`item_id`,`catalog_name`,`cost_credits`,`cost_pixels`,`cost_diamonds`,`amount`,`page_id`,`limited_sells`,`limited_stack`,`offer_active` AS `HaveOffer`,`extradata`,`badge`,`offer_id` AS `OfferId` FROM `catalog_items`");
-        foreach(CatalogItem item in items)
+        var items = await connection.QueryAsync<CatalogItemRow>("SELECT `id`,`item_id`,`catalog_name`,`cost_credits`,`cost_pixels`,`cost_diamonds`,`amount`,`page_id`,`limited_sells`,`limited_stack`,`offer_active` AS `HaveOfferRaw`,`extradata`,`badge`,`offer_id` AS `OfferId` FROM `catalog_items`");
+        foreach (var row in items)
         {
+            var item = new CatalogItem
+            {
+                Id = row.Id,
+                ItemId = row.ItemId,
+                CatalogName = row.CatalogName,
+                CostCredits = row.CostCredits,
+                CostPixels = row.CostPixels,
+                CostDiamonds = row.CostDiamonds,
+                Amount = row.Amount,
+                PageId = row.PageId,
+                LimitedEditionSells = row.LimitedEditionSells,
+                LimitedEditionStack = row.LimitedEditionStack,
+                HaveOffer = ParseBooleanish(row.HaveOfferRaw),
+                ExtraData = row.ExtraData,
+                Badge = row.Badge,
+                OfferId = row.OfferId
+            };
+
             if (item.Amount <= 0)
                 continue;
 
@@ -203,4 +221,32 @@ public class CatalogManager : ICatalogManager, IStartable
     public ICollection<CatalogPage> Pages => _pages.Values;
 
     public ICollection<CatalogPromotion> Promotions => _promotions.Values;
+
+    private static bool ParseBooleanish(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        return value.Equals("1", StringComparison.OrdinalIgnoreCase)
+               || value.Equals("true", StringComparison.OrdinalIgnoreCase)
+               || value.Equals("yes", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed class CatalogItemRow
+    {
+        public int Id { get; set; }
+        public uint ItemId { get; set; }
+        public int Amount { get; set; }
+        public int CostCredits { get; set; }
+        public string ExtraData { get; set; } = string.Empty;
+        public string HaveOfferRaw { get; set; } = string.Empty;
+        public string CatalogName { get; set; } = string.Empty;
+        public int PageId { get; set; }
+        public int CostPixels { get; set; }
+        public uint LimitedEditionStack { get; set; }
+        public uint LimitedEditionSells { get; set; }
+        public int CostDiamonds { get; set; }
+        public string Badge { get; set; } = string.Empty;
+        public int OfferId { get; set; }
+    }
 }

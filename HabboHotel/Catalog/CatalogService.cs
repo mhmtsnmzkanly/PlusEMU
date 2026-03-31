@@ -111,7 +111,7 @@ internal class CatalogService : ICatalogService
     {
         var habbo = session.GetHabbo();
         var inventory = habbo?.Inventory;
-        if (habbo?.Permissions == null || inventory == null || habbo.Effects == null)
+        if (habbo == null || inventory == null)
         {
             _logger.LogWarning("PurchaseItem aborted for session {sessionId}: missing habbo or components.", session.Id);
             return;
@@ -223,28 +223,44 @@ internal class CatalogService : ICatalogService
         if (totalPixelCost > 0) { habbo.Duckets -= totalPixelCost; session.Send(new HabboActivityPointNotificationComposer(habbo.Duckets, habbo.Duckets)); }
         if (totalDiamondCost > 0) { habbo.Diamonds -= totalDiamondCost; session.Send(new HabboActivityPointNotificationComposer(habbo.Diamonds, 0, 5)); }
 
-        // Deliver item
-        var itemType = item.Definition.Type.ToString().ToLower();
-        switch (itemType)
+        using (var currencyConnection = _database.Connection())
         {
-            case "s": // Floor
-            case "i": // Wall
-                await DeliverFurniture(session, item, habbo, extraData, amountPurchase, limitedEditionSells, limitedEditionStack);
-                break;
-            case "e": // Effect
+            await currencyConnection.ExecuteAsync(
+                "UPDATE `users` SET `credits` = @credits, `activity_points` = @duckets, `vip_points` = @diamonds WHERE `id` = @id LIMIT 1",
+                new
+                {
+                    credits = habbo.Credits,
+                    duckets = habbo.Duckets,
+                    diamonds = habbo.Diamonds,
+                    id = habbo.Id
+                });
+        }
+
+        // Deliver item
+        if (item.Definition.Type is Users.Inventory.Furniture.ItemType.Floor or Users.Inventory.Furniture.ItemType.Wall)
+            await DeliverFurniture(session, item, habbo, extraData, amountPurchase, limitedEditionSells, limitedEditionStack);
+
+        switch (item.Definition.Type.ToString().ToLowerInvariant())
+        {
+            case "e":
+                if (habbo.Effects == null)
+                {
+                    _logger.LogWarning("PurchaseItem aborted for session {sessionId}: effects component missing for effect item {itemId}.", session.Id, item.Id);
+                    return;
+                }
                 var effect = habbo.Effects.HasEffect(item.Definition.SpriteId) ? habbo.Effects.GetEffectNullable(item.Definition.SpriteId) : habbo.Effects.CreateEffect(item.Definition.SpriteId, 3600);
                 effect?.AddToQuantity(_database);
                 session.Send(new AvatarEffectAddedComposer(item.Definition.SpriteId, 3600));
                 break;
-            case "r": // Bot
+            case "r":
                 var bot = _botUtility.CreateBot(item.Definition, habbo.Id);
                 if (bot != null) { inventory.Bots.AddBot(bot); session.Send(new BotInventoryComposer(inventory.Bots.Bots.Values.ToList())); session.Send(new FurniListNotificationComposer((uint)bot.Id, 5)); }
                 break;
-            case "b": // Badge
+            case "b":
                 await _badgeManager.GiveBadge(habbo, item.Definition.ItemName);
                 session.Send(new FurniListNotificationComposer(0, 4));
                 break;
-            case "p": // Pet
+            case "p":
                 var petData = extraData.Split('\n');
                 var pet = _petUtility.CreatePet(habbo.Id, petData[0], item.Definition.BehaviourData, petData[1], petData[2]);
                 if (pet != null && inventory.Pets.AddPet(pet))
@@ -293,7 +309,13 @@ internal class CatalogService : ICatalogService
             session.Id, item.PageId, item.Id, generatedItems.Count, item.Definition.Type);
 
         foreach (var purchasedItem in generatedItems)
-            if (habbo.Inventory!.Furniture.AddItem(purchasedItem.ToInventoryItem()))
+        {
+            var inventoryItem = purchasedItem.ToInventoryItem();
+            if (habbo.Inventory!.Furniture.AddItem(inventoryItem))
+            {
+                session.Send(new FurniListAddComposer(inventoryItem));
                 session.Send(new FurniListNotificationComposer(purchasedItem.Id, 1));
+            }
+        }
     }
 }
