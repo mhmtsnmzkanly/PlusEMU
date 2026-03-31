@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Hardened movement diagnostics and `RoomUser` client resolution so move packets, path recalculation failures, invalid step rejections, and target-square occupancy denials are now logged explicitly while avatar session lookup is retried through the room client manager before movement-state helpers give up.
 - Centralized room lifecycle ownership further so `RoomManager` now evaluates unloads after room ticks and on occupancy changes, `Room` no longer unloads itself during idle/crash paths, and room disposal is reduced to resource cleanup instead of also running leave business logic.
 - Tightened room exit determinism by routing disconnect and room-entry-finalization failures back through `RoomService`, keeping habbo room-reference cleanup, room-runtime removal, and post-leave unload evaluation on one service-owned boundary.
 - Hardened `Habbo.OnDisconnect()` so persistence failures no longer abort the rest of the disconnect lifecycle; runtime cleanup now still runs from `finally`, and disconnect-save logging is explicit.

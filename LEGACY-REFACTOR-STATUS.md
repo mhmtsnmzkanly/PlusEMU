@@ -23,6 +23,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 
 - Disconnect flow is being rerouted through `TcpSessionProxy` / `WsSessionProxy` and instance-backed `Habbo.OnDisconnect()`.
 - Disconnect cleanup is now also converging back on `RoomService`, so active-room detachment during logout no longer depends on `Habbo.Dispose()` directly mutating room membership.
+- Movement debugging is also tighter now: move-packet ignores, `MoveTo` rejections, no-path recalculations, and invalid-step stops now emit targeted logs, while `RoomUser` retries room client-manager lookup before movement helpers treat a human avatar as clientless.
 - `RoomFactory`, `RoomManager`, `Room`, and related packet handlers are being reshaped to pass `IDatabase` and managers explicitly instead of leaning on older static/global access paths.
 - `RoomManager` now owns room idle/promotion/unload lifecycle decisions, while `Room` is narrowed toward active-room cycle execution.
 - That lifecycle split is now stricter too: `RoomManager` marks and unloads rooms, evicts active users before disposal, and re-evaluates unload eligibility after room occupancy changes, while `Room.Dispose()` itself is reduced toward resource cleanup only.

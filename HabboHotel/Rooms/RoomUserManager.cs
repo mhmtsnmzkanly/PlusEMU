@@ -721,12 +721,19 @@ public class RoomUserManager
                         user.PathRecalcNeeded = false;
                         if (user.Path.Count > 1)
                             user.Path.Clear();
+                        Log.Debug("Path recalculation produced no usable path. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Goal=({goalX},{goalY})",
+                            _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY);
                     }
                 }
                 if (user.IsWalking && !user.Freezed)
                 {
                     if (invalidStep || user.PathStep >= user.Path.Count || user.GoalX == user.X && user.GoalY == user.Y) //No path found, or reached goal (:
                     {
+                        if (invalidStep)
+                        {
+                            Log.Debug("Walking stopped due to invalid step. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Goal=({goalX},{goalY}), PathStep={pathStep}, PathCount={pathCount}",
+                                _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY, user.PathStep, user.Path.Count);
+                        }
                         user.IsWalking = false;
                         user.RemoveStatus("mv");
                         if (user.Statusses.ContainsKey("sign"))
@@ -862,6 +869,11 @@ public class RoomUserManager
                             }
                             else
                                 gameMap.GameMap[nextX, nextY] = 1;
+                        }
+                        else
+                        {
+                            Log.Debug("Next walking step rejected. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Next=({nextX},{nextY}), Goal=({goalX},{goalY}), AllowOverride={allowOverride}",
+                                _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, nextX, nextY, user.GoalX, user.GoalY, user.AllowOverride);
                         }
                     }
                     if (!user.RidingHorse)

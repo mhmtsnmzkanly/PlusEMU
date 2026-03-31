@@ -11,11 +11,13 @@ using Plus.HabboHotel.Rooms.Games.Freeze;
 using Plus.HabboHotel.Rooms.Games.Teams;
 using Plus.HabboHotel.Rooms.PathFinding;
 using Plus.Utilities;
+using NLog;
 
 namespace Plus.HabboHotel.Rooms;
 
 public class RoomUser
 {
+    private static readonly ILogger Log = LogManager.GetLogger("Plus.HabboHotel.Rooms.RoomUser");
     private GameClient _mClient = null!;
     private Room _mRoom = null!;
 
@@ -456,13 +458,20 @@ public class RoomUser
             UpdateNeeded = true;
             return;
         }
-        if (GetRoom().GetGameMap().SquareHasUsers(pX, pY) && !pOverride || Frozen)
+        var targetHasUsers = GetRoom().GetGameMap().SquareHasUsers(pX, pY);
+        if (targetHasUsers && !pOverride || Frozen)
+        {
+            Log.Debug("MoveTo rejected. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Goal=({goalX},{goalY}), Target=({targetX},{targetY}), Override={override}, Frozen={frozen}, TargetHasUsers={targetHasUsers}",
+                RoomId, HabboId, VirtualId, X, Y, GoalX, GoalY, pX, pY, pOverride, Frozen, targetHasUsers);
             return;
+        }
         UnIdle();
         GoalX = pX;
         GoalY = pY;
         PathRecalcNeeded = true;
         FreezeInteracting = false;
+        Log.Debug("MoveTo accepted. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Target=({targetX},{targetY}), Override={override}",
+            RoomId, HabboId, VirtualId, X, Y, pX, pY, pOverride);
     }
 
     public void MoveTo(int pX, int pY)
@@ -562,15 +571,18 @@ public class RoomUser
     {
         if (IsBot)
             return null!;
-        if (_mRoom == null || _mRoom.MDisposed || _mRoom.Unloaded)
-        {
-            _mClient = null!;
+
+        if (_mClient != null && _mClient.GetHabboOrNull() != null)
             return _mClient;
-        }
-        if (_mClient == null && _mRoom != null)
+
+        if (_mRoom != null && !_mRoom.MDisposed && !_mRoom.Unloaded)
+        {
             _mClient = _mRoom.GetClientManager().GetClientByUserId(HabboId)!;
-        if (_mClient != null && _mClient.GetHabboOrNull() == null)
-            _mClient = null!;
+            if (_mClient != null && _mClient.GetHabboOrNull() != null)
+                return _mClient;
+        }
+
+        _mClient = null!;
         return _mClient;
     }
 
