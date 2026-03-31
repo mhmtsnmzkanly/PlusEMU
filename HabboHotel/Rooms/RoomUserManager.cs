@@ -836,14 +836,14 @@ public class RoomUserManager
                                 var horse = GetRoomUserByVirtualId(user.HorseId);
                                 if (horse != null)
                                 {
-                                    horse.SetStatus("mv", $"{nextX},{nextY},{nextZ.ToString("0.00", CultureInfo.InvariantCulture)}");
+                                    horse.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
                                     horse.UpdateNeeded = true;
                                 }
-                                user.SetStatus("mv", $"{+nextX},{nextY},{(nextZ + 1).ToString("0.00", CultureInfo.InvariantCulture)}");
+                                user.SetStatus("mv", $"{+nextX},{nextY},{TextHandling.GetString(nextZ + 1)}");
                                 user.UpdateNeeded = true;
                             }
                             else
-                                user.SetStatus("mv", $"{nextX},{nextY},{nextZ.ToString("0.00", CultureInfo.InvariantCulture)}");
+                                user.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
                             var newRot = Rotation.Calculate(user.X, user.Y, nextX, nextY, user.MoonwalkEnabled);
                             user.RotBody = newRot;
                             user.RotHead = newRot;
@@ -883,37 +883,28 @@ public class RoomUserManager
                                 _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, nextX, nextY, user.GoalX, user.GoalY, user.AllowOverride);
                         }
                     }
-                    if (!user.RidingHorse)
-                        user.UpdateNeeded = true;
                 }
-                else
-                {
-                    if (user.Statusses.ContainsKey("mv"))
-                    {
-                        user.RemoveStatus("mv");
-                        user.UpdateNeeded = true;
-                        if (user.RidingHorse)
-                        {
-                            var horse = GetRoomUserByVirtualId(user.HorseId);
-                            if (horse != null)
-                            {
-                                horse.RemoveStatus("mv");
-                                horse.UpdateNeeded = true;
-                            }
-                        }
-                    }
-                }
+
+                if (user.IsWalking)
+                    user.UpdateNeeded = true;
+
+                if (!user.RidingHorse && user.InternalCycleCount >= 4)
+                    user.UpdateNeeded = true;
+
                 if (user.RidingHorse)
                     user.ApplyEffect(77);
+
                 if (user.IsBot && user.BotAi != null)
                     user.BotAi.OnTimerTick();
                 else
                     userCounter++;
+
                 if (!updated) UpdateUserEffect(user, user.X, user.Y);
 
                 if (user.InternalCycleCount >= 4)
                     user.InternalCycleCount = 0;
             }
+
             foreach (var userToRemove in toRemove.ToList())
             {
                 var client = _clientManager.GetClientByUserId(userToRemove.HabboId);
@@ -922,6 +913,7 @@ public class RoomUserManager
                 else
                     RemoveRoomUser(userToRemove);
             }
+
             if (UserCount != userCounter)
                 UpdateUserCount(userCounter);
         }
