@@ -7,6 +7,7 @@ using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Badges;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
+using Plus.HabboHotel.Subscriptions;
 using Plus.HabboHotel.Users.Clothing;
 using Plus.HabboHotel.Users.Effects;
 using Plus.HabboHotel.Users.Ignores;
@@ -14,17 +15,25 @@ using Plus.HabboHotel.Users.Inventory;
 using Plus.HabboHotel.Users.Messenger;
 using Plus.HabboHotel.Users.Navigator;
 using Plus.HabboHotel.Users.Permissions;
+using Plus.HabboHotel.Users.Process;
 using Plus.HabboHotel.Users.UserData;
+using Plus.Communication.Packets.Outgoing.Handshake;
+using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Core.Settings;
 using Plus.Database;
 using Dapper;
+using NLog;
 using Plus.Utilities;
 
 namespace Plus.HabboHotel.Users;
 
 public class Habbo
 {
+    private static readonly ILogger Log = LogManager.GetLogger("Plus.HabboHotel.Users.Habbo");
     private Room? _currentRoom;
+    private bool _disconnected;
+    private bool _habboSaved;
+    private ProcessComponent? _process;
 
     public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
@@ -124,6 +133,11 @@ public class Habbo
 
     public Calendar.CalendarComponent? Calendar { get; set; }
 
+    private IDatabase? Database { get; set; }
+    private ISettingsManager? SettingsManager { get; set; }
+    private ISubscriptionManager? SubscriptionManager { get; set; }
+    private IAchievementService? AchievementService { get; set; }
+
     public event EventHandler? Disconnected;
 
     public bool HasActiveClient => Client != null;
@@ -140,21 +154,73 @@ public class Habbo
         set => FriendBarState = Plus.HabboHotel.Users.Messenger.FriendBar.FriendBarStateUtility.GetInt(value);
     }
     
-    public void CheckCreditsTimer(Plus.Core.Settings.ISettingsManager settingsManager, Plus.HabboHotel.Subscriptions.ISubscriptionManager subscriptionManager) { } // placeholder - handled by process component
+    public void CheckCreditsTimer(ISettingsManager settingsManager, ISubscriptionManager subscriptionManager)
+    {
+        try
+        {
+            CreditsUpdateTick--;
+            if (CreditsUpdateTick > 0 || !TryGetClient(out var client))
+                return;
+
+            var creditUpdate = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.credit_reward"));
+            var ducketUpdate = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.ducket_reward"));
+            if (subscriptionManager.TryGetSubscriptionData(VipRank, out var subscriptionData) && subscriptionData != null)
+            {
+                creditUpdate += subscriptionData.Credits;
+                ducketUpdate += subscriptionData.Duckets;
+            }
+
+            Credits += creditUpdate;
+            Duckets += ducketUpdate;
+            client.Send(new CreditBalanceComposer(Credits));
+            client.Send(new HabboActivityPointNotificationComposer(Duckets, ducketUpdate));
+            CreditsUpdateTick = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.tick"));
+        }
+        catch
+        {
+        }
+    }
 
     public bool CacheExpired(double sessionStart) => (UnixTimestamp.GetNow() - sessionStart) > 300;
 
-    public void Dispose() { }
-
-    public void InitProcess(IDatabase database, Core.Settings.ISettingsManager settingsManager, object subscriptionManager, object achievementService)
+    public void Dispose()
     {
-        // Handled by specialized process components
+        if (TryGetCurrentRoom(out var room))
+        {
+            if (room.MDisposed || room.Unloaded)
+            {
+                LeaveRoom();
+            }
+            else if (TryGetClient(out var client))
+            {
+                room.GetRoomUserManager().RemoveUserFromRoom(client, false);
+            }
+        }
+
+        Effects?.Dispose();
+        Clothing?.Dispose();
+        Permissions?.Dispose();
+    }
+
+    public void InitProcess(IDatabase database, ISettingsManager settingsManager, object subscriptionManager, object achievementService)
+    {
+        Database = database;
+        SettingsManager = settingsManager;
+        SubscriptionManager = subscriptionManager as ISubscriptionManager;
+        AchievementService = achievementService as IAchievementService;
+
+        if (_process != null || SubscriptionManager == null || AchievementService == null)
+            return;
+
+        _process = new ProcessComponent();
+        _process.Init(this, database, settingsManager, SubscriptionManager, AchievementService);
     }
 
     public void AttachClient(GameClient session)
     {
         Client = session;
         SessionStart = UnixTimestamp.GetNow();
+        _disconnected = false;
     }
 
     public void DetachClient()
@@ -191,13 +257,78 @@ public class Habbo
 
     public void OnDisconnect()
     {
+        if (_disconnected)
+            return;
+
+        _disconnected = true;
         Disconnected?.Invoke(this, EventArgs.Empty);
+        try
+        {
+            _process?.Dispose();
+        }
+        catch
+        {
+        }
+        try
+        {
+            SaveStateOnDisconnect();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to persist habbo state during disconnect for user {userId}.", Id);
+        }
+        finally
+        {
+            Dispose();
+        }
+    }
+
+    private void SaveStateOnDisconnect()
+    {
+        if (_habboSaved || Database == null)
+            return;
+
+        _habboSaved = true;
+        using var connection = Database.Connection();
+        connection.Execute(
+            "UPDATE `users` SET `online` = '0', `last_online` = @lastOnline, `activity_points` = @duckets, `credits` = @credits, `vip_points` = @diamonds, `home_room` = @homeRoom, `gotw_points` = @gotwPoints, `time_muted` = @timeMuted, `friend_bar_state` = @friendBarState, `bubble_id` = @customBubbleId WHERE `id` = @id LIMIT 1;" +
+            "UPDATE `user_statistics` SET `roomvisits` = @roomVisits, `onlineTime` = @onlineTime, `respect` = @respect, `respectGiven` = @respectGiven, `giftsGiven` = @giftsGiven, `giftsReceived` = @giftsReceived, `dailyRespectPoints` = @dailyRespectPoints, `dailyPetRespectPoints` = @dailyPetRespectPoints, `AchievementScore` = @achievementScore, `quest_id` = @questId, `quest_progress` = @questProgress, `groupid` = @favouriteGroupId, `forum_posts` = @forumPosts WHERE `id` = @id LIMIT 1;",
+            new
+            {
+                lastOnline = UnixTimestamp.GetNow(),
+                duckets = Duckets,
+                credits = Credits,
+                diamonds = Diamonds,
+                homeRoom = HomeRoom,
+                gotwPoints = GotwPoints,
+                timeMuted = TimeMuted,
+                friendBarState = FriendBarState.ToString(),
+                customBubbleId = CustomBubbleId,
+                id = Id,
+                roomVisits = HabboStats.RoomVisits,
+                onlineTime = (int)(UnixTimestamp.GetNow() - SessionStart + HabboStats.OnlineTime),
+                respect = HabboStats.Respect,
+                respectGiven = HabboStats.RespectGiven,
+                giftsGiven = HabboStats.GiftsGiven,
+                giftsReceived = HabboStats.GiftsReceived,
+                dailyRespectPoints = HabboStats.DailyRespectPoints,
+                dailyPetRespectPoints = HabboStats.DailyPetRespectPoints,
+                achievementScore = HabboStats.AchievementPoints,
+                questId = HabboStats.QuestId,
+                questProgress = HabboStats.QuestProgress,
+                favouriteGroupId = HabboStats.FavouriteGroupId,
+                forumPosts = HabboStats.ForumPosts
+            });
+
+        if (Permissions?.HasRight("mod_tickets") == true)
+            connection.Execute("UPDATE `moderation_tickets` SET `status` = 'open', `moderator_id` = '0' WHERE `status` = 'picked' AND `moderator_id` = @id", new { id = Id });
     }
 
     public string GetQueryString
     {
         get
         {
+            _habboSaved = true;
             return $"UPDATE `users` SET `online` = '0', `last_online` = '{UnixTimestamp.GetNow()}', `activity_points` = '{Duckets}', `credits` = '{Credits}', `vip_points` = '{Diamonds}', `home_room` = '{HomeRoom}', `gotw_points` = '{GotwPoints}', `time_muted` = '{TimeMuted}', `friend_bar_state` = '{FriendBarState}' WHERE id = '{Id}' LIMIT 1; " +
                    $"UPDATE `user_statistics` SET `roomvisits` = '{HabboStats.RoomVisits}', `onlineTime` = '{(int)(UnixTimestamp.GetNow() - SessionStart + HabboStats.OnlineTime)}', `respect` = '{HabboStats.Respect}', `respectGiven` = '{HabboStats.RespectGiven}', `giftsGiven` = '{HabboStats.GiftsGiven}', `giftsReceived` = '{HabboStats.GiftsReceived}', `dailyRespectPoints` = '{HabboStats.DailyRespectPoints}', `dailyPetRespectPoints` = '{HabboStats.DailyPetRespectPoints}', `AchievementScore` = '{HabboStats.AchievementPoints}', `quest_id` = '{HabboStats.QuestId}', `quest_progress` = '{HabboStats.QuestProgress}', `groupid` = '{HabboStats.FavouriteGroupId}', `forum_posts` = '{HabboStats.ForumPosts}' WHERE `id` = '{Id}' LIMIT 1;";
         }

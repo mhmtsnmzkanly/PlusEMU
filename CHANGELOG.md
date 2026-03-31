@@ -1,5 +1,11 @@
 # Changelog
 
+### [Unreleased]
+#### Changed
+- Hardened `Habbo.OnDisconnect()` so persistence failures no longer abort the rest of the disconnect lifecycle; runtime cleanup now still runs from `finally`, and disconnect-save logging is explicit.
+- Tightened room lifecycle handling so idle unload decisions only reset on real user occupancy, preventing bots and pets from pinning empty rooms in memory.
+- Hardened room teardown by clearing attached habbo room references before room-user structures are disposed, reducing stale room-reference crashes during later disconnect cleanup.
+
 ### [0.8.2] - 2026-03-28
 #### Added
 - `WiredExecutionData` to carry queued Wired trigger invocations through the room cycle.

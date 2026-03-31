@@ -6,10 +6,13 @@ This file tracks the ongoing architecture cleanup that moved packet/business log
 
 ## Current Baseline
 
-- Project builds clean:
-  - `DOTNET_ROOT=/usr/share/dotnet PATH=/usr/share/dotnet:$PATH /usr/share/dotnet/dotnet build 'PlusEMU.csproj' -c Release --no-restore -v q`
+- Project builds:
+  - `DOTNET_ROOT=/usr/share/dotnet PATH=/usr/share/dotnet:$PATH DOTNET_CLI_HOME=/tmp DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 /usr/share/dotnet/dotnet build 'PlusEMU.csproj' -c Release --no-restore -v q`
 - Last confirmed result:
-  - `0 Warning(s), 0 Error(s)`
+  - `2 Warning(s), 0 Error(s)`
+- Known remaining warnings:
+  - `HabboHotel/Catalog/CatalogService.cs(274,159)` `CS8602`
+  - `HabboHotel/Rooms/RoomUser.cs(574,16)` `CS8603`
 - Do not touch or commit these user-owned files unless explicitly requested:
   - `Config/config.json`
   - `CONTRIBUTION-GUIDE.txt`
@@ -21,15 +24,18 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - Disconnect flow is being rerouted through `TcpSessionProxy` / `WsSessionProxy` and instance-backed `Habbo.OnDisconnect()`.
 - `RoomFactory`, `RoomManager`, `Room`, and related packet handlers are being reshaped to pass `IDatabase` and managers explicitly instead of leaning on older static/global access paths.
 - `RoomManager` now owns room idle/promotion/unload lifecycle decisions, while `Room` is narrowed toward active-room cycle execution.
+- That room idle path now keys off real-user occupancy again, so bot/pet-only rooms no longer keep reseting inactivity counters forever.
 - `Room` constructor bootstrap is now grouped behind an explicit room-content initialization step, so dependency assignment is no longer interleaved with furniture/map/promotions/rights/filter/bot/pet loading.
 - That room bootstrap is now further split into room-state versus creature initialization, and the bot/pet/rights/filter query-to-model translation work now sits behind dedicated helpers instead of inline deployment loops.
 - `Room.ProcessRoom()` is now split into explicit active-cycle phases with a shared phase guard, so room item, user, status, game-item, and Wired ticks are no longer repeated inline try/catch branches.
 - `RoomManager` room load/cycle paths are also split into explicit get/create/register/dispose and per-room cycle helpers, making the lifecycle ownership boundary clearer before any service extraction.
 - That creation path is also more explicit now: `RoomManager` coordinates cache/register concerns while `RoomFactory` owns dedicated room-row query and mapping helpers instead of repeating the same projection SQL inline.
 - `Room` crash/dispose teardown is now separated into user eviction, process-task disposal, collection reset, disposable system cleanup, and component cleanup phases, so room shutdown is no longer one long mixed-responsibility branch.
+- Room teardown now also clears attached human habbo room references before room-user disposal runs, reducing stale disposed-room references during later disconnect handling.
 - `RoomUserManager.RemoveUserFromRoom()` is now split into explicit client notification, habbo room-state reset, horse/team/trade cleanup, persistence, messenger notification, and disposal phases, so leave/disconnect handling is easier to reason about before any broader disconnect service extraction.
 - `RoomService` now splits room transfer and room-entry authorization into explicit helper phases, reducing duplicate leave-current-room behavior and making the public/private/doorbell/password decision path easier to follow before the wider disconnect/session cleanup moves further outward.
 - Disconnect ownership is also narrower now: session proxies no longer raise logout work separately, and the server-side disconnect path now goes through an idempotent `GameClient.OnDisconnected()` that detaches the attached habbo client reference before downstream logout tasks run.
+- That disconnect path is now also fail-safe against persistence errors: habbo-state saving is isolated behind guarded logging, and final disposal still runs from `finally`.
 - Authentication/login lifecycle is narrower too: `Authenticator` now has explicit habbo creation, disconnect hook-up, session binding, and post-login task phases instead of wiring logout events, session registration, and login fanout inline in one method.
 - Packet-level room exit callers are also starting to converge on `RoomService`: hotel-view exit and username-change room reset now use `LeaveRoom()` instead of calling the room-user removal path directly.
 - That shared room-exit boundary now also covers the silent room-entry failure path, since `RoomService.LeaveRoom()` takes the notify flag and `GetRoomEntryDataEvent` no longer bypasses it with its own direct removal call.

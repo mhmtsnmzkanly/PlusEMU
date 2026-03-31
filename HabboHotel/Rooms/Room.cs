@@ -564,6 +564,13 @@ public class Room : RoomData
 
         try
         {
+            UpdateLifecycleState();
+            if (ShouldUnloadForInactivity())
+            {
+                _roomManager.UnloadRoom(Id);
+                return;
+            }
+
             var roomUserManager = GetRoomUserManager();
             ExecuteRoomPhase(GetRoomItemHandler().OnCycle);
             ExecuteRoomPhase(roomUserManager.OnCycle);
@@ -601,7 +608,7 @@ public class Room : RoomData
         if (HasActivePromotion && Promotion?.HasExpired == true)
             EndPromotion();
 
-        if (HasUsers())
+        if (HasRealUsers())
         {
             if (IdleTime > 0)
                 IdleTime = 0;
@@ -611,7 +618,8 @@ public class Room : RoomData
         IdleTime++;
     }
 
-    public bool HasUsers() => GetRoomUserManager().UserCount > 0;
+    public bool HasUsers() => GetRoomUserManager().GetRoomUsers().Count > 0;
+    public bool HasRealUsers() => _roomUserManager?.UserCount > 0;
 
     public bool ShouldUnloadForInactivity() => IdleTime >= 60 && !HasActivePromotion;
 
@@ -790,7 +798,7 @@ public class Room : RoomData
                 if (user == null)
                     continue;
                 var client = user.GetClient();
-                if (client == null || user.IsBot)
+                if (client == null || user.IsBot || client.GetHabboOrNull() == null)
                     continue;
                 if (withRightsOnly && !CheckRights(client))
                     continue;
@@ -817,10 +825,26 @@ public class Room : RoomData
 
         IsCrashed = false;
         MDisposed = true;
+        DetachActiveUsers();
         DisposeProcessTask();
         ResetRoomCollections();
         DisposeRoomSystems();
         CleanupRoomComponents();
+    }
+
+    private void DetachActiveUsers()
+    {
+        var roomUserManager = _roomUserManager;
+        if (roomUserManager == null)
+            return;
+
+        foreach (var user in roomUserManager.GetUserList().ToList())
+        {
+            if (user.IsBot)
+                continue;
+
+            user.GetClient()?.GetHabboOrNull()?.LeaveRoom();
+        }
     }
 
     private void DisposeProcessTask()
