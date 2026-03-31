@@ -47,7 +47,7 @@ public class RoomUserManager
         _users = new();
         _pets = new();
         _bots = new();
-        _primaryPrivateUserId = 0;
+        _primaryPrivateUserId = 1;
         _secondaryPrivateUserId = 0;
         PetCount = 0;
         UserCount = 0;
@@ -57,8 +57,9 @@ public class RoomUserManager
 
     public RoomUser DeployBot(RoomBot bot, Pet pet)
     {
-        var user = new RoomUser(0, _room.RoomId, _primaryPrivateUserId++, _room);
-        bot.VirtualId = _primaryPrivateUserId;
+        var virtualId = _primaryPrivateUserId++;
+        var user = new RoomUser(0, _room.RoomId, virtualId, _room);
+        bot.VirtualId = virtualId;
         var personalId = _secondaryPrivateUserId++;
         user.InternalRoomId = personalId;
         _users.TryAdd(personalId, user);
@@ -142,7 +143,8 @@ public class RoomUserManager
             Log.Warn("AddAvatarToRoom aborted: user already exists in room. RoomId={roomId}, UserId={userId}", _room.RoomId, habbo.Id);
             return false;
         }
-        var user = new RoomUser(habbo.Id, _room.RoomId, _primaryPrivateUserId++, _room);
+        var virtualId = _primaryPrivateUserId++;
+        var user = new RoomUser(habbo.Id, _room.RoomId, virtualId, _room);
         user.BindClient(session);
         if (user == null || user.GetClient() == null)
         {
