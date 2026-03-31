@@ -17,11 +17,13 @@ using Plus.HabboHotel.Rooms.Trading;
 using Plus.Utilities;
 
 using Dapper;
+using NLog;
 
 namespace Plus.HabboHotel.Rooms;
 
 public class RoomUserManager
 {
+    private static readonly ILogger Log = LogManager.GetLogger("Plus.HabboHotel.Rooms.RoomUserManager");
     private ConcurrentDictionary<int, RoomUser> _bots;
     private ConcurrentDictionary<int, RoomUser> _pets;
 
@@ -125,27 +127,39 @@ public class RoomUserManager
 
     public RoomUser GetUserForSquare(int x, int y) => _room.GetGameMap().GetRoomUsers(new(x, y)).FirstOrDefault()!;
 
-    public bool AddAvatarToRoom(GameClient session)
+    internal bool AddAvatarToRoom(GameClient session)
     {
         if (_room == null)
             return false;
         if (session == null)
             return false;
         var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.TryGetCurrentRoom(out _))
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var currentRoom) || currentRoom != _room)
             return false;
+        Log.Debug("AddAvatarToRoom start. RoomId={roomId}, SessionId={sessionId}, UserId={userId}, Username={username}", _room.RoomId, session.Id, habbo.Id, habbo.Username);
         if (_users.Any(u => u.Value.UserId == habbo.Id))
+        {
+            Log.Warn("AddAvatarToRoom aborted: user already exists in room. RoomId={roomId}, UserId={userId}", _room.RoomId, habbo.Id);
             return false;
+        }
         var user = new RoomUser(habbo.Id, _room.RoomId, _primaryPrivateUserId++, _room);
+        user.BindClient(session);
         if (user == null || user.GetClient() == null)
+        {
+            Log.Warn("AddAvatarToRoom aborted: room user/client binding failed. RoomId={roomId}, UserId={userId}", _room.RoomId, habbo.Id);
             return false;
+        }
         user.UserId = habbo.Id;
         habbo.TentId = 0;
         var personalId = _secondaryPrivateUserId++;
         user.InternalRoomId = personalId;
-        habbo.EnterRoom(_room);
         if (!_users.TryAdd(personalId, user))
+        {
+            Log.Warn("AddAvatarToRoom aborted: could not add room user to registry. RoomId={roomId}, UserId={userId}, InternalRoomId={internalRoomId}", _room.RoomId, habbo.Id, personalId);
             return false;
+        }
+        UserCount = _users.Count(x => !x.Value.IsBot);
+        _room.UsersNow = UserCount;
         var model = _room.GetGameMap().Model;
         if (model == null)
             return false;
@@ -233,22 +247,29 @@ public class RoomUserManager
                 continue;
             bot.BotAi.OnUserEnterRoom(user);
         }
+        Log.Info("AddAvatarToRoom completed. RoomId={roomId}, UserId={userId}, Username={username}, VirtualId={virtualId}, HumanUsers={userCount}", _room.RoomId, habbo.Id, habbo.Username, user.VirtualId, UserCount);
         return true;
     }
 
-    public void RemoveUserFromRoom(GameClient session, bool nofityUser, bool notifyKick = false)
+    internal bool RemoveUserFromRoom(GameClient session, bool nofityUser, bool notifyKick = false)
     {
         try
         {
             if (!TryGetHabboLeavingRoom(session, out var habbo))
-                return;
+                return false;
+
+            Log.Info("RemoveUserFromRoom start. RoomId={roomId}, SessionId={sessionId}, UserId={userId}, Username={username}, NotifyUser={notifyUser}, NotifyKick={notifyKick}",
+                _room.RoomId, session.Id, habbo.Id, habbo.Username, nofityUser, notifyKick);
 
             NotifyLeavingClient(session, nofityUser, notifyKick);
             ResetHabboRoomState(habbo);
 
             var user = GetRoomUserByHabbo(habbo.Id);
             if (user == null)
-                return;
+            {
+                Log.Warn("RemoveUserFromRoom found no room user after habbo room-state reset. RoomId={roomId}, UserId={userId}", _room.RoomId, habbo.Id);
+                return true;
+            }
 
             CleanupMountedHorse(user);
             RemoveUserFromTeam(user);
@@ -258,10 +279,14 @@ public class RoomUserManager
             NotifyMessengerRoomChange(habbo);
             PersistRoomExit(habbo);
             DisposeLeavingUser(user);
+            Log.Info("RemoveUserFromRoom completed. RoomId={roomId}, UserId={userId}, Username={username}, RemainingHumanUsers={userCount}", _room.RoomId, habbo.Id, habbo.Username, UserCount);
+            return true;
         }
         catch (Exception e)
         {
+            Log.Error(e, "RemoveUserFromRoom failed. RoomId={roomId}, SessionId={sessionId}", _room?.RoomId ?? 0, session?.Id);
             ExceptionLogger.LogException(e);
+            return false;
         }
     }
 
@@ -425,8 +450,19 @@ public class RoomUserManager
         {
             //uhmm, could put the below stuff in but idk.
         }
+        UserCount = _users.Count(x => !x.Value.IsBot);
+        _room.UsersNow = UserCount;
         user.InternalRoomId = -1;
         OnRemove(user);
+    }
+
+    internal void ForceRemoveUser(RoomUser user)
+    {
+        if (user == null)
+            return;
+
+        RemoveRoomUser(user);
+        user.Dispose();
     }
 
     public bool TryGetPet(int petId, out RoomUser pet) => _pets.TryGetValue(petId, out pet!);
@@ -590,7 +626,7 @@ public class RoomUserManager
                 {
                     var client = user.GetClient();
                     if (client != null)
-                        RemoveUserFromRoom(client, false);
+                        _ = _room.GetRoomService().LeaveRoom(client, false);
                     else
                         RemoveRoomUser(user);
                 }
@@ -860,7 +896,7 @@ public class RoomUserManager
             {
                 var client = _clientManager.GetClientByUserId(userToRemove.HabboId);
                 if (client != null)
-                    RemoveUserFromRoom(client, true);
+                    _ = _room.GetRoomService().LeaveRoom(client, true);
                 else
                     RemoveRoomUser(userToRemove);
             }

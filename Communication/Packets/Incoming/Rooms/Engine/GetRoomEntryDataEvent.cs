@@ -30,7 +30,7 @@ internal class GetRoomEntryDataEvent : IPacketEvent
 
         _logger.LogInformation("GetRoomEntryDataEvent received for session {sessionId}. RoomId: {roomId}.", session.Id, room.RoomId);
 
-        if (!room.GetRoomUserManager().AddAvatarToRoom(session))
+        if (!await _roomService.FinalizeRoomEntry(session))
         {
             _logger.LogWarning("Failed to add avatar to room {roomId} for session {sessionId}; leaving room.", room.RoomId, session.Id);
             await _roomService.LeaveRoom(session, false);

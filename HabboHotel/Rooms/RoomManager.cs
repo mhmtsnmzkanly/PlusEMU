@@ -72,6 +72,7 @@ public class RoomManager : IRoomManager
     private readonly object _roomLoadingSync;
     private readonly Dictionary<string, RoomModel> _roomModels;
     private readonly ConcurrentDictionary<uint, Room> _rooms;
+    private DateTime _cycleLastExecution;
 
 
     public RoomManager(IDatabase database,
@@ -146,6 +147,11 @@ public class RoomManager : IRoomManager
 
     public void OnCycle()
     {
+        var sinceLastTime = DateTime.Now - _cycleLastExecution;
+        if (sinceLastTime.TotalMilliseconds < 500)
+            return;
+
+        _cycleLastExecution = DateTime.Now;
         var start = DateTime.Now;
         foreach (var room in GetRoomsToCycle())
             ProcessRoomCycle(room);
@@ -159,16 +165,13 @@ public class RoomManager : IRoomManager
     {
         if (room == null || room.Unloaded)
             return;
-
-        room.UpdateLifecycleState();
-        if (room.ShouldUnloadForInactivity())
+        if (room.IsCrashed)
         {
             UnloadRoom(room.RoomId);
             return;
         }
-
-        if (room.HasUsers())
-            room.OnCycle();
+        room.OnCycle();
+        NotifyRoomStateChanged(room);
     }
 
     private void LogSlowCycle(DateTime start)
@@ -243,7 +246,13 @@ public class RoomManager : IRoomManager
 
     public void UnloadRoom(uint roomId)
     {
-        if (_rooms.TryRemove(roomId, out var room))
+        if (!_rooms.TryGetValue(roomId, out var room) || room.IsDisposed || room.IsUnloading)
+            return;
+
+        room.BeginUnload();
+        EvictRoomUsers(room);
+
+        if (_rooms.TryRemove(roomId, out room))
         {
             _serverStatusSignal.MarkDirty();
             DisposeRoom(room);
@@ -306,6 +315,32 @@ public class RoomManager : IRoomManager
     }
 
     private static void DisposeRoom(Room room) => room.Dispose();
+
+    public void NotifyRoomStateChanged(Room room)
+    {
+        if (room == null || room.IsDisposed || room.IsUnloading)
+            return;
+
+        if (room.CanUnload)
+            UnloadRoom(room.RoomId);
+    }
+
+    private void EvictRoomUsers(Room room)
+    {
+        var users = room.GetRoomUserManager().GetRoomUsers().ToList();
+        var roomService = _serviceProvider.GetRequiredService<IRoomService>();
+        foreach (var user in users)
+        {
+            var client = user.GetClient();
+            if (client != null)
+            {
+                _ = roomService.LeaveRoom(client);
+                continue;
+            }
+
+            room.ForceRemoveHabboFromRuntime(user);
+        }
+    }
 
     public List<Room> SearchGroupRooms(string query) => _rooms.Values.Where(x => x.Data.GroupId > 0 && x.Data.Name.Contains(query, System.StringComparison.OrdinalIgnoreCase)).ToList();
     public List<Room> SearchTaggedRooms(string query) => _rooms.Values.Where(x => x.Data.Tags.Any(t => t.Contains(query, System.StringComparison.OrdinalIgnoreCase))).ToList();

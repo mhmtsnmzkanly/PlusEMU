@@ -2,9 +2,12 @@
 
 ### [Unreleased]
 #### Changed
+- Centralized room lifecycle ownership further so `RoomManager` now evaluates unloads after room ticks and on occupancy changes, `Room` no longer unloads itself during idle/crash paths, and room disposal is reduced to resource cleanup instead of also running leave business logic.
+- Tightened room exit determinism by routing disconnect and room-entry-finalization failures back through `RoomService`, keeping habbo room-reference cleanup, room-runtime removal, and post-leave unload evaluation on one service-owned boundary.
 - Hardened `Habbo.OnDisconnect()` so persistence failures no longer abort the rest of the disconnect lifecycle; runtime cleanup now still runs from `finally`, and disconnect-save logging is explicit.
 - Tightened room lifecycle handling so idle unload decisions only reset on real user occupancy, preventing bots and pets from pinning empty rooms in memory.
 - Hardened room teardown by clearing attached habbo room references before room-user structures are disposed, reducing stale room-reference crashes during later disconnect cleanup.
+- Increased lifecycle observability in room/habbo flow by adding targeted room-prepare, enter, leave, unload, disconnect, and room-user attach/detach logs, and by expanding console exception rendering in `nlog.config`.
 
 ### [0.8.2] - 2026-03-28
 #### Added

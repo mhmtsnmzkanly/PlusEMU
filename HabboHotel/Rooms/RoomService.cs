@@ -52,7 +52,10 @@ public class RoomService : IRoomService
         if (!TryGetPreparingHabbo(session, out var habbo))
             return;
 
-        RemoveCurrentRoomIfNeeded(session, habbo, false, false);
+        _logger.LogInformation("PrepareRoom start. SessionId={sessionId}, UserId={userId}, Username={username}, TargetRoomId={roomId}, InRoom={inRoom}, Teleporting={teleporting}, Hopping={hopping}",
+            session.Id, habbo.Id, habbo.Username, roomId, habbo.TryGetCurrentRoom(out _), habbo.IsTeleporting, habbo.IsHopping);
+        if (habbo.TryGetCurrentRoom(out _))
+            await LeaveRoomInternal(session, habbo, false, false, "PrepareNextRoom");
 
         if (habbo.IsTeleporting && habbo.TeleportingRoomId != roomId)
         {
@@ -62,12 +65,14 @@ public class RoomService : IRoomService
 
         if (!_roomManager.TryLoadRoom(roomId, out var room))
         {
+            _logger.LogWarning("PrepareRoom failed: room could not be loaded. SessionId={sessionId}, RoomId={roomId}", session.Id, roomId);
             session.Send(new CloseConnectionComposer());
             return;
         }
 
         if (room.IsCrashed)
         {
+            _logger.LogWarning("PrepareRoom failed: room is crashed. SessionId={sessionId}, RoomId={roomId}", session.Id, roomId);
             session.SendNotification("This room has crashed! :(");
             session.Send(new CloseConnectionComposer());
             return;
@@ -75,6 +80,7 @@ public class RoomService : IRoomService
 
         if (room.GetRoomUserManager().UserCount >= room.UsersMax && !(habbo.Permissions?.HasRight("room_enter_full") ?? false) && habbo.Id != room.OwnerId)
         {
+            _logger.LogWarning("PrepareRoom failed: room is full. SessionId={sessionId}, RoomId={roomId}, UserCount={userCount}, UsersMax={usersMax}", session.Id, roomId, room.GetRoomUserManager().UserCount, room.UsersMax);
             session.Send(new CantConnectComposer(1));
             session.Send(new CloseConnectionComposer());
             return;
@@ -83,6 +89,7 @@ public class RoomService : IRoomService
         if (!(habbo.Permissions?.HasRight("room_ban_override") ?? false) && room.GetBans().IsBanned(habbo.Id))
         {
             habbo.RoomAuthOk = false;
+            _logger.LogWarning("PrepareRoom failed: user is banned from room. SessionId={sessionId}, UserId={userId}, RoomId={roomId}", session.Id, habbo.Id, roomId);
             session.Send(new CantConnectComposer(4));
             session.Send(new CloseConnectionComposer());
             return;
@@ -168,13 +175,41 @@ public class RoomService : IRoomService
         }
     }
 
+    public async Task<bool> FinalizeRoomEntry(GameClient session)
+    {
+        if (!TryGetPreparingHabbo(session, out var habbo) || !habbo.TryGetCurrentRoom(out var room))
+            return false;
+
+        _logger.LogInformation("[RoomFlow] User={userId} Action=Join Room={roomId} Step=FinalizeEntryStart Session={sessionId}",
+            habbo.Id, room.RoomId, session.Id);
+
+        if (room.IsDisposed || room.IsUnloading)
+        {
+            habbo.LeaveRoom();
+            _logger.LogWarning("[RoomFlow] User={userId} Action=Join Room={roomId} Step=FinalizeEntryRejected Reason=RoomUnavailable Session={sessionId}",
+                habbo.Id, room.RoomId, session.Id);
+            return false;
+        }
+
+        if (!room.TryAddHabboToRuntime(session))
+        {
+            _logger.LogWarning("[RoomFlow] User={userId} Action=Join Room={roomId} Step=FinalizeEntryFailed Session={sessionId}",
+                habbo.Id, room.RoomId, session.Id);
+            await LeaveRoomInternal(session, habbo, false, false, "FinalizeEntryFailed");
+            return false;
+        }
+
+        _logger.LogInformation("[RoomFlow] User={userId} Action=Join Room={roomId} Step=FinalizeEntryCompleted Session={sessionId}",
+            habbo.Id, room.RoomId, session.Id);
+        return true;
+    }
+
     public Task LeaveRoom(GameClient session, bool notifyUser = true)
     {
         if (!TryGetPreparingHabbo(session, out var habbo))
             return Task.CompletedTask;
 
-        RemoveCurrentRoomIfNeeded(session, habbo, notifyUser, false);
-        return Task.CompletedTask;
+        return LeaveRoomInternal(session, habbo, notifyUser, false, "Leave");
     }
 
     public Task KickFromRoom(GameClient session, bool notifyUser = true)
@@ -182,8 +217,15 @@ public class RoomService : IRoomService
         if (!TryGetPreparingHabbo(session, out var habbo))
             return Task.CompletedTask;
 
-        RemoveCurrentRoomIfNeeded(session, habbo, notifyUser, true);
-        return Task.CompletedTask;
+        return LeaveRoomInternal(session, habbo, notifyUser, true, "Kick");
+    }
+
+    public Task HandleDisconnect(GameClient session)
+    {
+        if (!TryGetPreparingHabbo(session, out var habbo))
+            return Task.CompletedTask;
+
+        return LeaveRoomInternal(session, habbo, false, false, "Disconnect");
     }
 
     private static bool TryGetPreparingHabbo(GameClient session, out Users.Habbo habbo)
@@ -192,11 +234,30 @@ public class RoomService : IRoomService
         return habbo != null;
     }
 
-    private static void RemoveCurrentRoomIfNeeded(GameClient session, Users.Habbo habbo, bool notifyUser, bool notifyKick)
+    private Task LeaveRoomInternal(GameClient session, Users.Habbo habbo, bool notifyUser, bool notifyKick, string flow)
     {
         if (!habbo.TryGetCurrentRoom(out var room))
-            return;
-        room.GetRoomUserManager().RemoveUserFromRoom(session, notifyUser, notifyKick);
+        {
+            habbo.LeaveRoom();
+            return Task.CompletedTask;
+        }
+
+        _logger.LogInformation("[RoomFlow] User={userId} Action=Leave Room={roomId} Step=Begin Flow={flow} NotifyUser={notifyUser} NotifyKick={notifyKick} Session={sessionId}",
+            habbo.Id, room.RoomId, flow, notifyUser, notifyKick, session.Id);
+
+        if (room.IsDisposed)
+        {
+            habbo.LeaveRoom();
+            _logger.LogInformation("[RoomFlow] User={userId} Action=Leave Room={roomId} Step=DisposedRoomReferenceCleared Flow={flow} Session={sessionId}",
+                habbo.Id, room.RoomId, flow, session.Id);
+            return Task.CompletedTask;
+        }
+
+        room.TryRemoveHabboFromRuntime(session, notifyUser, notifyKick);
+        _roomManager.NotifyRoomStateChanged(room);
+        _logger.LogInformation("[RoomFlow] User={userId} Action=Leave Room={roomId} Step=Completed Flow={flow} Session={sessionId}",
+            habbo.Id, room.RoomId, flow, session.Id);
+        return Task.CompletedTask;
     }
 
     private async Task<bool> TryAuthorizeRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)
@@ -207,7 +268,7 @@ public class RoomService : IRoomService
             return await TryAuthorizePublicRoomEntry(session, habbo, room);
 
         if (CanBypassPrivateRoomChecks(habbo, room))
-            return await OpenAuthorizedRoom(session, habbo);
+            return await OpenAuthorizedRoom(session, habbo, room);
 
         if (room.Access == RoomAccess.Doorbell)
             return TryAuthorizeDoorbellRoomEntry(session, habbo, room);
@@ -215,7 +276,7 @@ public class RoomService : IRoomService
         if (room.Access == RoomAccess.Password)
             return await TryAuthorizePasswordRoomEntry(session, habbo, room, password);
 
-        return await OpenAuthorizedRoom(session, habbo);
+        return await OpenAuthorizedRoom(session, habbo, room);
     }
 
     private async Task<bool> TryAuthorizePublicRoomEntry(GameClient session, Users.Habbo habbo, Room room)
@@ -227,7 +288,7 @@ public class RoomService : IRoomService
             return false;
         }
 
-        return await OpenAuthorizedRoom(session, habbo);
+        return await OpenAuthorizedRoom(session, habbo, room);
     }
 
     private static bool CanBypassPrivateRoomChecks(Users.Habbo habbo, Room room)
@@ -256,18 +317,19 @@ public class RoomService : IRoomService
     private async Task<bool> TryAuthorizePasswordRoomEntry(GameClient session, Users.Habbo habbo, Room room, string password)
     {
         if (password.ToLower() == room.Password.ToLower() || habbo.RoomAuthOk)
-            return await OpenAuthorizedRoom(session, habbo);
+            return await OpenAuthorizedRoom(session, habbo, room);
 
         session.Send(new GenericErrorComposer(-100002));
         session.Send(new CloseConnectionComposer());
         return false;
     }
 
-    private async Task<bool> OpenAuthorizedRoom(GameClient session, Users.Habbo habbo)
+    private async Task<bool> OpenAuthorizedRoom(GameClient session, Users.Habbo habbo, Room room)
     {
         habbo.RoomAuthOk = true;
+        habbo.EnterRoom(room);
         session.Send(new OpenConnectionComposer());
-        _logger.LogInformation("OpenAuthorizedRoom completed for session {sessionId}. Immediately entering prepared room.", session.Id);
+        _logger.LogInformation("OpenAuthorizedRoom completed. SessionId={sessionId}, UserId={userId}, Username={username}, RoomId={roomId}. Immediately entering prepared room.", session.Id, habbo.Id, habbo.Username, room.RoomId);
         await EnterRoom(session);
         return true;
     }

@@ -185,18 +185,6 @@ public class Habbo
 
     public void Dispose()
     {
-        if (TryGetCurrentRoom(out var room))
-        {
-            if (room.MDisposed || room.Unloaded)
-            {
-                LeaveRoom();
-            }
-            else if (TryGetClient(out var client))
-            {
-                room.GetRoomUserManager().RemoveUserFromRoom(client, false);
-            }
-        }
-
         Effects?.Dispose();
         Clothing?.Dispose();
         Permissions?.Dispose();
@@ -221,10 +209,12 @@ public class Habbo
         Client = session;
         SessionStart = UnixTimestamp.GetNow();
         _disconnected = false;
+        Log.Debug("Habbo attached to session. UserId={userId}, Username={username}, SessionId={sessionId}", Id, Username, session.Id);
     }
 
     public void DetachClient()
     {
+        Log.Debug("Habbo detached from session. UserId={userId}, Username={username}, HadClient={hadClient}", Id, Username, Client != null);
         Client = null;
     }
 
@@ -237,6 +227,7 @@ public class Habbo
     public void EnterRoom(Room room)
     {
         _currentRoom = room;
+        Log.Debug("Habbo entered room reference. UserId={userId}, Username={username}, RoomId={roomId}", Id, Username, room.Id);
     }
 
     public void LeaveRoom()
@@ -244,6 +235,8 @@ public class Habbo
         if (TentId > 0)
             TentId = 0;
 
+        if (_currentRoom != null)
+            Log.Debug("Habbo cleared room reference. UserId={userId}, Username={username}, RoomId={roomId}", Id, Username, _currentRoom.Id);
         _currentRoom = null;
     }
 
@@ -260,6 +253,7 @@ public class Habbo
         if (_disconnected)
             return;
 
+        Log.Info("Habbo disconnect start. UserId={userId}, Username={username}, InRoom={inRoom}, HasClient={hasClient}", Id, Username, _currentRoom != null, Client != null);
         _disconnected = true;
         Disconnected?.Invoke(this, EventArgs.Empty);
         try
@@ -271,6 +265,18 @@ public class Habbo
         }
         try
         {
+            if (TryGetClient(out var client) && TryGetCurrentRoom(out var room))
+            {
+                if (room.IsDisposed || room.Unloaded)
+                    LeaveRoom();
+                else
+                    room.GetRoomService().HandleDisconnect(client).GetAwaiter().GetResult();
+            }
+            else
+            {
+                LeaveRoom();
+            }
+
             SaveStateOnDisconnect();
         }
         catch (Exception ex)
@@ -279,7 +285,9 @@ public class Habbo
         }
         finally
         {
+            Log.Debug("Habbo disconnect cleanup running. UserId={userId}, Username={username}", Id, Username);
             Dispose();
+            Log.Info("Habbo disconnect completed. UserId={userId}, Username={username}", Id, Username);
         }
     }
 
@@ -288,6 +296,7 @@ public class Habbo
         if (_habboSaved || Database == null)
             return;
 
+        Log.Debug("Persisting habbo state on disconnect. UserId={userId}, Username={username}, Credits={credits}, Duckets={duckets}, Diamonds={diamonds}", Id, Username, Credits, Duckets, Diamonds);
         _habboSaved = true;
         using var connection = Database.Connection();
         connection.Execute(

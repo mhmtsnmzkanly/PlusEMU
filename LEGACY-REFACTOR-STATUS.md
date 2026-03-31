@@ -22,8 +22,10 @@ This file tracks the ongoing architecture cleanup that moved packet/business log
 The current `master` head also contains an unfinished room / habbo lifecycle batch that is compiling cleanly but should still be treated as active refactor work rather than completed migration.
 
 - Disconnect flow is being rerouted through `TcpSessionProxy` / `WsSessionProxy` and instance-backed `Habbo.OnDisconnect()`.
+- Disconnect cleanup is now also converging back on `RoomService`, so active-room detachment during logout no longer depends on `Habbo.Dispose()` directly mutating room membership.
 - `RoomFactory`, `RoomManager`, `Room`, and related packet handlers are being reshaped to pass `IDatabase` and managers explicitly instead of leaning on older static/global access paths.
 - `RoomManager` now owns room idle/promotion/unload lifecycle decisions, while `Room` is narrowed toward active-room cycle execution.
+- That lifecycle split is now stricter too: `RoomManager` marks and unloads rooms, evicts active users before disposal, and re-evaluates unload eligibility after room occupancy changes, while `Room.Dispose()` itself is reduced toward resource cleanup only.
 - That room idle path now keys off real-user occupancy again, so bot/pet-only rooms no longer keep reseting inactivity counters forever.
 - `Room` constructor bootstrap is now grouped behind an explicit room-content initialization step, so dependency assignment is no longer interleaved with furniture/map/promotions/rights/filter/bot/pet loading.
 - That room bootstrap is now further split into room-state versus creature initialization, and the bot/pet/rights/filter query-to-model translation work now sits behind dedicated helpers instead of inline deployment loops.
@@ -34,8 +36,10 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - Room teardown now also clears attached human habbo room references before room-user disposal runs, reducing stale disposed-room references during later disconnect handling.
 - `RoomUserManager.RemoveUserFromRoom()` is now split into explicit client notification, habbo room-state reset, horse/team/trade cleanup, persistence, messenger notification, and disposal phases, so leave/disconnect handling is easier to reason about before any broader disconnect service extraction.
 - `RoomService` now splits room transfer and room-entry authorization into explicit helper phases, reducing duplicate leave-current-room behavior and making the public/private/doorbell/password decision path easier to follow before the wider disconnect/session cleanup moves further outward.
+- `RoomService` now also owns room-entry finalization failure handling, so avatar attach failures no longer bypass the shared leave boundary with direct `RoomUserManager` calls from room-entry packet handlers.
 - Disconnect ownership is also narrower now: session proxies no longer raise logout work separately, and the server-side disconnect path now goes through an idempotent `GameClient.OnDisconnected()` that detaches the attached habbo client reference before downstream logout tasks run.
 - That disconnect path is now also fail-safe against persistence errors: habbo-state saving is isolated behind guarded logging, and final disposal still runs from `finally`.
+- Flow observability is also higher now: room prepare/authorize/enter, room-user add/remove, room unload/dispose, and habbo attach/detach/disconnect transitions now emit targeted logs so lifecycle ordering regressions are easier to trace from console output.
 - Authentication/login lifecycle is narrower too: `Authenticator` now has explicit habbo creation, disconnect hook-up, session binding, and post-login task phases instead of wiring logout events, session registration, and login fanout inline in one method.
 - Packet-level room exit callers are also starting to converge on `RoomService`: hotel-view exit and username-change room reset now use `LeaveRoom()` instead of calling the room-user removal path directly.
 - That shared room-exit boundary now also covers the silent room-entry failure path, since `RoomService.LeaveRoom()` takes the notify flag and `GetRoomEntryDataEvent` no longer bypasses it with its own direct removal call.

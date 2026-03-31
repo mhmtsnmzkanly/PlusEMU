@@ -29,12 +29,14 @@ using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Bots;
 using Plus.Core.Language;
 using Microsoft.Extensions.Logging;
+using NLog;
 using System.Data;
 
 namespace Plus.HabboHotel.Rooms;
 
 public class Room : RoomData
 {
+    private static readonly NLog.ILogger RoomLog = LogManager.GetLogger("Plus.HabboHotel.Rooms.Room");
     private sealed class BotRow
     {
         public int Id { get; init; }
@@ -108,6 +110,7 @@ public class Room : RoomData
     private Soccer? _soccer;
 
     public bool IsCrashed;
+    public bool IsUnloading { get; private set; }
     public DateTime LastRegeneration;
     public DateTime LastTimerReset;
     private readonly IGameClientManager _clientManager;
@@ -242,6 +245,7 @@ public class Room : RoomData
 
     public int IsLagging { get; set; }
     public bool Unloaded { get; set; }
+    public bool IsDisposed => MDisposed;
     public int IdleTime { get; set; }
 
     public List<string> WordFilterList { get; set; } = new();
@@ -565,12 +569,6 @@ public class Room : RoomData
         try
         {
             UpdateLifecycleState();
-            if (ShouldUnloadForInactivity())
-            {
-                _roomManager.UnloadRoom(Id);
-                return;
-            }
-
             var roomUserManager = GetRoomUserManager();
             ExecuteRoomPhase(GetRoomItemHandler().OnCycle);
             ExecuteRoomPhase(roomUserManager.OnCycle);
@@ -606,12 +604,18 @@ public class Room : RoomData
     public void UpdateLifecycleState()
     {
         if (HasActivePromotion && Promotion?.HasExpired == true)
+        {
+            RoomLog.Debug("Room promotion expired during lifecycle update. RoomId={roomId}", Id);
             EndPromotion();
+        }
 
         if (HasRealUsers())
         {
             if (IdleTime > 0)
+            {
+                RoomLog.Debug("Room idle timer reset by active users. RoomId={roomId}, PreviousIdleTime={idleTime}, UserCount={userCount}", Id, IdleTime, _roomUserManager?.UserCount ?? 0);
                 IdleTime = 0;
+            }
             return;
         }
 
@@ -622,9 +626,30 @@ public class Room : RoomData
     public bool HasRealUsers() => _roomUserManager?.UserCount > 0;
 
     public bool ShouldUnloadForInactivity() => IdleTime >= 60 && !HasActivePromotion;
+    public bool CanUnload => IsCrashed || (ShouldUnloadForInactivity() && !HasRealUsers());
+
+    public void BeginUnload()
+    {
+        if (IsUnloading)
+            return;
+
+        IsUnloading = true;
+        RoomLog.Info("Room unload start. RoomId={roomId}, UsersNow={usersNow}, HumanUsers={humanUsers}", Id, UsersNow, _roomUserManager?.UserCount ?? 0);
+    }
+
+    public bool TryAddHabboToRuntime(GameClient session) => _roomUserManager != null && _roomUserManager.AddAvatarToRoom(session);
+
+    public bool TryRemoveHabboFromRuntime(GameClient session, bool notifyUser, bool notifyKick = false) =>
+        _roomUserManager != null && _roomUserManager.RemoveUserFromRoom(session, notifyUser, notifyKick);
+
+    public void ForceRemoveHabboFromRuntime(RoomUser user)
+    {
+        _roomUserManager?.ForceRemoveUser(user);
+    }
 
     private void OnRoomCrash(Exception e)
     {
+        RoomLog.Error(e, "Room crash detected. RoomId={roomId}, UsersNow={usersNow}", Id, UsersNow);
         try
         {
             NotifyAndEvictUsersAfterCrash();
@@ -635,7 +660,6 @@ public class Room : RoomData
         }
 
         IsCrashed = true;
-        _roomManager.UnloadRoom(Id);
     }
 
     private void NotifyAndEvictUsersAfterCrash()
@@ -819,32 +843,18 @@ public class Room : RoomData
 
     public void Dispose()
     {
-        SendPacket(new CloseConnectionComposer());
         if (MDisposed)
             return;
 
+        RoomLog.Info("Room dispose start. RoomId={roomId}, UsersNow={usersNow}, HumanUsers={humanUsers}", Id, UsersNow, _roomUserManager?.UserCount ?? 0);
         IsCrashed = false;
         MDisposed = true;
-        DetachActiveUsers();
+        Unloaded = true;
         DisposeProcessTask();
         ResetRoomCollections();
         DisposeRoomSystems();
         CleanupRoomComponents();
-    }
-
-    private void DetachActiveUsers()
-    {
-        var roomUserManager = _roomUserManager;
-        if (roomUserManager == null)
-            return;
-
-        foreach (var user in roomUserManager.GetUserList().ToList())
-        {
-            if (user.IsBot)
-                continue;
-
-            user.GetClient()?.GetHabboOrNull()?.LeaveRoom();
-        }
+        RoomLog.Info("Room dispose completed. RoomId={roomId}", Id);
     }
 
     private void DisposeProcessTask()
