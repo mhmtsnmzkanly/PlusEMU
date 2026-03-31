@@ -53,11 +53,6 @@ public class WiredComponent
 
     public void OnCycle()
     {
-        _internalCycleCount++;
-        if (_internalCycleCount < 4)
-            return;
-        _internalCycleCount = 0;
-
         var start = DateTime.Now;
         ProcessExecutionQueue();
         foreach (var item in _wiredItems.ToList())

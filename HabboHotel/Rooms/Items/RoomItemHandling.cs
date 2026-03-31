@@ -364,12 +364,7 @@ public class RoomItemHandling
 
     public void OnCycle()
     {
-        _internalCycleCount++;
-        if (_internalCycleCount >= 4)
-        {
-            _internalCycleCount = 0;
-            RunRollerCycle();
-        }
+        RunRollerCycle();
         ProcessQueuedItemUpdates();
     }
 
