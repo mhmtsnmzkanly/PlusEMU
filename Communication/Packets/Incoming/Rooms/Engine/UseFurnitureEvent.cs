@@ -45,14 +45,14 @@ internal class UseFurnitureEvent : RoomPacketEvent
         var toggle = true;
         if (item.Definition.IsFloorSwitch)
         {
-            var user = habbo == null ? null : item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+            var user = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
             if (user == null) return;
             if (!Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y)) toggle = false;
         }
         var request = packet.ReadInt();
         item.Interactor.OnTrigger(session, item, request, hasRights);
-        if (toggle && habbo != null)
-            item.GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerStateChanges, habbo, item);
+        if (toggle && habbo != null && !item.Definition.IsExchange)
+            room.GetWired()?.TriggerEvent(WiredBoxType.TriggerStateChanges, habbo, item);
         await _questService.ProgressUserQuest(session, QuestType.ExploreFindItem, (int)item.Definition.Id);
     }
 }
