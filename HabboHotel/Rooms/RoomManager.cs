@@ -148,7 +148,7 @@ public class RoomManager : IRoomManager
     public void OnCycle()
     {
         var sinceLastTime = DateTime.Now - _cycleLastExecution;
-        if (sinceLastTime.TotalMilliseconds < 500)
+        if (sinceLastTime.TotalMilliseconds < 110)
             return;
 
         _cycleLastExecution = DateTime.Now;

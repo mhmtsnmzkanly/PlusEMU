@@ -639,20 +639,24 @@ public class RoomUserManager
                     continue;
                 }
                 var updated = false;
-                user.IdleTime++;
-                user.HandleSpamTicks();
+                user.InternalCycleCount++;
+                if (user.InternalCycleCount >= 4)
+                {
+                    user.IdleTime++;
+                    user.HandleSpamTicks();
+                }
                 if (!user.IsBot && !user.IsAsleep && user.IdleTime >= 600)
                 {
                     user.IsAsleep = true;
                     _room.SendPacket(new SleepComposer(user, true));
                 }
-                if (user.CarryItemId > 0)
+                if (user.CarryItemId > 0 && user.InternalCycleCount >= 4)
                 {
                     user.CarryTimer--;
                     if (user.CarryTimer <= 0)
                         user.CarryItem(0);
                 }
-                if (_room.GotFreeze())
+                if (_room.GotFreeze() && user.InternalCycleCount >= 4)
                     _room.GetFreeze().CycleUser(user);
                 var invalidStep = false;
                 if (user.IsRolling)
@@ -665,7 +669,7 @@ public class RoomUserManager
                     else
                         user.RollerDelay--;
                 }
-                if (user.SetStep)
+                if (user.SetStep && user.InternalCycleCount >= 4)
                 {
                     var gameMap = _room.GetGameMap();
                     if (gameMap.IsValidStep2(user, new(user.X, user.Y), new(user.SetX, user.SetY), user.GoalX == user.SetX && user.GoalY == user.SetY, user.AllowOverride))
@@ -728,7 +732,7 @@ public class RoomUserManager
                             _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY);
                     }
                 }
-                if (user.IsWalking && !user.Freezed)
+                if (user.IsWalking && !user.Freezed && user.InternalCycleCount >= 4)
                 {
                     if (invalidStep || user.PathStep >= user.Path.Count || user.GoalX == user.X && user.GoalY == user.Y) //No path found, or reached goal (:
                     {
@@ -906,6 +910,9 @@ public class RoomUserManager
                 else
                     userCounter++;
                 if (!updated) UpdateUserEffect(user, user.X, user.Y);
+
+                if (user.InternalCycleCount >= 4)
+                    user.InternalCycleCount = 0;
             }
             foreach (var userToRemove in toRemove.ToList())
             {

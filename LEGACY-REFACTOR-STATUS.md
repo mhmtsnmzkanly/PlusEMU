@@ -28,6 +28,8 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - `RoomManager` now owns room idle/promotion/unload lifecycle decisions, while `Room` is narrowed toward active-room cycle execution.
 - `Room` constructor bootstrap is now separated from component and content initialization. Component initialization (`Gamemap`, `RoomItemHandling`, `RoomUserManager`, etc.) and content loading (`LoadFurniture`, `GenerateMaps`, `LoadPromotions`, `LoadRights`, `LoadFilter`, `InitBots`, `InitPets`) are now encapsulated in an explicit `Init()` method.
 - `RoomManager` now explicitly coordinates the creation and initialization of `Room` instances by calling `Init()` post-construction, ensuring clear manager-driven lifecycle phases.
+- Room cycle frequency has been increased from 500ms to 110ms in `RoomManager` to provide smoother movement interpolation for modern clients like Nitro.
+- High-level room logic (movement steps, rollers, Wired) is throttled to run every 4 ticks (~440ms) to maintain standard gameplay timing while still emitting high-frequency status updates.
 - That lifecycle split is now stricter too: `RoomManager` marks and unloads rooms, evicts active users before disposal, and re-evaluates unload eligibility after room occupancy changes, while `Room.Dispose()` itself is reduced toward resource cleanup only.
 - That room idle path now keys off real-user occupancy again, so bot/pet-only rooms no longer keep reseting inactivity counters forever.
 - `Room` constructor bootstrap is now grouped behind an explicit room-content initialization step, so dependency assignment is no longer interleaved with furniture/map/promotions/rights/filter/bot/pet loading.

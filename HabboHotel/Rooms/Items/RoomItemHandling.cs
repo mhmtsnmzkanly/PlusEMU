@@ -40,6 +40,7 @@ public class RoomItemHandling
     private readonly IRoomItemPlacementApplyService _roomItemPlacementApplyService;
     private readonly IRoomItemTrackingService _roomItemTrackingService;
     private readonly IRoomRollerApplyService _roomRollerApplyService;
+    private int _internalCycleCount;
     private int _mRollerCycle;
     private int _mRollerSpeed;
 
@@ -76,6 +77,7 @@ public class RoomItemHandling
         _rollerUsersMoved = new();
         _rollerMessages = new();
         _roomItemUpdateQueue = new();
+        _internalCycleCount = 0;
     }
 
     public ICollection<Item> GetFloor => _floorItems.Values;
@@ -362,7 +364,12 @@ public class RoomItemHandling
 
     public void OnCycle()
     {
-        RunRollerCycle();
+        _internalCycleCount++;
+        if (_internalCycleCount >= 4)
+        {
+            _internalCycleCount = 0;
+            RunRollerCycle();
+        }
         ProcessQueuedItemUpdates();
     }
 

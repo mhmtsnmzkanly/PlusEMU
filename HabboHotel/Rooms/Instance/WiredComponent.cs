@@ -40,6 +40,7 @@ public class WiredComponent
     private readonly ILogger<WiredComponent> _logger;
     private readonly ConcurrentDictionary<uint, IWiredItem> _wiredItems;
     private readonly ConcurrentQueue<WiredExecutionData> _executionQueue;
+    private int _internalCycleCount;
 
     public WiredComponent(Room instance, ILogger<WiredComponent> logger) //, RoomItem Items)
     {
@@ -47,10 +48,16 @@ public class WiredComponent
         _logger = logger;
         _wiredItems = new();
         _executionQueue = new();
+        _internalCycleCount = 0;
     }
 
     public void OnCycle()
     {
+        _internalCycleCount++;
+        if (_internalCycleCount < 4)
+            return;
+        _internalCycleCount = 0;
+
         var start = DateTime.Now;
         ProcessExecutionQueue();
         foreach (var item in _wiredItems.ToList())
