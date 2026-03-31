@@ -91,13 +91,11 @@ public class Room : RoomData
         public string GnomeClothing { get; init; } = string.Empty;
     }
 
-    private readonly BansComponent _bansComponent;
-
-    private readonly FilterComponent _filterComponent;
-
+    private BansComponent _bansComponent = null!;
+    private FilterComponent _filterComponent = null!;
     private readonly Dictionary<uint, List<RoomUser>> _tents;
-    private readonly TradingComponent _tradingComponent;
-    private readonly WiredComponent _wiredComponent;
+    private TradingComponent _tradingComponent = null!;
+    private WiredComponent _wiredComponent = null!;
     private BattleBanzai? _banzai;
     private Freeze? _freeze;
     private GameItemHandler? _gameItemHandler;
@@ -189,24 +187,31 @@ public class Room : RoomData
         _userDataFactory = userDataFactory;
         _achievementService = achievementService;
         _roomManager = roomManager;
+        _loggerFactory = loggerFactory;
         IsLagging = 0;
         Unloaded = false;
         IdleTime = 0;
         RoomMuted = false;
         MutedUsers = new();
         _tents = new();
-        _gamemap = new(this, data.Model);
-        _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService, _roomItemPlacementApplyService, _roomItemTrackingService, _roomRollerApplyService);
-        _roomUserManager = new(this, clientManager, database, groupManager);
-        _filterComponent = new(this);
-        _wiredComponent = new(this, loggerFactory.CreateLogger<WiredComponent>());
-        _bansComponent = new(this);
-        _tradingComponent = new(this);
-        InitializeRoomContent(database);
         LastRegeneration = DateTime.Now;
     }
 
-    private void InitializeRoomContent(IDatabase database)
+    private readonly ILoggerFactory _loggerFactory;
+
+    public void Init()
+    {
+        _gamemap = new(this, Model);
+        _roomItemHandling = new(this, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService, _roomItemPlacementApplyService, _roomItemTrackingService, _roomRollerApplyService);
+        _roomUserManager = new(this, _clientManager, _database, _groupManager);
+        _filterComponent = new(this);
+        _wiredComponent = new(this, _loggerFactory.CreateLogger<WiredComponent>());
+        _bansComponent = new(this);
+        _tradingComponent = new(this);
+        InitializeRoomContent(_database);
+    }
+
+    public void InitializeRoomContent(IDatabase database)
     {
         GetRoomItemHandler().LoadFurniture();
         GetGameMap().GenerateMaps();

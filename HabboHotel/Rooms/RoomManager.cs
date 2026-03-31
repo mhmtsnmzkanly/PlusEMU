@@ -284,6 +284,8 @@ public class RoomManager : IRoomManager
                 return false;
             }
 
+            instance.Init();
+
             return TryRegisterLoadedRoom(roomId, instance, out room);
         }
     }
