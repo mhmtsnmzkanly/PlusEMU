@@ -143,7 +143,8 @@ internal class RoomCreatureService : IRoomCreatureService
             if (!room.CheckRights(session) && room.WhoCanKick != 2 && room.Group == null || room.Group != null && !room.CheckRights(session, false, true))
                 return Task.CompletedTask;
 
-            room.GetRoomUserManager().TryGetRoomUserByHabbo(petId, out var targetUser);
+            if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(petId, out var targetUser) || targetUser == null)
+                return Task.CompletedTask;
             var targetHabbo = targetUser?.GetClient()?.GetHabbo();
             if (targetUser == null || targetHabbo == null)
                 return Task.CompletedTask;
@@ -219,13 +220,13 @@ internal class RoomCreatureService : IRoomCreatureService
         var habbo = session.GetHabbo();
         if (habbo?.HabboStats == null || !habbo.TryGetCurrentRoom(out var currentRoom) || habbo.HabboStats.DailyPetRespectPoints == 0)
             return;
-        room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var thisUser);
-        if (currentRoom == null || thisUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var thisUser) || thisUser == null)
             return;
 
         if (!currentRoom.GetRoomUserManager().TryGetPet(petId, out var pet) || pet == null)
         {
-            currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(petId, out var targetUser);
+            if (!currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(petId, out var targetUser) || targetUser == null)
+                return;
             var targetClient = targetUser?.GetClient();
             var targetHabbo = targetClient?.GetHabbo();
             if (targetUser == null || targetHabbo?.HabboStats == null)

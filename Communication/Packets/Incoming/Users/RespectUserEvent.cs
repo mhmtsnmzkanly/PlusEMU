@@ -25,10 +25,12 @@ internal class RespectUserEvent : RoomPacketEvent
         if (habbo?.HabboStats is not { } habboStats || habboStats.DailyRespectPoints <= 0)
             return;
 
-        room.GetRoomUserManager().TryGetRoomUserByHabbo(packet.ReadInt(), out var user);
-        var targetClient = user?.GetClient();
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(packet.ReadInt(), out var user) || user == null)
+            return;
+
+        var targetClient = user.GetClient();
         var targetHabbo = targetClient?.GetHabbo();
-        if (user == null || targetHabbo?.HabboStats == null || targetHabbo.Id == habbo.Id || user.IsBot)
+        if (targetHabbo?.HabboStats == null || targetHabbo.Id == habbo.Id || user.IsBot)
             return;
 
         if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var thisUser) || thisUser == null)
