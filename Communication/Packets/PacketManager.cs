@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Plus.Communication.Attributes;
 using Plus.Communication.Packets.Incoming;
 using Plus.HabboHotel.GameClients;
@@ -11,7 +10,7 @@ namespace Plus.Communication.Packets;
 public sealed class PacketManager : IPacketManager, IDisposable
 {
     private readonly ILogger<PacketManager> _logger;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IPacketEventActivator _packetEventActivator;
 
     private readonly Dictionary<uint, Type> _incomingPackets = new();
     private readonly HashSet<Type> _handshakePackets = new();
@@ -24,10 +23,10 @@ public sealed class PacketManager : IPacketManager, IDisposable
     private readonly TimeSpan _maximumRunTimeInSec; // 5 minutes in debug. 30 seconds in release.
     private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    public PacketManager(IServiceProvider serviceProvider, ILogger<PacketManager> logger)
+    public PacketManager(IPacketEventActivator packetEventActivator, ILogger<PacketManager> logger)
     {
         _maximumRunTimeInSec = Debugger.IsAttached ? TimeSpan.FromMinutes(30) : TimeSpan.FromSeconds(5);
-        _serviceProvider = serviceProvider;
+        _packetEventActivator = packetEventActivator;
         _logger = logger;
 
         var packetTypes = AppDomain.CurrentDomain.GetAssemblies()
@@ -82,7 +81,7 @@ public sealed class PacketManager : IPacketManager, IDisposable
             return;
         }
 
-        if (_serviceProvider.GetService(packetType) is not IPacketEvent pak)
+        if (!_packetEventActivator.TryActivate(packetType, out var pak))
         {
             _logger.LogError("Failed to resolve packet handler {packetType} for message {messageId}.", packetType.FullName, messageId);
             return;

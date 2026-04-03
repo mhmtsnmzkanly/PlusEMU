@@ -41,7 +41,7 @@ namespace Plus;
 public static class Program
 {
     private static readonly Dictionary<ServiceLifetime, IEnumerable<Type>> _defaultTypes = new();
-    private static IServiceProvider? _serviceProvider;
+    private static IRuntimeControlService? _runtimeControlService;
 
     public static async Task Main(string[] args)
     {
@@ -85,7 +85,7 @@ public static class Program
         });
 
         var serviceProvider = services.BuildServiceProvider();
-        _serviceProvider = serviceProvider;
+        _runtimeControlService = serviceProvider.GetService<IRuntimeControlService>();
         foreach (var plugin in pluginDefinitions)
             plugin.OnServiceProviderBuild(serviceProvider);
 
@@ -177,16 +177,15 @@ public static class Program
     private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs args)
     {
         var logger = LogManager.GetLogger("Plus.Program");
-        var runtimeControlService = _serviceProvider?.GetService<IRuntimeControlService>();
         if (args.ExceptionObject is Exception e)
         {
             logger.Error(e, "Unhandled exception terminated the emulator.");
-            runtimeControlService?.PerformShutdown($"Unhandled exception: {e.GetType().Name}: {e.Message}");
+            _runtimeControlService?.PerformShutdown($"Unhandled exception: {e.GetType().Name}: {e.Message}");
         }
         else
         {
             logger.Error("Unhandled non-exception object terminated the emulator: {exceptionObject}", args.ExceptionObject);
-            runtimeControlService?.PerformShutdown("Unhandled non-exception object");
+            _runtimeControlService?.PerformShutdown("Unhandled non-exception object");
         }
     }
 }
