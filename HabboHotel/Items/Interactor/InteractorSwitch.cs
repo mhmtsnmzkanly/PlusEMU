@@ -18,8 +18,7 @@ internal class InteractorSwitch : IFurniInteractor
         if (habbo == null)
             return;
 
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
         if (Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y))
         {

@@ -294,8 +294,10 @@ public class BattleBanzai
         var moverHabbo = mover.GetHabbo();
         if (moverHabbo == null || !moverHabbo.TryGetCurrentRoom(out var currentRoom))
             return;
-        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(moverHabbo.Id);
-        if (IsBanzaiActive && user != null) HandleBanzaiTiles(new(newX, newY), team, user);
+        if (IsBanzaiActive &&
+            currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(moverHabbo.Id, out var user) &&
+            user != null)
+            HandleBanzaiTiles(new(newX, newY), team, user);
     }
 
     private void SetTile(Item item, Team team, RoomUser user)

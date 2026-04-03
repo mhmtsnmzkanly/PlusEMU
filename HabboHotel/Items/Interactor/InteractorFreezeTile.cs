@@ -15,8 +15,7 @@ internal class InteractorFreezeTile : IFurniInteractor
         var habbo = session?.GetHabbo();
         if (habbo == null || item == null || item.InteractingUser > 0 || !habbo.TryGetCurrentRoom(out _))
             return;
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
         if (user.Team != Team.None)
         {

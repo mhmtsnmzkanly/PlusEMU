@@ -19,8 +19,8 @@ public class InteractorPuzzleBox : IFurniInteractor
         if (habbo == null)
             return;
 
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null) return;
+        if (!item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
+            return;
         if (!(Math.Abs(user.X - item.GetX) >= 2 || Math.Abs(user.Y - item.GetY) >= 2))
         {
             user.SetRot(Rotation.Calculate(user.X, user.Y, item.GetX, item.GetY), false);

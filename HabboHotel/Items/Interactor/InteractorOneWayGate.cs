@@ -10,8 +10,7 @@ public class InteractorOneWayGate : IFurniInteractor
         item.LegacyDataString = "0";
         if (item.InteractingUser != 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser);
-            if (user != null)
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser, out var user) && user != null)
             {
                 user.ClearMovement(true);
                 user.UnlockWalking();
@@ -25,8 +24,7 @@ public class InteractorOneWayGate : IFurniInteractor
         item.LegacyDataString = "0";
         if (item.InteractingUser != 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser);
-            if (user != null)
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser, out var user) && user != null)
             {
                 user.ClearMovement(true);
                 user.UnlockWalking();
@@ -43,8 +41,7 @@ public class InteractorOneWayGate : IFurniInteractor
         if (habbo == null)
             return;
 
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
         if (item.InteractingUser2 != user.UserId)
             item.InteractingUser2 = user.UserId;

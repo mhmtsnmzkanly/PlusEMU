@@ -59,8 +59,7 @@ internal class RoomAccessService : IRoomAccessService
                 new { roomId = room.RoomId, userId });
         }
 
-        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
-        if (roomUser != null && !roomUser.IsBot)
+        if (room.GetRoomUserManager().TryGetRoomUserByHabbo(userId, out var roomUser) && roomUser != null && !roomUser.IsBot)
         {
             roomUser.SetStatus("flatctrl 1");
             roomUser.UpdateNeeded = true;
@@ -89,8 +88,7 @@ internal class RoomAccessService : IRoomAccessService
             if (userId <= 0 || !room.UsersWithRights.Contains(userId))
                 continue;
 
-            var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
-            if (user != null && !user.IsBot)
+            if (room.GetRoomUserManager().TryGetRoomUserByHabbo(userId, out var user) && user != null && !user.IsBot)
             {
                 user.RemoveStatus("flatctrl 1");
                 user.UpdateNeeded = true;
@@ -118,8 +116,7 @@ internal class RoomAccessService : IRoomAccessService
 
         foreach (var userId in new List<int>(room.UsersWithRights))
         {
-            var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
-            if (user != null && !user.IsBot)
+            if (room.GetRoomUserManager().TryGetRoomUserByHabbo(userId, out var user) && user != null && !user.IsBot)
             {
                 user.RemoveStatus("flatctrl 1");
                 user.UpdateNeeded = true;
@@ -148,8 +145,7 @@ internal class RoomAccessService : IRoomAccessService
         if (habbo == null || !room.CheckRights(session, false) || !room.UsersWithRights.Contains(habbo.Id))
             return Task.CompletedTask;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user != null && !user.IsBot)
+        if (room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) && user != null && !user.IsBot)
         {
             user.RemoveStatus("flatctrl 1");
             user.UpdateNeeded = true;

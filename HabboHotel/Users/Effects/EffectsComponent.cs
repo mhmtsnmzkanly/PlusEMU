@@ -127,8 +127,7 @@ public sealed class EffectsComponent
         if (_habbo == null || !_habbo.TryGetCurrentRoom(out var room))
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(_habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(_habbo.Id, out var user) || user == null)
             return;
 
         CurrentEffect = effectId;

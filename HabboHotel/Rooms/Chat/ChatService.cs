@@ -78,12 +78,10 @@ public class ChatService : IChatService
         if (UnixTimestamp.GetNow() < habbo.FloodTime && habbo.FloodTime != 0)
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
 
-        var user2 = room.GetRoomUserManager().GetRoomUserByHabbo(targetUser);
-        if (user2 == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(targetUser, out var user2) || user2 == null)
             return;
 
         if (habbo.TimeMuted > 0)
@@ -151,8 +149,7 @@ public class ChatService : IChatService
         if (!habbo.TryGetCurrentRoom(out var room))
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Username, out var user) || user == null)
             return;
 
         room.SendPacket(new UserTypingComposer(user.VirtualId, isTyping));
@@ -174,8 +171,7 @@ public class ChatService : IChatService
         if (!habbo.TryGetCurrentRoom(out var room))
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
 
         if (!_chatStyleManager.TryGetStyle(styleId, out var style) || style == null ||
@@ -242,9 +238,9 @@ public class ChatService : IChatService
             return true;
         }
 
-        var user = habbo.TryGetCurrentRoom(out var room)
-            ? room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id)
-            : null;
+        RoomUser? user = null;
+        if (habbo.TryGetCurrentRoom(out var room))
+            room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out user);
         if (user != null)
         {
             if (type == "whisper")

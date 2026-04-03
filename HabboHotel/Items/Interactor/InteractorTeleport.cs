@@ -10,8 +10,7 @@ public class InteractorTeleport : IFurniInteractor
         item.LegacyDataString = "0";
         if (item.InteractingUser != 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser);
-            if (user != null)
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser, out var user) && user != null)
             {
                 user.ClearMovement(true);
                 user.AllowOverride = false;
@@ -21,8 +20,7 @@ public class InteractorTeleport : IFurniInteractor
         }
         if (item.InteractingUser2 != 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser2);
-            if (user != null)
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser2, out var user) && user != null)
             {
                 user.ClearMovement(true);
                 user.AllowOverride = false;
@@ -37,14 +35,14 @@ public class InteractorTeleport : IFurniInteractor
         item.LegacyDataString = "0";
         if (item.InteractingUser != 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser);
-            if (user != null) user.UnlockWalking();
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser, out var user) && user != null)
+                user.UnlockWalking();
             item.InteractingUser = 0;
         }
         if (item.InteractingUser2 != 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser2);
-            if (user != null) user.UnlockWalking();
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser2, out var user) && user != null)
+                user.UnlockWalking();
             item.InteractingUser2 = 0;
         }
     }
@@ -54,8 +52,7 @@ public class InteractorTeleport : IFurniInteractor
         var habbo = session?.GetHabbo();
         if (item == null || item.GetRoom() == null || habbo == null)
             return;
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
         user.LastInteraction = UnixTimestamp.GetNow();
 

@@ -168,8 +168,7 @@ internal class GroupService : IGroupService
         {
             currentRoom.SendPacket(new RefreshFavouriteGroupComposer(habbo.Id));
             currentRoom.SendPacket(new HabboGroupBadgesComposer(group));
-            var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user != null)
+            if (currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) && user != null)
                 currentRoom.SendPacket(new UpdateFavouriteGroupComposer(group, user.VirtualId));
         }
         else
@@ -193,8 +192,7 @@ internal class GroupService : IGroupService
 
         if (habbo.TryGetCurrentRoom(out var currentRoom))
         {
-            var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user != null)
+            if (currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) && user != null)
                 currentRoom.SendPacket(new UpdateFavouriteGroupComposer(null, user.VirtualId));
             SendFavouriteGroupRefresh(currentRoom, habbo.Id);
             return;
@@ -577,8 +575,7 @@ internal class GroupService : IGroupService
 
         if (habbo.TryGetCurrentRoom(out var currentRoom))
         {
-            var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user != null)
+            if (currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) && user != null)
                 currentRoom.SendPacket(new UpdateFavouriteGroupComposer(group, user.VirtualId));
             SendFavouriteGroupRefresh(currentRoom, habbo.Id);
             return;
@@ -624,8 +621,7 @@ internal class GroupService : IGroupService
         if (!_roomManager.TryGetRoom(group.RoomId, out var room) || room == null)
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(userId, out var user) || user == null)
             return;
 
         if (enabled)
@@ -648,8 +644,7 @@ internal class GroupService : IGroupService
         if (!_roomManager.TryGetRoom(group.RoomId, out var room) || room == null)
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(userId, out var user) || user == null)
             return;
 
         if (enabled)

@@ -12,8 +12,8 @@ public class InteractorVendor : IFurniInteractor
         item.UpdateNeeded = true;
         if (item.InteractingUser > 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser);
-            if (user != null) user.CanWalk = true;
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser, out var user) && user != null)
+                user.CanWalk = true;
         }
     }
 
@@ -22,8 +22,8 @@ public class InteractorVendor : IFurniInteractor
         item.LegacyDataString = "0";
         if (item.InteractingUser > 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser);
-            if (user != null) user.CanWalk = true;
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser, out var user) && user != null)
+                user.CanWalk = true;
         }
     }
 
@@ -36,8 +36,8 @@ public class InteractorVendor : IFurniInteractor
             if (habbo == null)
                 return;
 
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user == null) return;
+            if (!item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
+                return;
             if (!Gamemap.TilesTouching(user.X, user.Y, item.GetX, item.GetY))
             {
                 user.MoveTo(item.SquareInFront);

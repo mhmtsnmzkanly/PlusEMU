@@ -14,8 +14,7 @@ public class InteractorHopper : IFurniInteractor
             new { hopperid = item.Id, roomid = item.RoomId });
         if (item.InteractingUser != 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser);
-            if (user != null)
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser, out var user) && user != null)
             {
                 user.ClearMovement(true);
                 user.AllowOverride = false;
@@ -34,8 +33,8 @@ public class InteractorHopper : IFurniInteractor
             new { hid = item.Id, roomId = item.GetRoom().RoomId });
         if (item.InteractingUser != 0)
         {
-            var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(item.InteractingUser);
-            if (user != null) user.UnlockWalking();
+            if (item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(item.InteractingUser, out var user) && user != null)
+                user.UnlockWalking();
             item.InteractingUser = 0;
         }
     }
@@ -45,8 +44,8 @@ public class InteractorHopper : IFurniInteractor
         var habbo = session?.GetHabbo();
         if (item == null || item.GetRoom() == null || habbo == null)
             return;
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null) return;
+        if (!item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
+            return;
 
         // Alright. But is this user in the right position?
         if (user.Coordinate == item.Coordinate || user.Coordinate == item.SquareInFront)
