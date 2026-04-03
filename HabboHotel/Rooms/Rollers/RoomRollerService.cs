@@ -57,7 +57,7 @@ public class RoomRollerService : IRoomRollerService
                room.GetGameMap().CanRollItemHere(nextSquare.X, nextSquare.Y) &&
                targetState.NextRollerClear &&
                roller.GetZ < rollerItem.GetZ &&
-               room.GetRoomUserManager().GetUserForSquare(nextSquare.X, nextSquare.Y) == null;
+               !room.GetRoomUserManager().TryGetUserForSquare(nextSquare.X, nextSquare.Y, out _);
     }
 
     public bool CanMoveUser(Room room, Item roller, RoomUser? rollerUser, Point nextSquare, RoomRollerTargetState targetState, ICollection<int> movedUserIds)

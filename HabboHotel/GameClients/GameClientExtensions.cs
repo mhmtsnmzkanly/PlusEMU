@@ -11,8 +11,7 @@ public static class GameClientExtensions
         if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Username, out var user) || user == null)
             return;
 
         client.Send(new WhisperComposer(user.VirtualId, message, 0, colour == 0 ? user.LastBubble : colour));

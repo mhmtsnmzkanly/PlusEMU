@@ -18,7 +18,7 @@ public partial class Item
 
         if (InteractingUser > 0)
         {
-            user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
+            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user);
 
             if (user != null)
             {
@@ -69,7 +69,7 @@ public partial class Item
 
         if (InteractingUser2 > 0)
         {
-            user2 = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser2);
+            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser2, out user2);
             if (user2 != null)
             {
                 keepDoorOpen = true;
@@ -162,7 +162,7 @@ public partial class Item
         if (LegacyDataString != "1")
             return;
 
-        var user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
+        GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out var user);
         if (user == null)
             return;
 
@@ -180,9 +180,9 @@ public partial class Item
 
     private void ProcessOneWayGateUpdate()
     {
-        var user = InteractingUser > 0
-            ? GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser)
-            : null;
+        RoomUser? user = null;
+        if (InteractingUser > 0)
+            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user);
 
         if (user != null && user.X == GetX && user.Y == GetY)
         {
@@ -217,9 +217,9 @@ public partial class Item
 
     private void ProcessVipGateUpdate()
     {
-        var user = InteractingUser > 0
-            ? GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser)
-            : null;
+        RoomUser? user = null;
+        if (InteractingUser > 0)
+            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user);
 
         var deltaY = 0;
         var deltaX = 0;
@@ -267,7 +267,7 @@ public partial class Item
 
         if (InteractingUser > 0)
         {
-            user = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser);
+            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user);
 
             if (user != null)
             {
@@ -349,7 +349,7 @@ public partial class Item
 
         if (InteractingUser2 > 0)
         {
-            user2 = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(InteractingUser2);
+            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser2, out user2);
             if (user2 != null)
             {
                 keepDoorOpen = true;

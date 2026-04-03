@@ -127,7 +127,17 @@ public class RoomUserManager
         OnRemove(user);
     }
 
-    public RoomUser GetUserForSquare(int x, int y) => _room.GetGameMap().GetRoomUsers(new(x, y)).FirstOrDefault()!;
+    public bool TryGetUserForSquare(int x, int y, out RoomUser? user)
+    {
+        user = _room.GetGameMap().GetRoomUsers(new(x, y)).FirstOrDefault();
+        return user != null;
+    }
+
+    public RoomUser? GetUserForSquare(int x, int y)
+    {
+        TryGetUserForSquare(x, y, out var user);
+        return user;
+    }
 
     internal bool AddAvatarToRoom(GameClient session)
     {
@@ -475,15 +485,17 @@ public class RoomUserManager
 
     public bool TryGetBot(int botId, out RoomUser? bot) => _bots.TryGetValue(botId, out bot);
 
-    public RoomUser GetBotByName(string name)
+    public bool TryGetBotByName(string name, out RoomUser? bot)
     {
-        var foundBot = _bots.Count(x => x.Value.BotData != null && x.Value.BotData.Name.ToLower() == name.ToLower()) > 0;
-        if (foundBot)
-        {
-            var id = _bots.FirstOrDefault(x => x.Value.BotData != null && x.Value.BotData.Name.ToLower() == name.ToLower()).Value.BotData.Id;
-            return _bots[id];
-        }
-        return null!;
+        bot = _bots.Values.FirstOrDefault(entry =>
+            entry.BotData != null && entry.BotData.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return bot != null;
+    }
+
+    public RoomUser? GetBotByName(string name)
+    {
+        TryGetBotByName(name, out var bot);
+        return bot;
     }
 
     public void UpdateUserCount(int count)
@@ -494,9 +506,25 @@ public class RoomUserManager
         connection.Execute("UPDATE `rooms` SET `users_now` = @count WHERE `id` = @roomId LIMIT 1", new { count = count, roomId = _room.RoomId });
     }
 
-    public RoomUser GetRoomUserByVirtualId(int virtualId) => _users.TryGetValue(virtualId, out var user) ? user : null!;
+    public bool TryGetRoomUserByVirtualId(int virtualId, out RoomUser? user) => _users.TryGetValue(virtualId, out user);
 
-    public RoomUser GetRoomUserByHabbo(int id) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Id == id)!;
+    public RoomUser? GetRoomUserByVirtualId(int virtualId)
+    {
+        TryGetRoomUserByVirtualId(virtualId, out var user);
+        return user;
+    }
+
+    public bool TryGetRoomUserByHabbo(int id, out RoomUser? user)
+    {
+        user = GetUserList().FirstOrDefault(entry => GetHabbo(entry)?.Id == id);
+        return user != null;
+    }
+
+    public RoomUser? GetRoomUserByHabbo(int id)
+    {
+        TryGetRoomUserByHabbo(id, out var user);
+        return user;
+    }
 
     public List<RoomUser> GetRoomUsers() => GetUserList().Where(x => !x.IsBot).ToList();
 
@@ -512,7 +540,18 @@ public class RoomUserManager
         return returnList;
     }
 
-    public RoomUser GetRoomUserByHabbo(string pName) => GetUserList().FirstOrDefault(x => GetHabbo(x)?.Username.Equals(pName, StringComparison.OrdinalIgnoreCase) == true)!;
+    public bool TryGetRoomUserByHabbo(string username, out RoomUser? user)
+    {
+        user = GetUserList().FirstOrDefault(entry =>
+            GetHabbo(entry)?.Username.Equals(username, StringComparison.OrdinalIgnoreCase) == true);
+        return user != null;
+    }
+
+    public RoomUser? GetRoomUserByHabbo(string pName)
+    {
+        TryGetRoomUserByHabbo(pName, out var user);
+        return user;
+    }
 
     public void UpdatePets()
     {

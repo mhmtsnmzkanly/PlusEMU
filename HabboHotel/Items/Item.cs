@@ -282,7 +282,7 @@ public partial class Item
                     {
                         if (LegacyDataString == "1")
                         {
-                            if (GetRoom().GetRoomUserManager().GetUserForSquare(GetX, GetY) == null)
+                            if (!GetRoom().GetRoomUserManager().TryGetUserForSquare(GetX, GetY, out _))
                             {
                                 LegacyDataString = "0";
                                 UpdateState(false, true);
@@ -296,7 +296,7 @@ public partial class Item
                     {
                         if (LegacyDataString == "1")
                         {
-                            if (GetRoom().GetRoomUserManager().GetUserForSquare(GetX, GetY) == null)
+                            if (!GetRoom().GetRoomUserManager().TryGetUserForSquare(GetX, GetY, out _))
                             {
                                 LegacyDataString = "0";
                                 UpdateState(false, true);

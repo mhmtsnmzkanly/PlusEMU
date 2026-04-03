@@ -33,12 +33,10 @@ internal class TradingService : ITradingService
         if (habbo == null || !habbo.TryGetCurrentRoom(out var room))
             return;
 
-        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (roomUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var roomUser) || roomUser == null)
             return;
 
-        var targetUser = room.GetRoomUserManager().GetRoomUserByVirtualId(targetVirtualId);
-        if (targetUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByVirtualId(targetVirtualId, out var targetUser) || targetUser == null)
             return;
 
         if (habbo.TradingLockExpiry > 0)
@@ -308,8 +306,7 @@ internal class TradingService : ITradingService
         if (sessionHabbo == null || !sessionHabbo.TryGetCurrentRoom(out var currentRoom))
             return SendClosedIfPossible(session, sessionHabbo);
 
-        var currentRoomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(sessionHabbo.Id);
-        if (currentRoomUser == null)
+        if (!currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(sessionHabbo.Id, out var currentRoomUser) || currentRoomUser == null)
             return SendClosedIfPossible(session, sessionHabbo);
 
         if (requireTradingFlag && !currentRoomUser.IsTrading)

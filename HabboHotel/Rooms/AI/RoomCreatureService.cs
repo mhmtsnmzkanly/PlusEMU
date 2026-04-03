@@ -143,7 +143,7 @@ internal class RoomCreatureService : IRoomCreatureService
             if (!room.CheckRights(session) && room.WhoCanKick != 2 && room.Group == null || room.Group != null && !room.CheckRights(session, false, true))
                 return Task.CompletedTask;
 
-            var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(petId);
+            room.GetRoomUserManager().TryGetRoomUserByHabbo(petId, out var targetUser);
             var targetHabbo = targetUser?.GetClient()?.GetHabbo();
             if (targetUser == null || targetHabbo == null)
                 return Task.CompletedTask;
@@ -162,7 +162,7 @@ internal class RoomCreatureService : IRoomCreatureService
 
         if (pet.RidingHorse)
         {
-            var userRiding = room.GetRoomUserManager().GetRoomUserByVirtualId(pet.HorseId);
+            room.GetRoomUserManager().TryGetRoomUserByVirtualId(pet.HorseId, out var userRiding);
             if (userRiding != null)
             {
                 userRiding.RidingHorse = false;
@@ -219,13 +219,13 @@ internal class RoomCreatureService : IRoomCreatureService
         var habbo = session.GetHabbo();
         if (habbo?.HabboStats == null || !habbo.TryGetCurrentRoom(out var currentRoom) || habbo.HabboStats.DailyPetRespectPoints == 0)
             return;
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+        room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var thisUser);
         if (currentRoom == null || thisUser == null)
             return;
 
         if (!currentRoom.GetRoomUserManager().TryGetPet(petId, out var pet) || pet == null)
         {
-            var targetUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(petId);
+            currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(petId, out var targetUser);
             var targetClient = targetUser?.GetClient();
             var targetHabbo = targetClient?.GetHabbo();
             if (targetUser == null || targetHabbo?.HabboStats == null)
@@ -299,7 +299,9 @@ internal class RoomCreatureService : IRoomCreatureService
     public Task RideHorse(Room room, GameClient session, int petId, bool mount)
     {
         var habbo = session.GetHabbo();
-        var user = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+        RoomUser? user = null;
+        if (habbo != null)
+            room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out user);
         if (habbo == null || user == null || !room.GetRoomUserManager().TryGetPet(petId, out var pet) || pet == null || pet.PetData == null)
             return Task.CompletedTask;
         if (pet.PetData.AnyoneCanRide == 0 && pet.PetData.OwnerId != user.UserId)
