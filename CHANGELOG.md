@@ -469,3 +469,4 @@
 - extracted the pending-step resolution branch from `RoomUserManager` so set-step validation/application no longer stays inline ahead of the main walking decision path
 - grouped the remaining walking/not-walking decision into a `RoomUserManager` walking-state helper so `OnCycle` now delegates that branch instead of inlining the last movement-status toggles
 - grouped the pre-movement runtime state updates in `RoomUserManager` so idle/carry/freeze/roller progression now runs through one helper before path and movement decisions
+- grouped pending-step resolution, path recalculation, and walking-state handling into a `RoomUserManager` movement-phase helper so `OnCycle` now has an explicit movement phase boundary

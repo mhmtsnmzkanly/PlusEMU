@@ -725,6 +725,21 @@ public class RoomUserManager
         AdvanceRollerState(user);
     }
 
+    private bool ProcessMovementPhase(RoomUser user, List<RoomUser> toRemove, out bool shouldContinue)
+    {
+        shouldContinue = false;
+        if (!TryResolvePendingStep(user, toRemove, out var invalidStep))
+        {
+            shouldContinue = true;
+            return false;
+        }
+
+        if (user.PathRecalcNeeded)
+            RecalculatePath(user);
+
+        return ProcessWalkingState(user, invalidStep);
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -1032,13 +1047,10 @@ public class RoomUserManager
                 {
                     continue;
                 }
-                var updated = false;
                 AdvanceRuntimePreMovementState(user);
-                if (!TryResolvePendingStep(user, toRemove, out var invalidStep))
+                var updated = ProcessMovementPhase(user, toRemove, out var shouldContinue);
+                if (shouldContinue)
                     continue;
-                if (user.PathRecalcNeeded)
-                    RecalculatePath(user);
-                updated = ProcessWalkingState(user, invalidStep);
                 userCounter += FinalizeCycleUser(user, updated);
             }
 
