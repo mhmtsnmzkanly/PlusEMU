@@ -400,3 +400,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - that smaller cycle-state cleanup now also includes carry-item countdown handling, which has been moved behind a dedicated helper before the remaining idle/update branches are touched
 - the same small-cycle cleanup now also covers idle/sleep handling, with idle increment, spam tick updates, and sleep dispatch moved behind one helper before the remaining `OnCycle` tail is reduced
 - the `RoomUserManager` `OnCycle` tail is shrinking further too, with the final riding-effect, bot-tick, human-count, and fallback effect-update branch now moved behind one helper before any larger lifecycle split
+- the `RoomUserManager` cycle entry is narrower now too, with invalid-user room-leave dispatch and autokick queue checks moved behind one helper before the remaining movement decision branches are touched

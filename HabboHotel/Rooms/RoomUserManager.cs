@@ -603,6 +603,26 @@ public class RoomUserManager
         return 0;
     }
 
+    private bool QueueUserForRemovalIfNeeded(RoomUser user, List<RoomUser> toRemove)
+    {
+        if (!IsValid(user))
+        {
+            var client = user.GetClient();
+            if (client != null)
+                _ = _room.GetRoomService().LeaveRoom(client, false);
+            else
+                RemoveRoomUser(user);
+        }
+
+        if (user.NeedsAutokick && !toRemove.Contains(user))
+        {
+            toRemove.Add(user);
+            return true;
+        }
+
+        return false;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -906,17 +926,8 @@ public class RoomUserManager
             {
                 if (user == null)
                     continue;
-                if (!IsValid(user))
+                if (QueueUserForRemovalIfNeeded(user, toRemove))
                 {
-                    var client = user.GetClient();
-                    if (client != null)
-                        _ = _room.GetRoomService().LeaveRoom(client, false);
-                    else
-                        RemoveRoomUser(user);
-                }
-                if (user.NeedsAutokick && !toRemove.Contains(user))
-                {
-                    toRemove.Add(user);
                     continue;
                 }
                 var updated = false;
