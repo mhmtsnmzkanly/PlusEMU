@@ -2,6 +2,7 @@ using Dapper;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Furni;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.GameClients;
@@ -16,12 +17,14 @@ internal class OpenGiftEvent : IPacketEvent
     private readonly IItemDataManager _itemDataManger;
     private readonly ICacheManager _cacheManager;
     private readonly IDatabase _database;
+    private readonly ILanguageManager _languageManager;
 
-    public OpenGiftEvent(IItemDataManager itemDataManager, ICacheManager cacheManager, IDatabase database)
+    public OpenGiftEvent(IItemDataManager itemDataManager, ICacheManager cacheManager, IDatabase database, ILanguageManager languageManager)
     {
         _itemDataManger = itemDataManager;
         _cacheManager = cacheManager;
         _database = database;
+        _languageManager = languageManager;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
@@ -42,23 +45,23 @@ internal class OpenGiftEvent : IPacketEvent
             new { presentId = present.Id });
         if (data == null)
         {
-            RemoveBrokenPresent(session, room, furniture, present, "Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
+            RemoveBrokenPresent(session, room, furniture, present, _languageManager.TryGetValue("catalog.gift.broken"));
             return Task.CompletedTask;
         }
         if (!int.TryParse(present.LegacyDataString.Split(Convert.ToChar(5))[2], out var purchaserId))
         {
-            RemoveBrokenPresent(session, room, furniture, present, "Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
+            RemoveBrokenPresent(session, room, furniture, present, _languageManager.TryGetValue("catalog.gift.broken"));
             return Task.CompletedTask;
         }
         var purchaser = _cacheManager.GenerateUser(purchaserId);
         if (purchaser == null)
         {
-            RemoveBrokenPresent(session, room, furniture, present, "Oops! Appears there was a bug with this gift.\nWe'll just get rid of it for you.");
+            RemoveBrokenPresent(session, room, furniture, present, _languageManager.TryGetValue("catalog.gift.broken"));
             return Task.CompletedTask;
         }
         if (!_itemDataManger.Items.TryGetValue(Convert.ToUInt32(data.base_id), out ItemDefinition? baseItem))
         {
-            RemoveBrokenPresent(session, room, furniture, present, "Oops, it appears that the item within the gift is no longer in the hotel!");
+            RemoveBrokenPresent(session, room, furniture, present, _languageManager.TryGetValue("catalog.gift.item_missing"));
             return Task.CompletedTask;
         }
         present.MagicRemove = true;

@@ -77,14 +77,14 @@ internal class ModerationActionService : IModerationActionService
         var targetHabbo = client.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendWhisper("An error occoured whilst finding that user in the database.");
+            session.SendWhisper(_languageManager.TryGetValue("moderation.user.not_found"));
             return;
         }
 
         if ((targetHabbo.Permissions?.HasRight("mod_mute") ?? false) &&
             !(moderator.Permissions?.HasRight("mod_mute_any") ?? false))
         {
-            session.SendWhisper("Oops, you cannot mute that user.");
+            session.SendWhisper(_languageManager.TryGetValue("moderation.mute.disallowed"));
             return;
         }
 
@@ -97,7 +97,7 @@ internal class ModerationActionService : IModerationActionService
         }
 
         targetHabbo.TimeMuted = length;
-        client.SendNotification($"You have been muted by a moderator for {length} seconds!");
+        client.SendNotification(_languageManager.TryGetValue("moderation.mute.applied").Replace("{seconds}", length.ToString("0")));
     }
 
     public Task Kick(GameClient session, int userId)
@@ -148,7 +148,7 @@ internal class ModerationActionService : IModerationActionService
                     new { userId });
                 if (targetData == null)
                 {
-                    session.SendWhisper("An error occurred whilst finding that user in the database.");
+                    session.SendWhisper(_languageManager.TryGetValue("moderation.user.not_found"));
                     return;
                 }
                 targetUsername = targetData.username;
@@ -161,7 +161,7 @@ internal class ModerationActionService : IModerationActionService
             if ((targetHabbo.Permissions?.HasRight("mod_tool") ?? false) &&
                 !(moderator.Permissions?.HasRight("mod_ban_any") ?? false))
             {
-                session.SendWhisper("Oops, you cannot ban that user.");
+                session.SendWhisper(_languageManager.TryGetValue("moderation.ban.disallowed"));
                 return;
             }
             targetUsername = targetHabbo.Username;
@@ -246,14 +246,14 @@ internal class ModerationActionService : IModerationActionService
         var targetHabbo = client?.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendWhisper("An error occoured whilst finding that user in the database.");
+            session.SendWhisper(_languageManager.TryGetValue("moderation.user.not_found"));
             return;
         }
 
         if ((targetHabbo.Permissions?.HasRight("mod_trade_lock") ?? false) &&
             !(moderator.Permissions?.HasRight("mod_trade_lock_any") ?? false))
         {
-            session.SendWhisper("Oops, you cannot trade lock another user ranked 5 or higher.");
+            session.SendWhisper(_languageManager.TryGetValue("moderation.trade_lock.disallowed"));
             return;
         }
 
@@ -272,7 +272,9 @@ internal class ModerationActionService : IModerationActionService
         }
 
         targetHabbo.TradingLockExpiry = length;
-        client?.SendNotification($"You have been trade banned for {days} day(s)!\r\rReason:\r\r{message}");
+        client?.SendNotification(_languageManager.TryGetValue("moderation.trade_lock.applied")
+            .Replace("{days}", days.ToString("0"))
+            .Replace("{reason}", message));
     }
 
     public Task BroadcastRoomAction(GameClient session, int alertMode, string alertMessage)
@@ -285,8 +287,8 @@ internal class ModerationActionService : IModerationActionService
 
         var isCaution = alertMode != 3;
         var message = isCaution
-            ? $"Caution from Moderator:\n\n{alertMessage}"
-            : $"Message from Moderator:\n\n{alertMessage}";
+            ? _languageManager.TryGetValue("moderation.room_broadcast.caution").Replace("{message}", alertMessage)
+            : _languageManager.TryGetValue("moderation.room_broadcast.message").Replace("{message}", alertMessage);
         currentRoom.SendPacket(new BroadcastMessageAlertComposer(message));
         return Task.CompletedTask;
     }

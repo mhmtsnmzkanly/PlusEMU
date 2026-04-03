@@ -2,6 +2,7 @@ using Dapper;
 using Plus.Communication.Packets.Outgoing.Navigator;
 using Plus.Communication.Packets.Outgoing.Navigator.New;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Rooms;
@@ -18,6 +19,7 @@ internal class NavigatorService : INavigatorService
     private readonly IRoomAppender _roomAppender;
     private readonly IWordFilterManager _wordFilterManager;
     private readonly IDatabase _database;
+    private readonly ILanguageManager _languageManager;
 
     public NavigatorService(
         INavigatorManager navigatorManager,
@@ -26,7 +28,8 @@ internal class NavigatorService : INavigatorService
         IRoomFactory roomFactory,
         IRoomAppender roomAppender,
         IWordFilterManager wordFilterManager,
-        IDatabase database)
+        IDatabase database,
+        ILanguageManager languageManager)
     {
         _navigatorManager = navigatorManager;
         _navigatorQueryService = navigatorQueryService;
@@ -35,6 +38,7 @@ internal class NavigatorService : INavigatorService
         _roomAppender = roomAppender;
         _wordFilterManager = wordFilterManager;
         _database = database;
+        _languageManager = languageManager;
     }
 
     public Task Initialize(GameClient session)
@@ -129,10 +133,16 @@ internal class NavigatorService : INavigatorService
         var filteredName = _wordFilterManager.CheckMessage(name);
         var filteredDescription = _wordFilterManager.CheckMessage(description);
         if (filteredName.Length is < 3 or > 25)
+        {
+            session.SendNotification(_languageManager.TryGetValue("room.creation.name.too_short"));
             return Task.CompletedTask;
+        }
 
         if (!_roomManager.TryGetModel(modelName, out var model))
+        {
+            session.SendNotification(_languageManager.TryGetValue("room.creation.model.not_found"));
             return Task.CompletedTask;
+        }
 
         if (!_navigatorManager.TryGetSearchResultList(category, out var searchResultList))
             category = 36;

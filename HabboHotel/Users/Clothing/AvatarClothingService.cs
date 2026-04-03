@@ -3,6 +3,7 @@ using Plus.Communication.Packets.Outgoing.Avatar;
 using Plus.Communication.Packets.Outgoing.Inventory.AvatarEffects;
 using Plus.Communication.Packets.Outgoing.Rooms.Notifications;
 using Plus.Core.FigureData;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.Catalog.Clothing;
 using Plus.HabboHotel.GameClients;
@@ -16,17 +17,20 @@ internal class AvatarClothingService : IAvatarClothingService
     private readonly IFigureDataManager _figureDataManager;
     private readonly IDatabase _database;
     private readonly IClothingManager _clothingManager;
+    private readonly ILanguageManager _languageManager;
 
     public AvatarClothingService(
         IWardrobeLoader wardrobeLoader,
         IFigureDataManager figureDataManager,
         IDatabase database,
-        IClothingManager clothingManager)
+        IClothingManager clothingManager,
+        ILanguageManager languageManager)
     {
         _wardrobeLoader = wardrobeLoader;
         _figureDataManager = figureDataManager;
         _database = database;
         _clothingManager = clothingManager;
+        _languageManager = languageManager;
     }
 
     public async Task GetWardrobe(GameClient session)
@@ -82,17 +86,17 @@ internal class AvatarClothingService : IAvatarClothingService
             return Task.CompletedTask;
         if (item.Definition.InteractionType != InteractionType.PurchasableClothing)
         {
-            session.SendNotification("Oops, this item isn't set as a sellable clothing item!");
+            session.SendNotification(_languageManager.TryGetValue("clothing.sellable.invalid_item"));
             return Task.CompletedTask;
         }
         if (item.Definition.BehaviourData == 0)
         {
-            session.SendNotification("Oops, this item doesn't have a linking clothing configuration, please report it!");
+            session.SendNotification(_languageManager.TryGetValue("clothing.sellable.missing_config"));
             return Task.CompletedTask;
         }
         if (!_clothingManager.TryGetClothing(item.Definition.BehaviourData, out var clothing) || clothing == null)
         {
-            session.SendNotification("Oops, we couldn't find this clothing part!");
+            session.SendNotification(_languageManager.TryGetValue("clothing.sellable.part_not_found"));
             return Task.CompletedTask;
         }
 
@@ -105,7 +109,7 @@ internal class AvatarClothingService : IAvatarClothingService
         clothingComponent.AddClothing(clothing.ClothingName, clothing.PartIds);
         session.Send(new FigureSetIdsComposer(clothingComponent.GetClothingParts));
         session.Send(new RoomNotificationComposer("figureset.redeemed.success"));
-        session.SendWhisper("If for some reason cannot see your new clothing, reload the hotel!");
+        session.SendWhisper(_languageManager.TryGetValue("clothing.sellable.reload_hint"));
         return Task.CompletedTask;
     }
 

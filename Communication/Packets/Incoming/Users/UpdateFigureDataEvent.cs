@@ -3,6 +3,7 @@ using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Core.FigureData;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.GameClients;
@@ -18,14 +19,16 @@ internal class UpdateFigureDataEvent : IPacketEvent
     private readonly IQuestService _questService;
     private readonly IDatabase _database;
     private readonly ILogger<UpdateFigureDataEvent> _logger;
+    private readonly ILanguageManager _languageManager;
 
-    public UpdateFigureDataEvent(IFigureDataManager figureDataManager, IAchievementService achievementService, IQuestService questService, IDatabase database, ILogger<UpdateFigureDataEvent> logger)
+    public UpdateFigureDataEvent(IFigureDataManager figureDataManager, IAchievementService achievementService, IQuestService questService, IDatabase database, ILogger<UpdateFigureDataEvent> logger, ILanguageManager languageManager)
     {
         _figureManager = figureDataManager;
         _achievementService = achievementService;
         _questService = questService;
         _database = database;
         _logger = logger;
+        _languageManager = languageManager;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -55,7 +58,7 @@ internal class UpdateFigureDataEvent : IPacketEvent
         string[] allowedGenders = { "M", "F" };
         if (!allowedGenders.Contains(gender))
         {
-            session.Send(new BroadcastMessageAlertComposer("Sorry, you chose an invalid gender."));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("user.figure.invalid_gender")));
             return;
         }
 

@@ -1,4 +1,5 @@
 ﻿using Plus.Communication.Packets.Outgoing.Moderation;
+using Plus.Core.Language;
 using Plus.HabboHotel.Badges;
 using Plus.HabboHotel.GameClients;
 
@@ -8,15 +9,17 @@ internal class GiveUserBadgeCommand : IRconCommand
 {
     private readonly IBadgeManager _badgeManager;
     private readonly IGameClientManager _gameClientManager;
+    private readonly ILanguageManager _languageManager;
     public string Description => "This command is used to give a user a badge.";
 
     public string Key => "give_user_badge";
     public string Parameters => "%userId% %badgeId%";
 
-    public GiveUserBadgeCommand(IBadgeManager badgeManager, IGameClientManager gameClientManager)
+    public GiveUserBadgeCommand(IBadgeManager badgeManager, IGameClientManager gameClientManager, ILanguageManager languageManager)
     {
         _badgeManager = badgeManager;
         _gameClientManager = gameClientManager;
+        _languageManager = languageManager;
     }
 
     public async Task<bool> TryExecute(string[] parameters)
@@ -36,7 +39,7 @@ internal class GiveUserBadgeCommand : IRconCommand
         if (badges != null && !badges.HasBadge(badge))
         {
             await _badgeManager.GiveBadge(habbo, badge);
-            client?.Send(new BroadcastMessageAlertComposer("You have been given a new badge!"));
+            client?.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("rcon.badge.given")));
         }
         return true;
     }

@@ -1,5 +1,6 @@
 using Dapper;
 using Plus.Communication.Packets.Outgoing.Moderation;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.Cache;
 using Plus.HabboHotel.GameClients;
@@ -17,6 +18,7 @@ public class ModerationQueryService : IModerationQueryService
     private readonly ICacheManager _cacheManager;
     private readonly IGameClientManager _clientManager;
     private readonly IModerationManager _moderationManager;
+    private readonly ILanguageManager _languageManager;
 
     public ModerationQueryService(
         IDatabase database,
@@ -24,7 +26,8 @@ public class ModerationQueryService : IModerationQueryService
         IRoomManager roomManager,
         ICacheManager cacheManager,
         IGameClientManager clientManager,
-        IModerationManager moderationManager)
+        IModerationManager moderationManager,
+        ILanguageManager languageManager)
     {
         _database = database;
         _roomFactory = roomFactory;
@@ -32,6 +35,7 @@ public class ModerationQueryService : IModerationQueryService
         _cacheManager = cacheManager;
         _clientManager = clientManager;
         _moderationManager = moderationManager;
+        _languageManager = languageManager;
     }
 
     public async Task GetUserInfo(GameClient session, int userId)
@@ -43,7 +47,7 @@ public class ModerationQueryService : IModerationQueryService
 
         if (user == null)
         {
-            session.SendNotification("Could not find user info.");
+            session.SendNotification(_languageManager.TryGetValue("moderation.user_info.not_found"));
             return;
         }
 

@@ -9,6 +9,7 @@ using Plus.HabboHotel.Rooms.Chat.Filter;
 using Plus.HabboHotel.Users.Messenger;
 using Plus.Utilities;
 using Plus.HabboHotel.Cache;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 
 namespace Plus.HabboHotel.Friends;
@@ -23,6 +24,7 @@ internal class MessengerService : IMessengerService
     private readonly ISearchResultFactory _searchResultFactory;
     private readonly IRoomManager _roomManager;
     private readonly ICacheManager _cacheManager;
+    private readonly ILanguageManager _languageManager;
 
     public MessengerService(
         IMessengerDataLoader messengerDataLoader,
@@ -32,7 +34,8 @@ internal class MessengerService : IMessengerService
         ISearchResultFactory searchResultFactory,
         IRoomManager roomManager,
         ICacheManager cacheManager,
-        ISettingsManager settingsManager)
+        ISettingsManager settingsManager,
+        ILanguageManager languageManager)
     {
         _messengerDataLoader = messengerDataLoader;
         _questService = questService;
@@ -42,6 +45,7 @@ internal class MessengerService : IMessengerService
         _roomManager = roomManager;
         _cacheManager = cacheManager;
         _settingsManager = settingsManager;
+        _languageManager = languageManager;
     }
 
     public async Task Initialize(GameClient session)
@@ -157,13 +161,13 @@ internal class MessengerService : IMessengerService
 
         if (habbo.TimeMuted > 0)
         {
-            session.SendNotification("Oops, you're currently muted - you cannot send messages.");
+            session.SendNotification(_languageManager.TryGetValue("messenger.message.muted"));
             return Task.CompletedTask;
         }
 
         var error = messenger.SendMessage(friend, filteredMessage);
         if (error == MessageError.Flooding)
-            session.SendNotification("You cannot send a message, you have flooded the console.\n\nYou can send a message in 60 seconds.");
+            session.SendNotification(_languageManager.TryGetValue("messenger.message.flood"));
 
         return Task.CompletedTask;
     }
@@ -177,7 +181,7 @@ internal class MessengerService : IMessengerService
 
         if (habbo.TimeMuted > 0)
         {
-            session.SendNotification("Oops, you're currently muted - you cannot send room invitations.");
+            session.SendNotification(_languageManager.TryGetValue("messenger.invite.muted"));
             return;
         }
 
@@ -269,13 +273,13 @@ internal class MessengerService : IMessengerService
         var friend = messenger.GetFriend(friendId);
         if (friend == null)
         {
-            session.Send(new BroadcastMessageAlertComposer("Oops, you can only set a relationship where a friendship exists."));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("messenger.relationship.friendship_required")));
             return;
         }
 
         if (relationshipType is < 0 or > 3)
         {
-            session.Send(new BroadcastMessageAlertComposer("Oops, you've chosen an invalid relationship type."));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("messenger.relationship.invalid_type")));
             return;
         }
 

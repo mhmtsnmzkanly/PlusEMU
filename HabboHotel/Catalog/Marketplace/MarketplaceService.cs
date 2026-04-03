@@ -5,6 +5,7 @@ using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Communication.Packets.Outgoing.Marketplace;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
@@ -33,17 +34,20 @@ internal class MarketplaceService : IMarketplaceService
     private readonly IItemDataManager _itemDataManager;
     private readonly IDatabase _database;
     private readonly IItemFactory _itemFactory;
+    private readonly ILanguageManager _languageManager;
 
     public MarketplaceService(
         IMarketplaceManager marketplaceManager,
         IItemDataManager itemDataManager,
         IDatabase database,
-        IItemFactory itemFactory)
+        IItemFactory itemFactory,
+        ILanguageManager languageManager)
     {
         _marketplaceManager = marketplaceManager;
         _itemDataManager = itemDataManager;
         _database = database;
         _itemFactory = itemFactory;
+        _languageManager = languageManager;
     }
 
     public Task MakeOffer(GameClient session, int sellingPrice, uint itemId)
@@ -124,31 +128,31 @@ internal class MarketplaceService : IMarketplaceService
 
         if (row.State == "2")
         {
-            session.SendNotification("Oops, this offer is no longer available.");
+            session.SendNotification(_languageManager.TryGetValue("marketplace.offer.not_available"));
             return ReloadOffers(session, -1, -1, string.Empty, 1);
         }
 
         if (_marketplaceManager.FormatTimestamp() > row.Timestamp)
         {
-            session.SendNotification("Oops, this offer has expired..");
+            session.SendNotification(_languageManager.TryGetValue("marketplace.offer.expired"));
             return ReloadOffers(session, -1, -1, string.Empty, 1);
         }
 
         if (!_itemDataManager.Items.TryGetValue(row.ItemId, out var item))
         {
-            session.SendNotification("Item isn't in the hotel anymore.");
+            session.SendNotification(_languageManager.TryGetValue("marketplace.item.not_found"));
             return ReloadOffers(session, -1, -1, string.Empty, 1);
         }
 
         if (row.UserId == habbo.Id)
         {
-            session.SendNotification("To prevent average boosting you cannot purchase your own marketplace offers.");
+            session.SendNotification(_languageManager.TryGetValue("marketplace.offer.self_purchase"));
             return Task.CompletedTask;
         }
 
         if (row.TotalPrice > habbo.Credits)
         {
-            session.SendNotification("Oops, you do not have enough credits for this.");
+            session.SendNotification(_languageManager.TryGetValue("marketplace.credits.not_enough"));
             return Task.CompletedTask;
         }
 

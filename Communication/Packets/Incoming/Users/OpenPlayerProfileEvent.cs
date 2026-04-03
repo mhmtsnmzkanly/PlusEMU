@@ -1,4 +1,5 @@
 using Plus.Communication.Packets.Outgoing.Users;
+using Plus.Core.Language;
 using Plus.HabboHotel.Friends;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Groups;
@@ -14,14 +15,16 @@ internal class OpenPlayerProfileEvent : IPacketEvent
     private readonly IGameClientManager _gameClientManager;
     private readonly IUserDataFactory _userDataFactory;
     private readonly HabboStatsService _habboStatsService;
+    private readonly ILanguageManager _languageManager;
 
-    public OpenPlayerProfileEvent(IGroupManager groupManager, IMessengerDataLoader messengerDataLoader, IGameClientManager gameClientManager, IUserDataFactory userDataFactory, HabboStatsService habboStatsService)
+    public OpenPlayerProfileEvent(IGroupManager groupManager, IMessengerDataLoader messengerDataLoader, IGameClientManager gameClientManager, IUserDataFactory userDataFactory, HabboStatsService habboStatsService, ILanguageManager languageManager)
     {
         _groupManager = groupManager;
         _messengerDataLoader = messengerDataLoader;
         _gameClientManager = gameClientManager;
         _userDataFactory = userDataFactory;
         _habboStatsService = habboStatsService;
+        _languageManager = languageManager;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -35,7 +38,7 @@ internal class OpenPlayerProfileEvent : IPacketEvent
 
         if (targetData == null)
         {
-            session.SendNotification("An error occurred whilst finding that user's profile.");
+            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
             return;
         }
 

@@ -3,6 +3,7 @@ using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Communication.Packets.Outgoing.Moderation;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 using Plus.Database;
 using Plus.HabboHotel.Achievements;
@@ -29,6 +30,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
     private readonly IItemFactory _itemFactory;
     private readonly IPetUtility _petUtility;
     private readonly ILogger<PurchaseFromCatalogAsGiftEvent> _logger;
+    private readonly ILanguageManager _languageManager;
 
     public PurchaseFromCatalogAsGiftEvent(ICatalogManager catalogManager,
         ISettingsManager settingsManager,
@@ -39,7 +41,8 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         IQuestService questService,
         IItemFactory itemFactory,
         IPetUtility petUtility,
-        ILogger<PurchaseFromCatalogAsGiftEvent> logger)
+        ILogger<PurchaseFromCatalogAsGiftEvent> logger,
+        ILanguageManager languageManager)
     {
         _catalogManager = catalogManager;
         _settingsManager = settingsManager;
@@ -51,6 +54,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         _itemFactory = itemFactory;
         _petUtility = petUtility;
         _logger = logger;
+        _languageManager = languageManager;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -70,7 +74,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         _logger.LogInformation("PurchaseFromCatalogAsGiftEvent received for session {sessionId}. PageId: {pageId}. ItemId: {itemId}. GiftUser: {giftUser}.", session.Id, pageId, itemId, giftUser);
         if (_settingsManager.TryGetValue("room.item.gifts.enabled") != "1")
         {
-            session.SendNotification("The hotel managers have disabled gifting");
+            session.SendNotification(_languageManager.TryGetValue("catalog.gifting.disabled"));
             return;
         }
         if (!_catalogManager.TryGetPage(pageId, out var page))
@@ -110,12 +114,12 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         }
         if (!receiverHabbo.AllowGifts)
         {
-            session.SendNotification("Oops, this user doesn't allow gifts to be sent to them!");
+            session.SendNotification(_languageManager.TryGetValue("catalog.gifting.receiver_disabled"));
             return;
         }
         if ((DateTime.Now - sender.LastGiftPurchaseTime).TotalSeconds <= 15.0)
         {
-            session.SendNotification("You're purchasing gifts too fast! Please wait 15 seconds!");
+            session.SendNotification(_languageManager.TryGetValue("catalog.gifting.too_fast"));
             sender.GiftPurchasingWarnings += 1;
             if (sender.GiftPurchasingWarnings >= 25)
                 sender.SessionGiftBlocked = true;
@@ -185,7 +189,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                 case var _ when item.Definition.IsBadgeDisplay:
                     if (!senderBadges.HasBadge(data))
                     {
-                        session.Send(new BroadcastMessageAlertComposer("Oops, it appears that you do not own this badge."));
+                        session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("catalog.badge.not_owned")));
                         return;
                     }
                     itemExtraData = $"{data}{Convert.ToChar(9)}{sender.Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}";

@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Dapper;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
 
@@ -10,6 +11,7 @@ internal class UserInfoCommand : IChatCommand
 {
     private readonly IDatabase _database;
     private readonly IGameClientManager _gameClientManager;
+    private readonly ILanguageManager _languageManager;
     public string Key => "userinfo";
     public string PermissionRequired => "command_user_info";
 
@@ -17,10 +19,11 @@ internal class UserInfoCommand : IChatCommand
 
     public string Description => "View another users profile information.";
 
-    public UserInfoCommand(IDatabase database, IGameClientManager gameClientManager)
+    public UserInfoCommand(IDatabase database, IGameClientManager gameClientManager, ILanguageManager languageManager)
     {
         _database = database;
         _gameClientManager = gameClientManager;
+        _languageManager = languageManager;
     }
 
     public async Task Execute(GameClient session, Room room, string[] parameters)
@@ -40,7 +43,7 @@ internal class UserInfoCommand : IChatCommand
         
         if (userData == null)
         {
-            session.SendNotification($"Oops, there is no user in the database with that username ({username})!");
+            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
             return;
         }
 

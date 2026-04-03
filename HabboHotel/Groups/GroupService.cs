@@ -7,6 +7,7 @@ using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Permissions;
 using Plus.Communication.Packets.Outgoing.Rooms.Session;
 using Plus.Communication.Packets.Outgoing.Users;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 using Plus.Database;
 using Plus.HabboHotel.Cache;
@@ -27,6 +28,7 @@ internal class GroupService : IGroupService
     private readonly IDatabase _database;
     private readonly ICacheManager _cacheManager;
     private readonly ISettingsManager _settingsManager;
+    private readonly ILanguageManager _languageManager;
     private readonly IWordFilterManager _wordFilterManager;
     private readonly IGameClientManager _gameClientManager;
 
@@ -37,6 +39,7 @@ internal class GroupService : IGroupService
         IDatabase database,
         ICacheManager cacheManager,
         ISettingsManager settingsManager,
+        ILanguageManager languageManager,
         IWordFilterManager wordFilterManager,
         IGameClientManager gameClientManager)
     {
@@ -46,6 +49,7 @@ internal class GroupService : IGroupService
         _database = database;
         _cacheManager = cacheManager;
         _settingsManager = settingsManager;
+        _languageManager = languageManager;
         _wordFilterManager = wordFilterManager;
         _gameClientManager = gameClientManager;
     }
@@ -64,7 +68,7 @@ internal class GroupService : IGroupService
         var groups = _groupManager.GetGroupsForUser(habbo.Id);
         if (groups.Count >= 1500)
         {
-            session.Send(new BroadcastMessageAlertComposer("Oops, it appears that you've hit the group membership limit! You can only join upto 1,500 groups."));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("group.membership.limit_reached")));
             return;
         }
 
@@ -112,7 +116,7 @@ internal class GroupService : IGroupService
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendNotification("Oops, an error occurred whilst finding this user.");
+            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
             return;
         }
 
@@ -213,7 +217,7 @@ internal class GroupService : IGroupService
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendNotification("Oops, an error occurred whilst finding this user.");
+            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
             return;
         }
 
@@ -239,7 +243,7 @@ internal class GroupService : IGroupService
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendNotification("Oops, an error occurred whilst finding this user.");
+            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
             return;
         }
 
@@ -273,7 +277,7 @@ internal class GroupService : IGroupService
             return;
         if (group.IsAdmin(userId) && group.CreatorId != habbo.Id)
         {
-            session.SendNotification("Sorry, only group creators can remove other administrators from the group.");
+            session.SendNotification(_languageManager.TryGetValue("group.admin.remove_creator_only"));
             return;
         }
 
@@ -460,19 +464,19 @@ internal class GroupService : IGroupService
 
         if (!_groupManager.TryGetGroup(groupId, out var group))
         {
-            session.SendNotification("Oops, we couldn't find that group!");
+            session.SendNotification(_languageManager.TryGetValue("group.not_found"));
             return;
         }
         if (group.CreatorId != habbo.Id && !permissions.HasRight("group_delete_override"))
         {
-            session.SendNotification("Oops, only the group owner can delete a group!");
+            session.SendNotification(_languageManager.TryGetValue("group.delete.owner_only"));
             return;
         }
 
         var memberLimit = Convert.ToInt32(_settingsManager.TryGetValue("group.delete.member.limit"));
         if (group.MemberCount >= memberLimit && !permissions.HasRight("group_delete_limit_override"))
         {
-            session.SendNotification($"Oops, your group exceeds the maximum amount of members ({memberLimit}) a group can exceed before being eligible for deletion. Seek assistance from a staff member.");
+            session.SendNotification(_languageManager.TryGetValue("group.delete.member_limit_exceeded").Replace("{limit}", memberLimit.ToString()));
             return;
         }
 
@@ -493,7 +497,7 @@ internal class GroupService : IGroupService
         await connection.ExecuteAsync("DELETE FROM `items_groups` WHERE `group_id` = @groupId", new { groupId = group.Id });
 
         _roomManager.UnloadRoom(room.Id);
-        session.SendNotification("You have successfully deleted your group.");
+        session.SendNotification(_languageManager.TryGetValue("group.delete.success"));
     }
 
     public Task PurchaseGroup(GameClient session, string name, string description, uint roomId, int mainColour, int secondaryColour, IReadOnlyCollection<(int baseId, int firstPart, int secondPart)> parts)
@@ -507,7 +511,9 @@ internal class GroupService : IGroupService
         var groupCost = Convert.ToInt32(_settingsManager.TryGetValue("catalog.group.purchase.cost"));
         if (habbo.Credits < groupCost)
         {
-            session.Send(new BroadcastMessageAlertComposer($"A group costs {groupCost} credits! You only have {habbo.Credits}!"));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("group.purchase.not_enough_credits")
+                .Replace("{cost}", groupCost.ToString())
+                .Replace("{credits}", habbo.Credits.ToString())));
             return Task.CompletedTask;
         }
 
@@ -527,7 +533,7 @@ internal class GroupService : IGroupService
 
         if (!_groupManager.TryCreateGroup(habbo, filteredName, filteredDescription, roomId, badge, mainColour, secondaryColour, out var group))
         {
-            session.SendNotification("An error occured whilst trying to create this group.\n\nTry again. If you get this message more than once, report it at the link below.\r\rhttp://boonboards.com");
+            session.SendNotification(_languageManager.TryGetValue("group.create.error"));
             return Task.CompletedTask;
         }
 
