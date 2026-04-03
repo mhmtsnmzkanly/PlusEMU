@@ -457,3 +457,4 @@
 - extracted the fast/superfast path-step selection branch into a named `RoomUserManager` helper so movement-loop path advancement no longer repeats its inline `PathStep` juggling
 - extracted the bot carry-target completion branch from `RoomUserManager` movement stop handling so delivery/rotation cleanup no longer sits inline in the main walking exit path
 - extracted the next-step rotation and set-position preparation branch from `RoomUserManager` so rider and mounted-horse movement setup now flows through one helper before occupancy/update work
+- extracted the completed-step application branch from `RoomUserManager` so walk-off/walk-on item callbacks, rider coordinate sync, and door-exit queuing no longer sit inline in the main movement loop

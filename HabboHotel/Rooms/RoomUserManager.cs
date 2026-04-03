@@ -486,6 +486,42 @@ public class RoomUserManager
         }
     }
 
+    private bool ApplyCompletedStep(RoomUser user, Gamemap gameMap, List<RoomUser> toRemove)
+    {
+        if (!user.RidingHorse)
+            gameMap.UpdateUserMovement(new(user.Coordinate.X, user.Coordinate.Y), new(user.SetX, user.SetY), user);
+
+        var coordinatedItems = gameMap.GetCoordinatedItems(new(user.X, user.Y));
+        foreach (var item in coordinatedItems.ToList())
+            item.UserWalksOffFurni(user);
+
+        if (!user.IsBot || !user.RidingHorse)
+        {
+            user.X = user.SetX;
+            user.Y = user.SetY;
+            user.Z = user.SetZ;
+        }
+
+        if (!user.IsBot && user.RidingHorse && TryGetMountedHorse(user, out var horse))
+        {
+            horse.X = user.SetX;
+            horse.Y = user.SetY;
+        }
+
+        if (user.X == gameMap.Model.DoorX && user.Y == gameMap.Model.DoorY && !toRemove.Contains(user) && !user.IsBot)
+        {
+            toRemove.Add(user);
+            return false;
+        }
+
+        var items = gameMap.GetCoordinatedItems(new(user.X, user.Y));
+        foreach (var item in items.ToList())
+            item.UserWalksOnFurni(user);
+
+        UpdateUserStatus(user, true);
+        return true;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -834,38 +870,10 @@ public class RoomUserManager
                     var gameMap = _room.GetGameMap();
                     if (gameMap.IsValidStep2(user, new(user.X, user.Y), new(user.SetX, user.SetY), user.GoalX == user.SetX && user.GoalY == user.SetY, user.AllowOverride))
                     {
-                        if (!user.RidingHorse)
-                            gameMap.UpdateUserMovement(new(user.Coordinate.X, user.Coordinate.Y), new(user.SetX, user.SetY), user);
-                        var coordinatedItems = gameMap.GetCoordinatedItems(new(user.X, user.Y));
-                        foreach (var item in coordinatedItems.ToList()) item.UserWalksOffFurni(user);
-                        if (!user.IsBot)
+                        if (!ApplyCompletedStep(user, gameMap, toRemove))
                         {
-                            user.X = user.SetX;
-                            user.Y = user.SetY;
-                            user.Z = user.SetZ;
-                        }
-                        else if (user.IsBot && !user.RidingHorse)
-                        {
-                            user.X = user.SetX;
-                            user.Y = user.SetY;
-                            user.Z = user.SetZ;
-                        }
-                        if (!user.IsBot && user.RidingHorse)
-                        {
-                            if (TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
-                            {
-                                horse.X = user.SetX;
-                                horse.Y = user.SetY;
-                            }
-                        }
-                        if (user.X == gameMap.Model.DoorX && user.Y == gameMap.Model.DoorY && !toRemove.Contains(user) && !user.IsBot)
-                        {
-                            toRemove.Add(user);
                             continue;
                         }
-                        var items = gameMap.GetCoordinatedItems(new(user.X, user.Y));
-                        foreach (var item in items.ToList()) item.UserWalksOnFurni(user);
-                        UpdateUserStatus(user, true);
                     }
                     else
                         invalidStep = true;
