@@ -659,6 +659,31 @@ public class RoomUserManager
         return true;
     }
 
+    private bool TryResolvePendingStep(RoomUser user, List<RoomUser> toRemove, out bool invalidStep)
+    {
+        invalidStep = false;
+        if (!user.SetStep)
+            return true;
+
+        var gameMap = _room.GetGameMap();
+        var stepIsValid = gameMap.IsValidStep2(user, new(user.X, user.Y), new(user.SetX, user.SetY), user.GoalX == user.SetX && user.GoalY == user.SetY, user.AllowOverride);
+
+        try
+        {
+            if (!stepIsValid)
+            {
+                invalidStep = true;
+                return true;
+            }
+
+            return ApplyCompletedStep(user, gameMap, toRemove);
+        }
+        finally
+        {
+            user.SetStep = false;
+        }
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -971,22 +996,9 @@ public class RoomUserManager
                 AdvanceCarryItemState(user);
                 if (_room.GotFreeze())
                     _room.GetFreeze().CycleUser(user);
-                var invalidStep = false;
                 AdvanceRollerState(user);
-                if (user.SetStep)
-                {
-                    var gameMap = _room.GetGameMap();
-                    if (gameMap.IsValidStep2(user, new(user.X, user.Y), new(user.SetX, user.SetY), user.GoalX == user.SetX && user.GoalY == user.SetY, user.AllowOverride))
-                    {
-                        if (!ApplyCompletedStep(user, gameMap, toRemove))
-                        {
-                            continue;
-                        }
-                    }
-                    else
-                        invalidStep = true;
-                    user.SetStep = false;
-                }
+                if (!TryResolvePendingStep(user, toRemove, out var invalidStep))
+                    continue;
                 if (user.PathRecalcNeeded)
                     RecalculatePath(user);
                 if (user.IsWalking && !user.Freezed)

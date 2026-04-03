@@ -403,3 +403,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - the `RoomUserManager` cycle entry is narrower now too, with invalid-user room-leave dispatch and autokick queue checks moved behind one helper before the remaining movement decision branches are touched
 - the walking-decision branch is starting to shrink too, with invalid-step logging plus stop/carry cleanup moved behind one helper before the remaining step-validation path is touched
 - the same walking-decision cleanup now covers the successful step path too, with next-step validation/application moved behind one helper before any higher-risk movement behavior changes
+- the last small pre-walking branch is narrower too, with pending-step validation/application moved behind one helper before any behavior-changing movement refactor
