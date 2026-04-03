@@ -396,3 +396,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - the same room-user movement cleanup is now consolidating next-step setup too, with rider and mounted-horse rotation/set-step preparation moved behind one helper ahead of the later occupancy/update branches
 - that room-user movement cleanup now also covers completed-step application, with walk-on/off callbacks, coordinate sync, and door-exit enqueueing moved behind a single helper before any larger lifecycle rewrite
 - the same `RoomUserManager` cleanup is now isolating path recalculation as well, moving refind/reset/logging flow behind one helper before the remaining movement/lifecycle core is touched
+- `RoomUserManager` cycle-state cleanup is also starting to split out the smaller runtime branches now, with roller countdown/completion handling moved behind its own helper before deeper `OnCycle` restructuring

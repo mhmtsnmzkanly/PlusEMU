@@ -544,6 +544,21 @@ public class RoomUserManager
             _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY);
     }
 
+    private void AdvanceRollerState(RoomUser user)
+    {
+        if (!user.IsRolling)
+            return;
+
+        if (user.RollerDelay <= 0)
+        {
+            UpdateUserStatus(user, false);
+            user.IsRolling = false;
+            return;
+        }
+
+        user.RollerDelay--;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -877,16 +892,7 @@ public class RoomUserManager
                 if (_room.GotFreeze())
                     _room.GetFreeze().CycleUser(user);
                 var invalidStep = false;
-                if (user.IsRolling)
-                {
-                    if (user.RollerDelay <= 0)
-                    {
-                        UpdateUserStatus(user, false);
-                        user.IsRolling = false;
-                    }
-                    else
-                        user.RollerDelay--;
-                }
+                AdvanceRollerState(user);
                 if (user.SetStep)
                 {
                     var gameMap = _room.GetGameMap();

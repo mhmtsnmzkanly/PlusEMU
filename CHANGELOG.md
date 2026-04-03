@@ -459,3 +459,4 @@
 - extracted the next-step rotation and set-position preparation branch from `RoomUserManager` so rider and mounted-horse movement setup now flows through one helper before occupancy/update work
 - extracted the completed-step application branch from `RoomUserManager` so walk-off/walk-on item callbacks, rider coordinate sync, and door-exit queuing no longer sit inline in the main movement loop
 - extracted the path recalculation branch from `RoomUserManager` so path clearing, refinding, and restart logging now sit behind one helper instead of another large inline `OnCycle` block
+- extracted the roller-delay branch from `RoomUserManager` so cycle-time rolling countdown and completion status refresh no longer stay inline in `OnCycle`
