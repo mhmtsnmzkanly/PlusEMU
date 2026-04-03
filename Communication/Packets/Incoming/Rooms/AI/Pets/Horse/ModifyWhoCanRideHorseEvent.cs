@@ -20,7 +20,7 @@ internal class ModifyWhoCanRideHorseEvent : RoomPacketEvent
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
     {
         var petId = packet.ReadInt();
-        if (!room.GetRoomUserManager().TryGetPet(petId, out var pet))
+        if (!room.GetRoomUserManager().TryGetPet(petId, out var pet) || pet == null)
             return Task.CompletedTask;
         pet.PetData.AnyoneCanRide = pet.PetData.AnyoneCanRide == 1 ? 0 : 1;
         using var db = _database.Connection();

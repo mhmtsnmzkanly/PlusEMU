@@ -23,7 +23,7 @@ internal class GetClubOffersEvent : IPacketEvent
             return Task.CompletedTask;
 
         var pageId = _catalogManager.ItemOffers[offerId];
-        if (!_catalogManager.TryGetPage(pageId, out var page))
+        if (!_catalogManager.TryGetPage(pageId, out var page) || page == null)
             return Task.CompletedTask;
 
         if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || page.MinimumVip > habbo.VipRank && habbo.Rank == 1)

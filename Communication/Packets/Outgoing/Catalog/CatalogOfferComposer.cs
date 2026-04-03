@@ -53,7 +53,7 @@ public class CatalogOfferComposer : IServerPacket
             else if (_item.Definition.IsBot) //Bots
             {
                 CatalogBot? cataBot = null;
-                if (!_catalogManager.TryGetBot(_item.ItemId, out cataBot))
+                if (!_catalogManager.TryGetBot(_item.ItemId, out cataBot) || cataBot == null)
                     packet.WriteString("hd-180-7.ea-1406-62.ch-210-1321.hr-831-49.ca-1813-62.sh-295-1321.lg-285-92");
                 else
                     packet.WriteString(cataBot.Figure ?? string.Empty);

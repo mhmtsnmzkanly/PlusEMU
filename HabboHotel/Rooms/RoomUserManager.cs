@@ -471,9 +471,9 @@ public class RoomUserManager
         user.Dispose();
     }
 
-    public bool TryGetPet(int petId, out RoomUser pet) => _pets.TryGetValue(petId, out pet!);
+    public bool TryGetPet(int petId, out RoomUser? pet) => _pets.TryGetValue(petId, out pet);
 
-    public bool TryGetBot(int botId, out RoomUser bot) => _bots.TryGetValue(botId, out bot!);
+    public bool TryGetBot(int botId, out RoomUser? bot) => _bots.TryGetValue(botId, out bot);
 
     public RoomUser GetBotByName(string name)
     {

@@ -52,7 +52,7 @@ public class CatalogPageComposer : IServerPacket
                 if (item.Definition.IsDeal)
                 {
                     CatalogDeal? deal = null;
-                    if (!_catalogManager.TryGetDeal(item.Definition.BehaviourData, out deal))
+                    if (!_catalogManager.TryGetDeal(item.Definition.BehaviourData, out deal) || deal == null)
                         packet.WriteInteger(0); //Count
                     else
                     {
@@ -89,7 +89,7 @@ public class CatalogPageComposer : IServerPacket
                         else if (item.Definition.IsBot) //Bots
                         {
                             CatalogBot? catalogBot = null;
-                            if (!_catalogManager.TryGetBot(item.ItemId, out catalogBot))
+                            if (!_catalogManager.TryGetBot(item.ItemId, out catalogBot) || catalogBot == null)
                                 packet.WriteString("hd-180-7.ea-1406-62.ch-210-1321.hr-831-49.ca-1813-62.sh-295-1321.lg-285-92");
                             else
                                 packet.WriteString(catalogBot.Figure ?? string.Empty);

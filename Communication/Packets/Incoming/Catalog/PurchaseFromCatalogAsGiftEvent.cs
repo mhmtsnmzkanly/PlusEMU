@@ -77,7 +77,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
             session.SendNotification(_languageManager.Require("catalog.gifting.disabled"));
             return;
         }
-        if (!_catalogManager.TryGetPage(pageId, out var page))
+        if (!_catalogManager.TryGetPage(pageId, out var page) || page == null)
             return;
         if (!page.Enabled || !page.Visible || page.MinimumRank > sender.Rank || page.MinimumVip > sender.VipRank && sender.Rank == 1)
             return;

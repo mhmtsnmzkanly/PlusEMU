@@ -21,7 +21,7 @@ public class GetCatalogPageEvent : IPacketEvent
         var pageId = packet.ReadInt();
         packet.ReadInt();
         var cataMode = packet.ReadString();
-        if (!_catalogManager.TryGetPage(pageId, out var page))
+        if (!_catalogManager.TryGetPage(pageId, out var page) || page == null)
             return Task.CompletedTask;
 
         if (!page.Enabled || !page.Visible || page.MinimumRank > habbo.Rank || page.MinimumVip > habbo.VipRank && habbo.Rank == 1)

@@ -128,7 +128,7 @@ internal class CatalogService : ICatalogService
             return;
         }
 
-        if (!_catalogManager.TryGetPage(pageId, out var page))
+        if (!_catalogManager.TryGetPage(pageId, out var page) || page == null)
         {
             _logger.LogWarning("PurchaseItem aborted for session {sessionId}: page {pageId} not found.", session.Id, pageId);
             return;
@@ -302,7 +302,7 @@ internal class CatalogService : ICatalogService
                 foreach (var i in tonerItems!) { generatedItems.Add(i); _itemFactory.CreateTonerData(i); }
                 break;
             case var _ when item.Definition.IsDeal:
-                if (_catalogManager.TryGetDeal(item.Definition.BehaviourData, out var deal))
+                if (_catalogManager.TryGetDeal(item.Definition.BehaviourData, out var deal) && deal != null)
                     foreach (var dealItem in deal.ItemDataList) generatedItems.AddRange(_itemFactory.CreateMultipleItems(dealItem.Definition, habbo, "", amount)!);
                 break;
             default:

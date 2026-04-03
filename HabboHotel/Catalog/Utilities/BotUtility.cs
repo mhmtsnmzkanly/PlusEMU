@@ -19,7 +19,7 @@ public class BotUtility : IBotUtility
 
     public Bot? CreateBot(ItemDefinition itemDefinition, int ownerId)
     {
-        if (!_catalogManager.TryGetBot(itemDefinition.Id, out var cataBot))
+        if (!_catalogManager.TryGetBot(itemDefinition.Id, out var cataBot) || cataBot == null)
             return null;
 
         using var db = _database.Connection();

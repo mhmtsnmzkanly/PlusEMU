@@ -146,14 +146,14 @@ public class CommandManager : ICommandManager
             new { UserId = userId, Data = data, MachineId = machineId ?? string.Empty, Timestamp = UnixTimestamp.GetNow() });
     }
 
-    public bool TryGetCommand(string command, out ICommandBase chatCommand)
+    public bool TryGetCommand(string command, out ICommandBase? chatCommand)
     {
         if (_commands.TryGetValue(command, out var foundCommand))
         {
             chatCommand = foundCommand;
             return true;
         }
-        chatCommand = null!;
+        chatCommand = null;
         return false;
     }
 }
