@@ -43,7 +43,7 @@ internal class UserInfoCommand : IChatCommand
         
         if (userData == null)
         {
-            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
+            session.SendNotification(_languageManager.Require("user.not_found"));
             return;
         }
 

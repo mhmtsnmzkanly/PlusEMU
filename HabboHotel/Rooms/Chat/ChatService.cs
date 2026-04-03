@@ -1,5 +1,6 @@
 using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Communication.Packets.Outgoing.Rooms.Chat;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Moderation;
@@ -20,6 +21,7 @@ public class ChatService : IChatService
     private readonly IWordFilterManager _wordFilterManager;
     private readonly ICommandManager _commandManager;
     private readonly IModerationActionService _moderationActionService;
+    private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IQuestService _questService;
 
@@ -29,6 +31,7 @@ public class ChatService : IChatService
         IWordFilterManager wordFilterManager,
         ICommandManager commandManager,
         IModerationActionService moderationActionService,
+        ILanguageManager languageManager,
         ISettingsManager settingsManager,
         IQuestService questService)
     {
@@ -37,6 +40,7 @@ public class ChatService : IChatService
         _wordFilterManager = wordFilterManager;
         _commandManager = commandManager;
         _moderationActionService = moderationActionService;
+        _languageManager = languageManager;
         _settingsManager = settingsManager;
         _questService = questService;
     }
@@ -67,7 +71,7 @@ public class ChatService : IChatService
 
         if (!habbo.Permissions.HasRight("room_ignore_mute") && room.CheckMute(session))
         {
-            session.SendWhisper("Oops, you're currently muted.");
+            session.SendWhisper(_languageManager.Require("chat.muted"));
             return;
         }
 
@@ -113,7 +117,7 @@ public class ChatService : IChatService
 
         if (!targetHabbo.ReceiveWhispers && !habbo.Permissions.HasRight("room_whisper_override"))
         {
-            session.SendWhisper("Oops, this user has their whispers disabled!");
+            session.SendWhisper(_languageManager.Require("chat.whispers.disabled"));
             return;
         }
 
@@ -191,7 +195,7 @@ public class ChatService : IChatService
 
         if (!habbo.Permissions.HasRight("room_ignore_mute") && room.CheckMute(session))
         {
-            session.SendWhisper("Oops, you're currently muted.");
+            session.SendWhisper(_languageManager.Require("chat.muted"));
             return;
         }
 
@@ -230,7 +234,7 @@ public class ChatService : IChatService
         if (habbo == null) return false;
 
         habbo.BannedPhraseCount++;
-        if (habbo.BannedPhraseCount >= Convert.ToInt32(_settingsManager.TryGetValue("room.chat.filter.banned_phrases.chances")))
+        if (habbo.BannedPhraseCount >= _settingsManager.GetIntOrDefault("room.chat.filter.banned_phrases.chances", 0))
         {
             await _moderationActionService.Ban("System", ModerationBanType.Username, habbo.Username, $"Spamming banned phrases in {type} ({message})",
                 UnixTimestamp.GetNow() + 78892200);

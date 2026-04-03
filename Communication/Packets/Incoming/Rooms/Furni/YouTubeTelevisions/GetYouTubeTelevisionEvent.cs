@@ -1,4 +1,5 @@
 ﻿using Plus.Communication.Packets.Outgoing.Rooms.Furni.YouTubeTelevisions;
+using Plus.Core.Language;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items.Televisions;
 
@@ -7,10 +8,12 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Furni.YouTubeTelevisions;
 internal class GetYouTubeTelevisionEvent : IPacketEvent
 {
     private readonly ITelevisionManager _televisionManager;
+    private readonly ILanguageManager _languageManager;
 
-    public GetYouTubeTelevisionEvent(ITelevisionManager televisionManager)
+    public GetYouTubeTelevisionEvent(ITelevisionManager televisionManager, ILanguageManager languageManager)
     {
         _televisionManager = televisionManager;
+        _languageManager = languageManager;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
@@ -21,7 +24,7 @@ internal class GetYouTubeTelevisionEvent : IPacketEvent
         var videos = _televisionManager.TelevisionList;
         if (videos.Count == 0)
         {
-            session.SendNotification("Oh, it looks like the hotel manager haven't added any videos for you to watch! :(");
+            session.SendNotification(_languageManager.Require("youtube.videos.empty"));
             return Task.CompletedTask;
         }
         var dict = _televisionManager.Televisions;

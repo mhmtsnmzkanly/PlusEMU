@@ -161,13 +161,13 @@ internal class MessengerService : IMessengerService
 
         if (habbo.TimeMuted > 0)
         {
-            session.SendNotification(_languageManager.TryGetValue("messenger.message.muted"));
+            session.SendNotification(_languageManager.Require("messenger.message.muted"));
             return Task.CompletedTask;
         }
 
         var error = messenger.SendMessage(friend, filteredMessage);
         if (error == MessageError.Flooding)
-            session.SendNotification(_languageManager.TryGetValue("messenger.message.flood"));
+            session.SendNotification(_languageManager.Require("messenger.message.flood"));
 
         return Task.CompletedTask;
     }
@@ -181,7 +181,7 @@ internal class MessengerService : IMessengerService
 
         if (habbo.TimeMuted > 0)
         {
-            session.SendNotification(_languageManager.TryGetValue("messenger.invite.muted"));
+            session.SendNotification(_languageManager.Require("messenger.invite.muted"));
             return;
         }
 
@@ -273,13 +273,13 @@ internal class MessengerService : IMessengerService
         var friend = messenger.GetFriend(friendId);
         if (friend == null)
         {
-            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("messenger.relationship.friendship_required")));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.Require("messenger.relationship.friendship_required")));
             return;
         }
 
         if (relationshipType is < 0 or > 3)
         {
-            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("messenger.relationship.invalid_type")));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.Require("messenger.relationship.invalid_type")));
             return;
         }
 

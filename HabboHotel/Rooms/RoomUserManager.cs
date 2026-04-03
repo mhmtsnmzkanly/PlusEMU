@@ -1139,7 +1139,7 @@ public class RoomUserManager
                                         var targetItem = room.GetRoomItemHandler().GetItem(linkedTele);
                                         if (targetItem == null)
                                         {
-                                            user.GetClient()?.SendWhisper("Hey, that arrow is poorly!");
+                                            user.GetClient()?.SendWhisper(_room.GetLanguageManager().Require("room.teleport.arrow.invalid"));
                                             return;
                                         }
                                         room.GetGameMap().TeleportToItem(user, targetItem);

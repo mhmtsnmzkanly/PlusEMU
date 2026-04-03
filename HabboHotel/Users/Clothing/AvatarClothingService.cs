@@ -86,17 +86,17 @@ internal class AvatarClothingService : IAvatarClothingService
             return Task.CompletedTask;
         if (item.Definition.InteractionType != InteractionType.PurchasableClothing)
         {
-            session.SendNotification(_languageManager.TryGetValue("clothing.sellable.invalid_item"));
+            session.SendNotification(_languageManager.Require("clothing.sellable.invalid_item"));
             return Task.CompletedTask;
         }
         if (item.Definition.BehaviourData == 0)
         {
-            session.SendNotification(_languageManager.TryGetValue("clothing.sellable.missing_config"));
+            session.SendNotification(_languageManager.Require("clothing.sellable.missing_config"));
             return Task.CompletedTask;
         }
         if (!_clothingManager.TryGetClothing(item.Definition.BehaviourData, out var clothing) || clothing == null)
         {
-            session.SendNotification(_languageManager.TryGetValue("clothing.sellable.part_not_found"));
+            session.SendNotification(_languageManager.Require("clothing.sellable.part_not_found"));
             return Task.CompletedTask;
         }
 
@@ -109,7 +109,7 @@ internal class AvatarClothingService : IAvatarClothingService
         clothingComponent.AddClothing(clothing.ClothingName, clothing.PartIds);
         session.Send(new FigureSetIdsComposer(clothingComponent.GetClothingParts));
         session.Send(new RoomNotificationComposer("figureset.redeemed.success"));
-        session.SendWhisper(_languageManager.TryGetValue("clothing.sellable.reload_hint"));
+        session.SendWhisper(_languageManager.Require("clothing.sellable.reload_hint"));
         return Task.CompletedTask;
     }
 

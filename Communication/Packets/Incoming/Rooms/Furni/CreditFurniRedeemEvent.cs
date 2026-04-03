@@ -1,6 +1,7 @@
 using Dapper;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
@@ -11,11 +12,13 @@ namespace Plus.Communication.Packets.Incoming.Rooms.Furni;
 
 internal class CreditFurniRedeemEvent : RoomPacketEvent
 {
+    private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IDatabase _database;
 
-    public CreditFurniRedeemEvent(ISettingsManager settingsManager, IDatabase database)
+    public CreditFurniRedeemEvent(ILanguageManager languageManager, ISettingsManager settingsManager, IDatabase database)
     {
+        _languageManager = languageManager;
         _settingsManager = settingsManager;
         _database = database;
     }
@@ -27,9 +30,9 @@ internal class CreditFurniRedeemEvent : RoomPacketEvent
         if (!room.CheckRights(session, true))
             return Task.CompletedTask;
 
-        if (_settingsManager.TryGetValue("room.item.exchangeables.enabled") != "1")
+        if (!_settingsManager.GetBoolOrDefault("room.item.exchangeables.enabled", false))
         {
-            session.SendNotification("The hotel managers have temporarilly disabled exchanging!");
+            session.SendNotification(_languageManager.Require("room.item.exchangeables.disabled"));
             return Task.CompletedTask;
         }
 

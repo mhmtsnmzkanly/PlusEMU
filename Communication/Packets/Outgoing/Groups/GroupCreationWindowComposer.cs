@@ -18,7 +18,7 @@ public class GroupCreationWindowComposer : IServerPacket
 
     public void Compose(IOutgoingPacket packet)
     {
-        packet.WriteInteger(Convert.ToInt32(_settingsManager.TryGetValue("catalog.group.purchase.cost"))); //Price 
+        packet.WriteInteger(_settingsManager.GetIntOrDefault("catalog.group.purchase.cost", 0)); //Price 
         packet.WriteInteger(_rooms.Count); //Room count that the user has.
         foreach (var room in _rooms)
         {

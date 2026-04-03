@@ -162,8 +162,8 @@ public class Habbo
             if (CreditsUpdateTick > 0 || !TryGetClient(out var client))
                 return;
 
-            var creditUpdate = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.credit_reward"));
-            var ducketUpdate = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.ducket_reward"));
+            var creditUpdate = settingsManager.GetIntOrDefault("user.currency_scheduler.credit_reward", 0);
+            var ducketUpdate = settingsManager.GetIntOrDefault("user.currency_scheduler.ducket_reward", 0);
             if (subscriptionManager.TryGetSubscriptionData(VipRank, out var subscriptionData) && subscriptionData != null)
             {
                 creditUpdate += subscriptionData.Credits;
@@ -174,7 +174,7 @@ public class Habbo
             Duckets += ducketUpdate;
             client.Send(new CreditBalanceComposer(Credits));
             client.Send(new HabboActivityPointNotificationComposer(Duckets, ducketUpdate));
-            CreditsUpdateTick = Convert.ToInt32(settingsManager.TryGetValue("user.currency_scheduler.tick"));
+            CreditsUpdateTick = settingsManager.GetIntOrDefault("user.currency_scheduler.tick", 60);
         }
         catch
         {

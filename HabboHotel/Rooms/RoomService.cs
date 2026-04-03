@@ -73,7 +73,7 @@ public class RoomService : IRoomService
         if (room.IsCrashed)
         {
             _logger.LogWarning("PrepareRoom failed: room is crashed. SessionId={sessionId}, RoomId={roomId}", session.Id, roomId);
-            session.SendNotification("This room has crashed! :(");
+            session.SendNotification(_languageManager.Require("room.crashed.enter"));
             session.Send(new CloseConnectionComposer());
             return;
         }

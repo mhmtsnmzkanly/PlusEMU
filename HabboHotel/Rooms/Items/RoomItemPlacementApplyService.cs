@@ -32,7 +32,7 @@ public class RoomItemPlacementApplyService : IRoomItemPlacementApplyService
             if (floorItems.ContainsKey(item.Id))
             {
                 if (session != null)
-                    session.SendNotification(_languageManager.TryGetValue("room.item.already_placed"));
+                    session.SendNotification(_languageManager.Require("room.item.already_placed"));
                 room.GetGameMap().RemoveFromMap(item);
                 return true;
             }
@@ -84,7 +84,7 @@ public class RoomItemPlacementApplyService : IRoomItemPlacementApplyService
 
         if (floorItems.ContainsKey(item.Id))
         {
-            session.SendNotification(_languageManager.TryGetValue("room.item.already_placed"));
+            session.SendNotification(_languageManager.Require("room.item.already_placed"));
             return true;
         }
 

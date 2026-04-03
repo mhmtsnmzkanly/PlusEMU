@@ -52,14 +52,14 @@ internal sealed class RuntimeControlService : IRuntimeControlService
 
     public void BroadcastAlert(string message)
     {
-        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer($"{_languageManager.TryGetValue("server.console.alert")}\n\n{message}"));
+        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer($"{_languageManager.Require("server.console.alert")}\n\n{message}"));
     }
 
     public void PerformShutdown(string? reason = null)
     {
         _logger.LogInformation("Server shutting down... Reason: {reason}", string.IsNullOrWhiteSpace(reason) ? "Unspecified" : reason);
         Console.Title = "PLUSEMU: SHUTTING DOWN!";
-        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("server.shutdown.message")));
+        _gameClientManager.SendPacket(new BroadcastMessageAlertComposer(_languageManager.Require("server.shutdown.message")));
         _game.StopGameLoop();
         Thread.Sleep(2500);
         _flashServer.Stop();

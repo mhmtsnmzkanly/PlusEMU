@@ -47,7 +47,7 @@ internal class RoomAccessService : IRoomAccessService
             return Task.CompletedTask;
         if (room.UsersWithRights.Contains(userId))
         {
-            session.SendNotification(_languageManager.TryGetValue("room.rights.user.has_rights"));
+            session.SendNotification(_languageManager.Require("room.rights.user.has_rights"));
             return Task.CompletedTask;
         }
 

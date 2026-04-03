@@ -22,7 +22,7 @@ internal abstract class SaveWiredConfigEvent : IPacketEvent
             return Task.CompletedTask;
         if (box.Type == WiredBoxType.EffectGiveUserBadge && !(permissions?.HasRight("room_item_wired_rewards") ?? false))
         {
-            session.SendNotification("You don't have the correct permissions to do this.");
+            session.SendNotification(room.GetLanguageManager().Require("wired.config.permission_denied"));
             return Task.CompletedTask;
         }
         box.HandleSave(packet);

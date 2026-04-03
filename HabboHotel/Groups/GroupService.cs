@@ -68,7 +68,7 @@ internal class GroupService : IGroupService
         var groups = _groupManager.GetGroupsForUser(habbo.Id);
         if (groups.Count >= 1500)
         {
-            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("group.membership.limit_reached")));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.Require("group.membership.limit_reached")));
             return;
         }
 
@@ -116,7 +116,7 @@ internal class GroupService : IGroupService
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
+            session.SendNotification(_languageManager.Require("user.not_found"));
             return;
         }
 
@@ -217,7 +217,7 @@ internal class GroupService : IGroupService
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
+            session.SendNotification(_languageManager.Require("user.not_found"));
             return;
         }
 
@@ -243,7 +243,7 @@ internal class GroupService : IGroupService
         var targetHabbo = _gameClientManager.GetClientByUserId(userId)?.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendNotification(_languageManager.TryGetValue("user.not_found"));
+            session.SendNotification(_languageManager.Require("user.not_found"));
             return;
         }
 
@@ -277,7 +277,7 @@ internal class GroupService : IGroupService
             return;
         if (group.IsAdmin(userId) && group.CreatorId != habbo.Id)
         {
-            session.SendNotification(_languageManager.TryGetValue("group.admin.remove_creator_only"));
+            session.SendNotification(_languageManager.Require("group.admin.remove_creator_only"));
             return;
         }
 
@@ -464,19 +464,19 @@ internal class GroupService : IGroupService
 
         if (!_groupManager.TryGetGroup(groupId, out var group))
         {
-            session.SendNotification(_languageManager.TryGetValue("group.not_found"));
+            session.SendNotification(_languageManager.Require("group.not_found"));
             return;
         }
         if (group.CreatorId != habbo.Id && !permissions.HasRight("group_delete_override"))
         {
-            session.SendNotification(_languageManager.TryGetValue("group.delete.owner_only"));
+            session.SendNotification(_languageManager.Require("group.delete.owner_only"));
             return;
         }
 
-        var memberLimit = Convert.ToInt32(_settingsManager.TryGetValue("group.delete.member.limit"));
+        var memberLimit = _settingsManager.GetIntOrDefault("group.delete.member.limit", 0);
         if (group.MemberCount >= memberLimit && !permissions.HasRight("group_delete_limit_override"))
         {
-            session.SendNotification(_languageManager.TryGetValue("group.delete.member_limit_exceeded").Replace("{limit}", memberLimit.ToString()));
+            session.SendNotification(_languageManager.Format("group.delete.member_limit_exceeded", ("limit", memberLimit.ToString())));
             return;
         }
 
@@ -497,7 +497,7 @@ internal class GroupService : IGroupService
         await connection.ExecuteAsync("DELETE FROM `items_groups` WHERE `group_id` = @groupId", new { groupId = group.Id });
 
         _roomManager.UnloadRoom(room.Id);
-        session.SendNotification(_languageManager.TryGetValue("group.delete.success"));
+        session.SendNotification(_languageManager.Require("group.delete.success"));
     }
 
     public Task PurchaseGroup(GameClient session, string name, string description, uint roomId, int mainColour, int secondaryColour, IReadOnlyCollection<(int baseId, int firstPart, int secondPart)> parts)
@@ -508,12 +508,13 @@ internal class GroupService : IGroupService
 
         var filteredName = _wordFilterManager.CheckMessage(name);
         var filteredDescription = _wordFilterManager.CheckMessage(description);
-        var groupCost = Convert.ToInt32(_settingsManager.TryGetValue("catalog.group.purchase.cost"));
+        var groupCost = _settingsManager.GetIntOrDefault("catalog.group.purchase.cost", 0);
         if (habbo.Credits < groupCost)
         {
-            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("group.purchase.not_enough_credits")
-                .Replace("{cost}", groupCost.ToString())
-                .Replace("{credits}", habbo.Credits.ToString())));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.Format(
+                "group.purchase.not_enough_credits",
+                ("cost", groupCost.ToString()),
+                ("credits", habbo.Credits.ToString()))));
             return Task.CompletedTask;
         }
 
@@ -533,7 +534,7 @@ internal class GroupService : IGroupService
 
         if (!_groupManager.TryCreateGroup(habbo, filteredName, filteredDescription, roomId, badge, mainColour, secondaryColour, out var group))
         {
-            session.SendNotification(_languageManager.TryGetValue("group.create.error"));
+            session.SendNotification(_languageManager.Require("group.create.error"));
             return Task.CompletedTask;
         }
 

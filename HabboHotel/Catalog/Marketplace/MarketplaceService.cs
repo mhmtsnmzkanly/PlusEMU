@@ -128,31 +128,31 @@ internal class MarketplaceService : IMarketplaceService
 
         if (row.State == "2")
         {
-            session.SendNotification(_languageManager.TryGetValue("marketplace.offer.not_available"));
+            session.SendNotification(_languageManager.Require("marketplace.offer.not_available"));
             return ReloadOffers(session, -1, -1, string.Empty, 1);
         }
 
         if (_marketplaceManager.FormatTimestamp() > row.Timestamp)
         {
-            session.SendNotification(_languageManager.TryGetValue("marketplace.offer.expired"));
+            session.SendNotification(_languageManager.Require("marketplace.offer.expired"));
             return ReloadOffers(session, -1, -1, string.Empty, 1);
         }
 
         if (!_itemDataManager.Items.TryGetValue(row.ItemId, out var item))
         {
-            session.SendNotification(_languageManager.TryGetValue("marketplace.item.not_found"));
+            session.SendNotification(_languageManager.Require("marketplace.item.not_found"));
             return ReloadOffers(session, -1, -1, string.Empty, 1);
         }
 
         if (row.UserId == habbo.Id)
         {
-            session.SendNotification(_languageManager.TryGetValue("marketplace.offer.self_purchase"));
+            session.SendNotification(_languageManager.Require("marketplace.offer.self_purchase"));
             return Task.CompletedTask;
         }
 
         if (row.TotalPrice > habbo.Credits)
         {
-            session.SendNotification(_languageManager.TryGetValue("marketplace.credits.not_enough"));
+            session.SendNotification(_languageManager.Require("marketplace.credits.not_enough"));
             return Task.CompletedTask;
         }
 

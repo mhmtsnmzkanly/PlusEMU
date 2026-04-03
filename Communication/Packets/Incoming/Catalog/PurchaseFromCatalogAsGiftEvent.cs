@@ -72,9 +72,9 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         var colour = packet.ReadInt();
         packet.ReadBool();
         _logger.LogInformation("PurchaseFromCatalogAsGiftEvent received for session {sessionId}. PageId: {pageId}. ItemId: {itemId}. GiftUser: {giftUser}.", session.Id, pageId, itemId, giftUser);
-        if (_settingsManager.TryGetValue("room.item.gifts.enabled") != "1")
+        if (!_settingsManager.GetBoolOrDefault("room.item.gifts.enabled", false))
         {
-            session.SendNotification(_languageManager.TryGetValue("catalog.gifting.disabled"));
+            session.SendNotification(_languageManager.Require("catalog.gifting.disabled"));
             return;
         }
         if (!_catalogManager.TryGetPage(pageId, out var page))
@@ -114,12 +114,12 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
         }
         if (!receiverHabbo.AllowGifts)
         {
-            session.SendNotification(_languageManager.TryGetValue("catalog.gifting.receiver_disabled"));
+            session.SendNotification(_languageManager.Require("catalog.gifting.receiver_disabled"));
             return;
         }
         if ((DateTime.Now - sender.LastGiftPurchaseTime).TotalSeconds <= 15.0)
         {
-            session.SendNotification(_languageManager.TryGetValue("catalog.gifting.too_fast"));
+            session.SendNotification(_languageManager.Require("catalog.gifting.too_fast"));
             sender.GiftPurchasingWarnings += 1;
             if (sender.GiftPurchasingWarnings >= 25)
                 sender.SessionGiftBlocked = true;
@@ -189,7 +189,7 @@ public class PurchaseFromCatalogAsGiftEvent : IPacketEvent
                 case var _ when item.Definition.IsBadgeDisplay:
                     if (!senderBadges.HasBadge(data))
                     {
-                        session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("catalog.badge.not_owned")));
+                        session.Send(new BroadcastMessageAlertComposer(_languageManager.Require("catalog.badge.not_owned")));
                         return;
                     }
                     itemExtraData = $"{data}{Convert.ToChar(9)}{sender.Username}{Convert.ToChar(9)}{DateTime.Now.Day}-{DateTime.Now.Month}-{DateTime.Now.Year}";

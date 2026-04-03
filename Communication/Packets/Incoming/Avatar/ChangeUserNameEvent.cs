@@ -2,6 +2,7 @@ using Plus.Communication.Packets.Outgoing.Navigator;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Session;
 using Plus.Communication.Packets.Outgoing.Users;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.GameClients;
@@ -21,8 +22,9 @@ internal class ChangeUserNameEvent : IPacketEvent
     private readonly IRoomService _roomService;
     private readonly IAchievementService _achievementService;
     private readonly IDatabase _database;
+    private readonly ILanguageManager _languageManager;
 
-    public ChangeUserNameEvent(IUserDataFactory userDataFactory, IGameClientManager clientManager, IRoomManager roomManager, IRoomService roomService, IAchievementService achievementService, IDatabase database)
+    public ChangeUserNameEvent(IUserDataFactory userDataFactory, IGameClientManager clientManager, IRoomManager roomManager, IRoomService roomService, IAchievementService achievementService, IDatabase database, ILanguageManager languageManager)
     {
         _userDataFactory = userDataFactory;
         _clientManager = clientManager;
@@ -30,6 +32,7 @@ internal class ChangeUserNameEvent : IPacketEvent
         _roomService = roomService;
         _achievementService = achievementService;
         _database = database;
+        _languageManager = languageManager;
     }
 
     public async Task Parse(GameClient session, IIncomingPacket packet)
@@ -51,7 +54,7 @@ internal class ChangeUserNameEvent : IPacketEvent
         }
         if (!CanChangeName(habbo))
         {
-            session.SendNotification("Oops, it appears you currently cannot change your username!");
+            session.SendNotification(_languageManager.Require("user.name_change.disallowed"));
             return;
         }
 
@@ -77,7 +80,7 @@ internal class ChangeUserNameEvent : IPacketEvent
 
         if (!_clientManager.UpdateClientUsername(session, oldName, newName))
         {
-            session.SendNotification("Oops! An issue occoured whilst updating your username.");
+            session.SendNotification(_languageManager.Require("user.name_change.failed"));
             return;
         }
 

@@ -54,10 +54,10 @@ public class ItemService : IItemService
             return false;
         }
 
-        if (room.GetRoomItemHandler().GetWallAndFloor.Count() >= Convert.ToInt32(_settingsManager.TryGetValue("room.item.placement_limit")))
+        var placementLimit = _settingsManager.GetIntOrDefault("room.item.placement_limit", 2500);
+        if (room.GetRoomItemHandler().GetWallAndFloor.Count() >= placementLimit)
         {
-            var placementLimit = _settingsManager.TryGetValue("room.item.placement_limit");
-            session.SendNotification(_languageManager.TryGetValue("room.item.placement_limit_reached").Replace("{limit}", placementLimit));
+            session.SendNotification(_languageManager.Format("room.item.placement_limit_reached", ("limit", placementLimit.ToString())));
             return false;
         }
 
@@ -67,7 +67,7 @@ public class ItemService : IItemService
 
         if (item.Definition.IsExchange && room.OwnerId != habbo.Id && !habbo.Permissions.HasRight("room_item_place_exchange_anywhere"))
         {
-            session.SendNotification(_languageManager.TryGetValue("room.item.exchangeables.owner_only"));
+            session.SendNotification(_languageManager.Require("room.item.exchangeables.owner_only"));
             return false;
         }
 
@@ -77,21 +77,21 @@ public class ItemService : IItemService
             case var _ when item.Definition.IsMoodlight:
                 if (room.MoodlightData != null && room.GetRoomItemHandler().GetItem(room.MoodlightData.ItemId) != null)
                 {
-                    session.SendNotification(_languageManager.TryGetValue("room.item.single_moodlight"));
+                    session.SendNotification(_languageManager.Require("room.item.single_moodlight"));
                     return false;
                 }
                 break;
             case var _ when item.Definition.IsToner:
                 if (room.TonerData != null && room.GetRoomItemHandler().GetItem(room.TonerData.ItemId) != null)
                 {
-                    session.SendNotification(_languageManager.TryGetValue("room.item.single_toner"));
+                    session.SendNotification(_languageManager.Require("room.item.single_toner"));
                     return false;
                 }
                 break;
             case var _ when item.Definition.IsHopper:
                 if (room.GetRoomItemHandler().HopperCount > 0)
                 {
-                    session.SendNotification(_languageManager.TryGetValue("room.item.single_hopper"));
+                    session.SendNotification(_languageManager.Require("room.item.single_hopper"));
                     return false;
                 }
                 break;

@@ -47,14 +47,14 @@ internal class MuteTriggererBox : IWiredItem, IWiredActorExecutable
             return false;
         if ((player.Permissions?.HasRight("mod_tool") ?? false) || Instance.OwnerId == player.Id)
         {
-            playerClient.Send(new WhisperComposer(user.VirtualId, "Wired Mute Exception: Unmutable Player", 0, 0));
+            playerClient.Send(new WhisperComposer(user.VirtualId, Instance.GetLanguageManager().Require("wired.mute.exception_unmutable"), 0, 0));
             return false;
         }
         if (!WiredEffectDataParser.TryParseMute(StringData, out var time, out var message))
             return false;
         if (time > 0)
         {
-            playerClient.Send(new WhisperComposer(user.VirtualId, $"Wired Mute: Muted for {time}! Message: {message}", 0, 0));
+            playerClient.Send(new WhisperComposer(user.VirtualId, Instance.GetLanguageManager().Format("wired.mute.applied", ("time", time.ToString()), ("message", message)), 0, 0));
             if (!Instance.MutedUsers.ContainsKey(player.Id))
                 Instance.MutedUsers.Add(player.Id, UnixTimestamp.GetNow() + time * 60);
             else

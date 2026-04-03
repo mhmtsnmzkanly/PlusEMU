@@ -48,7 +48,7 @@ public class PurchaseRoomAdEvent : IPacketEvent
         if (data!.OwnerId != habbo.Id)
             return;
         if (data.Promotion == null)
-            data.Promotion = new(name, desc, categoryId, Convert.ToInt32(_settingsManager.TryGetValue("room.promotion.lifespan")));
+            data.Promotion = new(name, desc, categoryId, _settingsManager.GetIntOrDefault("room.promotion.lifespan", 0));
         else
         {
             data.Promotion.Name = name;

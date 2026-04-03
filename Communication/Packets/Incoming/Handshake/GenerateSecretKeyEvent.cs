@@ -2,6 +2,7 @@
 using Plus.Communication.Attributes;
 using Plus.Communication.Encryption;
 using Plus.Communication.Packets.Outgoing.Handshake;
+using Plus.Core.Language;
 using Plus.HabboHotel.GameClients;
 
 namespace Plus.Communication.Packets.Incoming.Handshake;
@@ -10,10 +11,12 @@ namespace Plus.Communication.Packets.Incoming.Handshake;
 public class GenerateSecretKeyEvent : IPacketEvent
 {
     private readonly ILogger<GenerateSecretKeyEvent> _logger;
+    private readonly ILanguageManager _languageManager;
 
-    public GenerateSecretKeyEvent(ILogger<GenerateSecretKeyEvent> logger)
+    public GenerateSecretKeyEvent(ILogger<GenerateSecretKeyEvent> logger, ILanguageManager languageManager)
     {
         _logger = logger;
+        _languageManager = languageManager;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
@@ -30,7 +33,7 @@ public class GenerateSecretKeyEvent : IPacketEvent
         else
         {
             _logger.LogWarning("Failed to calculate shared key for session {sessionId}.", session.Id);
-            session.SendNotification("There was an error logging you in, please try again!");
+            session.SendNotification(_languageManager.Require("auth.secret_key.failed"));
         }
         return Task.CompletedTask;
     }

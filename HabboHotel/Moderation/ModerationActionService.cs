@@ -77,14 +77,14 @@ internal class ModerationActionService : IModerationActionService
         var targetHabbo = client.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendWhisper(_languageManager.TryGetValue("moderation.user.not_found"));
+            session.SendWhisper(_languageManager.Require("moderation.user.not_found"));
             return;
         }
 
         if ((targetHabbo.Permissions?.HasRight("mod_mute") ?? false) &&
             !(moderator.Permissions?.HasRight("mod_mute_any") ?? false))
         {
-            session.SendWhisper(_languageManager.TryGetValue("moderation.mute.disallowed"));
+            session.SendWhisper(_languageManager.Require("moderation.mute.disallowed"));
             return;
         }
 
@@ -97,7 +97,7 @@ internal class ModerationActionService : IModerationActionService
         }
 
         targetHabbo.TimeMuted = length;
-        client.SendNotification(_languageManager.TryGetValue("moderation.mute.applied").Replace("{seconds}", length.ToString("0")));
+        client.SendNotification(_languageManager.Format("moderation.mute.applied", ("seconds", length.ToString("0"))));
     }
 
     public Task Kick(GameClient session, int userId)
@@ -113,7 +113,7 @@ internal class ModerationActionService : IModerationActionService
             return Task.CompletedTask;
         if (targetHabbo.Rank >= moderator.Rank)
         {
-            session.SendNotification(_languageManager.TryGetValue("moderation.kick.disallowed"));
+            session.SendNotification(_languageManager.Require("moderation.kick.disallowed"));
             return Task.CompletedTask;
         }
 
@@ -148,7 +148,7 @@ internal class ModerationActionService : IModerationActionService
                     new { userId });
                 if (targetData == null)
                 {
-                    session.SendWhisper(_languageManager.TryGetValue("moderation.user.not_found"));
+                    session.SendWhisper(_languageManager.Require("moderation.user.not_found"));
                     return;
                 }
                 targetUsername = targetData.username;
@@ -161,7 +161,7 @@ internal class ModerationActionService : IModerationActionService
             if ((targetHabbo.Permissions?.HasRight("mod_tool") ?? false) &&
                 !(moderator.Permissions?.HasRight("mod_ban_any") ?? false))
             {
-                session.SendWhisper(_languageManager.TryGetValue("moderation.ban.disallowed"));
+                session.SendWhisper(_languageManager.Require("moderation.ban.disallowed"));
                 return;
             }
             targetUsername = targetHabbo.Username;
@@ -246,14 +246,14 @@ internal class ModerationActionService : IModerationActionService
         var targetHabbo = client?.GetHabbo();
         if (targetHabbo == null)
         {
-            session.SendWhisper(_languageManager.TryGetValue("moderation.user.not_found"));
+            session.SendWhisper(_languageManager.Require("moderation.user.not_found"));
             return;
         }
 
         if ((targetHabbo.Permissions?.HasRight("mod_trade_lock") ?? false) &&
             !(moderator.Permissions?.HasRight("mod_trade_lock_any") ?? false))
         {
-            session.SendWhisper(_languageManager.TryGetValue("moderation.trade_lock.disallowed"));
+            session.SendWhisper(_languageManager.Require("moderation.trade_lock.disallowed"));
             return;
         }
 
@@ -272,9 +272,10 @@ internal class ModerationActionService : IModerationActionService
         }
 
         targetHabbo.TradingLockExpiry = length;
-        client?.SendNotification(_languageManager.TryGetValue("moderation.trade_lock.applied")
-            .Replace("{days}", days.ToString("0"))
-            .Replace("{reason}", message));
+        client?.SendNotification(_languageManager.Format(
+            "moderation.trade_lock.applied",
+            ("days", days.ToString("0")),
+            ("reason", message)));
     }
 
     public Task BroadcastRoomAction(GameClient session, int alertMode, string alertMessage)
@@ -287,8 +288,8 @@ internal class ModerationActionService : IModerationActionService
 
         var isCaution = alertMode != 3;
         var message = isCaution
-            ? _languageManager.TryGetValue("moderation.room_broadcast.caution").Replace("{message}", alertMessage)
-            : _languageManager.TryGetValue("moderation.room_broadcast.message").Replace("{message}", alertMessage);
+            ? _languageManager.Format("moderation.room_broadcast.caution", ("message", alertMessage))
+            : _languageManager.Format("moderation.room_broadcast.message", ("message", alertMessage));
         currentRoom.SendPacket(new BroadcastMessageAlertComposer(message));
         return Task.CompletedTask;
     }

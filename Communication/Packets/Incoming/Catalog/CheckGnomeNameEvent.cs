@@ -2,6 +2,7 @@ using Dapper;
 using Plus.Communication.Packets.Incoming.Rooms;
 using Plus.Communication.Packets.Outgoing.Catalog;
 using Plus.Communication.Packets.Outgoing.Inventory.Furni;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.Catalog.Utilities;
 using Plus.HabboHotel.GameClients;
@@ -17,13 +18,15 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
     private readonly IItemDataManager _itemDataManager;
     private readonly IPetUtility _petUtility;
     private readonly IItemFactory _itemFactory;
+    private readonly ILanguageManager _languageManager;
 
-    public CheckGnomeNameEvent(IDatabase database, IItemDataManager itemDataManager, IPetUtility petUtility, IItemFactory itemFactory)
+    public CheckGnomeNameEvent(IDatabase database, IItemDataManager itemDataManager, IPetUtility petUtility, IItemFactory itemFactory, ILanguageManager languageManager)
     {
         _database = database;
         _itemDataManager = itemDataManager;
         _petUtility = petUtility;
         _itemFactory = itemFactory;
+        _languageManager = languageManager;
     }
 
     public override Task Parse(Room room, GameClient session, IIncomingPacket packet)
@@ -65,7 +68,7 @@ internal class CheckGnomeNameEvent : RoomPacketEvent
         var pet = _petUtility.CreatePet(habbo.Id, petName, 26, "30", "ffffff");
         if (pet == null)
         {
-            session.SendNotification("Oops, an error occoured. Please report this!");
+            session.SendNotification(_languageManager.Require("catalog.gnome.create_failed"));
             return Task.CompletedTask;
         }
         var rndSpeechList = new List<RandomSpeech>();

@@ -39,7 +39,7 @@ internal class GiveUserBadgeCommand : IRconCommand
         if (badges != null && !badges.HasBadge(badge))
         {
             await _badgeManager.GiveBadge(habbo, badge);
-            client?.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("rcon.badge.given")));
+            client?.Send(new BroadcastMessageAlertComposer(_languageManager.Require("rcon.badge.given")));
         }
         return true;
     }

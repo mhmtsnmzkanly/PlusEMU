@@ -81,7 +81,7 @@ internal class KickUserBox : IWiredItem, IWiredCycle, IWiredActorExecutable
                 return false;
             if ((player.Permissions?.HasRight("mod_tool") ?? false) || Instance.OwnerId == player.Id)
             {
-                playerClient.Send(new WhisperComposer(user.VirtualId, "Wired Kick Exception: Unkickable Player", 0, 0));
+                playerClient.Send(new WhisperComposer(user.VirtualId, Instance.GetLanguageManager().Require("wired.kick.exception_unkickable"), 0, 0));
                 return false;
             }
             _toKick.Enqueue(player);

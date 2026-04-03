@@ -9,6 +9,7 @@ using Plus.Communication.Packets.Outgoing.Inventory.Pets;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Core;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 using Plus.Database;
 using Plus.HabboHotel.Achievements;
@@ -26,6 +27,7 @@ internal class CatalogService : ICatalogService
     private readonly ICatalogManager _catalogManager;
     private readonly IVoucherManager _voucherManager;
     private readonly IDatabase _database;
+    private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IAchievementService _achievementService;
     private readonly IItemDataManager _itemManager;
@@ -38,6 +40,7 @@ internal class CatalogService : ICatalogService
     public CatalogService(ICatalogManager catalogManager,
         IVoucherManager voucherManager,
         IDatabase database,
+        ILanguageManager languageManager,
         ISettingsManager settingsManager,
         IAchievementService achievementService,
         IItemDataManager itemManager,
@@ -50,6 +53,7 @@ internal class CatalogService : ICatalogService
         _catalogManager = catalogManager;
         _voucherManager = voucherManager;
         _database = database;
+        _languageManager = languageManager;
         _settingsManager = settingsManager;
         _achievementService = achievementService;
         _itemManager = itemManager;
@@ -74,7 +78,7 @@ internal class CatalogService : ICatalogService
 
         if (voucher!.CurrentUses >= voucher.MaxUses)
         {
-            session.SendNotification("This voucher has reached its maximum usage limit.");
+            session.SendNotification(_languageManager.Require("catalog.voucher.max_uses"));
             return;
         }
 
@@ -84,7 +88,7 @@ internal class CatalogService : ICatalogService
 
         if (exists > 0)
         {
-            session.SendNotification("You have already used this voucher code!");
+            session.SendNotification(_languageManager.Require("catalog.voucher.already_used"));
             return;
         }
 
@@ -117,10 +121,10 @@ internal class CatalogService : ICatalogService
             return;
         }
 
-        if (_settingsManager.TryGetValue("catalog.enabled") != "1")
+        if (!_settingsManager.GetBoolOrDefault("catalog.enabled", true))
         {
             _logger.LogWarning("PurchaseItem aborted for session {sessionId}: catalog disabled.", session.Id);
-            session.SendNotification("The hotel managers have disabled the catalogue");
+            session.SendNotification(_languageManager.Require("catalog.disabled"));
             return;
         }
 
@@ -186,7 +190,7 @@ internal class CatalogService : ICatalogService
             case InteractionType.BadgeDisplay:
                 if (!inventory.Badges.HasBadge(extraData))
                 {
-                    session.Send(new BroadcastMessageAlertComposer("Oops, it appears that you do not own this badge."));
+                    session.Send(new BroadcastMessageAlertComposer(_languageManager.Require("catalog.badge.not_owned")));
                     return;
                 }
                 extraData = $"{extraData}{Convert.ToChar(9)}{habbo.Username}{Convert.ToChar(9)}{DateTime.Now:dd-MM-yyyy}";
@@ -205,7 +209,7 @@ internal class CatalogService : ICatalogService
         {
             if (item.LimitedEditionStack <= item.LimitedEditionSells)
             {
-                session.SendNotification("This item has sold out!");
+                session.SendNotification(_languageManager.Require("catalog.item.sold_out"));
                 session.Send(new CatalogUpdatedComposer());
                 session.Send(new PurchaseOkComposer());
                 return;

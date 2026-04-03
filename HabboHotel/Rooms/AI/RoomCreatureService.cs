@@ -11,6 +11,7 @@ using Plus.Communication.Packets.Outgoing.Rooms.AI.Pets;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
 using Plus.Communication.Packets.Outgoing.Rooms.Engine;
 using Plus.Communication.Packets.Outgoing.Rooms.Notifications;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 using Plus.Database;
 using Plus.HabboHotel.Achievements;
@@ -45,6 +46,7 @@ internal class RoomCreatureService : IRoomCreatureService
 
     private readonly ILogger<RoomCreatureService> _logger;
     private readonly IRoomManager _roomManager;
+    private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IGameClientManager _clientManager;
     private readonly IDatabase _database;
@@ -57,6 +59,7 @@ internal class RoomCreatureService : IRoomCreatureService
 
     public RoomCreatureService(
         IRoomManager roomManager,
+        ILanguageManager languageManager,
         ISettingsManager settingsManager,
         ILogger<RoomCreatureService> logger,
         IGameClientManager clientManager,
@@ -69,6 +72,7 @@ internal class RoomCreatureService : IRoomCreatureService
         IGroupManager groupManager)
     {
         _roomManager = roomManager;
+        _languageManager = languageManager;
         _settingsManager = settingsManager;
         _logger = logger;
         _clientManager = clientManager;
@@ -93,7 +97,7 @@ internal class RoomCreatureService : IRoomCreatureService
             session.Send(new RoomErrorNotifComposer(1));
             return Task.CompletedTask;
         }
-        if (room.GetRoomUserManager().PetCount > Convert.ToInt32(_settingsManager.TryGetValue("room.pets.placement_limit")))
+        if (room.GetRoomUserManager().PetCount > _settingsManager.GetIntOrDefault("room.pets.placement_limit", 0))
         {
             session.Send(new RoomErrorNotifComposer(2));
             return Task.CompletedTask;
@@ -102,7 +106,7 @@ internal class RoomCreatureService : IRoomCreatureService
             return Task.CompletedTask;
         if (pet.PlacedInRoom)
         {
-            session.SendNotification("This pet is already in the room?");
+            session.SendNotification(_languageManager.Require("pet.already_in_room"));
             return Task.CompletedTask;
         }
         if (!room.GetGameMap().CanWalk(x, y, false))
@@ -152,7 +156,7 @@ internal class RoomCreatureService : IRoomCreatureService
 
         if (habbo.Id != pet.PetData.OwnerId && !room.CheckRights(session, true))
         {
-            session.SendWhisper("You can only pickup your own pets, to kick a pet you must have room rights.");
+            session.SendWhisper(_languageManager.Require("pet.pickup.owner_only"));
             return Task.CompletedTask;
         }
 
@@ -228,7 +232,7 @@ internal class RoomCreatureService : IRoomCreatureService
                 return;
             if (targetHabbo.Id == habbo.Id)
             {
-                session.SendWhisper("Oops, you cannot use this on yourself! (You haven't lost a point, simply reload!)");
+                session.SendWhisper(_languageManager.Require("pet.respect.self_disallowed"));
                 return;
             }
 
@@ -283,7 +287,7 @@ internal class RoomCreatureService : IRoomCreatureService
         if (!currentRoom.GetRoomUserManager().TryGetPet(petId, out var pet))
         {
             if (currentRoom.GetRoomUserManager().GetRoomUserByHabbo(petId)?.GetClient()?.GetHabbo() != null)
-                session.SendWhisper("Maybe one day, boo boo.");
+                session.SendWhisper(_languageManager.Require("pet.training.habbo_only"));
             return Task.CompletedTask;
         }
 
@@ -300,7 +304,7 @@ internal class RoomCreatureService : IRoomCreatureService
             return Task.CompletedTask;
         if (pet.PetData.AnyoneCanRide == 0 && pet.PetData.OwnerId != user.UserId)
         {
-            session.SendNotification("You are unable to ride this horse.\nThe owner of the pet has not selected for anyone to ride it.");
+            session.SendNotification(_languageManager.Require("pet.ride.disallowed"));
             return Task.CompletedTask;
         }
 
@@ -313,7 +317,7 @@ internal class RoomCreatureService : IRoomCreatureService
             }
             else if (user.RidingHorse)
             {
-                session.SendNotification("You are already riding a horse!");
+                session.SendNotification(_languageManager.Require("pet.ride.already_riding"));
             }
             else
             {
@@ -357,7 +361,7 @@ internal class RoomCreatureService : IRoomCreatureService
             }
             else
             {
-                session.SendNotification("Could not dismount this horse - You are not riding it!");
+                session.SendNotification(_languageManager.Require("pet.ride.dismount_failed"));
             }
         }
 
@@ -451,7 +455,7 @@ internal class RoomCreatureService : IRoomCreatureService
             return Task.CompletedTask;
         if (!room.GetGameMap().CanWalk(x, y, false) || !room.GetGameMap().ValidTile(x, y))
         {
-            session.SendNotification("You cannot place a bot here!");
+            session.SendNotification(_languageManager.Require("bot.place.invalid_tile"));
             return Task.CompletedTask;
         }
         if (inventory?.Bots == null || !inventory.Bots.Bots.TryGetValue(botId, out var bot))
@@ -460,7 +464,7 @@ internal class RoomCreatureService : IRoomCreatureService
         var botCount = room.GetRoomUserManager().GetUserList().Count(user => user != null && !user.IsPet && user.IsBot);
         if (botCount >= 5 && !(habbo.Permissions?.HasRight("bot_place_any_override") ?? false))
         {
-            session.SendNotification("Sorry; 5 bots per room only!");
+            session.SendNotification(_languageManager.Require("bot.place.limit_reached"));
             return Task.CompletedTask;
         }
 
@@ -524,7 +528,7 @@ internal class RoomCreatureService : IRoomCreatureService
             return Task.CompletedTask;
         if (habbo.Id != botUser.BotData.OwnerId && !(habbo.Permissions?.HasRight("bot_place_any_override") ?? false))
         {
-            session.SendWhisper("You can only pick up your own bots!");
+            session.SendWhisper(_languageManager.Require("bot.pickup.owner_only"));
             return Task.CompletedTask;
         }
 
@@ -596,17 +600,17 @@ internal class RoomCreatureService : IRoomCreatureService
             case 5:
                 if (dataString.Length == 0)
                 {
-                    session.SendWhisper("Come on, atleast give the bot a name!");
+                    session.SendWhisper(_languageManager.Require("bot.name.required"));
                     return Task.CompletedTask;
                 }
                 if (dataString.Length >= 16)
                 {
-                    session.SendWhisper("Come on, the bot doesn't need a name that long!");
+                    session.SendWhisper(_languageManager.Require("bot.name.too_long"));
                     return Task.CompletedTask;
                 }
                 if (dataString.Contains("<img src") || dataString.Contains("<font ") || dataString.Contains("</font>") || dataString.Contains("</a>") || dataString.Contains("<i>"))
                 {
-                    session.SendWhisper("No HTML, please :<");
+                    session.SendWhisper(_languageManager.Require("bot.name.html_disallowed"));
                     return Task.CompletedTask;
                 }
                 roomBot.Name = dataString;

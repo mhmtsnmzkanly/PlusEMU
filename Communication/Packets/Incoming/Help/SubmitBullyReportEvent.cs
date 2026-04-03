@@ -1,4 +1,5 @@
 ﻿using Plus.Communication.Packets.Outgoing.Help;
+using Plus.Core.Language;
 using Plus.HabboHotel.GameClients;
 using Plus.Utilities;
 
@@ -7,10 +8,12 @@ namespace Plus.Communication.Packets.Incoming.Help;
 internal class SubmitBullyReportEvent : IPacketEvent
 {
     private readonly IGameClientManager _clientManager;
+    private readonly ILanguageManager _languageManager;
 
-    public SubmitBullyReportEvent(IGameClientManager clientManager)
+    public SubmitBullyReportEvent(IGameClientManager clientManager, ILanguageManager languageManager)
     {
         _clientManager = clientManager;
+        _languageManager = languageManager;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
@@ -33,7 +36,7 @@ internal class SubmitBullyReportEvent : IPacketEvent
         }
         if (habbo.LastAdvertiseReport > UnixTimestamp.GetNow())
         {
-            session.SendNotification("Reports can only be sent per 5 minutes!");
+            session.SendNotification(_languageManager.Require("help.bully_report.cooldown"));
             return Task.CompletedTask;
         }
         var targetHabbo = client.GetHabbo();
@@ -41,7 +44,7 @@ internal class SubmitBullyReportEvent : IPacketEvent
             return Task.CompletedTask;
         if (targetHabbo.Permissions?.HasRight("mod_tool") == true) //Reporting staff, nope!
         {
-            session.SendNotification("Sorry, you cannot report staff members via this tool.");
+            session.SendNotification(_languageManager.Require("help.bully_report.staff_disallowed"));
             return Task.CompletedTask;
         }
 

@@ -58,7 +58,7 @@ internal class UpdateFigureDataEvent : IPacketEvent
         string[] allowedGenders = { "M", "F" };
         if (!allowedGenders.Contains(gender))
         {
-            session.Send(new BroadcastMessageAlertComposer(_languageManager.TryGetValue("user.figure.invalid_gender")));
+            session.Send(new BroadcastMessageAlertComposer(_languageManager.Require("user.figure.invalid_gender")));
             return;
         }
 

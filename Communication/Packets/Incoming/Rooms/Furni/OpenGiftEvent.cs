@@ -45,23 +45,23 @@ internal class OpenGiftEvent : IPacketEvent
             new { presentId = present.Id });
         if (data == null)
         {
-            RemoveBrokenPresent(session, room, furniture, present, _languageManager.TryGetValue("catalog.gift.broken"));
+            RemoveBrokenPresent(session, room, furniture, present, _languageManager.Require("catalog.gift.broken"));
             return Task.CompletedTask;
         }
         if (!int.TryParse(present.LegacyDataString.Split(Convert.ToChar(5))[2], out var purchaserId))
         {
-            RemoveBrokenPresent(session, room, furniture, present, _languageManager.TryGetValue("catalog.gift.broken"));
+            RemoveBrokenPresent(session, room, furniture, present, _languageManager.Require("catalog.gift.broken"));
             return Task.CompletedTask;
         }
         var purchaser = _cacheManager.GenerateUser(purchaserId);
         if (purchaser == null)
         {
-            RemoveBrokenPresent(session, room, furniture, present, _languageManager.TryGetValue("catalog.gift.broken"));
+            RemoveBrokenPresent(session, room, furniture, present, _languageManager.Require("catalog.gift.broken"));
             return Task.CompletedTask;
         }
         if (!_itemDataManger.Items.TryGetValue(Convert.ToUInt32(data.base_id), out ItemDefinition? baseItem))
         {
-            RemoveBrokenPresent(session, room, furniture, present, _languageManager.TryGetValue("catalog.gift.item_missing"));
+            RemoveBrokenPresent(session, room, furniture, present, _languageManager.Require("catalog.gift.item_missing"));
             return Task.CompletedTask;
         }
         present.MagicRemove = true;

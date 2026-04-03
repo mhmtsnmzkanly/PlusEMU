@@ -54,12 +54,12 @@ internal class GiveUserBadgeBox : IWiredItem, IWiredActorExecutable
         if (string.IsNullOrEmpty(StringData))
             return false;
         if (playerBadges.HasBadge(StringData))
-            playerClient.Send(new WhisperComposer(user.VirtualId, "Oops, it appears you have already recieved this badge!", 0, user.LastBubble));
+            playerClient.Send(new WhisperComposer(user.VirtualId, Instance.GetLanguageManager().Require("wired.badge.already_owned"), 0, user.LastBubble));
         else
         {
             var badgeManager = Instance.GetBadgeManager();
             Task.Run(() => badgeManager.GiveBadge(player, StringData));
-            playerClient.SendNotification("You have recieved a badge!");
+            playerClient.SendNotification(Instance.GetLanguageManager().Require("wired.badge.received"));
         }
         return true;
     }

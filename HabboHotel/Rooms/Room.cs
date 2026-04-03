@@ -242,6 +242,7 @@ public class Room : RoomData
     public IAchievementService GetAchievementService() => _achievementService;
     public IQuestService GetQuestService() => _questService;
     public ICacheManager GetCacheManager() => _cacheManager;
+    public ILanguageManager GetLanguageManager() => _languageManager;
     public IBadgeManager GetBadgeManager() => _badgeManager;
     public IUserDataFactory GetUserDataFactory() => _userDataFactory;
     public IGroupManager GetGroupManager() => _groupManager;
@@ -683,7 +684,7 @@ public class Room : RoomData
         if (client == null)
             return;
 
-        client.SendNotification("Sorry, it appears that room has crashed!");
+        client.SendNotification(_languageManager.Require("room.crashed.evict"));
         try
         {
             _ = GetRoomService().LeaveRoom(client);

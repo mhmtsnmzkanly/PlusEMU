@@ -134,13 +134,13 @@ internal class NavigatorService : INavigatorService
         var filteredDescription = _wordFilterManager.CheckMessage(description);
         if (filteredName.Length is < 3 or > 25)
         {
-            session.SendNotification(_languageManager.TryGetValue("room.creation.name.too_short"));
+            session.SendNotification(_languageManager.Require("room.creation.name.too_short"));
             return Task.CompletedTask;
         }
 
         if (!_roomManager.TryGetModel(modelName, out var model))
         {
-            session.SendNotification(_languageManager.TryGetValue("room.creation.model.not_found"));
+            session.SendNotification(_languageManager.Require("room.creation.model.not_found"));
             return Task.CompletedTask;
         }
 
@@ -213,7 +213,7 @@ internal class NavigatorService : INavigatorService
             return;
         if (data.Promotion == null)
         {
-            session.SendNotification("Oops, it looks like there isn't a room promotion in this room?");
+            session.SendNotification(_languageManager.Require("navigator.room_promotion.missing"));
             return;
         }
 

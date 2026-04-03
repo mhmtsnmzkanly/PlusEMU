@@ -139,8 +139,8 @@ public class SsoTicketEvent : IPacketEvent
                     _moderationManager.RoomMessagePresets,
                     _moderationManager.GetTickets));
             }
-            if (_settingsManager.TryGetValue("user.login.message.enabled") == "1")
-                session.Send(new MotdNotificationComposer(_languageManager.TryGetValue("user.login.message")));
+            if (_settingsManager.GetBoolOrDefault("user.login.message.enabled", false))
+                session.Send(new MotdNotificationComposer(_languageManager.Require("user.login.message")));
             await _rewardManager.CheckRewards(session);
         }
     }

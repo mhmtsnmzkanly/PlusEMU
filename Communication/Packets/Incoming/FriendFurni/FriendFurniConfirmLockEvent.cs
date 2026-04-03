@@ -1,5 +1,6 @@
 using Dapper;
 using Plus.Communication.Packets.Outgoing.Rooms.Furni.LoveLocks;
+using Plus.Core.Language;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Items;
@@ -9,10 +10,12 @@ namespace Plus.Communication.Packets.Incoming.FriendFurni;
 internal class FriendFurniConfirmLockEvent : IPacketEvent
 {
     private readonly IDatabase _database;
+    private readonly ILanguageManager _languageManager;
 
-    public FriendFurniConfirmLockEvent(IDatabase database)
+    public FriendFurniConfirmLockEvent(IDatabase database, ILanguageManager languageManager)
     {
         _database = database;
+        _languageManager = languageManager;
     }
 
     public Task Parse(GameClient session, IIncomingPacket packet)
@@ -35,7 +38,7 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
         if (userOne == null && userTwo == null)
         {
             item.InteractingUser = 0; item.InteractingUser2 = 0;
-            session.SendNotification("Your partner has left the room or has cancelled the love lock.");
+            session.SendNotification(_languageManager.Require("lovelock.partner_missing"));
             return Task.CompletedTask;
         }
         var userOneClient = userOne?.GetClient();
@@ -45,15 +48,15 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
         if (userOneClient == null || userTwoClient == null || userOneHabbo == null || userTwoHabbo == null)
         {
             item.InteractingUser = 0; item.InteractingUser2 = 0;
-            session.SendNotification("Your partner has left the room or has cancelled the love lock.");
+            session.SendNotification(_languageManager.Require("lovelock.partner_missing"));
             return Task.CompletedTask;
         }
-        if (userOne == null) { userTwo!.CanWalk = true; userTwoClient.SendNotification("Your partner has left the room or has cancelled the love lock."); userTwo.LlPartner = 0; item.InteractingUser = 0; item.InteractingUser2 = 0; return Task.CompletedTask; }
-        if (userTwo == null) { userOne.CanWalk = true; userOneClient.SendNotification("Your partner has left the room or has cancelled the love lock."); userOne.LlPartner = 0; item.InteractingUser = 0; item.InteractingUser2 = 0; return Task.CompletedTask; }
+        if (userOne == null) { userTwo!.CanWalk = true; userTwoClient.SendNotification(_languageManager.Require("lovelock.partner_missing")); userTwo.LlPartner = 0; item.InteractingUser = 0; item.InteractingUser2 = 0; return Task.CompletedTask; }
+        if (userTwo == null) { userOne.CanWalk = true; userOneClient.SendNotification(_languageManager.Require("lovelock.partner_missing")); userOne.LlPartner = 0; item.InteractingUser = 0; item.InteractingUser2 = 0; return Task.CompletedTask; }
         if (item.ExtraData.Serialize().Contains(Convert.ToChar(5).ToString()))
         {
-            userTwo.CanWalk = true; userTwoClient.SendNotification("It appears this love lock has already been locked."); userTwo.LlPartner = 0;
-            userOne.CanWalk = true; userOneClient.SendNotification("It appears this love lock has already been locked."); userOne.LlPartner = 0;
+            userTwo.CanWalk = true; userTwoClient.SendNotification(_languageManager.Require("lovelock.already_locked")); userTwo.LlPartner = 0;
+            userOne.CanWalk = true; userOneClient.SendNotification(_languageManager.Require("lovelock.already_locked")); userOne.LlPartner = 0;
             item.InteractingUser = 0; item.InteractingUser2 = 0;
             return Task.CompletedTask;
         }

@@ -47,7 +47,7 @@ public class ModerationQueryService : IModerationQueryService
 
         if (user == null)
         {
-            session.SendNotification(_languageManager.TryGetValue("moderation.user_info.not_found"));
+            session.SendNotification(_languageManager.Require("moderation.user_info.not_found"));
             return;
         }
 

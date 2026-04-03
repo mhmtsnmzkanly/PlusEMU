@@ -41,25 +41,25 @@ public class InteractorLoveLock : IFurniInteractor
                 var userOne = item.GetRoom().GetRoomUserManager().GetUserForSquare(pointOne.X, pointOne.Y);
                 var userTwo = item.GetRoom().GetRoomUserManager().GetUserForSquare(pointTwo.X, pointTwo.Y);
                 if (userOne == null || userTwo == null)
-                    session.SendNotification("We couldn't find a valid user to lock this love lock with.");
+                    session.SendNotification(item.GetRoom().GetLanguageManager().Require("lovelock.user_invalid"));
                 else if (userOne.GetClient() == null || userTwo.GetClient() == null)
-                    session.SendNotification("We couldn't find a valid user to lock this love lock with.");
+                    session.SendNotification(item.GetRoom().GetLanguageManager().Require("lovelock.user_invalid"));
                 else if (userOne.HabboId != item.UserId && userTwo.HabboId != item.UserId)
-                    session.SendNotification("You can only use this item with the item owner.");
+                    session.SendNotification(item.GetRoom().GetLanguageManager().Require("lovelock.owner_only"));
                 else
                 {
                     var userOneClient = userOne.GetClient();
                     var userTwoClient = userTwo.GetClient();
                     if (userOneClient == null || userTwoClient == null)
                     {
-                        session.SendNotification("We couldn't find a valid user to lock this love lock with.");
+                        session.SendNotification(item.GetRoom().GetLanguageManager().Require("lovelock.user_invalid"));
                         return;
                     }
                     var userOneHabbo = userOneClient?.GetHabbo();
                     var userTwoHabbo = userTwoClient?.GetHabbo();
                     if (userOneHabbo == null || userTwoHabbo == null)
                     {
-                        session.SendNotification("We couldn't find a valid user to lock this love lock with.");
+                        session.SendNotification(item.GetRoom().GetLanguageManager().Require("lovelock.user_invalid"));
                         return;
                     }
                     userOne.CanWalk = false;

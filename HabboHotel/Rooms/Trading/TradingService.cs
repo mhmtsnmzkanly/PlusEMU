@@ -3,6 +3,7 @@ using Plus.Communication.Packets.Outgoing.Inventory.Furni;
 using Plus.Communication.Packets.Outgoing.Inventory.Purse;
 using Plus.Communication.Packets.Outgoing.Inventory.Trading;
 using Plus.Communication.Packets.Outgoing.Moderation;
+using Plus.Core.Language;
 using Plus.Core.Settings;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
@@ -16,11 +17,13 @@ namespace Plus.HabboHotel.Rooms.Trading;
 internal class TradingService : ITradingService
 {
     private readonly IDatabase _database;
+    private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
 
-    public TradingService(IDatabase database, ISettingsManager settingsManager)
+    public TradingService(IDatabase database, ILanguageManager languageManager, ISettingsManager settingsManager)
     {
         _database = database;
+        _languageManager = languageManager;
         _settingsManager = settingsManager;
     }
 
@@ -42,12 +45,12 @@ internal class TradingService : ITradingService
         {
             if (habbo.TradingLockExpiry > UnixTimestamp.GetNow())
             {
-                session.SendNotification("You're currently banned from trading.");
+                session.SendNotification(_languageManager.Require("trading.locked"));
                 return;
             }
 
             habbo.TradingLockExpiry = 0;
-            session.SendNotification("Your trading ban has now expired.");
+            session.SendNotification(_languageManager.Require("trading.lock_expired"));
             using var connection = _database.Connection();
             await connection.ExecuteAsync(
                 "UPDATE `user_info` SET `trading_locked` = '0' WHERE `id` = @userId LIMIT 1",
@@ -97,7 +100,7 @@ internal class TradingService : ITradingService
 
         if (!room.GetTrading().StartTrade(roomUser, targetUser, out var trade))
         {
-            session.SendNotification("An error occured trying to start this trade");
+            session.SendNotification(_languageManager.Require("trading.start.error"));
             return;
         }
 
@@ -350,7 +353,7 @@ internal class TradingService : ITradingService
         {
             if (inventoryOne.GetItem(item.Id) == null)
             {
-                trade.SendPacket(new BroadcastMessageAlertComposer("Error! Trading Failed!"));
+                trade.SendPacket(new BroadcastMessageAlertComposer(_languageManager.Require("trading.failed")));
                 return;
             }
         }
@@ -359,12 +362,12 @@ internal class TradingService : ITradingService
         {
             if (inventoryTwo.GetItem(item.Id) == null)
             {
-                trade.SendPacket(new BroadcastMessageAlertComposer("Error! Trading Failed!"));
+                trade.SendPacket(new BroadcastMessageAlertComposer(_languageManager.Require("trading.failed")));
                 return;
             }
         }
 
-        var autoRedeemExchangeables = _settingsManager.TryGetValue("trading.auto_exchange_redeemables") == "1";
+        var autoRedeemExchangeables = _settingsManager.GetBoolOrDefault("trading.auto_exchange_redeemables", false);
         var logUserOne = string.Empty;
         var logUserTwo = string.Empty;
 

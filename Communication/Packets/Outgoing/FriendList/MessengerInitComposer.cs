@@ -15,7 +15,7 @@ public class MessengerInitComposer : IServerPacket
 
     public void Compose(IOutgoingPacket packet)
     {
-        packet.WriteInteger(Convert.ToInt32(_settingsManager.TryGetValue("messenger.buddy_limit"))); //Friends max.
+        packet.WriteInteger(_settingsManager.GetIntOrDefault("messenger.buddy_limit", 0)); //Friends max.
         packet.WriteInteger(300);
         packet.WriteInteger(800);
         packet.WriteInteger(0); // category count
