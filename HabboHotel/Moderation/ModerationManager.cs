@@ -227,8 +227,11 @@ public sealed class ModerationManager : IModerationManager
 
     public bool UserHasTickets(int userId) => _modTickets.Any(x => x.Value.Sender.Id == userId && x.Value.Answered == false);
 
-    public ModerationTicket? GetTicketBySenderId(int userId)
-        => _modTickets.FirstOrDefault(x => x.Value.Sender.Id == userId).Value;
+    public bool TryGetTicketBySenderId(int userId, out ModerationTicket? ticket)
+    {
+        ticket = _modTickets.Values.FirstOrDefault(entry => entry.Sender.Id == userId);
+        return ticket != null;
+    }
 
     /// <summary>
     /// Runs a quick check to see if a ban record is cached in the server.

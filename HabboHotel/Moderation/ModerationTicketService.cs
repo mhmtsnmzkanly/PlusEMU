@@ -29,14 +29,12 @@ internal class ModerationTicketService : IModerationTicketService
         if (habbo == null)
             return;
 
-        if (_moderationManager.UserHasTickets(habbo.Id))
+        if (_moderationManager.UserHasTickets(habbo.Id)
+            && _moderationManager.TryGetTicketBySenderId(habbo.Id, out var pendingTicket)
+            && pendingTicket != null)
         {
-            var pendingTicket = _moderationManager.GetTicketBySenderId(habbo.Id);
-            if (pendingTicket != null)
-            {
-                session.Send(new CallForHelpPendingCallsComposer(pendingTicket));
-                return;
-            }
+            session.Send(new CallForHelpPendingCallsComposer(pendingTicket));
+            return;
         }
 
         var reportedUser = _clientManager.GetClientByUserId(reportedUserId)?.GetHabbo();
@@ -134,14 +132,12 @@ internal class ModerationTicketService : IModerationTicketService
         if (habbo == null)
             return Task.CompletedTask;
 
-        if (_moderationManager.UserHasTickets(habbo.Id))
+        if (_moderationManager.UserHasTickets(habbo.Id)
+            && _moderationManager.TryGetTicketBySenderId(habbo.Id, out var pendingTicket)
+            && pendingTicket != null)
         {
-            var pendingTicket = _moderationManager.GetTicketBySenderId(habbo.Id);
-            if (pendingTicket != null)
-            {
-                pendingTicket.Answered = true;
-                _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, pendingTicket), "mod_tool");
-            }
+            pendingTicket.Answered = true;
+            _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, pendingTicket), "mod_tool");
         }
 
         return Task.CompletedTask;

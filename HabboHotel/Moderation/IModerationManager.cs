@@ -12,7 +12,7 @@ public interface IModerationManager
     bool TryAddTicket(ModerationTicket ticket);
     bool TryGetTicket(int ticketId, out ModerationTicket? ticket);
     bool UserHasTickets(int userId);
-    ModerationTicket? GetTicketBySenderId(int userId);
+    bool TryGetTicketBySenderId(int userId, out ModerationTicket? ticket);
 
     /// <summary>
     /// Runs a quick check to see if a ban record is cached in the server.
