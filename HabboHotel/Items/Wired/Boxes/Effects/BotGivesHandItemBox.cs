@@ -40,11 +40,9 @@ internal class BotGivesHandItemBox : IWiredItem, IWiredActorExecutable
         var player = context.Actor;
         if (player == null)
             return false;
-        var actor = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
-        if (actor == null)
+        if (!Instance.GetRoomUserManager().TryGetRoomUserByHabbo(player.Id, out var actor) || actor == null)
             return false;
-        var user = Instance.GetRoomUserManager().GetBotByName(botName);
-        if (user == null)
+        if (!Instance.GetRoomUserManager().TryGetBotByName(botName, out var user) || user == null)
             return false;
         if (user.BotData.TargetUser == 0)
         {

@@ -42,8 +42,7 @@ internal class MuteTriggererBox : IWiredItem, IWiredActorExecutable
         var player = context.Actor;
         if (player == null || !player.TryGetClient(out var playerClient))
             return false;
-        var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
-        if (user == null)
+        if (!Instance.GetRoomUserManager().TryGetRoomUserByHabbo(player.Id, out var user) || user == null)
             return false;
         if ((player.Permissions?.HasRight("mod_tool") ?? false) || Instance.OwnerId == player.Id)
         {

@@ -36,8 +36,7 @@ internal class BotChangesClothesBox : IWiredItem, IWiredEmptyExecutable
     {
         if (!WiredBotDataParser.TryParseBotClothing(StringData, out var botName, out var figure))
             return false;
-        var user = Instance.GetRoomUserManager().GetBotByName(botName);
-        if (user == null)
+        if (!Instance.GetRoomUserManager().TryGetBotByName(botName, out var user) || user == null)
             return false;
         var userChangeComposer = new UserChangeComposer(user.BotData);
         Instance.SendPacket(userChangeComposer);

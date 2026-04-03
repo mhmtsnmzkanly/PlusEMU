@@ -38,8 +38,7 @@ internal class AddActorToTeamBox : IWiredItem, IWiredActorExecutable
         var player = context.Actor;
         if (player == null)
             return false;
-        var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
-        if (user == null)
+        if (!Instance.GetRoomUserManager().TryGetRoomUserByHabbo(player.Id, out var user) || user == null)
             return false;
         var client = user.GetClient();
         var habbo = client?.GetHabbo();

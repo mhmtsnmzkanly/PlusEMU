@@ -41,8 +41,7 @@ internal class TeleportBotToFurniBox : IWiredItem, IWiredEmptyExecutable
     {
         if (!WiredBotDataParser.TryParseBotName(StringData, out var botName))
             return false;
-        var user = Instance.GetRoomUserManager().GetBotByName(botName);
-        if (user == null)
+        if (!Instance.GetRoomUserManager().TryGetBotByName(botName, out var user) || user == null)
             return false;
         if (!WiredSetItemSelector.TryGetRandomFloorItem(Instance, SetItems, out var item))
             return false;

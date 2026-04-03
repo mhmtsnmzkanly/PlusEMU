@@ -92,8 +92,7 @@ internal class TeleportUserBox : IWiredItem, IWiredCycle, IWiredActorExecutable
             return;
         if (!player.TryGetCurrentRoom(out var room))
             return;
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(player.Username, out var user) || user == null)
             return;
         if (player.IsTeleporting || player.IsHopping || player.TeleporterId != 0)
             return;

@@ -40,8 +40,7 @@ internal class ActorIsInTeamBox : IWiredItem, IWiredActorExecutable
         var player = context.Actor;
         if (player == null)
             return false;
-        var user = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
-        if (user == null)
+        if (!Instance.GetRoomUserManager().TryGetRoomUserByHabbo(player.Id, out var user) || user == null)
             return false;
         return WiredTeamParser.TryParseTeam(StringData, out var team) && user.Team == team;
     }

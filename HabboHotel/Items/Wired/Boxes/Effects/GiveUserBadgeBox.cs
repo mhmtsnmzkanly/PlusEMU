@@ -48,8 +48,7 @@ internal class GiveUserBadgeBox : IWiredItem, IWiredActorExecutable
         var playerBadges = player?.Inventory?.Badges;
         if (player == null || playerBadges == null || !player.TryGetClient(out var playerClient) || !player.TryGetCurrentRoom(out var currentRoom))
             return false;
-        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
-        if (user == null)
+        if (!currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(player.Username, out var user) || user == null)
             return false;
         if (string.IsNullOrEmpty(StringData))
             return false;

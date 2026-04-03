@@ -42,8 +42,7 @@ internal class ShowMessageBox : IWiredItem, IWiredActorExecutable
         var player = context.Actor;
         if (player == null || string.IsNullOrWhiteSpace(StringData) || !player.TryGetClient(out var playerClient) || !player.TryGetCurrentRoom(out var currentRoom))
             return false;
-        var user = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(player.Username);
-        if (user == null)
+        if (!currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(player.Username, out var user) || user == null)
             return false;
         var message = StringData;
         if (StringData.Contains("%USERNAME%"))

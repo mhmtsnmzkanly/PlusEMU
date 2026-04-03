@@ -37,8 +37,7 @@ internal class BotCommunicatesToAllBox : IWiredItem, IWiredEmptyExecutable
     {
         if (!WiredBotDataParser.TryParseBotCommunication(StringData, out var botName, out var message, out var chatMode))
             return false;
-        var user = Instance.GetRoomUserManager().GetBotByName(botName);
-        if (user == null)
+        if (!Instance.GetRoomUserManager().TryGetBotByName(botName, out var user) || user == null)
             return false;
         SpeakToRoom(user, message, chatMode);
         return true;

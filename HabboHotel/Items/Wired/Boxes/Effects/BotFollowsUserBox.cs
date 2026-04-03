@@ -40,11 +40,9 @@ internal class BotFollowsUserBox : IWiredItem, IWiredActorExecutable
         var player = context.Actor;
         if (player == null)
             return false;
-        var human = Instance.GetRoomUserManager().GetRoomUserByHabbo(player.Id);
-        if (human == null)
+        if (!Instance.GetRoomUserManager().TryGetRoomUserByHabbo(player.Id, out var human) || human == null)
             return false;
-        var user = Instance.GetRoomUserManager().GetBotByName(botName);
-        if (user == null)
+        if (!Instance.GetRoomUserManager().TryGetBotByName(botName, out var user) || user == null)
             return false;
         if (followMode == 0)
         {
