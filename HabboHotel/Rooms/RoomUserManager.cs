@@ -522,6 +522,28 @@ public class RoomUserManager
         return true;
     }
 
+    private void RecalculatePath(RoomUser user)
+    {
+        if (user.Path.Count > 1)
+            user.Path.Clear();
+
+        user.Path = PathFinder.FindPath(user, _room.GetGameMap().DiagonalEnabled, _room.GetGameMap(), new(user.X, user.Y), new(user.GoalX, user.GoalY));
+        user.PathRecalcNeeded = false;
+
+        if (user.Path.Count > 1)
+        {
+            user.PathStep = 1;
+            user.IsWalking = true;
+            return;
+        }
+
+        if (user.Path.Count > 1)
+            user.Path.Clear();
+
+        Log.Debug("Path recalculation produced no usable path. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Goal=({goalX},{goalY})",
+            _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY);
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -880,25 +902,7 @@ public class RoomUserManager
                     user.SetStep = false;
                 }
                 if (user.PathRecalcNeeded)
-                {
-                    if (user.Path.Count > 1)
-                        user.Path.Clear();
-                    user.Path = PathFinder.FindPath(user, _room.GetGameMap().DiagonalEnabled, _room.GetGameMap(), new(user.X, user.Y), new(user.GoalX, user.GoalY));
-                    if (user.Path.Count > 1)
-                    {
-                        user.PathStep = 1;
-                        user.IsWalking = true;
-                        user.PathRecalcNeeded = false;
-                    }
-                    else
-                    {
-                        user.PathRecalcNeeded = false;
-                        if (user.Path.Count > 1)
-                            user.Path.Clear();
-                        Log.Debug("Path recalculation produced no usable path. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Goal=({goalX},{goalY})",
-                            _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY);
-                    }
-                }
+                    RecalculatePath(user);
                 if (user.IsWalking && !user.Freezed)
                 {
                     if (invalidStep || user.PathStep >= user.Path.Count || user.GoalX == user.X && user.GoalY == user.Y) //No path found, or reached goal (:

@@ -395,3 +395,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - `RoomUserManager` is also peeling the bot follow/carry tail away from the main movement-stop branch now, keeping target-delivery rotation and cleanup behind a dedicated helper before larger runtime changes
 - the same room-user movement cleanup is now consolidating next-step setup too, with rider and mounted-horse rotation/set-step preparation moved behind one helper ahead of the later occupancy/update branches
 - that room-user movement cleanup now also covers completed-step application, with walk-on/off callbacks, coordinate sync, and door-exit enqueueing moved behind a single helper before any larger lifecycle rewrite
+- the same `RoomUserManager` cleanup is now isolating path recalculation as well, moving refind/reset/logging flow behind one helper before the remaining movement/lifecycle core is touched
