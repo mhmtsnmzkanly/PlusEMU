@@ -38,7 +38,7 @@ public class RoomAppender : IRoomAppender
             roomType += 8;
         if (data.AllowPets)
             roomType += 16;
-        if (_navigator.TryGetFeaturedRoom(data.Id, out var item)) roomType += 1;
+        if (_navigator.TryGetFeaturedRoom(data.Id, out var item) && item != null) roomType += 1;
         packet.WriteInteger(roomType);
         if (item != null) packet.WriteString(item.Image);
         if (data.Group != null)

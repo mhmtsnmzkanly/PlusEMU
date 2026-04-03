@@ -128,36 +128,36 @@ public sealed class NavigatorManager : INavigatorManager
 
     public IReadOnlyCollection<SearchResultList> SearchResultLists => _searchResultLists.Values;
 
-    public bool TryGetTopLevelItem(int id, out TopLevelItem topLevelItem)
+    public bool TryGetTopLevelItem(int id, out TopLevelItem? topLevelItem)
     {
         if (_topLevelItems.TryGetValue(id, out var item))
         {
             topLevelItem = item;
             return true;
         }
-        topLevelItem = null!;
+        topLevelItem = null;
         return false;
     }
 
-    public bool TryGetSearchResultList(int id, out SearchResultList searchResultList)
+    public bool TryGetSearchResultList(int id, out SearchResultList? searchResultList)
     {
         if (_searchResultLists.TryGetValue(id, out var resultList))
         {
             searchResultList = resultList;
             return true;
         }
-        searchResultList = null!;
+        searchResultList = null;
         return false;
     }
 
-    public bool TryGetFeaturedRoom(uint roomId, out FeaturedRoom publicRoom)
+    public bool TryGetFeaturedRoom(uint roomId, out FeaturedRoom? publicRoom)
     {
         if (_featuredRooms.TryGetValue(roomId, out var featuredRoom))
         {
             publicRoom = featuredRoom;
             return true;
         }
-        publicRoom = null!;
+        publicRoom = null;
         return false;
     }
 

@@ -70,7 +70,7 @@ internal static class ItemBehaviourUtility
                 packet.WriteString(item.LegacyDataString);
                 break;
             case var _ when item.Definition.IsGroupFurni:
-                if (!item.GetRoom().GetGroupManager().TryGetGroup(item.GroupId, out var group))
+                if (!item.GetRoom().GetGroupManager().TryGetGroup(item.GroupId, out var group) || group == null)
                 {
                     packet.WriteInteger(1);
                     packet.WriteInteger(0);

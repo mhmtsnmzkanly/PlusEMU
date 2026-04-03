@@ -748,7 +748,7 @@ public class Gamemap
                 var I = items.FirstOrDefault(x => x.Definition.IsGroupGate);
                 if (I != null)
                 {
-                    if (!_room.GetGroupManager().TryGetGroup(I.GroupId, out var group))
+                    if (!_room.GetGroupManager().TryGetGroup(I.GroupId, out var group) || group == null)
                         return false;
                     var client = user.GetClient();
                     var habbo = client?.GetHabbo();

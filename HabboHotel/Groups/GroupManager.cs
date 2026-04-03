@@ -114,15 +114,15 @@ public class GroupManager : IGroupManager
         }
     }
 
-    public bool TryGetGroup(int id, out Group group)
+    public bool TryGetGroup(int id, out Group? group)
     {
-        group = null!;
+        group = null;
         if (_groups.ContainsKey(id))
-            return _groups.TryGetValue(id, out group!);
+            return _groups.TryGetValue(id, out group);
         lock (_groupLoadingSync)
         {
             if (_groups.ContainsKey(id))
-                return _groups.TryGetValue(id, out group!);
+                return _groups.TryGetValue(id, out group);
             using var connection = _database.Connection();
             var row = connection.QueryFirstOrDefault<GroupRow>(
                 """
@@ -226,7 +226,7 @@ public class GroupManager : IGroupManager
             new { user = userId });
         foreach (var groupId in groupIds)
         {
-            if (TryGetGroup(groupId, out var group))
+            if (TryGetGroup(groupId, out var group) && group != null)
                 groups.Add(group);
         }
         return groups;
@@ -245,7 +245,7 @@ public class GroupManager : IGroupManager
                      .Where(g => g > 0)
                      .Distinct())
         {
-            if (!TryGetGroup(groupIds, out var group))
+            if (!TryGetGroup(groupIds, out var group) || group == null)
                 continue;
             badges.Add(group.Id, group.Badge);
         }

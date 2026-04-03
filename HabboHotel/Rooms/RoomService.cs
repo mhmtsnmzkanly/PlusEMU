@@ -120,7 +120,7 @@ public class RoomService : IRoomService
         if (!_roomManager.TryGetModel(modelName, out var model))
             return null;
 
-        if (!_navigatorManager.TryGetSearchResultList(category, out var searchResultList))
+        if (!_navigatorManager.TryGetSearchResultList(category, out var searchResultList) || searchResultList == null)
             category = 36;
         else if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank)
             category = 36;
