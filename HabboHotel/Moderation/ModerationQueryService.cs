@@ -61,11 +61,11 @@ public class ModerationQueryService : IModerationQueryService
 
     public async Task GetRoomInfo(GameClient session, uint roomId)
     {
-        if (!_roomFactory.TryGetData(roomId, out var data))
+        if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
             return;
 
-        var ownerInRoom = _roomManager.TryGetRoom(roomId, out var room) && room.GetRoomUserManager().GetRoomUserByHabbo(data!.OwnerId) != null;
-        session.Send(new ModeratorRoomInfoComposer(data!, ownerInRoom));
+        var ownerInRoom = _roomManager.TryGetRoom(roomId, out var room) && room.GetRoomUserManager().GetRoomUserByHabbo(data.OwnerId) != null;
+        session.Send(new ModeratorRoomInfoComposer(data, ownerInRoom));
     }
 
     public async Task GetUserRoomVisits(GameClient session, int userId)
@@ -82,10 +82,10 @@ public class ModerationQueryService : IModerationQueryService
         var visits = new Dictionary<double, RoomData>();
         foreach (var row in visitsRows)
         {
-            if (!_roomFactory.TryGetData((uint)row.room_id, out var data))
+            if (!_roomFactory.TryGetData((uint)row.room_id, out var data) || data == null)
                 continue;
             if (!visits.ContainsKey((double)row.entry_timestamp))
-                visits.Add((double)row.entry_timestamp, data!);
+                visits.Add((double)row.entry_timestamp, data);
         }
 
         session.Send(new ModeratorUserRoomVisitsComposer(habbo.Id, habbo.Username, visits));
@@ -105,7 +105,7 @@ public class ModerationQueryService : IModerationQueryService
         var chatlogs = new List<KeyValuePair<RoomData, List<ChatlogEntry>>>();
         foreach (var row in visitsRows)
         {
-            if (!_roomFactory.TryGetData((uint)row.room_id, out var data))
+            if (!_roomFactory.TryGetData((uint)row.room_id, out var data) || data == null)
                 continue;
 
             var chats = (await connection.QueryAsync<dynamic>(
@@ -113,7 +113,7 @@ public class ModerationQueryService : IModerationQueryService
                 new { userId, roomId = row.room_id, start = row.entry_timestamp, end = row.exit_timestamp == 0 ? UnixTimestamp.GetNow() : row.exit_timestamp }))
                 .Select(c => new ChatlogEntry((int)c.PlayerId, (uint)row.room_id, (string)c.Message, (double)c.Timestamp)).ToList();
 
-            chatlogs.Add(new(data!, chats));
+            chatlogs.Add(new(data, chats));
         }
 
         session.Send(new ModeratorUserChatlogComposer(habbo.Id, habbo.Username, chatlogs));
@@ -121,7 +121,7 @@ public class ModerationQueryService : IModerationQueryService
 
     public async Task GetRoomChatlog(GameClient session, uint roomId)
     {
-        if (!_roomFactory.TryGetData(roomId, out var data))
+        if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
             return;
 
         using var connection = _database.Connection();
@@ -130,7 +130,7 @@ public class ModerationQueryService : IModerationQueryService
             new { roomId }))
             .Select(c => new ChatlogEntry((int)c.PlayerId, roomId, (string)c.Message, (double)c.Timestamp)).ToList();
 
-        session.Send(new ModeratorRoomChatlogComposer(data!, chats));
+        session.Send(new ModeratorRoomChatlogComposer(data, chats));
     }
 
     public async Task GetTicketChatlogs(GameClient session, int ticketId)
@@ -138,7 +138,7 @@ public class ModerationQueryService : IModerationQueryService
         if (!_moderationManager.TryGetTicket(ticketId, out var ticket))
             return;
 
-        if (ticket!.Room == null)
+        if (ticket == null || ticket.Room == null)
             return;
 
         session.Send(new ModeratorTicketChatlogComposer(ticket, ticket.Room, ticket.Timestamp));

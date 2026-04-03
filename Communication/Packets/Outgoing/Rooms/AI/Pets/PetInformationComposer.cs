@@ -30,7 +30,7 @@ public class PetInformationComposer : IServerPacket
     {
         if (_pet != null)
         {
-            if (!_roomManager.TryGetRoom(_pet.RoomId, out var room))
+            if (!_roomManager.TryGetRoom(_pet.RoomId, out var room) || room == null)
                 return;
             packet.WriteInteger(_pet.PetId);
             packet.WriteString(_pet.Name);

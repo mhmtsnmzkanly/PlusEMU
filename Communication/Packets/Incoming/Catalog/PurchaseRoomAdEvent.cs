@@ -43,9 +43,9 @@ public class PurchaseRoomAdEvent : IPacketEvent
         packet.ReadBool(); //junk
         var desc = _wordFilterManager.CheckMessage(packet.ReadString());
         var categoryId = packet.ReadInt();
-        if (!_roomFactory.TryGetData(roomId, out var data))
+        if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
             return;
-        if (data!.OwnerId != habbo.Id)
+        if (data.OwnerId != habbo.Id)
             return;
         if (data.Promotion == null)
             data.Promotion = new(name, desc, categoryId, _settingsManager.GetIntOrDefault("room.promotion.lifespan", 0));

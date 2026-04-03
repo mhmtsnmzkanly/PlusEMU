@@ -109,9 +109,9 @@ internal class NavigatorQueryService : INavigatorQueryService
                 roomId = (uint)intRoomId;
             else
                 continue;
-            if (!_roomFactory.TryGetData(roomId, out var data))
+            if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
                 continue;
-            if (data != null && !favourites.Contains(data))
+            if (!favourites.Contains(data))
                 favourites.Add(data);
         }
 
@@ -123,9 +123,9 @@ internal class NavigatorQueryService : INavigatorQueryService
         var myGroups = new List<RoomData>();
         foreach (var group in _groupManager.GetGroupsForUser(userId).ToList())
         {
-            if (!_roomFactory.TryGetData((uint)group.RoomId, out var data))
+            if (!_roomFactory.TryGetData((uint)group.RoomId, out var data) || data == null)
                 continue;
-            if (data != null && !myGroups.Contains(data))
+            if (!myGroups.Contains(data))
                 myGroups.Add(data);
         }
 
@@ -163,9 +163,9 @@ internal class NavigatorQueryService : INavigatorQueryService
         var results = new List<RoomData>();
         foreach (var roomId in roomIds)
         {
-            if (!_roomFactory.TryGetData(roomId, out var data))
+            if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
                 continue;
-            if (data != null && !results.Contains(data))
+            if (!results.Contains(data))
                 results.Add(data);
         }
 
