@@ -357,7 +357,7 @@ public class RoomManager : IRoomManager
     public List<Room> GetPromotedRooms(int categoryId, int amount = 50) => _rooms.Values.Where(x => x.Data.Promotion != null && (categoryId == -1 || x.Data.Promotion.CategoryId == categoryId)).Take(amount).ToList();
     public List<Room> GetGroupRooms(int amount = 50) => _rooms.Values.Where(x => x.Data.GroupId > 0).Take(amount).ToList();
     public List<Room> GetRoomsByIds(List<uint> ids, int amount = 50) => _rooms.Values.Where(x => ids.Contains(x.RoomId)).Take(amount).ToList();
-    public Room TryGetRandomLoadedRoom() => _rooms.Values.OrderBy(_ => System.Guid.NewGuid()).FirstOrDefault()!;
+    public Room? TryGetRandomLoadedRoom() => _rooms.Values.OrderBy(_ => System.Guid.NewGuid()).FirstOrDefault();
 
     public RoomData CreateRoom(GameClient session, string name, string description, int category, int maxVisitors, int tradeSettings, RoomModel model, string wallpaper = "0.0", string floor = "0.0",
         string landscape = "0.0", int wallthick = 0, int floorthick = 0)

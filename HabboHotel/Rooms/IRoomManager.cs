@@ -22,7 +22,7 @@ public interface IRoomManager
     List<Room> GetPromotedRooms(int categoryId, int amount = 50);
     List<Room> GetGroupRooms(int amount = 50);
     List<Room> GetRoomsByIds(List<uint> ids, int amount = 50);
-    Room TryGetRandomLoadedRoom();
+    Room? TryGetRandomLoadedRoom();
     bool TryGetRoom(uint roomId, out Room? room);
     void NotifyRoomStateChanged(Room room);
 
