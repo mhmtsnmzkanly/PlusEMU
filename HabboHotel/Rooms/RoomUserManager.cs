@@ -466,6 +466,26 @@ public class RoomUserManager
         user.BotData.TargetUser = 0;
     }
 
+    private void PrepareNextMovementStep(RoomUser user, int nextX, int nextY, double nextZ, int newRot)
+    {
+        user.RotBody = newRot;
+        user.RotHead = newRot;
+        user.SetStep = true;
+        user.SetX = nextX;
+        user.SetY = nextY;
+        user.SetZ = nextZ;
+
+        if (TryGetMountedHorse(user, out var horse))
+        {
+            horse.RotBody = newRot;
+            horse.RotHead = newRot;
+            horse.SetStep = true;
+            horse.SetX = nextX;
+            horse.SetY = nextY;
+            horse.SetZ = nextZ;
+        }
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -896,23 +916,9 @@ public class RoomUserManager
                             ClearMovementTransientState(user);
                             SetMovementStatus(user, nextX, nextY, nextZ);
                             var newRot = Rotation.Calculate(user.X, user.Y, nextX, nextY, user.MoonwalkEnabled);
-                            user.RotBody = newRot;
-                            user.RotHead = newRot;
-                            user.SetStep = true;
-                            user.SetX = nextX;
-                            user.SetY = nextY;
-                            user.SetZ = nextZ;
+                            PrepareNextMovementStep(user, nextX, nextY, nextZ, newRot);
                             UpdateUserEffect(user, user.SetX, user.SetY);
                             updated = true;
-                            if (TryGetMountedHorse(user, out var horseForStep))
-                            {
-                                horseForStep.RotBody = newRot;
-                                horseForStep.RotHead = newRot;
-                                horseForStep.SetStep = true;
-                                horseForStep.SetX = nextX;
-                                horseForStep.SetY = nextY;
-                                horseForStep.SetZ = nextZ;
-                            }
                             UpdateTargetSquareOccupancy(gameMap, user, nextX, nextY);
                         }
                         else
