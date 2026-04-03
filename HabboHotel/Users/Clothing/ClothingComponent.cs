@@ -53,14 +53,15 @@ public sealed class ClothingComponent
     public void AddClothing(string clothingName, List<int> partIds)
     {
         var habbo = _habbo;
-        if (habbo == null)
+        var database = _database;
+        if (habbo == null || database == null)
             return;
 
         foreach (var partId in partIds.ToList())
         {
             if (!_allClothing.ContainsKey(partId))
             {
-                using (var connection = _database!.Connection())
+                using (var connection = database.Connection())
                 {
                     var newId = Convert.ToInt32(connection.ExecuteScalar<long>(
                         "INSERT INTO `user_clothing` (`user_id`,`part_id`,`part`) VALUES (@UserId, @PartId, @Part); SELECT LAST_INSERT_ID();",

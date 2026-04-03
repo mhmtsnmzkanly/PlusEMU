@@ -42,6 +42,7 @@ public static class Program
 {
     private static readonly Dictionary<ServiceLifetime, IEnumerable<Type>> _defaultTypes = new();
     private static IRuntimeControlService? _runtimeControlService;
+    private static IConsoleCommandHandler? _consoleCommandHandler;
 
     public static async Task Main(string[] args)
     {
@@ -86,6 +87,7 @@ public static class Program
 
         var serviceProvider = services.BuildServiceProvider();
         _runtimeControlService = serviceProvider.GetService<IRuntimeControlService>();
+        _consoleCommandHandler = serviceProvider.GetService<IConsoleCommandHandler>();
         foreach (var plugin in pluginDefinitions)
             plugin.OnServiceProviderBuild(serviceProvider);
 
@@ -108,7 +110,7 @@ public static class Program
                 var input = Console.ReadLine();
                 if (!string.IsNullOrWhiteSpace(input))
                 {
-                    serviceProvider.GetRequiredService<IConsoleCommandHandler>().InvokeCommand(input);
+                    _consoleCommandHandler?.InvokeCommand(input);
                 }
             }
         }

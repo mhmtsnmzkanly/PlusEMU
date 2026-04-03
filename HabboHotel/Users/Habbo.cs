@@ -212,8 +212,14 @@ public class Habbo
 
     public bool TryGetClient(out GameClient client)
     {
-        client = Client!;
-        return client != null;
+        if (Client != null)
+        {
+            client = Client;
+            return true;
+        }
+
+        client = null!;
+        return false;
     }
 
     public void EnterRoom(Room room)
@@ -236,8 +242,14 @@ public class Habbo
 
     public bool TryGetCurrentRoom(out Room room)
     {
-        room = _currentRoom!;
-        return room != null;
+        if (_currentRoom != null)
+        {
+            room = _currentRoom;
+            return true;
+        }
+
+        room = null!;
+        return false;
     }
 
     public void OnDisconnect()

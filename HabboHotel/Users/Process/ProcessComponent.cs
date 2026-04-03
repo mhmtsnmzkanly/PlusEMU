@@ -83,55 +83,66 @@ internal sealed class ProcessComponent
         {
             if (_disabled)
                 return;
-            if (_player == null)
+            var player = _player;
+            var database = _database;
+            var settingsManager = _settingsManager;
+            var subscriptionManager = _subscriptionManager;
+            var achievementService = _achievementService;
+            if (player == null || database == null || settingsManager == null || subscriptionManager == null || achievementService == null)
                 return;
             if (_timerRunning)
             {
                 _timerLagging = true;
-                Log.Warn($"<Player {_player.Id}> Server can't keep up, Player timer is lagging behind.");
+                Log.Warn($"<Player {player.Id}> Server can't keep up, Player timer is lagging behind.");
                 return;
             }
+
+            _timerRunning = true;
             _resetEvent.Reset();
 
             // BEGIN CODE
-            if (_player.TimeMuted > 0)
-                _player.TimeMuted -= 60;
-            if (_player.MessengerSpamTime > 0)
-                _player.MessengerSpamTime -= 60;
-            if (_player.MessengerSpamTime <= 0)
-                _player.MessengerSpamCount = 0;
-            _player.TimeAfk += 1;
-            if (_player.HabboStats.RespectsTimestamp != DateTime.Today.ToString("MM/dd"))
+            if (player.TimeMuted > 0)
+                player.TimeMuted -= 60;
+            if (player.MessengerSpamTime > 0)
+                player.MessengerSpamTime -= 60;
+            if (player.MessengerSpamTime <= 0)
+                player.MessengerSpamCount = 0;
+            player.TimeAfk += 1;
+            if (player.HabboStats.RespectsTimestamp != DateTime.Today.ToString("MM/dd"))
             {
-                _player.HabboStats.RespectsTimestamp = DateTime.Today.ToString("MM/dd");
-                var respectPoints = _player.Rank == 1 && _player.VipRank == 0 ? 10 : _player.VipRank == 1 ? 15 : 20;
-                using var db = _database!.Connection();
+                player.HabboStats.RespectsTimestamp = DateTime.Today.ToString("MM/dd");
+                var respectPoints = player.Rank == 1 && player.VipRank == 0 ? 10 : player.VipRank == 1 ? 15 : 20;
+                using var db = database.Connection();
                 db.Execute(
                     "UPDATE `user_statistics` SET `dailyRespectPoints` = @points, `dailyPetRespectPoints` = @points, `respectsTimestamp` = @ts WHERE `id` = @id LIMIT 1",
-                    new { points = respectPoints, ts = DateTime.Today.ToString("MM/dd"), id = _player.Id });
-                _player.HabboStats.DailyRespectPoints = respectPoints;
-                _player.HabboStats.DailyPetRespectPoints = respectPoints;
-                if (_player.TryGetClient(out var playerClient)) playerClient.Send(new UserObjectComposer(_player));
+                    new { points = respectPoints, ts = DateTime.Today.ToString("MM/dd"), id = player.Id });
+                player.HabboStats.DailyRespectPoints = respectPoints;
+                player.HabboStats.DailyPetRespectPoints = respectPoints;
+                if (player.TryGetClient(out var playerClient)) playerClient.Send(new UserObjectComposer(player));
             }
-            if (_player.GiftPurchasingWarnings < 15)
-                _player.GiftPurchasingWarnings = 0;
-            if (_player.MottoUpdateWarnings < 15)
-                _player.MottoUpdateWarnings = 0;
-            if (_player.ClothingUpdateWarnings < 15)
-                _player.ClothingUpdateWarnings = 0;
-            if (_player.TryGetClient(out var achievementClient))
-                _ = _achievementService!.ProgressAchievement(achievementClient, "ACH_AllTimeHotelPresence", 1);
-            _player.CheckCreditsTimer(_settingsManager!, _subscriptionManager!);
-            _player.Effects?.CheckEffectExpiry(_player, _database!);
+            if (player.GiftPurchasingWarnings < 15)
+                player.GiftPurchasingWarnings = 0;
+            if (player.MottoUpdateWarnings < 15)
+                player.MottoUpdateWarnings = 0;
+            if (player.ClothingUpdateWarnings < 15)
+                player.ClothingUpdateWarnings = 0;
+            if (player.TryGetClient(out var achievementClient))
+                _ = achievementService.ProgressAchievement(achievementClient, "ACH_AllTimeHotelPresence", 1);
+            player.CheckCreditsTimer(settingsManager, subscriptionManager);
+            player.Effects?.CheckEffectExpiry(player, database);
 
             // END CODE
-
-            // Reset the values
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "User process timer failed. UserId={userId}", _player?.Id ?? 0);
+        }
+        finally
+        {
             _timerRunning = false;
             _timerLagging = false;
             _resetEvent.Set();
         }
-        catch { }
     }
 
     /// <summary>
@@ -144,7 +155,10 @@ internal sealed class ProcessComponent
         {
             _resetEvent.WaitOne(TimeSpan.FromMinutes(5));
         }
-        catch { } // give up
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "Timed wait for user process disposal failed.");
+        }
 
         // Set the timer to disabled
         _disabled = true;
@@ -155,7 +169,10 @@ internal sealed class ProcessComponent
             if (_timer != null)
                 _timer.Dispose();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "Timer disposal failed for user process component.");
+        }
 
         // Remove reference to the timer.
         _timer = null;
