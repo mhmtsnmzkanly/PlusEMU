@@ -64,7 +64,7 @@ public class ModerationQueryService : IModerationQueryService
         if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
             return;
 
-        var ownerInRoom = _roomManager.TryGetRoom(roomId, out var room) && room.GetRoomUserManager().GetRoomUserByHabbo(data.OwnerId) != null;
+        var ownerInRoom = _roomManager.TryGetRoom(roomId, out var room) && room != null && room.GetRoomUserManager().GetRoomUserByHabbo(data.OwnerId) != null;
         session.Send(new ModeratorRoomInfoComposer(data, ownerInRoom));
     }
 

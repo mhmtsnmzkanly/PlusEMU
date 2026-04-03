@@ -258,7 +258,7 @@ internal class RoomAccessService : IRoomAccessService
         var habbo = session.GetHabbo();
         if (habbo == null)
             return Task.CompletedTask;
-        if (!_roomManager.TryGetRoom(roomId, out var room))
+        if (!_roomManager.TryGetRoom(roomId, out var room) || room == null)
             return Task.CompletedTask;
         if (!room.CheckRights(session, true))
             return Task.CompletedTask;

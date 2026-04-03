@@ -29,7 +29,7 @@ internal class DeleteRoomEvent : IPacketEvent
         var roomId = packet.ReadUInt();
         if (roomId == 0)
             return Task.CompletedTask;
-        if (!_roomManager.TryGetRoom(roomId, out var room))
+        if (!_roomManager.TryGetRoom(roomId, out var room) || room == null)
             return Task.CompletedTask;
         if (room.OwnerId != habbo.Id && !(permissions?.HasRight("room_delete_any") ?? false))
             return Task.CompletedTask;

@@ -345,7 +345,7 @@ internal class GroupService : IGroupService
             });
 
         group.AdminOnlyDeco = furniOptions;
-        if (_roomManager.TryGetRoom(group.RoomId, out var room))
+        if (_roomManager.TryGetRoom(group.RoomId, out var room) && room != null)
         {
             foreach (var user in room.GetRoomUserManager().GetRoomUsers().ToList())
             {
@@ -480,7 +480,7 @@ internal class GroupService : IGroupService
             return;
         }
 
-        if (!_roomManager.TryGetRoom(group.RoomId, out var room))
+        if (!_roomManager.TryGetRoom(group.RoomId, out var room) || room == null)
             return;
         if (!_roomFactory.TryGetData(group.RoomId, out _))
             return;
@@ -539,7 +539,7 @@ internal class GroupService : IGroupService
         }
 
         session.Send(new PurchaseOkComposer());
-        if (_roomManager.TryGetRoom(roomId, out var roomInstance))
+        if (_roomManager.TryGetRoom(roomId, out var roomInstance) && roomInstance != null)
             roomInstance.Group = group;
             
         if (roomInstance == null || !habbo.IsInRoom(roomInstance))
@@ -621,7 +621,7 @@ internal class GroupService : IGroupService
 
     private void UpdateGroupAdminRoomPermissions(Group group, int userId, bool enabled)
     {
-        if (!_roomManager.TryGetRoom(group.RoomId, out var room))
+        if (!_roomManager.TryGetRoom(group.RoomId, out var room) || room == null)
             return;
 
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
@@ -645,7 +645,7 @@ internal class GroupService : IGroupService
 
     private void UpdateGroupControllerStatus(Group group, int userId, bool enabled)
     {
-        if (!_roomManager.TryGetRoom(group.RoomId, out var room))
+        if (!_roomManager.TryGetRoom(group.RoomId, out var room) || room == null)
             return;
 
         var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);

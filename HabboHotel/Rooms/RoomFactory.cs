@@ -142,7 +142,7 @@ public class RoomFactory : IRoomFactory
 
     private RoomData ResolveRoomData(RoomFactoryRow row)
     {
-        if (_roomDependencyResolver.GetRoomManager().TryGetRoom(row.Id, out var roomInstance))
+        if (_roomDependencyResolver.GetRoomManager().TryGetRoom(row.Id, out var roomInstance) && roomInstance != null)
             return roomInstance.Data;
 
         return Map(row);

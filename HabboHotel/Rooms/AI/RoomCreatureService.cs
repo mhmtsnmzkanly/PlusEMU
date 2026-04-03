@@ -418,7 +418,7 @@ internal class RoomCreatureService : IRoomCreatureService
     public Task RemoveSaddleFromHorse(GameClient session, int petId)
     {
         var habbo = session.GetHabbo();
-        if (habbo == null || !habbo.TryGetCurrentRoom(out var currentRoom) || !_roomManager.TryGetRoom(currentRoom.Id, out var room))
+        if (habbo == null || !habbo.TryGetCurrentRoom(out var currentRoom) || !_roomManager.TryGetRoom(currentRoom.Id, out var room) || room == null)
             return Task.CompletedTask;
         if (!room.GetRoomUserManager().TryGetPet(petId, out var petUser) || petUser.PetData == null || petUser.PetData.OwnerId != habbo.Id)
             return Task.CompletedTask;

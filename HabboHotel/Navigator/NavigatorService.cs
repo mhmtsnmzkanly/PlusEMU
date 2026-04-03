@@ -222,7 +222,7 @@ internal class NavigatorService : INavigatorService
             "UPDATE `room_promotions` SET `title` = @title, `description` = @description WHERE `room_id` = @roomId LIMIT 1",
             new { title = filteredName, description = filteredDescription, roomId });
 
-        if (!_roomManager.TryGetRoom(roomId, out var room))
+        if (!_roomManager.TryGetRoom(roomId, out var room) || room == null)
             return;
 
         data.Promotion.Name = filteredName;

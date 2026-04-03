@@ -243,7 +243,7 @@ public class RoomManager : IRoomManager
 
     public bool TryGetModel(string id, out RoomModel model) => _roomModels.TryGetValue(id, out model!);
 
-    public bool TryGetRoom(uint roomId, out Room room) => _rooms.TryGetValue(roomId, out room!);
+    public bool TryGetRoom(uint roomId, out Room? room) => _rooms.TryGetValue(roomId, out room);
 
     public ICollection<Room> GetRooms() => _rooms.Values;
 

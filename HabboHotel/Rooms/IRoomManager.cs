@@ -23,7 +23,7 @@ public interface IRoomManager
     List<Room> GetGroupRooms(int amount = 50);
     List<Room> GetRoomsByIds(List<uint> ids, int amount = 50);
     Room TryGetRandomLoadedRoom();
-    bool TryGetRoom(uint roomId, out Room room);
+    bool TryGetRoom(uint roomId, out Room? room);
     void NotifyRoomStateChanged(Room room);
 
     RoomData CreateRoom(GameClient session, string name, string description, int category, int maxVisitors, int tradeSettings, RoomModel model, string wallpaper = "0.0", string floor = "0.0",
