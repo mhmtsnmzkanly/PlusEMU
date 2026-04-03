@@ -38,8 +38,8 @@ internal class SuperPushCommand : ITargetChatCommand
             return Task.CompletedTask;
         }
         RoomUser? thisUser = null;
-        if (habbo != null)
-            room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out thisUser);
+        if (habbo != null && !room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out thisUser))
+            thisUser = null;
         if (thisUser == null)
             return Task.CompletedTask;
         if (!(Math.Abs(targetUser.X - thisUser.X) >= 2 || Math.Abs(targetUser.Y - thisUser.Y) >= 2))

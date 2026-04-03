@@ -45,8 +45,8 @@ internal class SuperPullCommand : ITargetChatCommand
             return Task.CompletedTask;
         }
         RoomUser? thisUser = null;
-        if (habbo != null)
-            room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out thisUser);
+        if (habbo != null && !room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out thisUser))
+            thisUser = null;
         if (thisUser == null)
             return Task.CompletedTask;
         if (thisUser.SetX - 1 == room.GetGameMap().Model.DoorX)

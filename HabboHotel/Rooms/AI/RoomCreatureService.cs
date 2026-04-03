@@ -163,8 +163,7 @@ internal class RoomCreatureService : IRoomCreatureService
 
         if (pet.RidingHorse)
         {
-            room.GetRoomUserManager().TryGetRoomUserByVirtualId(pet.HorseId, out var userRiding);
-            if (userRiding != null)
+            if (room.GetRoomUserManager().TryGetRoomUserByVirtualId(pet.HorseId, out var userRiding) && userRiding != null)
             {
                 userRiding.RidingHorse = false;
                 userRiding.ApplyEffect(-1);
@@ -304,8 +303,8 @@ internal class RoomCreatureService : IRoomCreatureService
     {
         var habbo = session.GetHabbo();
         RoomUser? user = null;
-        if (habbo != null)
-            room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out user);
+        if (habbo != null && !room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out user))
+            user = null;
         if (habbo == null || user == null || !room.GetRoomUserManager().TryGetPet(petId, out var pet) || pet == null || pet.PetData == null)
             return Task.CompletedTask;
         if (pet.PetData.AnyoneCanRide == 0 && pet.PetData.OwnerId != user.UserId)

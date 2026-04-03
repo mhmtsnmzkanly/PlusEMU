@@ -18,7 +18,8 @@ public partial class Item
 
         if (InteractingUser > 0)
         {
-            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user);
+            if (!GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user))
+                user = null;
 
             if (user != null)
             {
@@ -69,7 +70,8 @@ public partial class Item
 
         if (InteractingUser2 > 0)
         {
-            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser2, out user2);
+            if (!GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser2, out user2))
+                user2 = null;
             if (user2 != null)
             {
                 keepDoorOpen = true;
@@ -162,8 +164,7 @@ public partial class Item
         if (LegacyDataString != "1")
             return;
 
-        GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out var user);
-        if (user == null)
+        if (!GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out var user) || user == null)
             return;
 
         user.UnlockWalking();
@@ -182,7 +183,10 @@ public partial class Item
     {
         RoomUser? user = null;
         if (InteractingUser > 0)
-            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user);
+        {
+            if (!GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user))
+                user = null;
+        }
 
         if (user != null && user.X == GetX && user.Y == GetY)
         {
@@ -219,7 +223,10 @@ public partial class Item
     {
         RoomUser? user = null;
         if (InteractingUser > 0)
-            GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user);
+        {
+            if (!GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(InteractingUser, out user))
+                user = null;
+        }
 
         var deltaY = 0;
         var deltaX = 0;

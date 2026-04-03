@@ -239,8 +239,9 @@ public class ChatService : IChatService
         }
 
         RoomUser? user = null;
-        if (habbo.TryGetCurrentRoom(out var room))
-            room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out user);
+        if (habbo.TryGetCurrentRoom(out var room) &&
+            !room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out user))
+            user = null;
         if (user != null)
         {
             if (type == "whisper")
