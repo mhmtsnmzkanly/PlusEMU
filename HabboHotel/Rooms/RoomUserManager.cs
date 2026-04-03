@@ -635,6 +635,30 @@ public class RoomUserManager
         CompleteBotCarryTarget(user);
     }
 
+    private bool TryAdvanceWalkingStep(RoomUser user, Gamemap gameMap)
+    {
+        var nextStep = AdvanceNextPathStep(user);
+        var nextX = nextStep.X;
+        var nextY = nextStep.Y;
+
+        user.RemoveStatus("mv");
+        if (!gameMap.IsValidStep2(user, new(user.X, user.Y), new(nextX, nextY), user.GoalX == nextX && user.GoalY == nextY, user.AllowOverride))
+        {
+            Log.Debug("Next walking step rejected. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Next=({nextX},{nextY}), Goal=({goalX},{goalY}), AllowOverride={allowOverride}",
+                _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, nextX, nextY, user.GoalX, user.GoalY, user.AllowOverride);
+            return false;
+        }
+
+        var nextZ = gameMap.SqAbsoluteHeight(nextX, nextY);
+        ClearMovementTransientState(user);
+        SetMovementStatus(user, nextX, nextY, nextZ);
+        var newRot = Rotation.Calculate(user.X, user.Y, nextX, nextY, user.MoonwalkEnabled);
+        PrepareNextMovementStep(user, nextX, nextY, nextZ, newRot);
+        UpdateUserEffect(user, user.SetX, user.SetY);
+        UpdateTargetSquareOccupancy(gameMap, user, nextX, nextY);
+        return true;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -974,25 +998,9 @@ public class RoomUserManager
                     else
                     {
                         var gameMap = _room.GetGameMap();
-                        var nextStep = AdvanceNextPathStep(user);
-                        var nextX = nextStep.X;
-                        var nextY = nextStep.Y;
-                        user.RemoveStatus("mv");
-                        if (gameMap.IsValidStep2(user, new(user.X, user.Y), new(nextX, nextY), user.GoalX == nextX && user.GoalY == nextY, user.AllowOverride))
+                        if (TryAdvanceWalkingStep(user, gameMap))
                         {
-                            var nextZ = gameMap.SqAbsoluteHeight(nextX, nextY);
-                            ClearMovementTransientState(user);
-                            SetMovementStatus(user, nextX, nextY, nextZ);
-                            var newRot = Rotation.Calculate(user.X, user.Y, nextX, nextY, user.MoonwalkEnabled);
-                            PrepareNextMovementStep(user, nextX, nextY, nextZ, newRot);
-                            UpdateUserEffect(user, user.SetX, user.SetY);
                             updated = true;
-                            UpdateTargetSquareOccupancy(gameMap, user, nextX, nextY);
-                        }
-                        else
-                        {
-                            Log.Debug("Next walking step rejected. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Next=({nextX},{nextY}), Goal=({goalX},{goalY}), AllowOverride={allowOverride}",
-                                _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, nextX, nextY, user.GoalX, user.GoalY, user.AllowOverride);
                         }
                     }
                     if (!user.RidingHorse)
