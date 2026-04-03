@@ -3,6 +3,7 @@ using Plus.Database;
 using Plus.HabboHotel.GameClients;
 using System.Collections.Generic;
 using System.Linq;
+using Plus.Core;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -59,8 +60,10 @@ public class RoomFactory : IRoomFactory
 
     public RoomFactory(IDatabase database, IRoomDependencyResolver roomDependencyResolver)
     {
+        BootProbe.Write("Entering RoomFactory constructor...");
         _database = database;
         _roomDependencyResolver = roomDependencyResolver;
+        BootProbe.Write("Leaving RoomFactory constructor.");
     }
 
     public List<RoomData> GetRoomsDataByOwnerSortByName(int ownerId)

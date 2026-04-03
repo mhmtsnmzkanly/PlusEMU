@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Plus.Core;
 using Plus.HabboHotel.Badges;
 using Plus.HabboHotel.Bots;
 using Plus.HabboHotel.Cache;
@@ -17,7 +18,6 @@ using Plus.HabboHotel.Users.UserData;
 using Microsoft.Extensions.Logging;
 using Dapper;
 using System.Data;
-using Plus.Core;
 
 namespace Plus.HabboHotel.Rooms;
 
@@ -106,6 +106,7 @@ public class RoomManager : IRoomManager
         ILoggerFactory loggerFactory,
         ILogger<RoomManager> logger)
     {
+        BootProbe.Write("Entering RoomManager constructor...");
         _database = database;
         _roomFactory = roomFactory;
         _itemLoader = itemLoader;
@@ -140,6 +141,7 @@ public class RoomManager : IRoomManager
         _rooms = new();
         _roomModels = new();
         _roomLoadingSync = new();
+        BootProbe.Write("Leaving RoomManager constructor.");
     }
 
     public int Count => _rooms.Count;

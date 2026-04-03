@@ -37,6 +37,8 @@ public class PlusEnvironment : IPlusEnvironment
     private readonly IServerRuntimeState _serverRuntimeState;
     private readonly IEnumerable<IStartable> _startableTasks;
     private readonly RconConfiguration _rconConfiguration;
+    private readonly FlashServerConfiguration _flashConfiguration;
+    private readonly NitroServerConfiguration _nitroConfiguration;
 
     public PlusEnvironment(IDatabase database,
         ILanguageManager languageManager,
@@ -47,6 +49,8 @@ public class PlusEnvironment : IPlusEnvironment
         IEnumerable<IStartable> startableTasks,
         IRconSocket rconSocket,
         IOptions<RconConfiguration> rconConfiguration,
+        IOptions<FlashServerConfiguration> flashConfiguration,
+        IOptions<NitroServerConfiguration> nitroConfiguration,
         IItemDataManager itemDataManager,
         IFlashServer flashServer,
         INitroServer nitroServer)
@@ -62,6 +66,8 @@ public class PlusEnvironment : IPlusEnvironment
         _flashServer = flashServer;
         _nitroServer = nitroServer;
         _rconConfiguration = rconConfiguration.Value;
+        _flashConfiguration = flashConfiguration.Value;
+        _nitroConfiguration = nitroConfiguration.Value;
         _itemDataManager = itemDataManager;
     }
 
@@ -107,8 +113,8 @@ public class PlusEnvironment : IPlusEnvironment
             _rcon.Init(_rconConfiguration.Hostname, _rconConfiguration.Port, _rconConfiguration.AllowedAddresses);
 
             //Accept connections.
-            _flashServer.Start();
-            _nitroServer.Start();
+            EnsureServerStarted(_flashServer.Start(), "Flash", _flashConfiguration.Hostname, _flashConfiguration.Port);
+            EnsureServerStarted(_nitroServer.Start(), "Nitro", _nitroConfiguration.Hostname, _nitroConfiguration.Port);
 
             _itemDataManager.Init();
             // Allow services to self initialize
@@ -167,5 +173,11 @@ public class PlusEnvironment : IPlusEnvironment
         catch (InvalidOperationException)
         {
         }
+    }
+
+    private static void EnsureServerStarted(bool started, string serverName, string host, int port)
+    {
+        if (!started)
+            throw new InvalidOperationException($"{serverName} server failed to bind on {host}:{port}.");
     }
 }

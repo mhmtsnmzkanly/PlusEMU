@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Plus.Core;
 using Plus.HabboHotel.Groups;
 
 namespace Plus.HabboHotel.Rooms;
@@ -9,7 +10,9 @@ internal class RoomDependencyResolver : IRoomDependencyResolver
 
     public RoomDependencyResolver(IServiceProvider serviceProvider)
     {
+        BootProbe.Write("Entering RoomDependencyResolver constructor...");
         _serviceProvider = serviceProvider;
+        BootProbe.Write("Leaving RoomDependencyResolver constructor.");
     }
 
     public IRoomManager GetRoomManager() => _serviceProvider.GetRequiredService<IRoomManager>();

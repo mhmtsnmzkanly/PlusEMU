@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Plus.Database;
+using Plus.Core;
 using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Users;
 using Plus.Utilities;
@@ -49,6 +50,7 @@ public class GroupManager : IGroupManager
 
     public GroupManager(ILogger<GroupManager> logger, IDatabase database, IRoomFactory roomFactory)
     {
+        BootProbe.Write("Entering GroupManager constructor...");
         _logger = logger;
         _database = database;
         _roomFactory = roomFactory;
@@ -59,6 +61,7 @@ public class GroupManager : IGroupManager
         _baseColours = new();
         _symbolColours = new();
         _backgroundColours = new();
+        BootProbe.Write("Leaving GroupManager constructor.");
     }
 
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Plus.HabboHotel.Cache;
 using Plus.Core;
 
@@ -7,12 +8,13 @@ namespace Plus.HabboHotel.Cache.Process;
 public sealed class ProcessComponent : IProcessComponent
 {
     private readonly ILogger<ProcessComponent> _logger;
-    private readonly ICacheManager _cacheManager;
+    private readonly IServiceProvider _serviceProvider;
+    private ICacheManager? _cacheManager;
 
-    public ProcessComponent(ILogger<ProcessComponent> logger, ICacheManager cacheManager)
+    public ProcessComponent(ILogger<ProcessComponent> logger, IServiceProvider serviceProvider)
     {
         _logger = logger;
-        _cacheManager = cacheManager;
+        _serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -68,7 +70,11 @@ public sealed class ProcessComponent : IProcessComponent
             _resetEvent.Reset();
 
             // BEGIN CODE
-            var cacheList = _cacheManager.GetUserCache().ToList();
+            var cacheManager = GetCacheManager();
+            if (cacheManager == null)
+                return;
+
+            var cacheList = cacheManager.GetUserCache().ToList();
             if (cacheList.Count > 0)
             {
                 foreach (var cache in cacheList)
@@ -78,7 +84,7 @@ public sealed class ProcessComponent : IProcessComponent
                         if (cache == null)
                             continue;
                         if (cache.IsExpired)
-                            _cacheManager.TryRemoveUser(cache.Id, out _);
+                            cacheManager.TryRemoveUser(cache.Id, out _);
                     }
                     catch (Exception e)
                     {
@@ -131,5 +137,22 @@ public sealed class ProcessComponent : IProcessComponent
 
         // Remove reference to the timer.
         _timer = null;
+    }
+
+    private ICacheManager? GetCacheManager()
+    {
+        if (_cacheManager != null)
+            return _cacheManager;
+
+        try
+        {
+            _cacheManager = _serviceProvider.GetService<ICacheManager>();
+        }
+        catch (Exception e)
+        {
+            ExceptionLogger.LogException(e);
+        }
+
+        return _cacheManager;
     }
 }
