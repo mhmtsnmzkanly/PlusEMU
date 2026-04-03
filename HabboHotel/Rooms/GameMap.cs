@@ -628,10 +628,10 @@ public class Gamemap
         return CanWalk(GameMap[x, y], pOverride);
     }
 
-    public bool GetHighestItemForSquare(Point square, out Item item)
+    public bool GetHighestItemForSquare(Point square, out Item? item)
     {
         var items = GetAllRoomItemForSquare(square.X, square.Y);
-        item = null!;
+        item = null;
         double highestZ = -1;
         if (items != null && items.Count > 0)
         {

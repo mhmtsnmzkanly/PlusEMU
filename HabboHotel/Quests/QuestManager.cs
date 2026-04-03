@@ -63,11 +63,11 @@ public class QuestManager : IQuestManager
         return count;
     }
 
-    public Quest GetNextQuestInSeries(string category, int number)
+    public Quest? GetNextQuestInSeries(string category, int number)
     {
         foreach (var quest in _quests.Values)
             if (quest.Category == category && quest.Number == number)
                 return quest;
-        return null!;
+        return null;
     }
 }

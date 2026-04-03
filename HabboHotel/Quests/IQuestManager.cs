@@ -8,6 +8,6 @@ public interface IQuestManager
     Quest GetQuest(int id);
     bool TryGetQuest(int id, out Quest quest);
     int GetAmountOfQuestsInCategory(string category);
-    Quest GetNextQuestInSeries(string category, int number);
+    Quest? GetNextQuestInSeries(string category, int number);
     IReadOnlyDictionary<int, Quest> Quests { get; }
 }
