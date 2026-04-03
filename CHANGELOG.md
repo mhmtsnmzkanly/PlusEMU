@@ -470,3 +470,4 @@
 - grouped the remaining walking/not-walking decision into a `RoomUserManager` walking-state helper so `OnCycle` now delegates that branch instead of inlining the last movement-status toggles
 - grouped the pre-movement runtime state updates in `RoomUserManager` so idle/carry/freeze/roller progression now runs through one helper before path and movement decisions
 - grouped pending-step resolution, path recalculation, and walking-state handling into a `RoomUserManager` movement-phase helper so `OnCycle` now has an explicit movement phase boundary
+- grouped queued room-user removals and user-count finalization into dedicated `RoomUserManager` helpers so `OnCycle` now has explicit teardown/finalize phases after per-user processing

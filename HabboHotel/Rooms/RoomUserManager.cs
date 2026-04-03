@@ -740,6 +740,24 @@ public class RoomUserManager
         return ProcessWalkingState(user, invalidStep);
     }
 
+    private void ProcessQueuedRemovals(List<RoomUser> toRemove)
+    {
+        foreach (var userToRemove in toRemove.ToList())
+        {
+            var client = _clientManager.GetClientByUserId(userToRemove.HabboId);
+            if (client != null)
+                _ = _room.GetRoomService().LeaveRoom(client, true);
+            else
+                RemoveRoomUser(userToRemove);
+        }
+    }
+
+    private void FinalizeCycleCount(int userCounter)
+    {
+        if (UserCount != userCounter)
+            UpdateUserCount(userCounter);
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -1053,18 +1071,8 @@ public class RoomUserManager
                     continue;
                 userCounter += FinalizeCycleUser(user, updated);
             }
-
-            foreach (var userToRemove in toRemove.ToList())
-            {
-                var client = _clientManager.GetClientByUserId(userToRemove.HabboId);
-                if (client != null)
-                    _ = _room.GetRoomService().LeaveRoom(client, true);
-                else
-                    RemoveRoomUser(userToRemove);
-            }
-
-            if (UserCount != userCounter)
-                UpdateUserCount(userCounter);
+            ProcessQueuedRemovals(toRemove);
+            FinalizeCycleCount(userCounter);
         }
         catch (Exception e)
         {
