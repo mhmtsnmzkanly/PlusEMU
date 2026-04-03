@@ -256,7 +256,7 @@ public class Room : RoomData
 
     public List<string> WordFilterList { get; set; } = new();
 
-    public int UserCount => GetRoomUserManager().GetRoomUsers().Count;
+    public int UserCount => _roomUserManager?.UserCount ?? 0;
 
     public uint RoomId => Id;
 
@@ -628,7 +628,7 @@ public class Room : RoomData
         IdleTime++;
     }
 
-    public bool HasUsers() => GetRoomUserManager().GetRoomUsers().Count > 0;
+    public bool HasUsers() => (_roomUserManager?.UserCount ?? 0) > 0;
     public bool HasRealUsers() => _roomUserManager?.UserCount > 0;
 
     public bool ShouldUnloadForInactivity() => IdleTime >= 60 && !HasActivePromotion;

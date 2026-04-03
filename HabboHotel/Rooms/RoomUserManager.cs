@@ -753,7 +753,7 @@ public class RoomUserManager
                         {
                             if (user.CarryItemId > 0)
                             {
-                                if (_room.GetRoomUserManager().TryGetRoomUserByHabbo(user.BotData.TargetUser, out var target) &&
+                                if (TryGetRoomUserByHabbo(user.BotData.TargetUser, out var target) &&
                                     target != null &&
                                     Gamemap.TilesTouching(user.X, user.Y, target.X, target.Y))
                                 {
@@ -872,7 +872,7 @@ public class RoomUserManager
                             user.SqState = gameMap.GameMap[user.SetX, user.SetY]; //Backup the new one
                             if (!_room.RoomBlockingEnabled)
                             {
-                                if (_room.GetRoomUserManager().TryGetUserForSquare(nextX, nextY, out var users) && users != null)
+                                if (TryGetUserForSquare(nextX, nextY, out var users) && users != null)
                                     gameMap.GameMap[nextX, nextY] = 0;
                             }
                             else
