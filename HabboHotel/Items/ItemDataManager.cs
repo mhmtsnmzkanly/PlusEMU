@@ -121,8 +121,7 @@ public class ItemDataManager : IItemDataManager
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
-                    Console.ReadKey();
+                    _logger.LogError(e, "Failed to map furniture definition {itemId} ({itemName}).", row.Id, row.ItemName);
                 }
             }
         }
