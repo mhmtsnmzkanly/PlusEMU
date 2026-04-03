@@ -405,3 +405,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - the same walking-decision cleanup now covers the successful step path too, with next-step validation/application moved behind one helper before any higher-risk movement behavior changes
 - the last small pre-walking branch is narrower too, with pending-step validation/application moved behind one helper before any behavior-changing movement refactor
 - `OnCycle` now delegates the full walking/not-walking decision through a dedicated helper as well, which is the first small structural step beyond pure helper extraction before any deeper runtime behavior split
+- the same first structural pass now groups the pre-movement runtime state updates too, so idle/carry/freeze/roller progression has an explicit phase boundary before path and movement decisions

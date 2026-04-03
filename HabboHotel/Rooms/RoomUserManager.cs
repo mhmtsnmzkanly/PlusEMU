@@ -714,6 +714,17 @@ public class RoomUserManager
         return false;
     }
 
+    private void AdvanceRuntimePreMovementState(RoomUser user)
+    {
+        AdvanceIdleState(user);
+        AdvanceCarryItemState(user);
+
+        if (_room.GotFreeze())
+            _room.GetFreeze().CycleUser(user);
+
+        AdvanceRollerState(user);
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -1022,11 +1033,7 @@ public class RoomUserManager
                     continue;
                 }
                 var updated = false;
-                AdvanceIdleState(user);
-                AdvanceCarryItemState(user);
-                if (_room.GotFreeze())
-                    _room.GetFreeze().CycleUser(user);
-                AdvanceRollerState(user);
+                AdvanceRuntimePreMovementState(user);
                 if (!TryResolvePendingStep(user, toRemove, out var invalidStep))
                     continue;
                 if (user.PathRecalcNeeded)
