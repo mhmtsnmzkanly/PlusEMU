@@ -18,12 +18,10 @@ internal class GiveHandItemEvent : RoomPacketEvent
         if (session.GetHabbo() is not { } habbo)
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
 
-        var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(packet.ReadInt());
-        if (targetUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(packet.ReadInt(), out var targetUser) || targetUser == null)
             return;
 
         if (!(Math.Abs(user.X - targetUser.X) >= 3 || Math.Abs(user.Y - targetUser.Y) >= 3) || (habbo.Permissions?.HasRight("mod_tool") ?? false))

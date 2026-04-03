@@ -74,8 +74,7 @@ internal class UpdateFigureDataEvent : IPacketEvent
             await _questService.ProgressUserQuest(session, QuestType.WearHat);
         if (habbo.TryGetCurrentRoom(out var currentRoom))
         {
-            var roomUser = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (roomUser != null)
+            if (currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var roomUser) && roomUser != null)
             {
                 session.Send(new UserChangeComposer(roomUser, true));
                 currentRoom.SendPacket(new UserChangeComposer(roomUser, false));

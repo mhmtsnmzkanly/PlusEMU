@@ -20,8 +20,7 @@ public class ActionEvent : RoomPacketEvent
             return;
 
         var action = packet.ReadInt();
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
 
         if (user.DanceId > 0)

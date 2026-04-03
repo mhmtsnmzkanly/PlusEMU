@@ -23,8 +23,7 @@ internal class BanUserEvent : IPacketEvent
         var userId = packet.ReadInt();
         packet.ReadInt(); //roomId
         var r = packet.ReadString();
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(Convert.ToInt32(userId));
-        if (user == null || user.IsBot)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(Convert.ToInt32(userId), out var user) || user == null || user.IsBot)
             return;
         if (room.OwnerId == userId)
             return;

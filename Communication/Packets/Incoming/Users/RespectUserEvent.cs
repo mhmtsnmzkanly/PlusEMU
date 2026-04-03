@@ -25,14 +25,13 @@ internal class RespectUserEvent : RoomPacketEvent
         if (habbo?.HabboStats is not { } habboStats || habboStats.DailyRespectPoints <= 0)
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(packet.ReadInt());
+        room.GetRoomUserManager().TryGetRoomUserByHabbo(packet.ReadInt(), out var user);
         var targetClient = user?.GetClient();
         var targetHabbo = targetClient?.GetHabbo();
         if (user == null || targetHabbo?.HabboStats == null || targetHabbo.Id == habbo.Id || user.IsBot)
             return;
 
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (thisUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var thisUser) || thisUser == null)
             return;
 
         await _questService.ProgressUserQuest(session, QuestType.SocialRespect);

@@ -32,8 +32,7 @@ internal class ReloadUserMottoCommand : IRconCommand
             return Task.FromResult(true);
         if (room != null)
         {
-            var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user != null)
+            if (room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) && user != null)
             {
                 room.SendPacket(new UserChangeComposer(user, false));
                 return Task.FromResult(true);

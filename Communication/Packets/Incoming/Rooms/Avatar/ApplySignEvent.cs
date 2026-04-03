@@ -12,8 +12,7 @@ internal class ApplySignEvent : RoomPacketEvent
         if (session.GetHabbo() is not { } habbo)
             return Task.CompletedTask;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return Task.CompletedTask;
 
         user.UnIdle();

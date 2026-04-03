@@ -40,8 +40,7 @@ internal class ChangeUserNameEvent : IPacketEvent
         if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var room))
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Username, out var user) || user == null)
             return;
 
         var newName = packet.ReadString();

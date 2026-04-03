@@ -11,8 +11,7 @@ internal class LookToEvent : RoomPacketEvent
         if (session.GetHabbo() is not { } habbo || !habbo.TryGetCurrentRoom(out var currentRoom))
             return Task.CompletedTask;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return Task.CompletedTask;
         if (user.IsAsleep)
             return Task.CompletedTask;
@@ -26,8 +25,7 @@ internal class LookToEvent : RoomPacketEvent
         user.UpdateNeeded = true;
         if (user.RidingHorse)
         {
-            var horse = currentRoom.GetRoomUserManager().GetRoomUserByVirtualId(user.HorseId);
-            if (horse != null)
+            if (currentRoom.GetRoomUserManager().TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
             {
                 horse.SetRot(rot, false);
                 horse.UpdateNeeded = true;

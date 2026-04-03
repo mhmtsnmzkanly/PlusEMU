@@ -22,8 +22,7 @@ internal class MoveAvatarEvent : IPacketEvent
             return Task.CompletedTask;
         }
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null || !user.CanWalk)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null || !user.CanWalk)
         {
             _logger.LogDebug("MoveAvatar ignored: user unavailable or cannot walk. SessionId={sessionId}, UserId={userId}, RoomId={roomId}, Target=({x},{y}), UserFound={userFound}, CanWalk={canWalk}",
                 session.Id, habbo.Id, room.RoomId, moveX, moveY, user != null, user?.CanWalk ?? false);
@@ -33,8 +32,7 @@ internal class MoveAvatarEvent : IPacketEvent
             return Task.CompletedTask;
         if (user.RidingHorse)
         {
-            var horse = room.GetRoomUserManager().GetRoomUserByVirtualId(user.HorseId);
-            if (horse != null)
+            if (room.GetRoomUserManager().TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
                 horse.MoveTo(moveX, moveY);
         }
         user.MoveTo(moveX, moveY);

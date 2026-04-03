@@ -25,8 +25,7 @@ internal class KickUserEvent : IPacketEvent
         if (room.Group != null && !room.CheckRights(session, false, true))
             return;
         var userId = packet.ReadInt();
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(userId);
-        if (user == null || user.IsBot)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(userId, out var user) || user == null || user.IsBot)
             return;
 
         //Cannot kick owner or moderators.

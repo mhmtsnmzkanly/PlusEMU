@@ -19,8 +19,7 @@ internal class DanceEvent : RoomPacketEvent
         if (session.GetHabbo() is not { Effects: { } effects } habbo)
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
 
         user.UnIdle();
