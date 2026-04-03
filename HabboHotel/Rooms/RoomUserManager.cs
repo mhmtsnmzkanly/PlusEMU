@@ -426,6 +426,27 @@ public class RoomUserManager
         }
     }
 
+    private static Vector2D AdvanceNextPathStep(RoomUser user)
+    {
+        var nextStep = user.Path[user.Path.Count - user.PathStep - 1];
+        user.PathStep++;
+
+        if (user.FastWalking && user.PathStep < user.Path.Count)
+        {
+            nextStep = user.Path[user.Path.Count - user.PathStep - 1];
+            user.PathStep++;
+        }
+
+        if (user.SuperFastWalking && user.PathStep < user.Path.Count)
+        {
+            nextStep = user.Path[user.Path.Count - user.PathStep - 1];
+            user.PathStep++;
+            user.PathStep++;
+        }
+
+        return nextStep;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -861,21 +882,7 @@ public class RoomUserManager
                     else
                     {
                         var gameMap = _room.GetGameMap();
-                        var nextStep = user.Path[user.Path.Count - user.PathStep - 1];
-                        user.PathStep++;
-                        if (user.FastWalking && user.PathStep < user.Path.Count)
-                        {
-                            var s2 = user.Path.Count - user.PathStep - 1;
-                            nextStep = user.Path[s2];
-                            user.PathStep++;
-                        }
-                        if (user.SuperFastWalking && user.PathStep < user.Path.Count)
-                        {
-                            var s2 = user.Path.Count - user.PathStep - 1;
-                            nextStep = user.Path[s2];
-                            user.PathStep++;
-                            user.PathStep++;
-                        }
+                        var nextStep = AdvanceNextPathStep(user);
                         var nextX = nextStep.X;
                         var nextY = nextStep.Y;
                         user.RemoveStatus("mv");

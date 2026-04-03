@@ -454,3 +454,4 @@
 - aligned Nitro 1.6.6 `GoToFlatEvent` header with the live renderer and fixed catalog offer-id mapping so room entry and purchases no longer depend on mismatched wire ids
 - restored original immediate room-enter behavior after room authorization and added targeted catalog purchase abort logging for silent failure diagnosis
 - extracted another small `RoomUserManager` movement helper so stop/sync cleanup for mounted movement now flows through one named branch instead of repeating the same `mv` teardown inline
+- extracted the fast/superfast path-step selection branch into a named `RoomUserManager` helper so movement-loop path advancement no longer repeats its inline `PathStep` juggling
