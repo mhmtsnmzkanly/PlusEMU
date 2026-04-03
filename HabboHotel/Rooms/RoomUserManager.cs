@@ -581,6 +581,28 @@ public class RoomUserManager
         }
     }
 
+    private int FinalizeCycleUser(RoomUser user, bool updated)
+    {
+        if (user.RidingHorse)
+            user.ApplyEffect(77);
+
+        if (user.IsBot && user.BotAi != null)
+        {
+            user.BotAi.OnTimerTick();
+        }
+        else
+        {
+            if (!updated)
+                UpdateUserEffect(user, user.X, user.Y);
+            return 1;
+        }
+
+        if (!updated)
+            UpdateUserEffect(user, user.X, user.Y);
+
+        return 0;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -967,16 +989,7 @@ public class RoomUserManager
                         user.UpdateNeeded = true;
                     }
                 }
-
-                if (user.RidingHorse)
-                    user.ApplyEffect(77);
-
-                if (user.IsBot && user.BotAi != null)
-                    user.BotAi.OnTimerTick();
-                else
-                    userCounter++;
-
-                if (!updated) UpdateUserEffect(user, user.X, user.Y);
+                userCounter += FinalizeCycleUser(user, updated);
             }
 
             foreach (var userToRemove in toRemove.ToList())

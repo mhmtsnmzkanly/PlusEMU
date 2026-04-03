@@ -462,3 +462,4 @@
 - extracted the roller-delay branch from `RoomUserManager` so cycle-time rolling countdown and completion status refresh no longer stay inline in `OnCycle`
 - extracted the carry-item timer branch from `RoomUserManager` so per-cycle carry countdown and item-clear handling no longer sit inline in `OnCycle`
 - extracted the idle/sleep branch from `RoomUserManager` so per-cycle idle increment, spam tick handling, and sleep packet dispatch no longer stay inline in `OnCycle`
+- extracted the cycle finalization tail from `RoomUserManager` so riding effect refresh, bot timer tick, human user counting, and fallback effect update no longer sit inline at the end of `OnCycle`
