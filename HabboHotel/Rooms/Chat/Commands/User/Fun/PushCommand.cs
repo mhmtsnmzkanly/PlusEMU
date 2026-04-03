@@ -29,8 +29,7 @@ internal class PushCommand : ITargetChatCommand
             return Task.CompletedTask;
         }
 
-        var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
-        if (targetUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(target.Id, out var targetUser) || targetUser == null)
         {
             session.SendWhisper("An error occoured whilst finding that user, maybe they're not online or in this room.");
             return Task.CompletedTask;
@@ -41,7 +40,9 @@ internal class PushCommand : ITargetChatCommand
             session.SendWhisper("Oops, you cannot push a user whilst they have their teleport mode enabled.");
             return Task.CompletedTask;
         }
-        var thisUser = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+        RoomUser? thisUser = null;
+        if (habbo != null)
+            room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out thisUser);
         if (thisUser == null)
             return Task.CompletedTask;
 

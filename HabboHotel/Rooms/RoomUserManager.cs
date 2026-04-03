@@ -110,8 +110,7 @@ public class RoomUserManager
 
     public void RemoveBot(int virtualId, bool kicked)
     {
-        var user = GetRoomUserByVirtualId(virtualId);
-        if (user == null || !user.IsBot)
+        if (!TryGetRoomUserByVirtualId(virtualId, out var user) || user == null || !user.IsBot)
             return;
         if (user.IsPet)
         {
@@ -277,8 +276,7 @@ public class RoomUserManager
             NotifyLeavingClient(session, nofityUser, notifyKick);
             ResetHabboRoomState(habbo);
 
-            var user = GetRoomUserByHabbo(habbo.Id);
-            if (user == null)
+            if (!TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             {
                 Log.Warn("RemoveUserFromRoom found no room user after habbo room-state reset. RoomId={roomId}, UserId={userId}", _room.RoomId, habbo.Id);
                 return true;
@@ -332,8 +330,7 @@ public class RoomUserManager
             return;
 
         user.RidingHorse = false;
-        var mountedUser = GetRoomUserByVirtualId(user.HorseId);
-        if (mountedUser == null)
+        if (!TryGetRoomUserByVirtualId(user.HorseId, out var mountedUser) || mountedUser == null)
             return;
 
         mountedUser.RidingHorse = false;
@@ -572,7 +569,7 @@ public class RoomUserManager
             else if (pet.DbState == PetDatabaseUpdateState.NeedsUpdate)
             {
                 //Surely this can be *99 better? // TODO
-                var user = GetRoomUserByVirtualId(pet.VirtualId);
+                TryGetRoomUserByVirtualId(pet.VirtualId, out var user);
                 connection.Execute("UPDATE `bots` SET room_id = @roomId, x = @x, y = @y, z = @z WHERE `id` = @id LIMIT 1", 
                     new { roomId = pet.RoomId, x = user?.X ?? 0, y = user?.Y ?? 0, z = user?.Z ?? 0, id = pet.PetId });
                     
@@ -730,8 +727,7 @@ public class RoomUserManager
                         }
                         if (!user.IsBot && user.RidingHorse)
                         {
-                            var horse = GetRoomUserByVirtualId(user.HorseId);
-                            if (horse != null)
+                            if (TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
                             {
                                 horse.X = user.SetX;
                                 horse.Y = user.SetY;
@@ -787,8 +783,9 @@ public class RoomUserManager
                         {
                             if (user.CarryItemId > 0)
                             {
-                                var target = _room.GetRoomUserManager().GetRoomUserByHabbo(user.BotData.TargetUser);
-                                if (target != null && Gamemap.TilesTouching(user.X, user.Y, target.X, target.Y))
+                                if (_room.GetRoomUserManager().TryGetRoomUserByHabbo(user.BotData.TargetUser, out var target) &&
+                                    target != null &&
+                                    Gamemap.TilesTouching(user.X, user.Y, target.X, target.Y))
                                 {
                                     user.SetRot(Rotation.Calculate(user.X, user.Y, target.X, target.Y), false);
                                     target.SetRot(Rotation.Calculate(target.X, target.Y, user.X, user.Y), false);
@@ -800,8 +797,7 @@ public class RoomUserManager
                         }
                         if (user.RidingHorse && user.IsPet == false && !user.IsBot)
                         {
-                            var mascotaVinculada = GetRoomUserByVirtualId(user.HorseId);
-                            if (mascotaVinculada != null)
+                            if (TryGetRoomUserByVirtualId(user.HorseId, out var mascotaVinculada) && mascotaVinculada != null)
                             {
                                 mascotaVinculada.IsWalking = false;
                                 mascotaVinculada.RemoveStatus("mv");
@@ -871,8 +867,7 @@ public class RoomUserManager
                             }
                             if (!user.IsBot && user.RidingHorse && user.IsPet == false)
                             {
-                                var horse = GetRoomUserByVirtualId(user.HorseId);
-                                if (horse != null)
+                                if (TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
                                 {
                                     horse.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
                                     horse.UpdateNeeded = true;
@@ -893,8 +888,7 @@ public class RoomUserManager
                             updated = true;
                             if (user.RidingHorse && user.IsPet == false && !user.IsBot)
                             {
-                                var horse = GetRoomUserByVirtualId(user.HorseId);
-                                if (horse != null)
+                                if (TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
                                 {
                                     horse.RotBody = newRot;
                                     horse.RotHead = newRot;
@@ -908,8 +902,7 @@ public class RoomUserManager
                             user.SqState = gameMap.GameMap[user.SetX, user.SetY]; //Backup the new one
                             if (!_room.RoomBlockingEnabled)
                             {
-                                var users = _room.GetRoomUserManager().GetUserForSquare(nextX, nextY);
-                                if (users != null)
+                                if (_room.GetRoomUserManager().TryGetUserForSquare(nextX, nextY, out var users) && users != null)
                                     gameMap.GameMap[nextX, nextY] = 0;
                             }
                             else
@@ -932,8 +925,7 @@ public class RoomUserManager
                         user.UpdateNeeded = true;
                         if (user.RidingHorse)
                         {
-                            var horse = GetRoomUserByVirtualId(user.HorseId);
-                            if (horse != null)
+                            if (TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
                             {
                                 horse.RemoveStatus("mv");
                                 horse.UpdateNeeded = true;

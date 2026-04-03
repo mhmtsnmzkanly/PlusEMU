@@ -34,8 +34,7 @@ internal class MimicCommand : ITargetChatCommand
             session.SendWhisper("Oops, you cannot mimic this user - sorry!");
             return Task.CompletedTask;
         }
-        var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
-        if (targetUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(target.Id, out var targetUser) || targetUser == null)
         {
             session.SendWhisper("An error occoured whilst finding that user, maybe they're not online or in this room.");
             return Task.CompletedTask;
@@ -48,8 +47,7 @@ internal class MimicCommand : ITargetChatCommand
         habbo.Look = targetHabbo.Look;
         using var connection = _database.Connection();
         connection.Execute("UPDATE `users` SET `gender` = @gender, `look` = @look WHERE `id` = @id LIMIT 1", new { gender = habbo.Gender, look = habbo.Look, id = habbo.Id });
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user != null)
+        if (room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) && user != null)
         {
             session.Send(new AvatarAspectUpdateComposer(habbo.Look, habbo.Gender));
             session.Send(new UserChangeComposer(user, true));

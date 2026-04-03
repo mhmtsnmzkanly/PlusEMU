@@ -23,8 +23,7 @@ internal class PetCommand : IChatCommand
         if (session.GetHabbo() is not { } habbo || !habbo.IsInRoom(room))
             return;
 
-        var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (roomUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var roomUser) || roomUser == null)
             return;
         if (!room.PetMorphsAllowed)
         {
