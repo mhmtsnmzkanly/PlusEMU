@@ -410,6 +410,22 @@ public class RoomUserManager
         }
     }
 
+    private void StopMovement(RoomUser user, bool clearSignStatus = false)
+    {
+        user.IsWalking = false;
+        user.RemoveStatus("mv");
+
+        if (clearSignStatus && user.Statusses.ContainsKey("sign"))
+            user.RemoveStatus("sign");
+
+        if (TryGetMountedHorse(user, out var horse))
+        {
+            horse.IsWalking = false;
+            horse.RemoveStatus("mv");
+            horse.UpdateNeeded = true;
+        }
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -824,10 +840,7 @@ public class RoomUserManager
                             Log.Debug("Walking stopped due to invalid step. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Goal=({goalX},{goalY}), PathStep={pathStep}, PathCount={pathCount}",
                                 _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY, user.PathStep, user.Path.Count);
                         }
-                        user.IsWalking = false;
-                        user.RemoveStatus("mv");
-                        if (user.Statusses.ContainsKey("sign"))
-                            user.RemoveStatus("sign");
+                        StopMovement(user, clearSignStatus: true);
                         if (user.IsBot && user.BotData.TargetUser > 0)
                         {
                             if (user.CarryItemId > 0)
@@ -843,12 +856,6 @@ public class RoomUserManager
                             }
                             user.CarryItem(0);
                             user.BotData.TargetUser = 0;
-                        }
-                        if (TryGetMountedHorse(user, out var horseToSync))
-                        {
-                            horseToSync.IsWalking = false;
-                            horseToSync.RemoveStatus("mv");
-                            horseToSync.UpdateNeeded = true;
                         }
                     }
                     else
@@ -910,13 +917,8 @@ public class RoomUserManager
                 {
                     if (user.Statusses.ContainsKey("mv"))
                     {
-                        user.RemoveStatus("mv");
+                        StopMovement(user);
                         user.UpdateNeeded = true;
-                        if (TryGetMountedHorse(user, out var horseForStop))
-                        {
-                            horseForStop.RemoveStatus("mv");
-                            horseForStop.UpdateNeeded = true;
-                        }
                     }
                 }
 

@@ -390,3 +390,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - tightened avatar figure-update flow so filtered look data is persisted and echoed consistently, with live tracing for Nitro clothing-debug runs
 - aligned the live Nitro 1.6.6 room-enter follow-up header and catalog offer-id flow with the client renderer, removing two concrete protocol mismatches behind black-screen and silent purchase failures
 - corrected the room authorization flow back to original immediate-enter semantics and added targeted catalog purchase abort tracing so service extraction no longer hides silent protocol/lookup failures
+- `RoomUserManager` movement cleanup is now also consolidating repeated stop/sync branches behind named helpers, shrinking another small slice of inline mounted-movement teardown before any larger lifecycle refactor
