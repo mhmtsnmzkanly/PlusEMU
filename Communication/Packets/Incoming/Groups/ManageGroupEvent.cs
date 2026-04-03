@@ -20,7 +20,7 @@ internal class ManageGroupEvent : IPacketEvent
             return Task.CompletedTask;
 
         var groupId = packet.ReadInt();
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return Task.CompletedTask;
 
         if (group.CreatorId != habbo.Id && !habbo.Permissions.HasRight("group_management_override"))

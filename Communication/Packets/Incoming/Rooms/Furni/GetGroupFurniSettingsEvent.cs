@@ -34,7 +34,7 @@ internal class GetGroupFurniSettingsEvent : IPacketEvent
 
         if (!item.Definition.IsGroupGate)
             return Task.CompletedTask;
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return Task.CompletedTask;
 
         session.Send(new GroupFurniSettingsComposer(group, itemId, habbo.Id));

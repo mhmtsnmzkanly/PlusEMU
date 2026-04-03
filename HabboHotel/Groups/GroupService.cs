@@ -60,7 +60,7 @@ internal class GroupService : IGroupService
         if (habbo == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (group.IsMember(habbo.Id) || group.IsAdmin(habbo.Id) || group.HasRequest(habbo.Id) && group.Type == GroupType.Private)
             return;
@@ -106,7 +106,7 @@ internal class GroupService : IGroupService
         if (habbo == null || permissions == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (habbo.Id != group.CreatorId && !group.IsAdmin(habbo.Id) && !permissions.HasRight("fuse_group_accept_any"))
             return;
@@ -134,7 +134,7 @@ internal class GroupService : IGroupService
         if (habbo == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (habbo.Id != group.CreatorId && !group.IsAdmin(habbo.Id))
             return;
@@ -155,7 +155,7 @@ internal class GroupService : IGroupService
         if (habbo == null || habboStats == null || groupId == 0)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
 
         habboStats.FavouriteGroupId = group.Id;
@@ -209,7 +209,7 @@ internal class GroupService : IGroupService
         if (habbo == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (habbo.Id != group.CreatorId || !group.IsMember(userId))
             return;
@@ -235,7 +235,7 @@ internal class GroupService : IGroupService
         if (habbo == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (habbo.Id != group.CreatorId || !group.IsMember(userId))
             return;
@@ -262,7 +262,7 @@ internal class GroupService : IGroupService
         if (habbo == null || habboStats == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
 
         if (userId == habbo.Id)
@@ -314,7 +314,7 @@ internal class GroupService : IGroupService
         if (habbo == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (group.CreatorId != habbo.Id)
             return;
@@ -376,7 +376,7 @@ internal class GroupService : IGroupService
         if (habbo == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (group.CreatorId != habbo.Id)
             return;
@@ -399,7 +399,7 @@ internal class GroupService : IGroupService
         if (habbo == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (group.CreatorId != habbo.Id)
             return;
@@ -427,7 +427,7 @@ internal class GroupService : IGroupService
         if (habbo == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return;
         if (group.CreatorId != habbo.Id)
             return;
@@ -462,7 +462,7 @@ internal class GroupService : IGroupService
         if (habbo == null || permissions == null)
             return;
 
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
         {
             session.SendNotification(_languageManager.Require("group.not_found"));
             return;

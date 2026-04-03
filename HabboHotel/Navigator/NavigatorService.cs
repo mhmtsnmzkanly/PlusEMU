@@ -84,10 +84,10 @@ internal class NavigatorService : INavigatorService
 
     public Task GetGuestRoom(GameClient session, uint roomId, bool enter, bool forward)
     {
-        if (!_roomFactory.TryGetData(roomId, out var data))
+        if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
             return Task.CompletedTask;
 
-        session.Send(new GetGuestRoomResultComposer(session, data!, enter, forward));
+        session.Send(new GetGuestRoomResultComposer(session, data, enter, forward));
         return Task.CompletedTask;
     }
 
@@ -96,7 +96,7 @@ internal class NavigatorService : INavigatorService
         ICollection<SearchResultList> categories = new List<SearchResultList>();
         if (!string.IsNullOrEmpty(search))
         {
-            if (_navigatorManager.TryGetSearchResultList(0, out var queryResult))
+            if (_navigatorManager.TryGetSearchResultList(0, out var queryResult) && queryResult != null)
                 categories.Add(queryResult);
         }
         else
@@ -144,7 +144,7 @@ internal class NavigatorService : INavigatorService
             return Task.CompletedTask;
         }
 
-        if (!_navigatorManager.TryGetSearchResultList(category, out var searchResultList))
+        if (!_navigatorManager.TryGetSearchResultList(category, out var searchResultList) || searchResultList == null)
             category = 36;
         else if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank)
             category = 36;
@@ -207,9 +207,9 @@ internal class NavigatorService : INavigatorService
         var filteredName = _wordFilterManager.CheckMessage(name);
         var filteredDescription = _wordFilterManager.CheckMessage(description);
 
-        if (!_roomFactory.TryGetData(roomId, out var data))
+        if (!_roomFactory.TryGetData(roomId, out var data) || data == null)
             return;
-        if (data!.OwnerId != habbo.Id)
+        if (data.OwnerId != habbo.Id)
             return;
         if (data.Promotion == null)
         {

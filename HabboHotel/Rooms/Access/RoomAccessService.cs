@@ -265,9 +265,9 @@ internal class RoomAccessService : IRoomAccessService
 
         if (tradeSettings < 0 || tradeSettings > 2)
             tradeSettings = 0;
-        if (!_navigatorManager.TryGetSearchResultList(categoryId, out var searchResultList))
+        if (!_navigatorManager.TryGetSearchResultList(categoryId, out var searchResultList) || searchResultList == null)
             categoryId = 36;
-        if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank)
+        else if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank)
             categoryId = 36;
 
         return Task.CompletedTask;

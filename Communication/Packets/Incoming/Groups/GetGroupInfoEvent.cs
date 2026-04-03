@@ -23,7 +23,7 @@ internal class GetGroupInfoEvent : IPacketEvent
     {
         var groupId = packet.ReadInt();
         var newWindow = packet.ReadBool();
-        if (!_groupManager.TryGetGroup(groupId, out var group))
+        if (!_groupManager.TryGetGroup(groupId, out var group) || group == null)
             return Task.CompletedTask;
         session.Send(new GroupInfoComposer(group, session, _roomFactory, _cacheManager, newWindow));
         return Task.CompletedTask;

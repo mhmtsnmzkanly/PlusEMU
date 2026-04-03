@@ -87,8 +87,10 @@ internal class SaveRoomSettingsEvent : IPacketEvent
         if (access == RoomAccess.Password && password.Length == 0) access = RoomAccess.Open;
         if (maxUsers < 0) maxUsers = 10;
         if (maxUsers > 50) maxUsers = 50;
-        if (!_navigationManager.TryGetSearchResultList(categoryId, out var searchResultList)) categoryId = 36;
-        if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank || habbo.Id != room.OwnerId && habbo.Rank >= searchResultList.RequiredRank) categoryId = 36;
+        if (!_navigationManager.TryGetSearchResultList(categoryId, out var searchResultList) || searchResultList == null)
+            categoryId = 36;
+        else if (searchResultList.CategoryType != NavigatorCategoryType.Category || searchResultList.RequiredRank > habbo.Rank || habbo.Id != room.OwnerId && habbo.Rank >= searchResultList.RequiredRank)
+            categoryId = 36;
         if (tagCount > 2)
             return;
         room.AllowPets = allowPets;
