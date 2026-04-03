@@ -342,6 +342,35 @@ public class RoomUserManager
                horse != null;
     }
 
+    private void SetMovementStatus(RoomUser user, int nextX, int nextY, double nextZ)
+    {
+        if (TryGetMountedHorse(user, out var horseForStatus))
+        {
+            horseForStatus.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
+            horseForStatus.UpdateNeeded = true;
+            user.SetStatus("mv", $"{+nextX},{nextY},{TextHandling.GetString(nextZ + 1)}");
+            user.UpdateNeeded = true;
+            return;
+        }
+
+        user.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
+    }
+
+    private void UpdateTargetSquareOccupancy(Gamemap gameMap, RoomUser user, int nextX, int nextY)
+    {
+        gameMap.GameMap[user.X, user.Y] = user.SqState;
+        user.SqState = gameMap.GameMap[user.SetX, user.SetY];
+
+        if (!_room.RoomBlockingEnabled)
+        {
+            if (TryGetUserForSquare(nextX, nextY, out var users) && users != null)
+                gameMap.GameMap[nextX, nextY] = 0;
+            return;
+        }
+
+        gameMap.GameMap[nextX, nextY] = 1;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -843,15 +872,7 @@ public class RoomUserManager
                                     habbo.HopperId = 0;
                                 }
                             }
-                            if (TryGetMountedHorse(user, out var horseForStatus))
-                            {
-                                horseForStatus.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
-                                horseForStatus.UpdateNeeded = true;
-                                user.SetStatus("mv", $"{+nextX},{nextY},{TextHandling.GetString(nextZ + 1)}");
-                                user.UpdateNeeded = true;
-                            }
-                            else
-                                user.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
+                            SetMovementStatus(user, nextX, nextY, nextZ);
                             var newRot = Rotation.Calculate(user.X, user.Y, nextX, nextY, user.MoonwalkEnabled);
                             user.RotBody = newRot;
                             user.RotHead = newRot;
@@ -870,15 +891,7 @@ public class RoomUserManager
                                 horseForStep.SetY = nextY;
                                 horseForStep.SetZ = nextZ;
                             }
-                            gameMap.GameMap[user.X, user.Y] = user.SqState; // REstore the old one
-                            user.SqState = gameMap.GameMap[user.SetX, user.SetY]; //Backup the new one
-                            if (!_room.RoomBlockingEnabled)
-                            {
-                                if (TryGetUserForSquare(nextX, nextY, out var users) && users != null)
-                                    gameMap.GameMap[nextX, nextY] = 0;
-                            }
-                            else
-                                gameMap.GameMap[nextX, nextY] = 1;
+                            UpdateTargetSquareOccupancy(gameMap, user, nextX, nextY);
                         }
                         else
                         {
