@@ -405,7 +405,10 @@ public class RoomUserManager
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log.Warn(ex, "Failed to enumerate bots during room leave handling. RoomId={roomId}, UserId={userId}", _room.RoomId, user.UserId);
+            }
             var petsToRemove = new List<RoomUser>();
             foreach (var bot in bots.ToList())
             {
@@ -1253,7 +1256,10 @@ public class RoomUserManager
                 user.CurrentItemEffect = ItemEffectType.None;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log.Warn(ex, "Failed to apply item effects for room user. RoomId={roomId}, UserId={userId}", _room.RoomId, user.UserId);
+        }
     }
 
     public ICollection<RoomUser> GetUserList() => _users.Values;

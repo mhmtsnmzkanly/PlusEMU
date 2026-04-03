@@ -247,11 +247,8 @@ public class Gamemap
                 GameMap[user.X, user.Y] = 0;
             }
         }
-        try
-        {
+        if (Model.DoorX >= 0 && Model.DoorX < GameMap.GetLength(0) && Model.DoorY >= 0 && Model.DoorY < GameMap.GetLength(1))
             GameMap[Model.DoorX, Model.DoorY] = 3;
-        }
-        catch { }
     }
 
     private bool ConstructMapForItem(Item item, Point coord)

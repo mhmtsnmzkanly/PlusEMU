@@ -122,7 +122,10 @@ public class GameClientManager : IGameClientManager
                 {
                     //client.SendWhisper(message, 5);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Moderator alert delivery failed for client {clientId}.", client == null ? "<unknown>" : client.Id.ToString());
+                }
             }
         }
     }
@@ -219,7 +222,10 @@ public class GameClientManager : IGameClientManager
                     Console.Clear();
                     _logger.LogInformation("<<- SERVER SHUTDOWN ->> IVNENTORY IS SAVING");
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to persist habbo inventory/query state during shutdown. UserId={userId}", habbo.Id);
+                }
             }
         }
         _logger.LogInformation("Done saving users inventory!");
