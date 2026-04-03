@@ -34,6 +34,7 @@ public class Habbo
     private bool _disconnected;
     private bool _habboSaved;
     private ProcessComponent? _process;
+    private IDatabase? _database;
 
     public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
@@ -133,14 +134,10 @@ public class Habbo
 
     public Calendar.CalendarComponent? Calendar { get; set; }
 
-    private IDatabase? Database { get; set; }
-    private ISettingsManager? SettingsManager { get; set; }
-    private ISubscriptionManager? SubscriptionManager { get; set; }
-    private IAchievementService? AchievementService { get; set; }
-
     public event EventHandler? Disconnected;
 
     public bool HasActiveClient => Client != null;
+    internal bool HasProcessComponent => _process != null;
 
     public UserAchievement? GetAchievementData(string group) =>
         Achievements.TryGetValue(group, out var data) ? data : null;
@@ -190,18 +187,13 @@ public class Habbo
         Permissions?.Dispose();
     }
 
-    public void InitProcess(IDatabase database, ISettingsManager settingsManager, object subscriptionManager, object achievementService)
+    internal void AttachProcess(ProcessComponent process, IDatabase database)
     {
-        Database = database;
-        SettingsManager = settingsManager;
-        SubscriptionManager = subscriptionManager as ISubscriptionManager;
-        AchievementService = achievementService as IAchievementService;
-
-        if (_process != null || SubscriptionManager == null || AchievementService == null)
+        if (_process != null)
             return;
 
-        _process = new ProcessComponent();
-        _process.Init(this, database, settingsManager, SubscriptionManager, AchievementService);
+        _database = database;
+        _process = process;
     }
 
     public void AttachClient(GameClient session)
@@ -293,12 +285,12 @@ public class Habbo
 
     private void SaveStateOnDisconnect()
     {
-        if (_habboSaved || Database == null)
+        if (_habboSaved || _database == null)
             return;
 
         Log.Debug("Persisting habbo state on disconnect. UserId={userId}, Username={username}, Credits={credits}, Duckets={duckets}, Diamonds={diamonds}", Id, Username, Credits, Duckets, Diamonds);
         _habboSaved = true;
-        using var connection = Database.Connection();
+        using var connection = _database.Connection();
         connection.Execute(
             "UPDATE `users` SET `online` = '0', `last_online` = @lastOnline, `activity_points` = @duckets, `credits` = @credits, `vip_points` = @diamonds, `home_room` = @homeRoom, `gotw_points` = @gotwPoints, `time_muted` = @timeMuted, `friend_bar_state` = @friendBarState, `bubble_id` = @customBubbleId WHERE `id` = @id LIMIT 1;" +
             "UPDATE `user_statistics` SET `roomvisits` = @roomVisits, `onlineTime` = @onlineTime, `respect` = @respect, `respectGiven` = @respectGiven, `giftsGiven` = @giftsGiven, `giftsReceived` = @giftsReceived, `dailyRespectPoints` = @dailyRespectPoints, `dailyPetRespectPoints` = @dailyPetRespectPoints, `AchievementScore` = @achievementScore, `quest_id` = @questId, `quest_progress` = @questProgress, `groupid` = @favouriteGroupId, `forum_posts` = @forumPosts WHERE `id` = @id LIMIT 1;",

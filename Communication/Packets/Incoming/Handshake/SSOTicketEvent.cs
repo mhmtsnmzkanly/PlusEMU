@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Plus.Database;
 using Plus.Communication.Attributes;
 using Plus.Communication.Packets.Outgoing.BuildersClub;
 using Plus.Communication.Packets.Outgoing.Handshake;
@@ -22,6 +21,7 @@ using Plus.HabboHotel.Rewards;
 using Plus.HabboHotel.Subscriptions;
 using Plus.HabboHotel.Users.Authentication;
 using Plus.HabboHotel.Users.Messenger.FriendBar;
+using Plus.HabboHotel.Users;
 
 namespace Plus.Communication.Packets.Incoming.Handshake;
 
@@ -39,8 +39,7 @@ public class SsoTicketEvent : IPacketEvent
     private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IRewardManager _rewardManager;
-    private readonly IDatabase _database;
-    private readonly IAchievementService _achievementService;
+    private readonly IHabboRuntimeInitializer _habboRuntimeInitializer;
     private readonly ILogger<SsoTicketEvent> _logger;
 
     public SsoTicketEvent(IAuthenticator authenticate,
@@ -49,13 +48,12 @@ public class SsoTicketEvent : IPacketEvent
         IAchievementManager achievementManager,
         IPermissionManager permissionManager,
         ISubscriptionManager subscriptionManager,
-        IAchievementService achievementService,
         ICacheManager cacheManager,
         IFigureDataManager figureManager,
         ILanguageManager languageManager,
         ISettingsManager settingsManager,
         IRewardManager rewardManager,
-        IDatabase database,
+        IHabboRuntimeInitializer habboRuntimeInitializer,
         ILogger<SsoTicketEvent> logger)
     {
         _authenticate = authenticate;
@@ -64,13 +62,12 @@ public class SsoTicketEvent : IPacketEvent
         _achievementManager = achievementManager;
         _permissionManager = permissionManager;
         _subscriptionManager = subscriptionManager;
-        _achievementService = achievementService;
         _cacheManager = cacheManager;
         _figureManager = figureManager;
         _languageManager = languageManager;
         _settingsManager = settingsManager;
         _rewardManager = rewardManager;
-        _database = database;
+        _habboRuntimeInitializer = habboRuntimeInitializer;
         _logger = logger;
     }
 
@@ -131,7 +128,7 @@ public class SsoTicketEvent : IPacketEvent
             if (!_cacheManager.ContainsUser(habbo.Id))
                 _cacheManager.GenerateUser(habbo.Id);
             habbo.Look = _figureManager.ProcessFigure(habbo.Look, habbo.Gender, clothing?.GetClothingParts ?? Array.Empty<Plus.HabboHotel.Users.Clothing.Parts.ClothingParts>(), true);
-            habbo.InitProcess(_database, _settingsManager, _subscriptionManager, _achievementService);
+            _habboRuntimeInitializer.EnsureProcessComponent(habbo);
             if (habbo.Permissions?.HasRight("mod_tickets") == true)
             {
                 session.Send(new ModeratorInitComposer(

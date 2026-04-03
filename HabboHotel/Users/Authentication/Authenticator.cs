@@ -1,8 +1,6 @@
 ﻿using Dapper;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
-using Plus.HabboHotel.Users.Clothing;
-using Plus.HabboHotel.Users.Effects;
 using Plus.HabboHotel.Users.UserData;
 using System.Diagnostics;
 
@@ -14,13 +12,20 @@ internal class Authenticator : IAuthenticator
     private readonly IGameClientManager _gameClientManager;
     private readonly IUserDataFactory _userDataFactory;
     private readonly IDatabase _database;
+    private readonly IHabboRuntimeInitializer _habboRuntimeInitializer;
 
-    public Authenticator(IEnumerable<IAuthenticationTask> authenticationTasks, IGameClientManager gameClientManager, IUserDataFactory userDataFactory, IDatabase database)
+    public Authenticator(
+        IEnumerable<IAuthenticationTask> authenticationTasks,
+        IGameClientManager gameClientManager,
+        IUserDataFactory userDataFactory,
+        IDatabase database,
+        IHabboRuntimeInitializer habboRuntimeInitializer)
     {
         _authenticationTasks = authenticationTasks;
         _gameClientManager = gameClientManager;
         _userDataFactory = userDataFactory;
         _database = database;
+        _habboRuntimeInitializer = habboRuntimeInitializer;
     }
 
     public async Task<AuthenticationError?> AuthenticateUsingSSO(GameClient session, string sso)
@@ -71,17 +76,7 @@ internal class Authenticator : IAuthenticator
 
     private void EnsureRuntimeComponents(Habbo habbo)
     {
-        if (habbo.Effects == null)
-        {
-            habbo.Effects = new EffectsComponent();
-            habbo.Effects.Init(habbo, _database);
-        }
-
-        if (habbo.Clothing == null)
-        {
-            habbo.Clothing = new ClothingComponent();
-            habbo.Clothing.Init(habbo, _database);
-        }
+        _habboRuntimeInitializer.EnsureVisualComponents(habbo);
     }
 
     private Task CompleteLogin(Habbo habbo) => RaiseHabboLoggedIn(habbo);

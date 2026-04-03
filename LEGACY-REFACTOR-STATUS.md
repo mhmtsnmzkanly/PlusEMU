@@ -9,10 +9,9 @@ This file tracks the ongoing architecture cleanup that moved packet/business log
 - Project builds:
   - `DOTNET_ROOT=/usr/share/dotnet PATH=/usr/share/dotnet:$PATH DOTNET_CLI_HOME=/tmp DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 /usr/share/dotnet/dotnet build 'PlusEMU.csproj' -c Release --no-restore -v q`
 - Last confirmed result:
-  - `2 Warning(s), 0 Error(s)`
+  - `1 Warning(s), 0 Error(s)`
 - Known remaining warnings:
-  - `HabboHotel/Catalog/CatalogService.cs(274,159)` `CS8602`
-  - `HabboHotel/Rooms/RoomUser.cs(574,16)` `CS8603`
+  - `HabboHotel/Catalog/CatalogService.cs(278,159)` `CS8602`
 - Do not touch or commit these user-owned files unless explicitly requested:
   - `Config/config.json`
   - `CONTRIBUTION-GUIDE.txt`
@@ -44,6 +43,7 @@ The current `master` head also contains an unfinished room / habbo lifecycle bat
 - That disconnect path is now also fail-safe against persistence errors: habbo-state saving is isolated behind guarded logging, and final disposal still runs from `finally`.
 - Flow observability is also higher now: room prepare/authorize/enter, room-user add/remove, room unload/dispose, and habbo attach/detach/disconnect transitions now emit targeted logs so lifecycle ordering regressions are easier to trace from console output.
 - Authentication/login lifecycle is narrower too: `Authenticator` now has explicit habbo creation, disconnect hook-up, session binding, and post-login task phases instead of wiring logout events, session registration, and login fanout inline in one method.
+- Login runtime bootstrap is narrower too: manual `new EffectsComponent()`, `new ClothingComponent()`, and loose `Habbo.InitProcess(..., object, object)` wiring have been replaced by `IHabboRuntimeInitializer`, so session visual/process bootstrap now goes through one DI-owned boundary with typed process attachment.
 - Packet-level room exit callers are also starting to converge on `RoomService`: hotel-view exit and username-change room reset now use `LeaveRoom()` instead of calling the room-user removal path directly.
 - That shared room-exit boundary now also covers the silent room-entry failure path, since `RoomService.LeaveRoom()` takes the notify flag and `GetRoomEntryDataEvent` no longer bypasses it with its own direct removal call.
 - Moderation-driven room exits are converging there as well: moderator room-kick flows now use `RoomService.LeaveRoom()` instead of calling `RoomUserManager.RemoveUserFromRoom()` directly from moderation services and commands.

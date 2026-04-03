@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Continued the DI/service transition in the login runtime path by introducing `IHabboRuntimeInitializer`, centralizing habbo visual/process bootstrap, and removing the loose `Habbo.InitProcess(..., object, object)` handoff.
 - Hardened movement diagnostics and `RoomUser` client resolution so move packets, path recalculation failures, invalid step rejections, and target-square occupancy denials are now logged explicitly while avatar session lookup is retried through the room client manager before movement-state helpers give up.
 - Centralized room lifecycle ownership further so `RoomManager` now evaluates unloads after room ticks and on occupancy changes, `Room` no longer unloads itself during idle/crash paths, and room disposal is reduced to resource cleanup instead of also running leave business logic.
 - Tightened room exit determinism by routing disconnect and room-entry-finalization failures back through `RoomService`, keeping habbo room-reference cleanup, room-runtime removal, and post-leave unload evaluation on one service-owned boundary.
