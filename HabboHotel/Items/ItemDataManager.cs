@@ -128,7 +128,7 @@ public class ItemDataManager : IItemDataManager
         _logger.LogInformation("Item Manager -> LOADED");
     }
 
-    public ItemDefinition GetItemByName(string name)
+    public ItemDefinition? GetItemByName(string name)
     {
         foreach (var entry in Items)
         {
@@ -136,7 +136,7 @@ public class ItemDataManager : IItemDataManager
             if (item.ItemName == name)
                 return item;
         }
-        return null!;
+        return null;
     }
 
     private List<int> ParseIntList(string rawValue)

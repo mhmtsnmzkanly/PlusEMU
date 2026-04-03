@@ -177,12 +177,12 @@ public class RoomItemHandling
             HopperCount += result.HopperDelta;
     }
 
-    public Item GetItem(uint itemId)
+    public Item? GetItem(uint itemId)
     {
         if (_roomItemTrackingService.TryGetLoadedItem(_floorItems, _wallItems, itemId, out var item))
             return item;
 
-        return null!;
+        return null;
     }
 
     public void RemoveFurniture(GameClient? session, uint itemId)

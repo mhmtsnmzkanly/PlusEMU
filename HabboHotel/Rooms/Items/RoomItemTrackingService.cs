@@ -18,15 +18,21 @@ public class RoomItemTrackingService : IRoomItemTrackingService
             wallItems[item.Id] = item;
     }
 
-    public bool TryGetLoadedItem(IReadOnlyDictionary<uint, Item> floorItems, IReadOnlyDictionary<uint, Item> wallItems, uint itemId, out Item item)
+    public bool TryGetLoadedItem(IReadOnlyDictionary<uint, Item> floorItems, IReadOnlyDictionary<uint, Item> wallItems, uint itemId, out Item? item)
     {
-        if (floorItems.TryGetValue(itemId, out item!))
+        if (floorItems.TryGetValue(itemId, out var floorItem))
+        {
+            item = floorItem;
             return true;
+        }
 
-        if (wallItems.TryGetValue(itemId, out item!))
+        if (wallItems.TryGetValue(itemId, out var wallItem))
+        {
+            item = wallItem;
             return true;
+        }
 
-        item = null!;
+        item = null;
         return false;
     }
 
