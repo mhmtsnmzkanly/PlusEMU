@@ -758,6 +758,19 @@ public class RoomUserManager
             UpdateUserCount(userCounter);
     }
 
+    private int ProcessCycleUser(RoomUser user, List<RoomUser> toRemove)
+    {
+        if (QueueUserForRemovalIfNeeded(user, toRemove))
+            return 0;
+
+        AdvanceRuntimePreMovementState(user);
+        var updated = ProcessMovementPhase(user, toRemove, out var shouldContinue);
+        if (shouldContinue)
+            return 0;
+
+        return FinalizeCycleUser(user, updated);
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -1061,15 +1074,7 @@ public class RoomUserManager
             {
                 if (user == null)
                     continue;
-                if (QueueUserForRemovalIfNeeded(user, toRemove))
-                {
-                    continue;
-                }
-                AdvanceRuntimePreMovementState(user);
-                var updated = ProcessMovementPhase(user, toRemove, out var shouldContinue);
-                if (shouldContinue)
-                    continue;
-                userCounter += FinalizeCycleUser(user, updated);
+                userCounter += ProcessCycleUser(user, toRemove);
             }
             ProcessQueuedRemovals(toRemove);
             FinalizeCycleCount(userCounter);
