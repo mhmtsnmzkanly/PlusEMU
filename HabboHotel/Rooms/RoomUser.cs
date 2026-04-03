@@ -128,10 +128,7 @@ public class RoomUser
         TradeId = 0;
         TradePartner = 0;
         IsTrading = false;
-        InternalCycleCount = 0;
     }
-
-    public int InternalCycleCount { get; set; }
 
     public Point Coordinate => new(X, Y);
 

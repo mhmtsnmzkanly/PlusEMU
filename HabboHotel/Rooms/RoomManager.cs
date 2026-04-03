@@ -152,34 +152,38 @@ public class RoomManager : IRoomManager
             return;
 
         _cycleLastExecution = DateTime.Now;
-        var start = DateTime.Now;
         foreach (var room in GetRoomsToCycle())
-            ProcessRoomCycle(room);
+        {
+            if (room == null || room.Unloaded)
+                continue;
 
-        LogSlowCycle(start);
+            if (room.IsCrashed)
+            {
+                UnloadRoom(room.RoomId);
+                continue;
+            }
+
+            if (room.ProcessTask == null || room.ProcessTask.IsCompleted)
+            {
+                room.ProcessTask?.Dispose();
+                room.ProcessTask = new(room.ProcessRoom);
+                room.ProcessTask.Start();
+                room.IsLagging = 0;
+            }
+            else
+            {
+                room.IsLagging++;
+                if (room.IsLagging >= 30)
+                {
+                    room.IsCrashed = true;
+                    UnloadRoom(room.RoomId);
+                }
+            }
+            NotifyRoomStateChanged(room);
+        }
     }
 
     private List<Room> GetRoomsToCycle() => _rooms.Values.ToList();
-
-    private void ProcessRoomCycle(Room room)
-    {
-        if (room == null || room.Unloaded)
-            return;
-        if (room.IsCrashed)
-        {
-            UnloadRoom(room.RoomId);
-            return;
-        }
-        room.OnCycle();
-        NotifyRoomStateChanged(room);
-    }
-
-    private void LogSlowCycle(DateTime start)
-    {
-        var span = DateTime.Now - start;
-        if (span.TotalMilliseconds > 500)
-            _logger.LogWarning("RoomManager.OnCycle took {span}ms to execute - Rooms lagging behind", span.TotalMilliseconds);
-    }
 
     public void LoadModels()
     {

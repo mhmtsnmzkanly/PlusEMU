@@ -966,8 +966,8 @@ public class RoomUserManager
                     newZ = _room.GetGameMap().SqAbsoluteHeight(user.X, user.Y, itemsOnSquare.ToList());
             }
             else
-                newZ = 1;
-            if (newZ != user.Z)
+                newZ = _room.GetGameMap().Model.SqFloorHeight[user.X, user.Y];
+            if (Math.Abs(newZ - user.Z) > 0.001)
             {
                 user.Z = newZ;
                 user.UpdateNeeded = true;

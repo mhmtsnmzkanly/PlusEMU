@@ -29,9 +29,13 @@ public class InteractorGate : IFurniInteractor
                 return;
         item.LegacyDataString = newMode.ToString();
         item.UpdateState();
-        item.GetRoom().GetGameMap().UpdateMapForItem(item);
-        item.GetRoom().GetWired().TriggerEvent(WiredBoxType.TriggerStateChanges, session.GetHabbo(), item);
-        //Item.GetRoom().GenerateMaps();
+
+        var room = item.GetRoom();
+        if (room != null)
+        {
+            room.GetGameMap().UpdateMapForItem(item);
+            room.GetWired().TriggerEvent(WiredBoxType.TriggerStateChanges, session.GetHabbo(), item);
+        }
     }
 
     public void OnWiredTrigger(Item item)
@@ -52,7 +56,12 @@ public class InteractorGate : IFurniInteractor
                 return;
         item.LegacyDataString = newMode.ToString();
         item.UpdateState();
-        item.GetRoom().GetGameMap().UpdateMapForItem(item);
+
+        var room = item.GetRoom();
+        if (room != null)
+        {
+            room.GetGameMap().UpdateMapForItem(item);
+        }
         //Item.GetRoom().GenerateMaps();
     }
 }
