@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Plus.Communication.Packets.Outgoing.Handshake;
 using Plus.Communication.Packets.Outgoing.Rooms.Avatar;
@@ -329,6 +330,16 @@ public class RoomUserManager
 
         mountedUser.RidingHorse = false;
         mountedUser.HorseId = 0;
+    }
+
+    private static bool IsMountedHumanUser(RoomUser user) => user.RidingHorse && !user.IsPet && !user.IsBot;
+
+    private bool TryGetMountedHorse(RoomUser user, [NotNullWhen(true)] out RoomUser? horse)
+    {
+        horse = null;
+        return IsMountedHumanUser(user) &&
+               TryGetRoomUserByVirtualId(user.HorseId, out horse) &&
+               horse != null;
     }
 
     private void RemoveUserFromTeam(RoomUser user)
@@ -765,14 +776,11 @@ public class RoomUserManager
                             user.CarryItem(0);
                             user.BotData.TargetUser = 0;
                         }
-                        if (user.RidingHorse && user.IsPet == false && !user.IsBot)
+                        if (TryGetMountedHorse(user, out var horseToSync))
                         {
-                            if (TryGetRoomUserByVirtualId(user.HorseId, out var mascotaVinculada) && mascotaVinculada != null)
-                            {
-                                mascotaVinculada.IsWalking = false;
-                                mascotaVinculada.RemoveStatus("mv");
-                                mascotaVinculada.UpdateNeeded = true;
-                            }
+                            horseToSync.IsWalking = false;
+                            horseToSync.RemoveStatus("mv");
+                            horseToSync.UpdateNeeded = true;
                         }
                     }
                     else
@@ -835,13 +843,10 @@ public class RoomUserManager
                                     habbo.HopperId = 0;
                                 }
                             }
-                            if (!user.IsBot && user.RidingHorse && user.IsPet == false)
+                            if (TryGetMountedHorse(user, out var horseForStatus))
                             {
-                                if (TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
-                                {
-                                    horse.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
-                                    horse.UpdateNeeded = true;
-                                }
+                                horseForStatus.SetStatus("mv", $"{nextX},{nextY},{TextHandling.GetString(nextZ)}");
+                                horseForStatus.UpdateNeeded = true;
                                 user.SetStatus("mv", $"{+nextX},{nextY},{TextHandling.GetString(nextZ + 1)}");
                                 user.UpdateNeeded = true;
                             }
@@ -856,17 +861,14 @@ public class RoomUserManager
                             user.SetZ = nextZ;
                             UpdateUserEffect(user, user.SetX, user.SetY);
                             updated = true;
-                            if (user.RidingHorse && user.IsPet == false && !user.IsBot)
+                            if (TryGetMountedHorse(user, out var horseForStep))
                             {
-                                if (TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
-                                {
-                                    horse.RotBody = newRot;
-                                    horse.RotHead = newRot;
-                                    horse.SetStep = true;
-                                    horse.SetX = nextX;
-                                    horse.SetY = nextY;
-                                    horse.SetZ = nextZ;
-                                }
+                                horseForStep.RotBody = newRot;
+                                horseForStep.RotHead = newRot;
+                                horseForStep.SetStep = true;
+                                horseForStep.SetX = nextX;
+                                horseForStep.SetY = nextY;
+                                horseForStep.SetZ = nextZ;
                             }
                             gameMap.GameMap[user.X, user.Y] = user.SqState; // REstore the old one
                             user.SqState = gameMap.GameMap[user.SetX, user.SetY]; //Backup the new one
@@ -893,13 +895,10 @@ public class RoomUserManager
                     {
                         user.RemoveStatus("mv");
                         user.UpdateNeeded = true;
-                        if (user.RidingHorse)
+                        if (TryGetMountedHorse(user, out var horseForStop))
                         {
-                            if (TryGetRoomUserByVirtualId(user.HorseId, out var horse) && horse != null)
-                            {
-                                horse.RemoveStatus("mv");
-                                horse.UpdateNeeded = true;
-                            }
+                            horseForStop.RemoveStatus("mv");
+                            horseForStop.UpdateNeeded = true;
                         }
                     }
                 }
