@@ -18,8 +18,7 @@ internal class StandCommand : IChatCommand
         if (string.IsNullOrEmpty(username))
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(username);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(username, out var user) || user == null)
             return;
         if (user.IsSitting)
         {

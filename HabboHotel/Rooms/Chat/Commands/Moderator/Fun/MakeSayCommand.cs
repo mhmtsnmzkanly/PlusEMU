@@ -25,8 +25,7 @@ internal class MakeSayCommand : ITargetChatCommand
                 return Task.CompletedTask;
 
             var message = CommandManager.MergeParams(parameters);
-            var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
-            if (targetUser != null)
+            if (room.GetRoomUserManager().TryGetRoomUserByHabbo(target.Id, out var targetUser) && targetUser != null)
             {
                 var targetClient = targetUser.GetClient();
                 var targetHabbo = targetClient?.GetHabbo();

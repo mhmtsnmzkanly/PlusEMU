@@ -15,8 +15,7 @@ internal class AvatarEffectSelectedEvent : IPacketEvent
         if (!habbo.TryGetCurrentRoom(out var room))
             return Task.CompletedTask;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return Task.CompletedTask;
         if (effectId != 0 && effects.HasEffect(effectId, true))
             user.ApplyEffect(effectId);

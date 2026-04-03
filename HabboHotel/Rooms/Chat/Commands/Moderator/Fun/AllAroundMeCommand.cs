@@ -17,8 +17,7 @@ internal class AllAroundMeCommand : IChatCommand
         if (habbo == null)
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
         var users = room.GetRoomUserManager().GetRoomUsers();
         foreach (var u in users.ToList())

@@ -45,7 +45,9 @@ internal class UseFurnitureEvent : RoomPacketEvent
         var toggle = true;
         if (item.Definition.IsFloorSwitch)
         {
-            var user = habbo == null ? null : room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
+            RoomUser? user = null;
+            if (habbo != null)
+                room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out user);
             if (user == null) return;
             if (!Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y)) toggle = false;
         }

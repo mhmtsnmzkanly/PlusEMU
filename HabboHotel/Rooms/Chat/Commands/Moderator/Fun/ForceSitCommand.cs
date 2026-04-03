@@ -16,8 +16,7 @@ internal class ForceSitCommand : ITargetChatCommand
 
     public Task Execute(GameClient session, Room room, Habbo target, string[] parameters)
     {
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(target.Id, out var user) || user == null)
             return Task.CompletedTask;
         if (user.Statusses.ContainsKey("lie") || user.IsLying || user.RidingHorse || user.IsWalking)
             return Task.CompletedTask;

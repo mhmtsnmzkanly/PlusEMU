@@ -25,8 +25,7 @@ internal class FreezeCommand : ITargetChatCommand
         if (session.GetHabbo() is not { } habbo || !habbo.IsInRoom(room))
             return Task.CompletedTask;
 
-        var targetUser = room.GetRoomUserManager().GetRoomUserByHabbo(target.Id);
-        if (targetUser != null)
+        if (room.GetRoomUserManager().TryGetRoomUserByHabbo(target.Id, out var targetUser) && targetUser != null)
             targetUser.Frozen = true;
         session.SendWhisper($"Successfully froze {target.Username}!");
         return Task.CompletedTask;

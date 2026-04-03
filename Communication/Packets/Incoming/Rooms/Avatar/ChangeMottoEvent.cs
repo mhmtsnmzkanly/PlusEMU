@@ -46,8 +46,8 @@ internal class ChangeMottoEvent : IPacketEvent
         await _achievementService.ProgressAchievement(session, "ACH_Motto", 1);
         if (habbo.TryGetCurrentRoom(out var room))
         {
-            var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-            if (user == null || user.GetClient() == null) return;
+            if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null || user.GetClient() == null)
+                return;
             room.SendPacket(new UserChangeComposer(user, false));
         }
     }

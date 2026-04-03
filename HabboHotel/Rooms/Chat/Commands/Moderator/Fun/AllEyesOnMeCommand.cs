@@ -18,8 +18,7 @@ internal class AllEyesOnMeCommand : IChatCommand
         if (habbo == null)
             return;
 
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (thisUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var thisUser) || thisUser == null)
             return;
         var users = room.GetRoomUserManager().GetRoomUsers();
         foreach (var u in users.ToList())

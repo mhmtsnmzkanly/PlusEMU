@@ -17,8 +17,7 @@ internal class DanceCommand : IChatCommand
         if (session.GetHabbo() is not { } habbo || !habbo.IsInRoom(room))
             return;
 
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (thisUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var thisUser) || thisUser == null)
             return;
         if (parameters.Length == 0)
         {

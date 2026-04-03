@@ -17,8 +17,7 @@ internal class SuperFastwalkCommand : IChatCommand
         if (habbo == null)
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
         user.SuperFastWalking = !user.SuperFastWalking;
         if (user.FastWalking)

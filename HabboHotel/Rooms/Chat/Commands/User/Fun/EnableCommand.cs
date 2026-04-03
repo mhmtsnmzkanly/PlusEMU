@@ -27,8 +27,7 @@ internal class EnableCommand : IChatCommand
             session.SendWhisper("Oops, it appears that the room owner has disabled the ability to use the enable command in here.");
             return;
         }
-        var thisUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
-        if (thisUser == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Username, out var thisUser) || thisUser == null)
             return;
         if (thisUser.RidingHorse)
         {

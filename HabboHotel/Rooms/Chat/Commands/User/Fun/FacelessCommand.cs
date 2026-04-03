@@ -28,8 +28,7 @@ internal class FacelessCommand : IChatCommand
         if (session.GetHabbo() is not { Clothing: { } } habbo || !habbo.IsInRoom(room))
             return;
 
-        var user = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null || user.GetClient() == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null || user.GetClient() == null)
             return;
         string[] headParts;
         var figureParts = habbo.Look.Split('.');
