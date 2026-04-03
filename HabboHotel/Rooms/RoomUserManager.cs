@@ -623,6 +623,18 @@ public class RoomUserManager
         return false;
     }
 
+    private void HandleWalkingStop(RoomUser user, bool invalidStep)
+    {
+        if (invalidStep)
+        {
+            Log.Debug("Walking stopped due to invalid step. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Goal=({goalX},{goalY}), PathStep={pathStep}, PathCount={pathCount}",
+                _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY, user.PathStep, user.Path.Count);
+        }
+
+        StopMovement(user, clearSignStatus: true);
+        CompleteBotCarryTarget(user);
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -957,13 +969,7 @@ public class RoomUserManager
                 {
                     if (invalidStep || user.PathStep >= user.Path.Count || user.GoalX == user.X && user.GoalY == user.Y) //No path found, or reached goal (:
                     {
-                        if (invalidStep)
-                        {
-                            Log.Debug("Walking stopped due to invalid step. RoomId={roomId}, UserId={userId}, VirtualId={virtualId}, Current=({x},{y}), Goal=({goalX},{goalY}), PathStep={pathStep}, PathCount={pathCount}",
-                                _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY, user.PathStep, user.Path.Count);
-                        }
-                        StopMovement(user, clearSignStatus: true);
-                        CompleteBotCarryTarget(user);
+                        HandleWalkingStop(user, invalidStep);
                     }
                     else
                     {

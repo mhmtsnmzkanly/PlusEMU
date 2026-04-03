@@ -464,3 +464,4 @@
 - extracted the idle/sleep branch from `RoomUserManager` so per-cycle idle increment, spam tick handling, and sleep packet dispatch no longer stay inline in `OnCycle`
 - extracted the cycle finalization tail from `RoomUserManager` so riding effect refresh, bot timer tick, human user counting, and fallback effect update no longer sit inline at the end of `OnCycle`
 - extracted the invalid-user/autokick queue branch from `RoomUserManager` so cycle entry no longer inlines room-leave dispatch and autokick queue checks
+- extracted the walking-stop branch from `RoomUserManager` so invalid-step logging plus stop/carry cleanup no longer stay inline in the main walking decision path
