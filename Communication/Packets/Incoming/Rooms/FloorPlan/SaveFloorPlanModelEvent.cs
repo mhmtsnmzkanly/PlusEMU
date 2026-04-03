@@ -35,7 +35,8 @@ internal class SaveFloorPlanModelEvent : RoomPacketEvent
         var doorX = packet.ReadInt(); var doorY = packet.ReadInt(); var doorDirection = packet.ReadInt();
         var wallThick = packet.ReadInt(); var floorThick = packet.ReadInt(); var wallHeight = packet.ReadInt();
         var doorZ = 0;
-        try { doorZ = Parse(modelData[doorY][doorX]); } catch { }
+        if (doorY >= 0 && doorY < modelData.Length && doorX >= 0 && doorX < modelData[doorY].Length)
+            doorZ = Parse(modelData[doorY][doorX]);
         if (wallThick > 1) wallThick = 1; if (wallThick < -2) wallThick = -2;
         if (floorThick > 1) floorThick = 1; if (floorThick < -2) wallThick = -2;
         if (wallHeight < 0) wallHeight = 0; if (wallHeight > 15) wallHeight = 15;

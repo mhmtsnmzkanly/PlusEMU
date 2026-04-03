@@ -33,21 +33,15 @@ internal class LayCommand : IChatCommand
         {
             if (user.RotBody % 2 == 0)
             {
-                if (user == null)
-                    return;
-                try
-                {
-                    user.Statusses.Add("lay", "1.0 null");
-                    user.Z -= 0.35;
-                    user.IsLying = true;
-                    user.UpdateNeeded = true;
-                }
-                catch { }
+                user.Statusses["lay"] = "1.0 null";
+                user.Z -= 0.35;
+                user.IsLying = true;
+                user.UpdateNeeded = true;
             }
             else
             {
                 user.RotBody--; //
-                user.Statusses.Add("lay", "1.0 null");
+                user.Statusses["lay"] = "1.0 null";
                 user.Z -= 0.35;
                 user.IsLying = true;
                 user.UpdateNeeded = true;

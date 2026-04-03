@@ -16,15 +16,14 @@ public class BotResponse
         {
             foreach (var vendingId in responseBeverages.Split(','))
             {
-                try
-                {
-                    BeverageIds.Add(int.Parse(vendingId));
-                }
-                catch { }
+                if (int.TryParse(vendingId, out var beverageId))
+                    BeverageIds.Add(beverageId);
             }
         }
-        else if (!string.IsNullOrEmpty(responseBeverages) && int.Parse(responseBeverages) > 0)
-            BeverageIds.Add(int.Parse(responseBeverages));
+        else if (!string.IsNullOrEmpty(responseBeverages)
+                 && int.TryParse(responseBeverages, out var beverageId)
+                 && beverageId > 0)
+            BeverageIds.Add(beverageId);
     }
 
     public BotAiType AiType { get; set; }
