@@ -467,3 +467,4 @@
 - extracted the walking-stop branch from `RoomUserManager` so invalid-step logging plus stop/carry cleanup no longer stay inline in the main walking decision path
 - extracted the successful walking-step branch from `RoomUserManager` so next-step validation, movement-status updates, and occupancy writes no longer stay inline in the main walking decision path
 - extracted the pending-step resolution branch from `RoomUserManager` so set-step validation/application no longer stays inline ahead of the main walking decision path
+- grouped the remaining walking/not-walking decision into a `RoomUserManager` walking-state helper so `OnCycle` now delegates that branch instead of inlining the last movement-status toggles

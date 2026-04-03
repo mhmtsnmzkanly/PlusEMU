@@ -404,3 +404,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - the walking-decision branch is starting to shrink too, with invalid-step logging plus stop/carry cleanup moved behind one helper before the remaining step-validation path is touched
 - the same walking-decision cleanup now covers the successful step path too, with next-step validation/application moved behind one helper before any higher-risk movement behavior changes
 - the last small pre-walking branch is narrower too, with pending-step validation/application moved behind one helper before any behavior-changing movement refactor
+- `OnCycle` now delegates the full walking/not-walking decision through a dedicated helper as well, which is the first small structural step beyond pure helper extraction before any deeper runtime behavior split

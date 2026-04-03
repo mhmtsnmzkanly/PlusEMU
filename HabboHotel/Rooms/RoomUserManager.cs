@@ -684,6 +684,36 @@ public class RoomUserManager
         }
     }
 
+    private bool ProcessWalkingState(RoomUser user, bool invalidStep)
+    {
+        if (user.IsWalking && !user.Freezed)
+        {
+            if (invalidStep || user.PathStep >= user.Path.Count || user.GoalX == user.X && user.GoalY == user.Y)
+            {
+                HandleWalkingStop(user, invalidStep);
+            }
+            else
+            {
+                var gameMap = _room.GetGameMap();
+                if (TryAdvanceWalkingStep(user, gameMap))
+                    return true;
+            }
+
+            if (!user.RidingHorse)
+                user.UpdateNeeded = true;
+
+            return false;
+        }
+
+        if (user.Statusses.ContainsKey("mv"))
+        {
+            StopMovement(user);
+            user.UpdateNeeded = true;
+        }
+
+        return false;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -1001,31 +1031,7 @@ public class RoomUserManager
                     continue;
                 if (user.PathRecalcNeeded)
                     RecalculatePath(user);
-                if (user.IsWalking && !user.Freezed)
-                {
-                    if (invalidStep || user.PathStep >= user.Path.Count || user.GoalX == user.X && user.GoalY == user.Y) //No path found, or reached goal (:
-                    {
-                        HandleWalkingStop(user, invalidStep);
-                    }
-                    else
-                    {
-                        var gameMap = _room.GetGameMap();
-                        if (TryAdvanceWalkingStep(user, gameMap))
-                        {
-                            updated = true;
-                        }
-                    }
-                    if (!user.RidingHorse)
-                        user.UpdateNeeded = true;
-                }
-                else
-                {
-                    if (user.Statusses.ContainsKey("mv"))
-                    {
-                        StopMovement(user);
-                        user.UpdateNeeded = true;
-                    }
-                }
+                updated = ProcessWalkingState(user, invalidStep);
                 userCounter += FinalizeCycleUser(user, updated);
             }
 
