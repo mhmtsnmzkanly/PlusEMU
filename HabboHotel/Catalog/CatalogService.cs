@@ -275,7 +275,9 @@ internal class CatalogService : ICatalogService
                 break;
         }
 
-        if (!string.IsNullOrEmpty(item.Badge) && _badgeManager.Badges.TryGetValue(item.Badge, out var badge) && (string.IsNullOrEmpty(badge.RequiredRight) || habbo.Permissions.HasRight(badge.RequiredRight)))
+        if (!string.IsNullOrEmpty(item.Badge)
+            && _badgeManager.Badges.TryGetValue(item.Badge, out var badge)
+            && (string.IsNullOrEmpty(badge.RequiredRight) || habbo.Permissions?.HasRight(badge.RequiredRight) == true))
             await _badgeManager.GiveBadge(habbo, badge.Code);
 
         session.Send(new PurchaseOkComposer(item, item.Definition));
