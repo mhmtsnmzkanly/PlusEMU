@@ -3,15 +3,33 @@
 	<PropertyGroup>
 		<Nullable>enable</Nullable>
 		<TargetFramework>net10.0</TargetFramework>
+		<Platforms>AnyCPU</Platforms>
+		<PlatformTarget>AnyCPU</PlatformTarget>
 		<Configurations>Debug;Release</Configurations>
 		<OutputType>Exe</OutputType>
 		<RootNamespace>Plus</RootNamespace>
 		<AssemblyName>PlusEMU</AssemblyName>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<LangVersion>12</LangVersion>
+		<LangVersion>latestMajor</LangVersion>
+		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<AnalysisLevel>latest</AnalysisLevel>
+		<EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+		<Deterministic>true</Deterministic>
+		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+		<ServerGarbageCollection>true</ServerGarbageCollection>
 		<CheckEolTargetFramework>false</CheckEolTargetFramework>
 		<NoWarn>$(NoWarn);CS0067;CS0414;CS0612;CS0618;CS0649</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<Optimize>false</Optimize>
+		<DebugType>portable</DebugType>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<Optimize>true</Optimize>
+		<DebugType>portable</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
