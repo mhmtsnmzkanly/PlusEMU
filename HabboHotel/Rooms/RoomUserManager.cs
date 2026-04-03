@@ -771,6 +771,20 @@ public class RoomUserManager
         return FinalizeCycleUser(user, updated);
     }
 
+    private int ProcessCycleUsers(List<RoomUser> toRemove)
+    {
+        var userCounter = 0;
+        foreach (var user in GetUserList().ToList())
+        {
+            if (user == null)
+                continue;
+
+            userCounter += ProcessCycleUser(user, toRemove);
+        }
+
+        return userCounter;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -1066,16 +1080,10 @@ public class RoomUserManager
 
     public void OnCycle()
     {
-        var userCounter = 0;
         try
         {
             var toRemove = new List<RoomUser>();
-            foreach (var user in GetUserList().ToList())
-            {
-                if (user == null)
-                    continue;
-                userCounter += ProcessCycleUser(user, toRemove);
-            }
+            var userCounter = ProcessCycleUsers(toRemove);
             ProcessQueuedRemovals(toRemove);
             FinalizeCycleCount(userCounter);
         }

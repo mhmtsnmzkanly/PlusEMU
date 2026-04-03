@@ -472,3 +472,4 @@
 - grouped pending-step resolution, path recalculation, and walking-state handling into a `RoomUserManager` movement-phase helper so `OnCycle` now has an explicit movement phase boundary
 - grouped queued room-user removals and user-count finalization into dedicated `RoomUserManager` helpers so `OnCycle` now has explicit teardown/finalize phases after per-user processing
 - grouped the full per-user cycle flow into a `RoomUserManager` helper so `OnCycle` now reads as iterate, teardown, finalize instead of open-coding each user phase inline
+- grouped per-user iteration itself behind a `RoomUserManager` helper so `OnCycle` is now almost entirely phase orchestration rather than loop/control plumbing

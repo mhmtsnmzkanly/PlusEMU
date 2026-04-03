@@ -409,3 +409,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - that structural pass now also gives `OnCycle` an explicit movement phase boundary, with pending-step resolution, path recalculation, and walking-state handling grouped behind one helper before any deeper lifecycle split
 - `OnCycle` now has explicit teardown/finalize phases too, with queued removals and user-count synchronization delegated behind helpers instead of staying inline after the per-user loop
 - the per-user `OnCycle` flow is now grouped behind its own helper as well, so the top-level loop is effectively phase-driven and ready for a later extractor if we choose to move runtime orchestration out of `RoomUserManager`
+- even the per-user iteration is now behind a helper too, leaving `OnCycle` close to a pure phase orchestrator and making any later service extraction much more mechanical
