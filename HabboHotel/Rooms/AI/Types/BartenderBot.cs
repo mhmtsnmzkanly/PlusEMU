@@ -133,8 +133,7 @@ internal class BartenderBot : BotAi
                     }
                     else if (GetBotData().ForcedUserTargetMovement > 0)
                     {
-                        var target = GetRoom().GetRoomUserManager().GetRoomUserByHabbo(GetBotData().ForcedUserTargetMovement);
-                        if (target == null)
+                        if (!GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(GetBotData().ForcedUserTargetMovement, out var target) || target == null)
                         {
                             GetBotData().ForcedUserTargetMovement = 0;
                             GetRoomUser().ClearMovement(true);

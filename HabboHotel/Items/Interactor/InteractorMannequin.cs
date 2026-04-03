@@ -53,8 +53,7 @@ internal class InteractorMannequin : IFurniInteractor
                 new { look = habbo.Look, gender = habbo.Gender, id = habbo.Id });
             if (!habbo.TryGetCurrentRoom(out var room))
                 return;
-            var roomUser = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Username);
-            if (roomUser == null)
+            if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Username, out var roomUser) || roomUser == null)
                 return;
             client.Send(new UserChangeComposer(roomUser, true));
             room.SendPacket(new UserChangeComposer(roomUser, false));

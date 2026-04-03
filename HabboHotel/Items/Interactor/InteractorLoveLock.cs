@@ -16,8 +16,7 @@ public class InteractorLoveLock : IFurniInteractor
         var habbo = session.GetHabbo();
         if (habbo == null)
             return;
-        var user = item.GetRoom().GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (user == null)
+        if (!item.GetRoom().GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var user) || user == null)
             return;
         if (Gamemap.TilesTouching(item.GetX, item.GetY, user.X, user.Y))
         {
@@ -38,8 +37,8 @@ public class InteractorLoveLock : IFurniInteractor
                     default:
                         return;
                 }
-                var userOne = item.GetRoom().GetRoomUserManager().GetUserForSquare(pointOne.X, pointOne.Y);
-                var userTwo = item.GetRoom().GetRoomUserManager().GetUserForSquare(pointTwo.X, pointTwo.Y);
+                item.GetRoom().GetRoomUserManager().TryGetUserForSquare(pointOne.X, pointOne.Y, out var userOne);
+                item.GetRoom().GetRoomUserManager().TryGetUserForSquare(pointTwo.X, pointTwo.Y, out var userTwo);
                 if (userOne == null || userTwo == null)
                     session.SendNotification(item.GetRoom().GetLanguageManager().Require("lovelock.user_invalid"));
                 else if (userOne.GetClient() == null || userTwo.GetClient() == null)

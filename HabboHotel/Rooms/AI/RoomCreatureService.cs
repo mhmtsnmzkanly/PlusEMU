@@ -268,7 +268,9 @@ internal class RoomCreatureService : IRoomCreatureService
 
         if (!currentRoom.GetRoomUserManager().TryGetPet(petId, out var pet) || pet == null)
         {
-            var userHabbo = currentRoom.GetRoomUserManager().GetRoomUserByHabbo(petId)?.GetClient()?.GetHabbo();
+            var userHabbo = currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(petId, out var roomUser)
+                ? roomUser?.GetClient()?.GetHabbo()
+                : null;
             if (userHabbo != null)
                 session.Send(new PetInformationComposer(userHabbo, _roomManager));
             return Task.CompletedTask;
@@ -286,7 +288,8 @@ internal class RoomCreatureService : IRoomCreatureService
 
         if (!currentRoom.GetRoomUserManager().TryGetPet(petId, out var pet) || pet == null)
         {
-            if (currentRoom.GetRoomUserManager().GetRoomUserByHabbo(petId)?.GetClient()?.GetHabbo() != null)
+            if (currentRoom.GetRoomUserManager().TryGetRoomUserByHabbo(petId, out var roomUser) &&
+                roomUser?.GetClient()?.GetHabbo() != null)
                 session.SendWhisper(_languageManager.Require("pet.training.habbo_only"));
             return Task.CompletedTask;
         }

@@ -41,8 +41,7 @@ internal class KickPetsCommand : IChatCommand
                 continue;
             if (bot.RidingHorse)
             {
-                var rider = room.GetRoomUserManager().GetRoomUserByVirtualId(bot.HorseId);
-                if (rider != null)
+                if (room.GetRoomUserManager().TryGetRoomUserByVirtualId(bot.HorseId, out var rider) && rider != null)
                 {
                     rider.RidingHorse = false;
                     rider.ApplyEffect(-1);

@@ -16,8 +16,7 @@ internal class InteractorCannon : IFurniInteractor
             return;
         if (!habbo.TryGetCurrentRoom(out var room))
             return;
-        var actor = room.GetRoomUserManager().GetRoomUserByHabbo(habbo.Id);
-        if (actor == null)
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(habbo.Id, out var actor) || actor == null)
             return;
         if (item.LegacyDataString == "1")
             return;
