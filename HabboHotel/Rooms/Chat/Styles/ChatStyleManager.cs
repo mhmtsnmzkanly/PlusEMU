@@ -42,5 +42,5 @@ public sealed class ChatStyleManager : IChatStyleManager
         _logger.LogInformation("Loaded {Count} chat styles.", _styles.Count);
     }
 
-    public bool TryGetStyle(int id, out ChatStyle style) => _styles.TryGetValue(id, out style!);
+    public bool TryGetStyle(int id, out ChatStyle? style) => _styles.TryGetValue(id, out style);
 }

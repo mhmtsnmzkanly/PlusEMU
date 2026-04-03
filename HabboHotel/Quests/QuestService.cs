@@ -121,7 +121,7 @@ internal class QuestService : IQuestService
 
     public Task QuestReminder(GameClient session, int questId)
     {
-        if (_questManager.TryGetQuest(questId, out var quest))
+        if (_questManager.TryGetQuest(questId, out var quest) && quest != null)
             session.Send(new QuestStartedComposer(session, quest, _questManager));
         return Task.CompletedTask;
     }

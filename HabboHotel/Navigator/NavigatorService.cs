@@ -138,7 +138,7 @@ internal class NavigatorService : INavigatorService
             return Task.CompletedTask;
         }
 
-        if (!_roomManager.TryGetModel(modelName, out var model))
+        if (!_roomManager.TryGetModel(modelName, out var model) || model == null)
         {
             session.SendNotification(_languageManager.Require("room.creation.model.not_found"));
             return Task.CompletedTask;

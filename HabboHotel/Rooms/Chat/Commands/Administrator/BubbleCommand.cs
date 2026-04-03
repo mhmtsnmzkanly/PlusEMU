@@ -38,7 +38,7 @@ internal class BubbleCommand : IChatCommand
             session.SendWhisper("Please enter a valid number.");
             return;
         }
-        if (!_chatStyleManager.TryGetStyle(bubble, out var style) || style.RequiredRight.Length > 0 && !(permissions?.HasRight(style.RequiredRight) ?? false))
+        if (!_chatStyleManager.TryGetStyle(bubble, out var style) || style == null || style.RequiredRight.Length > 0 && !(permissions?.HasRight(style.RequiredRight) ?? false))
         {
             session.SendWhisper("Oops, you cannot use this bubble due to a rank requirement, sorry!");
             return;

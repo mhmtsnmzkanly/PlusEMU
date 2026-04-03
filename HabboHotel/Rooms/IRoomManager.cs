@@ -9,7 +9,7 @@ public interface IRoomManager
     void LoadModels();
     bool LoadModel(string id);
     void ReloadModel(string id);
-    bool TryGetModel(string id, out RoomModel model);
+    bool TryGetModel(string id, out RoomModel? model);
     void UnloadRoom(uint roomId);
     bool TryLoadRoom(uint roomId, out Room room);
     List<Room> SearchGroupRooms(string query);

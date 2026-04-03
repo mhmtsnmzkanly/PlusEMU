@@ -55,7 +55,7 @@ public class QuestManager : IQuestManager
         return quest!;
     }
 
-    public bool TryGetQuest(int id, out Quest quest) => _quests.TryGetValue(id, out quest!);
+    public bool TryGetQuest(int id, out Quest? quest) => _quests.TryGetValue(id, out quest);
 
     public int GetAmountOfQuestsInCategory(string category)
     {

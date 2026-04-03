@@ -117,7 +117,7 @@ public class RoomService : IRoomService
         if (filteredName.Length is < 3 or > 25)
             return null;
 
-        if (!_roomManager.TryGetModel(modelName, out var model))
+        if (!_roomManager.TryGetModel(modelName, out var model) || model == null)
             return null;
 
         if (!_navigatorManager.TryGetSearchResultList(category, out var searchResultList) || searchResultList == null)

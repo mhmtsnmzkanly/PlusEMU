@@ -202,12 +202,13 @@ public class RoomFactory : IRoomFactory
 
     private RoomData Map(RoomFactoryRow row)
     {
-        _roomDependencyResolver.GetRoomManager().TryGetModel(row.ModelName, out var model);
+        if (!_roomDependencyResolver.GetRoomManager().TryGetModel(row.ModelName, out var model) || model == null)
+            throw new InvalidOperationException($"Room model '{row.ModelName}' could not be resolved for room {row.Id}.");
         var data = new RoomData(row.Id, row.Caption, row.ModelName, row.Username, row.Owner, row.Password, row.Score, row.RoomType, row.State, row.UsersNow, row.UsersMax, row.Category, row.Description,
             row.Tags, row.Floor, row.Landscape, row.AllowPets == "1", row.AllowPetsEat == "1", row.RoomBlockingDisabled == "1", row.AllowHidewall == "1", row.WallThick, row.FloorThick, row.Wallpaper,
             row.MuteSettings, row.BanSettings, row.KickSettings, row.ChatMode, row.ChatSize, row.ChatSpeed, row.ChatExtraFlood, row.ChatHearingDistance, row.TradeSettings, row.PushEnabled == "1",
             row.PullEnabled == "1", row.SpushEnabled == "1", row.SpullEnabled == "1", row.EnablesEnabled == "1", row.RespectNotificationsEnabled == "1", row.PetMorphsAllowed == "1", row.GroupId,
-            row.SalePrice, row.LayEnabled == "1", model!);
+            row.SalePrice, row.LayEnabled == "1", model);
 
         if (row.GroupId > 0)
         {

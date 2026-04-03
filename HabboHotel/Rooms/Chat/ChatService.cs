@@ -95,7 +95,7 @@ public class ChatService : IChatService
         if (!habbo.Permissions.HasRight("word_filter_override"))
             message = _wordFilterManager.CheckMessage(message);
 
-        if (!_chatStyleManager.TryGetStyle(styleId, out var style) ||
+        if (!_chatStyleManager.TryGetStyle(styleId, out var style) || style == null ||
             style.RequiredRight.Length > 0 && !habbo.Permissions.HasRight(style.RequiredRight))
             styleId = 0;
 
@@ -178,7 +178,7 @@ public class ChatService : IChatService
         if (user == null)
             return;
 
-        if (!_chatStyleManager.TryGetStyle(styleId, out var style) ||
+        if (!_chatStyleManager.TryGetStyle(styleId, out var style) || style == null ||
             style.RequiredRight.Length > 0 && !habbo.Permissions.HasRight(style.RequiredRight))
             styleId = 0;
 
