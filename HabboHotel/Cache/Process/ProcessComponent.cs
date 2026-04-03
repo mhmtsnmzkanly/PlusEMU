@@ -63,6 +63,8 @@ public sealed class ProcessComponent : IProcessComponent
                 _logger.LogWarning("Cache process timer is lagging behind.");
                 return;
             }
+
+            _timerRunning = true;
             _resetEvent.Reset();
 
             // BEGIN CODE
@@ -86,13 +88,15 @@ public sealed class ProcessComponent : IProcessComponent
             }
             // END CODE
 
-            // Reset the values
-            _timerRunning = false;
-            _resetEvent.Set();
         }
         catch (Exception e)
         {
             ExceptionLogger.LogException(e);
+        }
+        finally
+        {
+            _timerRunning = false;
+            _resetEvent.Set();
         }
     }
 
@@ -106,7 +110,10 @@ public sealed class ProcessComponent : IProcessComponent
         {
             _resetEvent.WaitOne(TimeSpan.FromMinutes(5));
         }
-        catch { } // give up
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Timed wait for cache process disposal failed.");
+        }
 
         // Set the timer to disabled
         _disabled = true;
@@ -117,7 +124,10 @@ public sealed class ProcessComponent : IProcessComponent
             if (_timer != null)
                 _timer.Dispose();
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Timer disposal failed for cache process component.");
+        }
 
         // Remove reference to the timer.
         _timer = null;

@@ -35,7 +35,7 @@ internal class FurniMatchStateAndPositionBox : IWiredItem, IWiredEmptyExecutable
         var state = packet.ReadInt();
         var direction = packet.ReadInt();
         var placement = packet.ReadInt();
-        var unknown2 = packet.ReadString();
+        _ = packet.ReadString();
         var furniCount = packet.ReadInt();
         for (var i = 0; i < furniCount; i++)
         {
@@ -65,30 +65,18 @@ internal class FurniMatchStateAndPositionBox : IWiredItem, IWiredEmptyExecutable
                     continue;
                 if (stateMode == 1) //State
                 {
-                    try
-                    {
-                        if (ii.LegacyDataString != entry.Snapshot.State)
-                            return false;
-                    }
-                    catch { }
+                    if (ii.LegacyDataString != entry.Snapshot.State)
+                        return false;
                 }
                 if (directionMode == 1) //Direction
                 {
-                    try
-                    {
-                        if (ii.Rotation != entry.Snapshot.Rotation)
-                            return false;
-                    }
-                    catch { }
+                    if (ii.Rotation != entry.Snapshot.Rotation)
+                        return false;
                 }
                 if (positionMode == 1) //Position
                 {
-                    try
-                    {
-                        if (ii.GetX != entry.Snapshot.X || ii.GetY != entry.Snapshot.Y || ii.GetZ != entry.Snapshot.Z)
-                            return false;
-                    }
-                    catch { }
+                    if (ii.GetX != entry.Snapshot.X || ii.GetY != entry.Snapshot.Y || ii.GetZ != entry.Snapshot.Z)
+                        return false;
                 }
             }
         }
