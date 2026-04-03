@@ -371,6 +371,45 @@ public class RoomUserManager
         gameMap.GameMap[nextX, nextY] = 1;
     }
 
+    private void ClearMovementTransientState(RoomUser user)
+    {
+        if (user.IsBot)
+            return;
+
+        if (user.IsSitting)
+        {
+            user.Statusses.Remove("sit");
+            user.Z += 0.35;
+            user.IsSitting = false;
+            user.UpdateNeeded = true;
+        }
+        else if (user.IsLying)
+        {
+            user.Statusses.Remove("sit");
+            user.Z += 0.35;
+            user.IsLying = false;
+            user.UpdateNeeded = true;
+        }
+
+        user.Statusses.Remove("lay");
+        user.Statusses.Remove("sit");
+
+        if (user.IsPet)
+            return;
+
+        var habbo = GetHabbo(user);
+        if (habbo?.IsTeleporting == true)
+        {
+            habbo.IsTeleporting = false;
+            habbo.TeleporterId = 0;
+        }
+        else if (habbo?.IsHopping == true)
+        {
+            habbo.IsHopping = false;
+            habbo.HopperId = 0;
+        }
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -836,42 +875,7 @@ public class RoomUserManager
                         if (gameMap.IsValidStep2(user, new(user.X, user.Y), new(nextX, nextY), user.GoalX == nextX && user.GoalY == nextY, user.AllowOverride))
                         {
                             var nextZ = gameMap.SqAbsoluteHeight(nextX, nextY);
-                            if (!user.IsBot)
-                            {
-                                if (user.IsSitting)
-                                {
-                                    user.Statusses.Remove("sit");
-                                    user.Z += 0.35;
-                                    user.IsSitting = false;
-                                    user.UpdateNeeded = true;
-                                }
-                                else if (user.IsLying)
-                                {
-                                    user.Statusses.Remove("sit");
-                                    user.Z += 0.35;
-                                    user.IsLying = false;
-                                    user.UpdateNeeded = true;
-                                }
-                            }
-                            if (!user.IsBot)
-                            {
-                                user.Statusses.Remove("lay");
-                                user.Statusses.Remove("sit");
-                            }
-                            if (!user.IsBot && !user.IsPet)
-                            {
-                                var habbo = GetHabbo(user);
-                                if (habbo?.IsTeleporting == true)
-                                {
-                                    habbo.IsTeleporting = false;
-                                    habbo.TeleporterId = 0;
-                                }
-                                else if (habbo?.IsHopping == true)
-                                {
-                                    habbo.IsHopping = false;
-                                    habbo.HopperId = 0;
-                                }
-                            }
+                            ClearMovementTransientState(user);
                             SetMovementStatus(user, nextX, nextY, nextZ);
                             var newRot = Rotation.Calculate(user.X, user.Y, nextX, nextY, user.MoonwalkEnabled);
                             user.RotBody = newRot;
