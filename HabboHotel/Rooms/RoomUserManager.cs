@@ -569,6 +569,18 @@ public class RoomUserManager
             user.CarryItem(0);
     }
 
+    private void AdvanceIdleState(RoomUser user)
+    {
+        user.IdleTime++;
+        user.HandleSpamTicks();
+
+        if (!user.IsBot && !user.IsAsleep && user.IdleTime >= 600)
+        {
+            user.IsAsleep = true;
+            _room.SendPacket(new SleepComposer(user, true));
+        }
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -886,13 +898,7 @@ public class RoomUserManager
                     continue;
                 }
                 var updated = false;
-                user.IdleTime++;
-                user.HandleSpamTicks();
-                if (!user.IsBot && !user.IsAsleep && user.IdleTime >= 600)
-                {
-                    user.IsAsleep = true;
-                    _room.SendPacket(new SleepComposer(user, true));
-                }
+                AdvanceIdleState(user);
                 AdvanceCarryItemState(user);
                 if (_room.GotFreeze())
                     _room.GetFreeze().CycleUser(user);

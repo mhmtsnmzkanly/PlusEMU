@@ -398,3 +398,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - the same `RoomUserManager` cleanup is now isolating path recalculation as well, moving refind/reset/logging flow behind one helper before the remaining movement/lifecycle core is touched
 - `RoomUserManager` cycle-state cleanup is also starting to split out the smaller runtime branches now, with roller countdown/completion handling moved behind its own helper before deeper `OnCycle` restructuring
 - that smaller cycle-state cleanup now also includes carry-item countdown handling, which has been moved behind a dedicated helper before the remaining idle/update branches are touched
+- the same small-cycle cleanup now also covers idle/sleep handling, with idle increment, spam tick updates, and sleep dispatch moved behind one helper before the remaining `OnCycle` tail is reduced
