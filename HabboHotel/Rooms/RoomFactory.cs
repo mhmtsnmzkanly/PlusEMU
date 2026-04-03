@@ -1,7 +1,5 @@
 using Dapper;
-using Microsoft.Extensions.DependencyInjection;
 using Plus.Database;
-using Plus.HabboHotel.Groups;
 using Plus.HabboHotel.GameClients;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,12 +55,12 @@ public class RoomFactory : IRoomFactory
     }
 
     private readonly IDatabase _database;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IRoomDependencyResolver _roomDependencyResolver;
 
-    public RoomFactory(IDatabase database, IServiceProvider serviceProvider)
+    public RoomFactory(IDatabase database, IRoomDependencyResolver roomDependencyResolver)
     {
         _database = database;
-        _serviceProvider = serviceProvider;
+        _roomDependencyResolver = roomDependencyResolver;
     }
 
     public List<RoomData> GetRoomsDataByOwnerSortByName(int ownerId)
@@ -144,7 +142,7 @@ public class RoomFactory : IRoomFactory
 
     private RoomData ResolveRoomData(RoomFactoryRow row)
     {
-        if (GetRoomManager().TryGetRoom(row.Id, out var roomInstance))
+        if (_roomDependencyResolver.GetRoomManager().TryGetRoom(row.Id, out var roomInstance))
             return roomInstance.Data;
 
         return Map(row);
@@ -204,7 +202,7 @@ public class RoomFactory : IRoomFactory
 
     private RoomData Map(RoomFactoryRow row)
     {
-        GetRoomManager().TryGetModel(row.ModelName, out var model);
+        _roomDependencyResolver.GetRoomManager().TryGetModel(row.ModelName, out var model);
         var data = new RoomData(row.Id, row.Caption, row.ModelName, row.Username, row.Owner, row.Password, row.Score, row.RoomType, row.State, row.UsersNow, row.UsersMax, row.Category, row.Description,
             row.Tags, row.Floor, row.Landscape, row.AllowPets == "1", row.AllowPetsEat == "1", row.RoomBlockingDisabled == "1", row.AllowHidewall == "1", row.WallThick, row.FloorThick, row.Wallpaper,
             row.MuteSettings, row.BanSettings, row.KickSettings, row.ChatMode, row.ChatSize, row.ChatSpeed, row.ChatExtraFlood, row.ChatHearingDistance, row.TradeSettings, row.PushEnabled == "1",
@@ -213,13 +211,10 @@ public class RoomFactory : IRoomFactory
 
         if (row.GroupId > 0)
         {
-            GetGroupManager().TryGetGroup(row.GroupId, out var group);
+            _roomDependencyResolver.GetGroupManager().TryGetGroup(row.GroupId, out var group);
             data.Group = group;
         }
 
         return data;
     }
-
-    private IRoomManager GetRoomManager() => _serviceProvider.GetRequiredService<IRoomManager>();
-    private IGroupManager GetGroupManager() => _serviceProvider.GetRequiredService<IGroupManager>();
 }

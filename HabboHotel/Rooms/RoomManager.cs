@@ -15,7 +15,6 @@ using Plus.Database;
 using Plus.HabboHotel.Rooms;
 using Plus.HabboHotel.Users.UserData;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Dapper;
 using System.Data;
 using Plus.Core;
@@ -57,7 +56,7 @@ public class RoomManager : IRoomManager
     private readonly IRoomRollerApplyService _roomRollerApplyService;
     private readonly IChatManager _chatManager;
     private readonly IBotManager _botManager;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IRoomDependencyResolver _roomDependencyResolver;
     private readonly IAchievementService _achievementService;
     private readonly IQuestService _questService;
     private readonly ICacheManager _cacheManager;
@@ -92,7 +91,7 @@ public class RoomManager : IRoomManager
         IRoomRollerApplyService roomRollerApplyService,
         IGameClientManager gameClientManager,
         IGroupManager groupManager,
-        IServiceProvider serviceProvider,
+        IRoomDependencyResolver roomDependencyResolver,
         IChatManager chatManager,
         IBotManager botManager,
         IAchievementService achievementService,
@@ -124,7 +123,7 @@ public class RoomManager : IRoomManager
         _roomRollerApplyService = roomRollerApplyService;
         _clientManager = gameClientManager;
         _groupManager = groupManager;
-        _serviceProvider = serviceProvider;
+        _roomDependencyResolver = roomDependencyResolver;
         _chatManager = chatManager;
         _botManager = botManager;
         _achievementService = achievementService;
@@ -317,7 +316,7 @@ public class RoomManager : IRoomManager
 
     private Room CreateRoomInstance(RoomData data)
     {
-        return new Room(data, _clientManager, _database, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService, _roomItemPlacementApplyService, _roomItemTrackingService, _roomRollerApplyService, _groupManager, _serviceProvider.GetRequiredService<IRoomService>(), _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
+        return new Room(data, _clientManager, _database, _itemLoader, _roomItemPersistenceService, _roomItemPlacementValidatorService, _roomItemPlacementPersistenceService, _roomRollerService, _roomItemInventoryService, _roomItemUpdateQueueService, _roomItemLoadService, _roomItemRemovalService, _roomItemStateService, _roomItemPlacementApplyService, _roomItemTrackingService, _roomRollerApplyService, _groupManager, _roomDependencyResolver.GetRoomService(), _chatManager, _botManager, _achievementService, _questService, _cacheManager, _languageManager, _itemTeleporterFinder, _itemHopperFinder, _badgeManager, _userDataFactory, this, _loggerFactory);
     }
 
     private static void DisposeRoom(Room room) => room.Dispose();
@@ -334,7 +333,7 @@ public class RoomManager : IRoomManager
     private void EvictRoomUsers(Room room)
     {
         var users = room.GetRoomUserManager().GetRoomUsers().ToList();
-        var roomService = _serviceProvider.GetRequiredService<IRoomService>();
+        var roomService = _roomDependencyResolver.GetRoomService();
         foreach (var user in users)
         {
             var client = user.GetClient();

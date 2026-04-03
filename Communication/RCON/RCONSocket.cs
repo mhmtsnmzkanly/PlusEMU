@@ -1,20 +1,19 @@
 ﻿using System.Net;
 using System.Net.Sockets;
-using Microsoft.Extensions.DependencyInjection;
 using Plus.Communication.RCON.Commands;
 
 namespace Plus.Communication.RCON;
 
-public class RconSocket : IRconSocket
+    public class RconSocket : IRconSocket
 {
     private List<string> _allowedConnections = new();
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IRconCommandManagerAccessor _commandManagerAccessor;
     private ICommandManager? _commands;
     private Socket? _musSocket;
 
-    public RconSocket(IServiceProvider serviceProvider)
+    public RconSocket(IRconCommandManagerAccessor commandManagerAccessor)
     {
-        _serviceProvider = serviceProvider;
+        _commandManagerAccessor = commandManagerAccessor;
     }
 
     public void Init(string host, int port, IEnumerable<string> allowedConnections)
@@ -80,5 +79,5 @@ public class RconSocket : IRconSocket
             _musSocket.BeginAccept(OnCallBack, _musSocket);
     }
 
-    public ICommandManager GetCommands() => _commands ??= _serviceProvider.GetRequiredService<ICommandManager>();
+    public ICommandManager GetCommands() => _commands ??= _commandManagerAccessor.Get();
 }
