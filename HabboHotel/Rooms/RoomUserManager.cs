@@ -447,6 +447,25 @@ public class RoomUserManager
         return nextStep;
     }
 
+    private void CompleteBotCarryTarget(RoomUser user)
+    {
+        if (!user.IsBot || user.BotData.TargetUser <= 0)
+            return;
+
+        if (user.CarryItemId > 0 &&
+            TryGetRoomUserByHabbo(user.BotData.TargetUser, out var target) &&
+            target != null &&
+            Gamemap.TilesTouching(user.X, user.Y, target.X, target.Y))
+        {
+            user.SetRot(Rotation.Calculate(user.X, user.Y, target.X, target.Y), false);
+            target.SetRot(Rotation.Calculate(target.X, target.Y, user.X, user.Y), false);
+            target.CarryItem(user.CarryItemId);
+        }
+
+        user.CarryItem(0);
+        user.BotData.TargetUser = 0;
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -862,22 +881,7 @@ public class RoomUserManager
                                 _room.RoomId, user.HabboId, user.VirtualId, user.X, user.Y, user.GoalX, user.GoalY, user.PathStep, user.Path.Count);
                         }
                         StopMovement(user, clearSignStatus: true);
-                        if (user.IsBot && user.BotData.TargetUser > 0)
-                        {
-                            if (user.CarryItemId > 0)
-                            {
-                                if (TryGetRoomUserByHabbo(user.BotData.TargetUser, out var target) &&
-                                    target != null &&
-                                    Gamemap.TilesTouching(user.X, user.Y, target.X, target.Y))
-                                {
-                                    user.SetRot(Rotation.Calculate(user.X, user.Y, target.X, target.Y), false);
-                                    target.SetRot(Rotation.Calculate(target.X, target.Y, user.X, user.Y), false);
-                                    target.CarryItem(user.CarryItemId);
-                                }
-                            }
-                            user.CarryItem(0);
-                            user.BotData.TargetUser = 0;
-                        }
+                        CompleteBotCarryTarget(user);
                     }
                     else
                     {

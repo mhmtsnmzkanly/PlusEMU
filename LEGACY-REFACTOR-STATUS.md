@@ -392,3 +392,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - corrected the room authorization flow back to original immediate-enter semantics and added targeted catalog purchase abort tracing so service extraction no longer hides silent protocol/lookup failures
 - `RoomUserManager` movement cleanup is now also consolidating repeated stop/sync branches behind named helpers, shrinking another small slice of inline mounted-movement teardown before any larger lifecycle refactor
 - the same `RoomUserManager` movement cleanup is now starting to isolate path-step advancement too, with fast/superfast path selection moved behind a single helper before any deeper movement-loop changes
+- `RoomUserManager` is also peeling the bot follow/carry tail away from the main movement-stop branch now, keeping target-delivery rotation and cleanup behind a dedicated helper before larger runtime changes
