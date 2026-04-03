@@ -559,6 +559,16 @@ public class RoomUserManager
         user.RollerDelay--;
     }
 
+    private static void AdvanceCarryItemState(RoomUser user)
+    {
+        if (user.CarryItemId <= 0)
+            return;
+
+        user.CarryTimer--;
+        if (user.CarryTimer <= 0)
+            user.CarryItem(0);
+    }
+
     private void RemoveUserFromTeam(RoomUser user)
     {
         if (user.Team == Team.None)
@@ -883,12 +893,7 @@ public class RoomUserManager
                     user.IsAsleep = true;
                     _room.SendPacket(new SleepComposer(user, true));
                 }
-                if (user.CarryItemId > 0)
-                {
-                    user.CarryTimer--;
-                    if (user.CarryTimer <= 0)
-                        user.CarryItem(0);
-                }
+                AdvanceCarryItemState(user);
                 if (_room.GotFreeze())
                     _room.GetFreeze().CycleUser(user);
                 var invalidStep = false;

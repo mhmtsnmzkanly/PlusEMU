@@ -460,3 +460,4 @@
 - extracted the completed-step application branch from `RoomUserManager` so walk-off/walk-on item callbacks, rider coordinate sync, and door-exit queuing no longer sit inline in the main movement loop
 - extracted the path recalculation branch from `RoomUserManager` so path clearing, refinding, and restart logging now sit behind one helper instead of another large inline `OnCycle` block
 - extracted the roller-delay branch from `RoomUserManager` so cycle-time rolling countdown and completion status refresh no longer stay inline in `OnCycle`
+- extracted the carry-item timer branch from `RoomUserManager` so per-cycle carry countdown and item-clear handling no longer sit inline in `OnCycle`
