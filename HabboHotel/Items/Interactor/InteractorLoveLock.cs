@@ -37,9 +37,10 @@ public class InteractorLoveLock : IFurniInteractor
                     default:
                         return;
                 }
-                item.GetRoom().GetRoomUserManager().TryGetUserForSquare(pointOne.X, pointOne.Y, out var userOne);
-                item.GetRoom().GetRoomUserManager().TryGetUserForSquare(pointTwo.X, pointTwo.Y, out var userTwo);
-                if (userOne == null || userTwo == null)
+                if (!item.GetRoom().GetRoomUserManager().TryGetUserForSquare(pointOne.X, pointOne.Y, out var userOne) ||
+                    !item.GetRoom().GetRoomUserManager().TryGetUserForSquare(pointTwo.X, pointTwo.Y, out var userTwo) ||
+                    userOne == null ||
+                    userTwo == null)
                     session.SendNotification(item.GetRoom().GetLanguageManager().Require("lovelock.user_invalid"));
                 else if (userOne.GetClient() == null || userTwo.GetClient() == null)
                     session.SendNotification(item.GetRoom().GetLanguageManager().Require("lovelock.user_invalid"));

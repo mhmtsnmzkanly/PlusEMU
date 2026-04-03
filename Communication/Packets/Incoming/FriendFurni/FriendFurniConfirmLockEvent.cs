@@ -33,8 +33,10 @@ internal class FriendFurniConfirmLockEvent : IPacketEvent
             return Task.CompletedTask;
         var userOneId = item.InteractingUser;
         var userTwoId = item.InteractingUser2;
-        room.GetRoomUserManager().TryGetRoomUserByHabbo(userOneId, out var userOne);
-        room.GetRoomUserManager().TryGetRoomUserByHabbo(userTwoId, out var userTwo);
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(userOneId, out var userOne))
+            userOne = null;
+        if (!room.GetRoomUserManager().TryGetRoomUserByHabbo(userTwoId, out var userTwo))
+            userTwo = null;
         if (userOne == null && userTwo == null)
         {
             item.InteractingUser = 0; item.InteractingUser2 = 0;
