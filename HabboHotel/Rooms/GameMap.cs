@@ -570,7 +570,7 @@ public class Gamemap
     public bool CanWalk(int x, int y, bool @override)
     {
         if (@override) return true;
-        if (_room.GetRoomUserManager().GetUserForSquare(x, y) != null && !_room.RoomBlockingEnabled)
+        if (_room.GetRoomUserManager().TryGetUserForSquare(x, y, out _) && !_room.RoomBlockingEnabled)
             return false;
         return true;
     }
@@ -795,8 +795,7 @@ public class Gamemap
             return false;
 
         //Check this last, because ya.
-        var userx = _room.GetRoomUserManager().GetUserForSquare(to.X, to.Y);
-        if (userx != null)
+        if (_room.GetRoomUserManager().TryGetUserForSquare(to.X, to.Y, out var userx) && userx != null)
         {
             if (!userx.IsWalking && endOfPath)
                 return false;
