@@ -44,12 +44,11 @@ internal class ModerationTicketService : IModerationTicketService
             return;
         }
 
-        var reportedUser = _clientManager.GetClientByUserId(reportedUserId)?.GetHabbo();
-        if (reportedUser == null)
-            return;
+        var reportedUser = reportedUserId > 0
+            ? _clientManager.GetClientByUserId(reportedUserId)?.GetHabbo()
+            : null;
 
-        if (!habbo.TryGetCurrentRoom(out var currentRoom))
-            return;
+        habbo.TryGetCurrentRoom(out var currentRoom);
 
         var ticket = new ModerationTicket(
             1,

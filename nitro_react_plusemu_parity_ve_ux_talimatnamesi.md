@@ -84,13 +84,14 @@ Bu liste 3 kategoriye ayrilir:
   - `SubmitNewTicketEvent` mevcut moderation ticket service'e bagli
   - help tool acilisi artik moderation topic tree'yi `CfhTopicsInitComposer` ile gonderiyor
   - kullanicinin acik bir ticket'i varsa help tool acilisinda gorunur pending-request notification donuyor
+  - moderation ticket olusturma artik oda-zorunlu degil; roomless / non-user-scoped modern report varyantlari server tarafinda dusmeden kaydolabiliyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
   - acik ticket durumunda sessiz bozulma yerine gorunur geri bildirim var
 - Teknik etkisi:
   - moderation topic tree ve open-state ilk kez help tool acilisina baglandi
-  - kalan is exact pending-calls packet semantics ve room/im/forum/photo report varyantlari
+  - kalan is exact pending-calls packet semantics ve room/im/forum/photo report varyantlarinin ayri payload semantics'ini daraltmak
 - Oncelik: `Kritik`
 
 ### 3. Sanction Status
