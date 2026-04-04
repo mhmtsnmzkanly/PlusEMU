@@ -101,6 +101,7 @@ Bu liste 3 kategoriye ayrilir:
   - moderator queue issue etiketi artik ticket type context'ini de tasiyor; roomless ticket chatlog request'i artik tamamen dusmuyor, ticket icinde chat entry varsa sentetik report-context chatlog olarak gosterilebiliyor
   - mevcut `SubmitNewTicketEvent` surface'inde gelen reported-chat entry id'leri artik korunuyor; moderation ticket ve moderator chatlog ciktilari packet-level chat metadata'yi tamamen kaybetmiyor
   - moderator tarafindaki `CloseIssueDefaultActionEvent` artik no-op degil; default-action close butonu mevcut close/result lifecycle'ina bagli
+  - exact pending-calls packet'i hala dogrulanmamis olsa da mevcut fallback notification artik issue ozeti yaninda yaklasik moderation queue position bilgisini de tasiyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut

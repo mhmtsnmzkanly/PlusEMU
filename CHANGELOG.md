@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Improved the safe Help/CFH pending-request fallback again: when the still-unverified pending-calls packet is unavailable, the visible pending notification now also includes an approximate moderation queue position based on open ticket priority and age instead of only echoing the issue preview.
 - Replaced another set of active catalog probe exceptions with safe no-op handlers (`GetHabboClubExtendOfferEvent`, `GetHabboBasicMembershipExtendOfferEvent`, `GetDirectClubBuyAvailableEvent`, `GetLimitedOfferAppearingNextEvent`, `GetIsOfferGiftableEvent`, `MarkCatalogNewAdditionsPageOpenedEvent`, `GetBonusRareInfoEvent`), preventing those client-side catalog lookups from crashing sessions while their real Nitro semantics remain undocumented.
 - Wired the previously empty `CloseIssueDefaultActionEvent` into the existing moderation close flow, so the moderator default-action close packet no longer no-ops and now resolves tickets through the same result-aware close path as the explicit close event.
 - Opened moderator ticket chatlog parity for roomless Help/CFH cases too: tickets that carry reported chat entries but no room context now render through a synthetic report-context chatlog instead of failing outright, which keeps IM/photo/discussion-style reports inspectable before their dedicated incoming packet split exists.

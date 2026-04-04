@@ -254,12 +254,18 @@ internal class ModerationTicketService : IModerationTicketService
             : $"{prefix} ({issuePreview})";
     }
 
-    private static string BuildPendingTicketNotification(ModerationTicket ticket)
+    private string BuildPendingTicketNotification(ModerationTicket ticket)
     {
+        var queueHint = BuildQueuePositionHint(ticket);
         var issue = BuildIssuePreview(ticket.Issue);
-        return string.IsNullOrWhiteSpace(issue)
-            ? "You already have a pending help request."
-            : $"You already have a pending help request: {issue}";
+        if (string.IsNullOrWhiteSpace(issue))
+            return string.IsNullOrWhiteSpace(queueHint)
+                ? "You already have a pending help request."
+                : $"You already have a pending help request. {queueHint}";
+
+        return string.IsNullOrWhiteSpace(queueHint)
+            ? $"You already have a pending help request: {issue}"
+            : $"You already have a pending help request: {issue}. {queueHint}";
     }
 
     private static string BuildIssuePreview(string? issue)
@@ -270,6 +276,24 @@ internal class ModerationTicketService : IModerationTicketService
             normalized = normalized[..maxPreviewLength] + "...";
 
         return normalized;
+    }
+
+    private string BuildQueuePositionHint(ModerationTicket ticket)
+    {
+        var openTicketsAhead = _moderationManager.GetTickets
+            .Where(entry => !entry.Answered && entry.Id != ticket.Id)
+            .Count(entry =>
+                entry.Priority > ticket.Priority
+                || (entry.Priority == ticket.Priority && entry.Timestamp < ticket.Timestamp)
+                || (entry.Priority == ticket.Priority && entry.Timestamp == ticket.Timestamp && entry.Id < ticket.Id));
+
+        if (openTicketsAhead <= 0)
+            return "You are next in the moderation queue.";
+
+        if (openTicketsAhead == 1)
+            return "There is 1 open help request ahead of yours.";
+
+        return $"There are {openTicketsAhead} open help requests ahead of yours.";
     }
 
     private string BuildTicketIssue(string message, int category, int ticketType)
