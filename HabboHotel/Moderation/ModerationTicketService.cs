@@ -255,9 +255,15 @@ internal class ModerationTicketService : IModerationTicketService
         if (!_moderationManager.TryGetTopicCaption(category, out var caption) || string.IsNullOrWhiteSpace(caption))
             return trimmed;
 
+        var label = caption;
+        if (_moderationManager.TryGetTopicAction(category, out var action)
+            && action != null
+            && !string.IsNullOrWhiteSpace(action.DefaultSanction))
+            label = $"{caption} | {action.DefaultSanction}";
+
         return string.IsNullOrWhiteSpace(trimmed)
-            ? $"[{caption}]"
-            : $"[{caption}] {trimmed}";
+            ? $"[{label}]"
+            : $"[{label}] {trimmed}";
     }
 
     private static int NormalizeTicketType(int rawType, int reportedUserId, bool hasRoomContext)
