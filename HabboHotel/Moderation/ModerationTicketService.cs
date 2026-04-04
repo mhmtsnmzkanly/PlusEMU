@@ -42,7 +42,7 @@ internal class ModerationTicketService : IModerationTicketService
         return Task.CompletedTask;
     }
 
-    public async Task Submit(GameClient session, string message, int category, int reportedUserId, int type, IReadOnlyCollection<ModerationTicketChatEntry> reportedChats)
+    public async Task Submit(GameClient session, string message, int category, int reportedUserId, int type, IReadOnlyCollection<ModerationTicketChatEntry> reportedChats, ModerationTicketContext? context = null)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)
@@ -100,7 +100,7 @@ internal class ModerationTicketService : IModerationTicketService
         }
 
         var issueText = BuildTicketIssue(message, category, ticketType);
-        var (contextType, contextLabel) = BuildTicketContext(ticketType, currentRoom);
+        var resolvedContext = ResolveTicketContext(ticketType, currentRoom, context);
 
         var ticket = new ModerationTicket(
             1,
@@ -114,8 +114,9 @@ internal class ModerationTicketService : IModerationTicketService
             reportedUsername,
             issueText,
             currentRoom,
-            contextType,
-            contextLabel,
+            resolvedContext.Type,
+            resolvedContext.Label,
+            resolvedContext.RelatedId,
             reportedChats.ToList());
 
         if (!_moderationManager.TryAddTicket(ticket))
@@ -344,18 +345,35 @@ internal class ModerationTicketService : IModerationTicketService
             _ => string.Empty
         };
 
-    private static (string ContextType, string ContextLabel) BuildTicketContext(int ticketType, RoomData? room)
+    private static ModerationTicketContext ResolveTicketContext(int ticketType, RoomData? room, ModerationTicketContext? explicitContext)
     {
+        if (explicitContext != null)
+        {
+            return new ModerationTicketContext
+            {
+                Type = explicitContext.Type,
+                Label = explicitContext.Label,
+                RelatedId = explicitContext.RelatedId
+            };
+        }
+
         if (room != null)
-            return ("ROOM", string.IsNullOrWhiteSpace(room.Name) ? $"Room {room.Id}" : room.Name);
+        {
+            return new ModerationTicketContext
+            {
+                Type = "ROOM",
+                Label = string.IsNullOrWhiteSpace(room.Name) ? $"Room {room.Id}" : room.Name,
+                RelatedId = (int)room.Id
+            };
+        }
 
         return ticketType switch
         {
-            TicketTypeIm => ("IM", "Direct messenger report"),
-            TicketTypeDiscussion => ("DISCUSSION", "Forum discussion report"),
-            TicketTypePhoto => ("PHOTO", "Photo report"),
-            TicketTypeGuideSystem => ("GUIDE", "Guide help session"),
-            _ => ("HELP", "Help request")
+            TicketTypeIm => new ModerationTicketContext { Type = "IM", Label = "Direct messenger report" },
+            TicketTypeDiscussion => new ModerationTicketContext { Type = "DISCUSSION", Label = "Forum discussion report" },
+            TicketTypePhoto => new ModerationTicketContext { Type = "PHOTO", Label = "Photo report" },
+            TicketTypeGuideSystem => new ModerationTicketContext { Type = "GUIDE", Label = "Guide help session" },
+            _ => new ModerationTicketContext { Type = "HELP", Label = "Help request" }
         };
     }
 }

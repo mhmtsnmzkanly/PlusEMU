@@ -7,7 +7,7 @@ public class ModerationTicket
 {
     public List<ModerationTicketChatEntry> ReportedChats;
 
-    public ModerationTicket(int id, int type, int category, double timestamp, int priority, Habbo sender, Habbo? reported, int reportedUserId, string? reportedUsername, string issue, RoomData? room, string? contextType, string? contextLabel, List<ModerationTicketChatEntry> reportedChats)
+    public ModerationTicket(int id, int type, int category, double timestamp, int priority, Habbo sender, Habbo? reported, int reportedUserId, string? reportedUsername, string issue, RoomData? room, string? contextType, string? contextLabel, int contextRelatedId, List<ModerationTicketChatEntry> reportedChats)
     {
         Id = id;
         Type = type;
@@ -23,6 +23,7 @@ public class ModerationTicket
         Room = room;
         ContextType = contextType ?? string.Empty;
         ContextLabel = contextLabel ?? string.Empty;
+        ContextRelatedId = contextRelatedId;
         Answered = false;
         ReportedChats = reportedChats;
     }
@@ -42,6 +43,7 @@ public class ModerationTicket
     public RoomData? Room { get; set; }
     public string ContextType { get; set; }
     public string ContextLabel { get; set; }
+    public int ContextRelatedId { get; set; }
 
     public int GetStatus(int id)
     {

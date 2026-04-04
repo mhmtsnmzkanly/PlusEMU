@@ -372,6 +372,7 @@ internal sealed class GuideService : IGuideService
                     room,
                     "GUIDE",
                     "Guide help session",
+                    (int)room.Id,
                     guideSession.Messages
                         .Select((chat, index) => new ModerationTicketChatEntry(index + 1, chat.Message))
                         .ToList());

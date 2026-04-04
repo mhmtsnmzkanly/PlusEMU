@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Extended the moderation ticket submit API with an optional `ModerationTicketContext` contract and added a stable `ContextRelatedId` to tickets, so future room/IM/forum/photo incoming report packets can target the existing moderation pipeline with explicit context instead of relying on room-derived inference only.
 - Added lightweight context metadata to moderation tickets (`ContextType` / `ContextLabel`) and started populating it from the current Help/Guide ticket flow, so roomless moderator chatlog fallbacks and future IM/forum/photo packet splits can preserve clearer report context without depending on room-only assumptions.
 - Improved the safe Help/CFH pending-request fallback again: when the still-unverified pending-calls packet is unavailable, the visible pending notification now also includes an approximate moderation queue position based on open ticket priority and age instead of only echoing the issue preview.
 - Replaced another set of active catalog probe exceptions with safe no-op handlers (`GetHabboClubExtendOfferEvent`, `GetHabboBasicMembershipExtendOfferEvent`, `GetDirectClubBuyAvailableEvent`, `GetLimitedOfferAppearingNextEvent`, `GetIsOfferGiftableEvent`, `MarkCatalogNewAdditionsPageOpenedEvent`, `GetBonusRareInfoEvent`), preventing those client-side catalog lookups from crashing sessions while their real Nitro semantics remain undocumented.
