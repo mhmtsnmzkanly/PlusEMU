@@ -299,6 +299,8 @@ public static class Program
         ProbeResolve<IQuestManager>(serviceProvider, nameof(IQuestManager));
         ProbeResolve<IQuestService>(serviceProvider, nameof(IQuestService));
         ProbeResolve<ICatalogService>(serviceProvider, nameof(ICatalogService));
+        ProbeResolve<ITargetedOfferManager>(serviceProvider, nameof(ITargetedOfferManager));
+        ProbeResolve<ITargetedOfferService>(serviceProvider, nameof(ITargetedOfferService));
         ProbeResolve<IAchievementService>(serviceProvider, nameof(IAchievementService));
         ProbeResolve<IAchievementManager>(serviceProvider, nameof(IAchievementManager));
         ProbeResolve<ITalentTrackManager>(serviceProvider, nameof(ITalentTrackManager));

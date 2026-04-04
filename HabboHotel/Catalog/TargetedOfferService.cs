@@ -74,6 +74,8 @@ public sealed class TargetedOfferService : ITargetedOfferService
 
         await _catalogService.PurchaseItem(session, item.PageId, item.Id, string.Empty, purchaseAmount);
 
+        _logger.LogInformation("User {UserId} purchased targeted offer {OfferId} (Amount: {PurchaseAmount}).", habbo.Id, offerId, purchaseAmount);
+
         purchaseState.Amount += purchaseAmount;
         purchaseState.LastPurchaseTimestamp = (int)UnixTimestamp.GetNow();
         await PersistPurchaseState(habbo.Id, purchaseState);

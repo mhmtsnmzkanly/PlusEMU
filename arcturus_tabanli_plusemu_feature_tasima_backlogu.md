@@ -25,23 +25,19 @@ Legacy/community ozellikleri, operasyonel kolayliklar, plugin/genisletilebilirli
 
 ### 1. Targeted Offer Akisi
 Durum:
-- PlusEMU tarafinda event dosyalari var ama implementasyon backlog gorunuyor.
-
-Kaynaklar:
-- [GetNextTargetedOfferEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Catalog/GetNextTargetedOfferEvent.cs)
-- [PurchaseTargetedOfferEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Catalog/PurchaseTargetedOfferEvent.cs)
-- [SetTargetedOfferStateEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Catalog/SetTargetedOfferStateEvent.cs)
-- [ShopTargetedOfferViewedEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Catalog/ShopTargetedOfferViewedEvent.cs)
+- `Kismi` (Ilk Parity Katmani Tamamlandi)
 
 Neden oncelikli:
 - Nitro katalog UX'inde sessiz bozukluk uretebilir
 - packet surface var gorundugu icin "calisiyor sanilan" ama gercekte eksik alan sinifina girer
 
 Yapilacaklar:
-- offer state modeli tanimla
-- per-user persistence belirle
-- composer ve purchase flow tamamla
-- telemetry ekle
+- [x] offer state modeli tanimla
+- [x] per-user persistence belirle
+- [x] composer ve purchase flow tamamla
+- [x] telemetry ekle
+- [ ] exact Nitro 2017 revision dogrulamasi (canli test)
+
 
 ### 2. Guide / Guardian Yardim Akisi
 Durum:
