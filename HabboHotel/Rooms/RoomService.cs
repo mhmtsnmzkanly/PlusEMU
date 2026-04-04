@@ -300,7 +300,7 @@ public class RoomService : IRoomService
 
     private static bool TryAuthorizeDoorbellRoomEntry(GameClient session, Users.Habbo habbo, Room room)
     {
-        if (room.GetRoomUserManager().GetRoomUserByRank(2).Count > 0)
+        if (room.GetRoomUserManager().UserCount > 0)
         {
             session.Send(new DoorbellComposer(""));
             room.SendPacket(new DoorbellComposer(habbo.Username), true);

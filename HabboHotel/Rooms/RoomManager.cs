@@ -197,17 +197,25 @@ public class RoomManager : IRoomManager
         }
     }
 
-    public bool LoadModel(string id) => _roomModels.ContainsKey(id);
-    public void ReloadModel(string id)
+    public bool LoadModel(string id)
     {
         using var connection = _database.Connection();
         var model = connection.QuerySingleOrDefault<RoomModelRow>(
             $"{GetRoomModelProjectionSql("WHERE `id` = @id")} LIMIT 1",
             new { id });
-        if (model != null)
-        {
-            _roomModels[id] = MapRoomModel(model);
-        }
+        if (model == null)
+            return false;
+
+        _roomModels[id] = MapRoomModel(model);
+        return true;
+    }
+
+    public void ReloadModel(string id)
+    {
+        if (_roomModels.ContainsKey(id))
+            _roomModels.Remove(id);
+
+        LoadModel(id);
     }
 
     private static RoomModel MapRoomModel(RoomModelRow row)
@@ -243,7 +251,17 @@ public class RoomManager : IRoomManager
             """;
     }
 
-    public bool TryGetModel(string id, out RoomModel? model) => _roomModels.TryGetValue(id, out model);
+    public bool TryGetModel(string id, out RoomModel? model)
+    {
+        if (_roomModels.TryGetValue(id, out model))
+            return true;
+
+        if (LoadModel(id) && _roomModels.TryGetValue(id, out model))
+            return true;
+
+        model = null;
+        return false;
+    }
 
     public bool TryGetRoom(uint roomId, out Room? room) => _rooms.TryGetValue(roomId, out room);
 

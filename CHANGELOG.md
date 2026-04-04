@@ -2,6 +2,8 @@
 
 ### [Unreleased]
 #### Changed
+- Restored lazy `room_models` loading in `RoomManager`, so custom room models can be resolved on demand again instead of only working when they were already preloaded into the in-memory model cache.
+- Restored the original doorbell-room entry behavior in `RoomService`, so locked rooms now ring when any occupant is present instead of incorrectly requiring an in-room user with rank `>= 2`.
 - Continued the DI/service transition in the login runtime path by introducing `IHabboRuntimeInitializer`, centralizing habbo visual/process bootstrap, and removing the loose `Habbo.InitProcess(..., object, object)` handoff.
 - Continued the DI/service transition around late-bound runtime dependencies by replacing direct `IServiceProvider` usage in cache, room, chat, and RCON flows with focused resolver/accessor services, leaving dynamic packet-handler activation as the main intentional service-provider boundary.
 - Continued the DI/service transition in startup/runtime activation too by moving packet-handler activation behind `IPacketEventActivator` and replacing `Program`'s stored root provider reference with a typed runtime shutdown dependency.
