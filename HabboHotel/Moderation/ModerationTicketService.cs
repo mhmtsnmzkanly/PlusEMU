@@ -108,7 +108,7 @@ internal class ModerationTicketService : IModerationTicketService
 
         var client = _clientManager.GetClientByUserId(ticket.Sender.Id);
         client?.Send(new ModeratorSupportTicketResponseComposer(result));
-        client?.SendNotification(GetCloseAcknowledgement(result));
+        client?.SendNotification(GetCloseAcknowledgement(ticket, result));
 
         if (result == 2)
         {
@@ -203,25 +203,37 @@ internal class ModerationTicketService : IModerationTicketService
             ? 2
             : 1;
 
-    private static string GetCloseAcknowledgement(int result) =>
-        result switch
+    private static string GetCloseAcknowledgement(ModerationTicket ticket, int result)
+    {
+        var prefix = result switch
         {
             1 => "Your help request was reviewed and closed as non-actionable.",
             2 => "Your help request was reviewed and marked abusive.",
             3 => "Your help request was reviewed and resolved.",
             _ => "Your help request was reviewed and closed."
         };
+        var issuePreview = BuildIssuePreview(ticket.Issue);
+        return string.IsNullOrWhiteSpace(issuePreview)
+            ? prefix
+            : $"{prefix} ({issuePreview})";
+    }
 
     private static string BuildPendingTicketNotification(ModerationTicket ticket)
     {
-        const int maxPreviewLength = 80;
-        var issue = (ticket.Issue ?? string.Empty).Trim();
-        if (issue.Length > maxPreviewLength)
-            issue = issue[..maxPreviewLength] + "...";
-
+        var issue = BuildIssuePreview(ticket.Issue);
         return string.IsNullOrWhiteSpace(issue)
             ? "You already have a pending help request."
             : $"You already have a pending help request: {issue}";
+    }
+
+    private static string BuildIssuePreview(string? issue)
+    {
+        const int maxPreviewLength = 80;
+        var normalized = (issue ?? string.Empty).Trim();
+        if (normalized.Length > maxPreviewLength)
+            normalized = normalized[..maxPreviewLength] + "...";
+
+        return normalized;
     }
 
     private string BuildTicketIssue(string message, int category)

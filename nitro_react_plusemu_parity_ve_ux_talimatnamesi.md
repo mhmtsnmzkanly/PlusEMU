@@ -92,6 +92,7 @@ Bu liste 3 kategoriye ayrilir:
   - moderator ticket issue metni artik selected topic caption'i da tasiyor
   - moderator close sonucu ve pending-call clear akisi reporter'a gorunur mesaj donduruyor
   - acik pending ticket bildirimi artik issue ozetini de tasiyor
+  - close sonucu da artik issue ozetiyle birlikte gorunur hale geliyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
