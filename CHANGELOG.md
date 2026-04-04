@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Made Help/CFH submit acknowledgements topic-aware by reading the moderation topic action metadata, so support requests now reuse configured `message_text` replies when the selected moderation topic provides one.
 - Added a visible submit confirmation for modern Help/CFH tickets, so successful support requests now acknowledge receipt to the reporting user instead of only updating the moderator tool.
 - Preserved reported-user snapshots on moderation tickets, so Help/CFH reports keep the target user id/name visible in moderator views and ticket chatlogs even when the reported user is offline by the time moderators inspect the case.
 - Relaxed moderation ticket creation for modern Help/CFH variants: support tickets no longer require the sender to still be inside a room, and tickets can now be created without an online reported-user object when the report surface is roomless or non-user-scoped.

@@ -81,7 +81,7 @@ internal class ModerationTicketService : IModerationTicketService
             "UPDATE `user_info` SET `cfhs` = `cfhs` + 1 WHERE `user_id` = @userId LIMIT 1",
             new { userId = habbo.Id });
 
-        session.SendNotification("Your help request has been submitted.");
+        session.SendNotification(GetSubmitAcknowledgement(category));
         _clientManager.ModAlert("A new support ticket has been submitted!");
         _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
     }
@@ -171,5 +171,15 @@ internal class ModerationTicketService : IModerationTicketService
             && _moderationManager.TryGetTicketBySenderId(habbo.Id, out var pendingTicket)
             && pendingTicket != null)
             session.SendNotification("You already have a pending help request.");
+    }
+
+    private string GetSubmitAcknowledgement(int category)
+    {
+        if (_moderationManager.TryGetTopicAction(category, out var action)
+            && action != null
+            && !string.IsNullOrWhiteSpace(action.MessageText))
+            return action.MessageText;
+
+        return "Your help request has been submitted.";
     }
 }

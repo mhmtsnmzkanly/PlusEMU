@@ -11,6 +11,7 @@ public interface IModerationManager
     void AddBan(ModerationBan ban);
     bool TryAddTicket(ModerationTicket ticket);
     bool TryGetTicket(int ticketId, out ModerationTicket? ticket);
+    bool TryGetTopicAction(int topicId, out ModerationPresetActions? action);
     bool UserHasTickets(int userId);
     bool TryGetTicketBySenderId(int userId, out ModerationTicket? ticket);
 

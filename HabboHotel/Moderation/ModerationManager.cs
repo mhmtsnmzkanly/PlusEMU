@@ -225,6 +225,14 @@ public sealed class ModerationManager : IModerationManager
 
     public bool TryGetTicket(int ticketId, out ModerationTicket? ticket) => _modTickets.TryGetValue(ticketId, out ticket);
 
+    public bool TryGetTopicAction(int topicId, out ModerationPresetActions? action)
+    {
+        action = _moderationCfhTopicActions.Values
+            .SelectMany(actions => actions)
+            .FirstOrDefault(entry => entry.Id == topicId);
+        return action != null;
+    }
+
     public bool UserHasTickets(int userId) => _modTickets.Any(x => x.Value.Sender.Id == userId && x.Value.Answered == false);
 
     public bool TryGetTicketBySenderId(int userId, out ModerationTicket? ticket)
