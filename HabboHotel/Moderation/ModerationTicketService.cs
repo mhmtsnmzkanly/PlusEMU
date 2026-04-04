@@ -108,6 +108,7 @@ internal class ModerationTicketService : IModerationTicketService
 
         var client = _clientManager.GetClientByUserId(ticket.Sender.Id);
         client?.Send(new ModeratorSupportTicketResponseComposer(result));
+        client?.SendNotification(GetCloseAcknowledgement(result));
 
         if (result == 2)
         {
@@ -164,6 +165,7 @@ internal class ModerationTicketService : IModerationTicketService
             && pendingTicket != null)
         {
             pendingTicket.Answered = true;
+            session.SendNotification("Your pending help request has been closed.");
             _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, pendingTicket), "mod_tool");
         }
 
@@ -200,6 +202,15 @@ internal class ModerationTicketService : IModerationTicketService
         action != null && string.Equals(action.Type, "mods_till_logout", StringComparison.OrdinalIgnoreCase)
             ? 2
             : 1;
+
+    private static string GetCloseAcknowledgement(int result) =>
+        result switch
+        {
+            1 => "Your help request was reviewed and closed as non-actionable.",
+            2 => "Your help request was reviewed and marked abusive.",
+            3 => "Your help request was reviewed and resolved.",
+            _ => "Your help request was reviewed and closed."
+        };
 
     private string BuildTicketIssue(string message, int category)
     {
