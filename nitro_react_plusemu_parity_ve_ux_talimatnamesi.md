@@ -91,6 +91,7 @@ Bu liste 3 kategoriye ayrilir:
   - `mods_till_logout` topic'leri artik moderator kuyruğuna yukseltilmis priority ile dusuyor
   - moderator ticket issue metni artik selected topic caption'i da tasiyor
   - moderator close sonucu ve pending-call clear akisi reporter'a gorunur mesaj donduruyor
+  - acik pending ticket bildirimi artik issue ozetini de tasiyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut

@@ -181,7 +181,7 @@ internal class ModerationTicketService : IModerationTicketService
         if (_moderationManager.UserHasTickets(habbo.Id)
             && _moderationManager.TryGetTicketBySenderId(habbo.Id, out var pendingTicket)
             && pendingTicket != null)
-            session.SendNotification("You already have a pending help request.");
+            session.SendNotification(BuildPendingTicketNotification(pendingTicket));
     }
 
     private string GetSubmitAcknowledgement(int category, ModerationPresetActions? action = null)
@@ -211,6 +211,18 @@ internal class ModerationTicketService : IModerationTicketService
             3 => "Your help request was reviewed and resolved.",
             _ => "Your help request was reviewed and closed."
         };
+
+    private static string BuildPendingTicketNotification(ModerationTicket ticket)
+    {
+        const int maxPreviewLength = 80;
+        var issue = (ticket.Issue ?? string.Empty).Trim();
+        if (issue.Length > maxPreviewLength)
+            issue = issue[..maxPreviewLength] + "...";
+
+        return string.IsNullOrWhiteSpace(issue)
+            ? "You already have a pending help request."
+            : $"You already have a pending help request: {issue}";
+    }
 
     private string BuildTicketIssue(string message, int category)
     {

@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Improved Help/CFH pending-request feedback by including a short issue preview in the existing pending-ticket notification, making already-open reports more recognizable without depending on the still-unverified pending-calls packet.
 - Added visible close-state messaging for modern Help/CFH tickets, so reporters now receive a readable outcome when moderators close a case and also get feedback when they clear their own pending request state.
 - Prefixed Help/CFH moderation ticket issue text with the selected topic caption, so moderator queues now retain the submitted free-text message together with a readable topic label instead of showing an untyped issue string.
 - Added a first `mods_till_logout` parity hint for Help/CFH topics by elevating those reports to a higher moderation ticket priority, making the intent of logout-scoped review topics visible in the moderator queue even before fuller action-type automation lands.
