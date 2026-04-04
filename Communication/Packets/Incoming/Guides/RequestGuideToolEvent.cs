@@ -6,10 +6,15 @@ namespace Plus.Communication.Packets.Incoming.Guides;
 internal sealed class RequestGuideToolEvent : IPacketEvent
 {
     private readonly IGuideService _guideService;
+    private readonly IGuardianService _guardianService;
 
-    public RequestGuideToolEvent(IGuideService guideService) => _guideService = guideService;
+    public RequestGuideToolEvent(IGuideService guideService, IGuardianService guardianService)
+    {
+        _guideService = guideService;
+        _guardianService = guardianService;
+    }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         bool onDuty = packet.ReadBool();
         bool helperRequests = false;
@@ -23,6 +28,7 @@ internal sealed class RequestGuideToolEvent : IPacketEvent
             bullyReports = packet.HasDataRemaining() && packet.ReadBool();
         }
 
-        return _guideService.ConfigureDuty(session, onDuty, helperRequests, bullyReports);
+        await _guideService.ConfigureDuty(session, onDuty, helperRequests, bullyReports);
+        await _guardianService.SetOnDuty(session, onDuty && bullyReports);
     }
 }

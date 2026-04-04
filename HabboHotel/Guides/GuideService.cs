@@ -14,15 +14,17 @@ internal sealed class GuideService : IGuideService
     private readonly object _sync = new();
     private readonly IGameClientManager _clientManager;
     private readonly IModerationManager _moderationManager;
+    private readonly IGuardianService _guardianService;
     private readonly ConcurrentDictionary<int, byte> _watchedUsers = new();
     private readonly Dictionary<int, bool> _helpers = new();
     private readonly Dictionary<int, GuideSession> _sessionsByUserId = new();
     private readonly Queue<int> _resolvedWaitingTimes = new();
 
-    public GuideService(IGameClientManager clientManager, IModerationManager moderationManager)
+    public GuideService(IGameClientManager clientManager, IModerationManager moderationManager, IGuardianService guardianService)
     {
         _clientManager = clientManager;
         _moderationManager = moderationManager;
+        _guardianService = guardianService;
     }
 
     public Task SendToolState(GameClient session, bool onDutyOverride = false, bool useOverride = false)
@@ -42,7 +44,7 @@ internal sealed class GuideService : IGuideService
             helpersOnDuty = _helpers.Count;
         }
 
-        session.Send(new HelperToolComposer(onDuty, helpersOnDuty, 0));
+        session.Send(new HelperToolComposer(onDuty, helpersOnDuty, _guardianService.GuardiansOnDuty));
         return Task.CompletedTask;
     }
 
@@ -67,12 +69,12 @@ internal sealed class GuideService : IGuideService
                     return Task.CompletedTask;
 
                 _helpers.Remove(habbo.Id);
-                session.Send(new HelperToolComposer(false, _helpers.Count, 0));
+                session.Send(new HelperToolComposer(false, _helpers.Count, _guardianService.GuardiansOnDuty));
                 return Task.CompletedTask;
             }
 
             _helpers[habbo.Id] = false;
-            session.Send(new HelperToolComposer(true, _helpers.Count, bullyReports ? 1 : 0));
+            session.Send(new HelperToolComposer(true, _helpers.Count, _guardianService.GuardiansOnDuty));
         }
 
         return Task.CompletedTask;
@@ -354,7 +356,7 @@ internal sealed class GuideService : IGuideService
         helper.Send(new GuideSessionEndedComposer(endReason));
         if (detachHelper)
             helper.Send(new GuideSessionDetachedComposer());
-        helper.Send(new HelperToolComposer(true, _helpers.Count, 0));
+        helper.Send(new HelperToolComposer(true, _helpers.Count, _guardianService.GuardiansOnDuty));
     }
 
     private bool TryGetClientLocked(int userId, out GameClient client)

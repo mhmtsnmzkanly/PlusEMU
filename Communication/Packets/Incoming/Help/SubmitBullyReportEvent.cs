@@ -1,6 +1,7 @@
 ﻿using Plus.Communication.Packets.Outgoing.Help;
 using Plus.Core.Language;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Guides;
 using Plus.Utilities;
 
 namespace Plus.Communication.Packets.Incoming.Help;
@@ -9,57 +10,59 @@ internal class SubmitBullyReportEvent : IPacketEvent
 {
     private readonly IGameClientManager _clientManager;
     private readonly ILanguageManager _languageManager;
+    private readonly IGuardianService _guardianService;
 
-    public SubmitBullyReportEvent(IGameClientManager clientManager, ILanguageManager languageManager)
+    public SubmitBullyReportEvent(IGameClientManager clientManager, ILanguageManager languageManager, IGuardianService guardianService)
     {
         _clientManager = clientManager;
         _languageManager = languageManager;
+        _guardianService = guardianService;
     }
 
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         //0 = sent, 1 = blocked, 2 = no chat, 3 = already reported.
         var habbo = session.GetHabbo();
         var userId = packet.ReadInt();
         if (userId == habbo.Id) //Hax
-            return Task.CompletedTask;
+            return;
         if (habbo.AdvertisingReportedBlocked)
         {
             session.Send(new SubmitBullyReportComposer(1)); //This user is blocked from reporting.
-            return Task.CompletedTask;
+            return;
         }
         var client = _clientManager.GetClientByUserId(Convert.ToInt32(userId));
         if (client == null)
         {
             session.Send(new SubmitBullyReportComposer(0)); //Just say it's sent, the user isn't found.
-            return Task.CompletedTask;
+            return;
         }
         if (habbo.LastAdvertiseReport > UnixTimestamp.GetNow())
         {
             session.SendNotification(_languageManager.Require("help.bully_report.cooldown"));
-            return Task.CompletedTask;
+            return;
         }
         var targetHabbo = client.GetHabbo();
         if (targetHabbo == null)
-            return Task.CompletedTask;
+            return;
         if (targetHabbo.Permissions?.HasRight("mod_tool") == true) //Reporting staff, nope!
         {
             session.SendNotification(_languageManager.Require("help.bully_report.staff_disallowed"));
-            return Task.CompletedTask;
+            return;
         }
 
         //This user hasn't even said a word, nope!
         if (!targetHabbo.HasSpoken)
         {
             session.Send(new SubmitBullyReportComposer(2));
-            return Task.CompletedTask;
+            return;
         }
 
         //Already reported, nope.
         if (targetHabbo.AdvertisingReported && habbo.Rank < 2)
         {
             session.Send(new SubmitBullyReportComposer(3));
-            return Task.CompletedTask;
+            return;
         }
         if (habbo.Rank <= 1)
             habbo.LastAdvertiseReport = UnixTimestamp.GetNow() + 300;
@@ -68,7 +71,7 @@ internal class SubmitBullyReportEvent : IPacketEvent
         targetHabbo.AdvertisingReported = true;
         session.Send(new SubmitBullyReportComposer(0));
         //_clientManager.ModAlert("New advertising report! " + Client.GetHabbo().Username + " has been reported for advertising by " + Session.GetHabbo().Username +".");
-        _clientManager.DoAdvertisingReport(session, client);
-        return Task.CompletedTask;
+        if (!await _guardianService.SubmitReport(session, client))
+            _clientManager.DoAdvertisingReport(session, client);
     }
 }
