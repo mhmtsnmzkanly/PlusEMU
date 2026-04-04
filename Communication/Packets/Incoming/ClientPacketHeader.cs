@@ -26,6 +26,8 @@ public static class ClientPacketHeader
     public const uint GetClubGiftInfoEvent = 3127; //3302
     public const uint PurchaseFromCatalogEvent = 3492; //2830
     public const uint PurchaseFromCatalogAsGiftEvent = 1555; //21
+    public const uint RequestGuideToolEvent = 1922; // inferred from Arcturus guide mapping
+    public const uint RequestGuideAssistanceEvent = 3338; // inferred from Arcturus guide mapping
 
     // Navigator
 
@@ -68,6 +70,11 @@ public static class ClientPacketHeader
     // Moderation
     public const uint OpenHelpToolEvent = 1282; //1839
     public const uint CallForHelpPendingCallsDeletedEvent = 3643;
+    public const uint GuideReportHelperEvent = 3969; // inferred from Arcturus guide mapping
+    public const uint GuideUserMessageEvent = 3899; // inferred from Arcturus guide mapping
+    public const uint GuideCancelHelpRequestEvent = 291; // inferred from Arcturus guide mapping
+    public const uint GuideHandleHelpRequestEvent = 1424; // inferred from Arcturus guide mapping
+    public const uint GuideCloseHelpRequestEvent = 887; // inferred from Arcturus guide mapping
     public const uint ModeratorActionEvent = 760; //781
     public const uint ModerationMsgEvent = 2348; //2375
     public const uint ModerationMuteEvent = 2474; //1940

@@ -183,6 +183,12 @@ public static class ServerPacketHeader
     public const uint FollowFriendFailedComposer = 3469; //1170
 
     public const uint FindFriendsProcessResultComposer = 2921; //3763
+    public const uint GuideSessionAttachedComposer = 1591; // inferred from Arcturus guide mapping
+    public const uint GuideSessionDetachedComposer = 138; // inferred from Arcturus guide mapping
+    public const uint GuideSessionStartedComposer = 3209; // inferred from Arcturus guide mapping
+    public const uint GuideSessionEndedComposer = 1456; // inferred from Arcturus guide mapping
+    public const uint GuideSessionErrorComposer = 673; // inferred from Arcturus guide mapping
+    public const uint GuideSessionMessageComposer = 841; // inferred from Arcturus guide mapping
     public const uint UserChangeComposer = 2248; //32
     public const uint FloorHeightMapComposer = 1819; //1112
     public const uint RoomInfoUpdatedComposer = 3743; //3833

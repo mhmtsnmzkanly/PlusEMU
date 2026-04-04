@@ -2,6 +2,8 @@
 
 ### [Unreleased]
 #### Changed
+- Added the first guide-tool parity slice: helper duty state, guide assistance requests, helper accept/decline, session start/message/close flows, and helper reporting now run through a shared guide service instead of the old empty UI-only path.
+- Wired the minimum Nitro guide packet surface (`RequestGuideToolEvent`, `RequestGuideAssistanceEvent`, `GuideHandleHelpRequestEvent`, `GuideUserMessageEvent`, `GuideCancelHelpRequestEvent`, `GuideCloseHelpRequestEvent`, `GuideReportHelperEvent` plus the `GuideSession*` outgoing set) with Arcturus-derived packet IDs, explicitly leaving guardian voting and room-invite extras for a later pass.
 - Added the first HC Center / Club Gifts parity slice: `GetHabboClubWindowEvent` and `GetClubGiftInfoEvent` now resolve through a club-center service, club-center data has a real outgoing composer, and club-gifts responses no longer rely on the old junk hardcode payload.
 - Kept the kickback/payday metrics intentionally conservative for now by deriving fallback values from existing subscription/account state, with exact Nitro club-center economics still marked as a later verification step.
 - Added the first camera parity slice: request/init, room render, thumbnail save, purchase, and publish handlers now run through a dedicated camera service instead of throwing, with inferred Nitro packet IDs and matching outgoing camera composers.

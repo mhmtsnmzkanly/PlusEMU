@@ -44,6 +44,21 @@ Yapilacaklar:
 - telemetry ekle
 
 ### 2. Guide / Guardian Yardim Akisi
+Durum:
+- `Kismi`
+
+Tamamlanan ilk dilim:
+- helper duty durumu
+- guide request queue
+- accept / decline
+- session start / message / close
+- helper report
+
+Kalan ana bosluk:
+- guardian voting ve bully review
+- guide room invite / requester room surface
+- typing / playing gibi yan session packetleri
+
 Arcturus'ta guardian sistemi ve scheduler izleri var:
 - [GuardianTicketFindMoreSlaves.java](/home/duldul/Belgeler/Arcturus-Community-master/src/main/java/com/eu/habbo/threading/runnables/GuardianTicketFindMoreSlaves.java)
 - [GuardianNotAccepted.java](/home/duldul/Belgeler/Arcturus-Community-master/src/main/java/com/eu/habbo/threading/runnables/GuardianNotAccepted.java)

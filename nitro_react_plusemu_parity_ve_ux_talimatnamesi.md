@@ -45,7 +45,7 @@ Bu liste 3 kategoriye ayrilir:
 - `Uyarlama Gerekli`: Ozellik server'da var ama packet adi, payload sekli veya akis birebir Nitro client beklentisiyle ortusmuyor
 
 ### 1. Guide Tool
-- Durum: `Yok`
+- Durum: `Kismi`
 - Client tarafi:
   - Duty durumu
   - Guide/help/bully toggle
@@ -53,11 +53,15 @@ Bu liste 3 kategoriye ayrilir:
   - Session attach/start/message/invite/end/error akisi
   - Guide ve user ongoing state yonetimi
 - Server tarafi:
-  - `GuideSession*`, `GuideOnDutyStatus`, `GuideTool` sinif/packet izi yok
+  - Minimum `GuideSession*` packet/composer surface artik var
+  - Duty state, request queue, accept/decline, chat relay ve close/report akisi service-backed
+  - Guardian voting, room invite ve typing/playing gibi yan packetler halen yok
 - Kullanici etkisi:
-  - Guide Tool UI aciliyor ama arka tarafta islevsel session mantigi yok
+  - Guide Tool UI artik yalnizca bos acilmiyor; temel helper-request-session akisi calisiyor
+  - Guardian ve ileri seviye client durumlari halen eksik
 - Teknik etkisi:
-  - Yeni service, queue, state store, incoming/outgoing packet seti gerekir
+  - Ilk service, queue ve transient session store eklendi
+  - Kalan is guardian queue/voting ve client-side yan sinyallerin tamamlanmasi
 - Oncelik: `Kritik`
 
 ### 2. Help / Modern Call For Help Akislari

@@ -53,6 +53,15 @@ Burada yorum satirinda duran veya sonradan tamamlanacak packetler var:
 - `SetTargetedOfferStateEvent`
 - `ShopTargetedOfferViewedEvent`
 
+Guide tarafinda ise ilk parity katmani artik mevcut:
+- [GuideService.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Guides/GuideService.cs)
+- [HelperToolComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Moderation/HelperToolComposer.cs)
+- [GuideSessionAttachedComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Guides/GuideSessionAttachedComposer.cs)
+- [GuideSessionStartedComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Guides/GuideSessionStartedComposer.cs)
+- [RequestGuideToolEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/RequestGuideToolEvent.cs)
+- [RequestGuideAssistanceEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/RequestGuideAssistanceEvent.cs)
+- `guardian voting`, `guide room invite`, `typing/playing` yan packetleri halen backlog durumunda
+
 Camera tarafinda ise ilk parity katmani artik mevcut:
 - [CameraService.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Camera/CameraService.cs)
 - [CameraPriceComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Camera/CameraPriceComposer.cs)
