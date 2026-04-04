@@ -82,7 +82,13 @@ internal class ModerationTicketService : IModerationTicketService
             reportedUsername = currentRoom.OwnerName;
         }
 
-        if (IsGuardianTopic(topicAction) && reportedUser != null && await _guardianService.SubmitReport(session, reportedUser.Client))
+        var reportedSession = effectiveReportedUserId > 0
+            ? _clientManager.GetClientByUserId(effectiveReportedUserId)
+            : null;
+
+        if (IsGuardianTopic(topicAction)
+            && reportedSession?.GetHabboOrNull() != null
+            && await _guardianService.SubmitReport(session, reportedSession))
         {
             session.SendNotification(GetSubmitAcknowledgement(category, topicAction));
             return;

@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Added the first moderation-topic guardian bridge: Help/CFH topics configured as `guardians` now route into the existing guardian review queue when the reported user is currently online, and otherwise fall back to the normal moderation-ticket path.
 - Added moderation default-sanction hints to Help/CFH ticket issue labels, so moderator queues now surface the configured topic caption and suggested action together instead of hiding the sanction metadata inside the topic tables.
 - Restored room-report target parity for Help/CFH tickets by binding room-scoped reports to the current room owner snapshot when no explicit reported user id is present, matching the older mod-tool expectation more closely.
 - Normalized moderation ticket type semantics against the legacy mod-tool enum: guide reports now open as `GUIDE_SYSTEM`, and Help/CFH submits with missing or unusable type values now fall back to context-aware room/user/unknown ticket types instead of forwarding raw junk into moderator views.

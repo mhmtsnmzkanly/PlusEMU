@@ -96,13 +96,14 @@ Bu liste 3 kategoriye ayrilir:
   - ticket `type` degerleri artik legacy mod-tool enum'una daha yakin normalize ediliyor; guide raporlari `GUIDE_SYSTEM`, roomless/room-scoped fallback'ler daha tutarli
   - room-scoped report'larda explicit hedef user yoksa oda sahibi snapshot'i reported target olarak tasiniyor
   - moderator queue issue etiketi artik topic `default_sanction` ipucunu da tasiyor
+  - moderation topic `type=guardians` ise ve hedef kullanici online ise submit-time guardian queue routing artik mevcut
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
   - acik ticket durumunda sessiz bozulma yerine gorunur geri bildirim var
 - Teknik etkisi:
   - moderation topic tree ve open-state ilk kez help tool acilisina baglandi
-  - kalan is exact pending-calls packet semantics, `mods_till_logout` / guardian action davranis eslesmesi ve room/im/forum/photo report varyantlarinin ayri payload semantics'ini daraltmak
+  - kalan is exact pending-calls packet semantics ve room/im/forum/photo report varyantlarinin ayri payload semantics'ini daraltmak
 - Oncelik: `Kritik`
 
 ### 3. Sanction Status
