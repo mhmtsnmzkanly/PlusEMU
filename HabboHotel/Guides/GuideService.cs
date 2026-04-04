@@ -9,6 +9,7 @@ namespace Plus.HabboHotel.Guides;
 
 internal sealed class GuideService : IGuideService
 {
+    private const int GuideSystemTicketType = 5;
     private const string GuideToolPermission = "mod_tool";
 
     private readonly object _sync = new();
@@ -359,7 +360,7 @@ internal sealed class GuideService : IGuideService
             {
                 var ticket = new ModerationTicket(
                     0,
-                    1,
+                    GuideSystemTicketType,
                     0,
                     UnixTimestamp.GetNow(),
                     1,

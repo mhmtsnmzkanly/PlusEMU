@@ -9,6 +9,10 @@ namespace Plus.HabboHotel.Moderation;
 
 internal class ModerationTicketService : IModerationTicketService
 {
+    private const int TicketTypeNormal = 1;
+    private const int TicketTypeNormalUnknown = 2;
+    private const int TicketTypeRoom = 7;
+
     private readonly IModerationManager _moderationManager;
     private readonly IGameClientManager _clientManager;
     private readonly IDatabase _database;
@@ -67,10 +71,11 @@ internal class ModerationTicketService : IModerationTicketService
 
         habbo.TryGetCurrentRoom(out var currentRoom);
         var issueText = BuildTicketIssue(message, category);
+        var ticketType = NormalizeTicketType(type, reportedUserId, currentRoom != null);
 
         var ticket = new ModerationTicket(
             1,
-            type,
+            ticketType,
             category,
             UnixTimestamp.GetNow(),
             GetTicketPriority(topicAction),
@@ -245,5 +250,16 @@ internal class ModerationTicketService : IModerationTicketService
         return string.IsNullOrWhiteSpace(trimmed)
             ? $"[{caption}]"
             : $"[{caption}] {trimmed}";
+    }
+
+    private static int NormalizeTicketType(int rawType, int reportedUserId, bool hasRoomContext)
+    {
+        if (rawType is >= 1 and <= 15)
+            return rawType;
+
+        if (reportedUserId <= 0)
+            return hasRoomContext ? TicketTypeRoom : TicketTypeNormalUnknown;
+
+        return TicketTypeNormal;
     }
 }

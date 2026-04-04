@@ -93,6 +93,7 @@ Bu liste 3 kategoriye ayrilir:
   - moderator close sonucu ve pending-call clear akisi reporter'a gorunur mesaj donduruyor
   - acik pending ticket bildirimi artik issue ozetini de tasiyor
   - close sonucu da artik issue ozetiyle birlikte gorunur hale geliyor
+  - ticket `type` degerleri artik legacy mod-tool enum'una daha yakin normalize ediliyor; guide raporlari `GUIDE_SYSTEM`, roomless/room-scoped fallback'ler daha tutarli
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
