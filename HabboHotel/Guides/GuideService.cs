@@ -370,7 +370,9 @@ internal sealed class GuideService : IGuideService
                     reportedHabbo.Username,
                     trimmedMessage,
                     room,
-                    guideSession.Messages.Select(chat => chat.Message).ToList());
+                    guideSession.Messages
+                        .Select((chat, index) => new ModerationTicketChatEntry(index + 1, chat.Message))
+                        .ToList());
                 _moderationManager.TryAddTicket(ticket);
                 _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
             }

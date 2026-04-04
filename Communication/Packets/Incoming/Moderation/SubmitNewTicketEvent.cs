@@ -20,11 +20,11 @@ internal class SubmitNewTicketEvent : IPacketEvent
         var reportedUserId = packet.ReadInt();
         var type = packet.ReadInt();
         var messagecount = packet.ReadInt();
-        var chats = new List<string>(messagecount);
+        var chats = new List<ModerationTicketChatEntry>(messagecount);
         for (var i = 0; i < messagecount; i++)
         {
-            packet.ReadInt();
-            chats.Add(packet.ReadString());
+            var entryId = packet.ReadInt();
+            chats.Add(new ModerationTicketChatEntry(entryId, packet.ReadString()));
         }
 
         return _moderationTicketService.Submit(session, message, category, reportedUserId, type, chats);

@@ -5,9 +5,9 @@ namespace Plus.HabboHotel.Moderation;
 
 public class ModerationTicket
 {
-    public List<string> ReportedChats;
+    public List<ModerationTicketChatEntry> ReportedChats;
 
-    public ModerationTicket(int id, int type, int category, double timestamp, int priority, Habbo sender, Habbo? reported, int reportedUserId, string? reportedUsername, string issue, RoomData? room, List<string> reportedChats)
+    public ModerationTicket(int id, int type, int category, double timestamp, int priority, Habbo sender, Habbo? reported, int reportedUserId, string? reportedUsername, string issue, RoomData? room, List<ModerationTicketChatEntry> reportedChats)
     {
         Id = id;
         Type = type;

@@ -42,7 +42,7 @@ internal class ModerationTicketService : IModerationTicketService
         return Task.CompletedTask;
     }
 
-    public async Task Submit(GameClient session, string message, int category, int reportedUserId, int type, IReadOnlyCollection<string> reportedChats)
+    public async Task Submit(GameClient session, string message, int category, int reportedUserId, int type, IReadOnlyCollection<ModerationTicketChatEntry> reportedChats)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)

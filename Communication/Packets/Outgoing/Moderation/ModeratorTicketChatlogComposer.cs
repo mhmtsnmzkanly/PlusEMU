@@ -37,9 +37,9 @@ public class ModeratorTicketChatlogComposer : IServerPacket
         foreach (var chat in _ticket.ReportedChats)
         {
             packet.WriteString(UnixTimestamp.FromUnixTimestamp(_timestamp).ToShortTimeString());
-            packet.WriteInteger(_ticket.Id);
+            packet.WriteInteger(chat.EntryId > 0 ? chat.EntryId : _ticket.Id);
             packet.WriteString(_ticket.Reported?.Username ?? _ticket.ReportedUsername);
-            packet.WriteString(chat);
+            packet.WriteString(chat.Message);
             packet.WriteBoolean(false);
         }
     }
