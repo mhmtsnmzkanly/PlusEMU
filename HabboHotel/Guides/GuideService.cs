@@ -199,6 +199,31 @@ internal sealed class GuideService : IGuideService
         return Task.CompletedTask;
     }
 
+    public Task SetTyping(GameClient session, bool typing)
+    {
+        var habbo = session.GetHabboOrNull();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        lock (_sync)
+        {
+            PruneLocked();
+
+            if (!_sessionsByUserId.TryGetValue(habbo.Id, out var guideSession))
+                return Task.CompletedTask;
+
+            int partnerUserId = guideSession.RequesterId == habbo.Id
+                ? guideSession.HelperId ?? 0
+                : guideSession.RequesterId;
+            if (partnerUserId == 0 || !TryGetClientLocked(partnerUserId, out var partnerClient))
+                return Task.CompletedTask;
+
+            partnerClient.Send(new GuideSessionPartnerIsTypingComposer(typing));
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task SendRequesterRoom(GameClient session)
     {
         var habbo = session.GetHabboOrNull();

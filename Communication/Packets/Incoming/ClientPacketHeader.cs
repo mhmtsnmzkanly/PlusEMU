@@ -71,6 +71,7 @@ public static class ClientPacketHeader
     public const uint OpenHelpToolEvent = 1282; //1839
     public const uint CallForHelpPendingCallsDeletedEvent = 3643;
     public const uint GuideReportHelperEvent = 3969; // inferred from Arcturus guide mapping
+    public const uint GuideUserTypingEvent = 519; // inferred from Arcturus guide mapping
     public const uint GuideUserMessageEvent = 3899; // inferred from Arcturus guide mapping
     public const uint GuideCancelHelpRequestEvent = 291; // inferred from Arcturus guide mapping
     public const uint GuideHandleHelpRequestEvent = 1424; // inferred from Arcturus guide mapping

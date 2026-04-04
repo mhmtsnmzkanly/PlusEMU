@@ -191,6 +191,8 @@ public static class ServerPacketHeader
     public const uint GuideSessionMessageComposer = 841; // inferred from Arcturus guide mapping
     public const uint GuideSessionRequesterRoomComposer = 1847; // inferred from Arcturus guide mapping
     public const uint GuideSessionInvitedToGuideRoomComposer = 219; // inferred from Arcturus guide mapping
+    public const uint GuideSessionPartnerIsTypingComposer = 1016; // inferred from Arcturus guide mapping
+    public const uint GuideSessionPartnerIsPlayingComposer = 448; // inferred from Arcturus guide mapping
     public const uint GuardianNewReportReceivedComposer = 735; // inferred from Arcturus guardian mapping
     public const uint GuardianVotingRequestedComposer = 143; // inferred from Arcturus guardian mapping
     public const uint GuardianVotingVotesComposer = 1829; // inferred from Arcturus guardian mapping

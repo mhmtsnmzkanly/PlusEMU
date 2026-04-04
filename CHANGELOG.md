@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Extended the guide session surface with partner typing notifications too: `GuideUserTypingEvent` now relays live typing state between helper and requester, and the matching partner-typing / partner-playing outgoing composers are registered on the packet surface for the remaining guide-session UX work.
 - Extended the guide parity slice once more with requester-room lookup and room-invite support, so helpers can now resolve the requester's room id and send a direct guide-room invite through the `GuideVisitUserEvent` / `GuideInviteUserEvent` flow instead of stopping at chat-only sessions.
 - Extended the guide/help parity slice with a first guardian review foundation: bully reports can now route into a guardian on-duty queue, guardians can accept and vote through a minimal `Guardian*` packet surface, and the old moderation alert path remains as fallback when no guardians are available.
 - Added the first guide-tool parity slice: helper duty state, guide assistance requests, helper accept/decline, session start/message/close flows, and helper reporting now run through a shared guide service instead of the old empty UI-only path.

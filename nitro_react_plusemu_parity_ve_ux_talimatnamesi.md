@@ -57,7 +57,8 @@ Bu liste 3 kategoriye ayrilir:
   - Duty state, request queue, accept/decline, chat relay ve close/report akisi service-backed
   - Guardian on-duty, bully report queue, accept ve vote surface'in ilk dilimi artik var
   - Requester room ve room invite surface artik var
-  - Typing/playing gibi yan packetler halen yok
+  - Typing surface artik var
+  - Playing runtime sinyali halen eksik
 - Kullanici etkisi:
   - Guide Tool UI artik yalnizca bos acilmiyor; temel helper-request-session akisi calisiyor
   - Guardian review de artik tamamen bos degil, ama ileri seviye guardian durumlari halen eksik

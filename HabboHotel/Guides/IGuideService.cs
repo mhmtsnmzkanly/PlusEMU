@@ -11,6 +11,7 @@ public interface IGuideService
     Task RequestAssistance(GameClient session, int requestType, string message);
     Task HandleRequest(GameClient session, bool accepted);
     Task SendSessionMessage(GameClient session, string message);
+    Task SetTyping(GameClient session, bool typing);
     Task SendRequesterRoom(GameClient session);
     Task InviteRequesterToRoom(GameClient session);
     Task CancelRequest(GameClient session);
