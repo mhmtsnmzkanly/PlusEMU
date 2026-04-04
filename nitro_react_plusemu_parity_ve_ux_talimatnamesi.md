@@ -81,15 +81,18 @@ Bu liste 3 kategoriye ayrilir:
 - Oncelik: `Kritik`
 
 ### 3. Sanction Status
-- Durum: `Stub`
+- Durum: `Kismi`
 - Client tarafi:
   - Sanction status response bekliyor
 - Server tarafi:
-  - `GetSanctionStatusEvent` var ama response gondermuyor
+  - `GetSanctionStatusEvent` artik response gonderiyor
+  - mevcut uygulama mute, trade-lock, caution ve aktif ban verisini moderation-backed query ile composer'a tasiyor
+  - sanction ekraninin packet akisi acildi, fakat exact Nitro UX/payload semantics icin halen client-level dogrulama gerekli
 - Kullanici etkisi:
   - Yardim ekraninda yaptirim durumu eksik kalir
 - Teknik etkisi:
-  - Sanction query + response composer yazilmali
+  - Ilk sanction query + response composer tamamlandi
+  - Sonraki adimda Nitro client payload davranisi dogrulanip gerekirse field semantics daraltilacak
 - Oncelik: `Kritik`
 
 ### 4. Targeted Offer

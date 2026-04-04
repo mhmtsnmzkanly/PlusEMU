@@ -1,25 +1,32 @@
 ﻿using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Moderation;
 
 namespace Plus.Communication.Packets.Outgoing.Help;
 
-// TODO @80O: Implement
 public class SanctionStatusComposer : IServerPacket
 {
+    private readonly SanctionStatusData _data;
+
     public uint MessageId => ServerPacketHeader.SanctionStatusComposer;
+
+    public SanctionStatusComposer(SanctionStatusData data)
+    {
+        _data = data;
+    }
 
     public void Compose(IOutgoingPacket packet)
     {
-        packet.WriteBoolean(false);
-        packet.WriteBoolean(false);
-        packet.WriteString("The General was here");
-        packet.WriteInteger(1); //Hours
-        packet.WriteInteger(10);
-        packet.WriteString("ccccc");
-        packet.WriteString("bbb");
-        packet.WriteInteger(0);
-        packet.WriteString("abb");
-        packet.WriteInteger(0);
-        packet.WriteInteger(0);
-        packet.WriteBoolean(true); //if true and second boolean is false it does something. - if false, we got banned, so true is mute
+        packet.WriteBoolean(_data.HasCurrentSanction);
+        packet.WriteBoolean(_data.UsesCustomMessage);
+        packet.WriteString(_data.CurrentSanctionText);
+        packet.WriteInteger(_data.CurrentSanctionHours);
+        packet.WriteInteger(_data.ProbationDaysLeft);
+        packet.WriteString(_data.NextSanctionText);
+        packet.WriteString(_data.InfoTitle);
+        packet.WriteInteger(_data.CautionCount);
+        packet.WriteString(_data.Disclaimer);
+        packet.WriteInteger(_data.BanCount);
+        packet.WriteInteger(_data.TradeLockCount);
+        packet.WriteBoolean(_data.IsMuted);
     }
 }

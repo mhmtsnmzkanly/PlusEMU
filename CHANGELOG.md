@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Started the Nitro parity backlog by wiring `GetSanctionStatusEvent` to a real moderation-backed response path, replacing the old no-op/stub help sanction status flow with a populated composer sourced from mute, trade-lock, caution, and active-ban state.
 - Restored lazy `room_models` loading in `RoomManager`, so custom room models can be resolved on demand again instead of only working when they were already preloaded into the in-memory model cache.
 - Restored the original doorbell-room entry behavior in `RoomService`, so locked rooms now ring when any occupant is present instead of incorrectly requiring an in-room user with rank `>= 2`.
 - Continued the DI/service transition in the login runtime path by introducing `IHabboRuntimeInitializer`, centralizing habbo visual/process bootstrap, and removing the loose `Habbo.InitProcess(..., object, object)` handoff.

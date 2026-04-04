@@ -1,12 +1,18 @@
-﻿using Plus.HabboHotel.GameClients;
+﻿using Plus.Communication.Packets.Outgoing.Help;
+using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Moderation;
 
 namespace Plus.Communication.Packets.Incoming.Help;
 
 internal class GetSanctionStatusEvent : IPacketEvent
 {
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    private readonly ISanctionStatusService _sanctionStatusService;
+
+    public GetSanctionStatusEvent(ISanctionStatusService sanctionStatusService)
     {
-        //Session.SendMessage(new SanctionStatusComposer());
-        return Task.CompletedTask;
+        _sanctionStatusService = sanctionStatusService;
     }
+
+    public async Task Parse(GameClient session, IIncomingPacket packet) =>
+        session.Send(new SanctionStatusComposer(await _sanctionStatusService.GetStatus(session)));
 }
