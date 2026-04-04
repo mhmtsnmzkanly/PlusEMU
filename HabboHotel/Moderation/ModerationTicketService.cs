@@ -66,6 +66,7 @@ internal class ModerationTicketService : IModerationTicketService
         }
 
         habbo.TryGetCurrentRoom(out var currentRoom);
+        var issueText = BuildTicketIssue(message, category);
 
         var ticket = new ModerationTicket(
             1,
@@ -77,7 +78,7 @@ internal class ModerationTicketService : IModerationTicketService
             reportedUser,
             reportedUserId,
             reportedUsername,
-            StringCharFilter.Escape(message.Trim()),
+            issueText,
             currentRoom,
             reportedChats.ToList());
 
@@ -199,4 +200,15 @@ internal class ModerationTicketService : IModerationTicketService
         action != null && string.Equals(action.Type, "mods_till_logout", StringComparison.OrdinalIgnoreCase)
             ? 2
             : 1;
+
+    private string BuildTicketIssue(string message, int category)
+    {
+        var trimmed = StringCharFilter.Escape((message ?? string.Empty).Trim());
+        if (!_moderationManager.TryGetTopicCaption(category, out var caption) || string.IsNullOrWhiteSpace(caption))
+            return trimmed;
+
+        return string.IsNullOrWhiteSpace(trimmed)
+            ? $"[{caption}]"
+            : $"[{caption}] {trimmed}";
+    }
 }

@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Prefixed Help/CFH moderation ticket issue text with the selected topic caption, so moderator queues now retain the submitted free-text message together with a readable topic label instead of showing an untyped issue string.
 - Added a first `mods_till_logout` parity hint for Help/CFH topics by elevating those reports to a higher moderation ticket priority, making the intent of logout-scoped review topics visible in the moderator queue even before fuller action-type automation lands.
 - Added the first Help/CFH action-type routing: moderation topics configured as `auto_reply` now short-circuit to their configured reply text without opening a moderator ticket, matching the existing non-emergency moderation-topic intent more closely.
 - Made Help/CFH submit acknowledgements topic-aware by reading the moderation topic action metadata, so support requests now reuse configured `message_text` replies when the selected moderation topic provides one.

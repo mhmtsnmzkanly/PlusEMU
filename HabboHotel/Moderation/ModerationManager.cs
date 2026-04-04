@@ -233,6 +233,16 @@ public sealed class ModerationManager : IModerationManager
         return action != null;
     }
 
+    public bool TryGetTopicCaption(int topicId, out string? caption)
+    {
+        caption = _moderationCfhTopicActions.Values
+            .SelectMany(actions => actions)
+            .Where(entry => entry.Id == topicId)
+            .Select(entry => entry.Caption)
+            .FirstOrDefault();
+        return !string.IsNullOrWhiteSpace(caption);
+    }
+
     public bool UserHasTickets(int userId) => _modTickets.Any(x => x.Value.Sender.Id == userId && x.Value.Answered == false);
 
     public bool TryGetTicketBySenderId(int userId, out ModerationTicket? ticket)

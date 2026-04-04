@@ -12,6 +12,7 @@ public interface IModerationManager
     bool TryAddTicket(ModerationTicket ticket);
     bool TryGetTicket(int ticketId, out ModerationTicket? ticket);
     bool TryGetTopicAction(int topicId, out ModerationPresetActions? action);
+    bool TryGetTopicCaption(int topicId, out string? caption);
     bool UserHasTickets(int userId);
     bool TryGetTicketBySenderId(int userId, out ModerationTicket? ticket);
 

@@ -89,6 +89,7 @@ Bu liste 3 kategoriye ayrilir:
   - basarili ticket submit artik reporter'a gorunur bir onay donduruyor ve topic action `message_text` varsa onu reuse ediyor
   - `auto_reply` moderation topic'leri artik mod ticket acmadan dogrudan configured reply ile sonuclaniyor
   - `mods_till_logout` topic'leri artik moderator kuyruğuna yukseltilmis priority ile dusuyor
+  - moderator ticket issue metni artik selected topic caption'i da tasiyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
