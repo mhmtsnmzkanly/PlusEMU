@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Began wiring modern Help/CFH open-state parity: opening the help tool now pushes moderation CFH topics from the loaded moderation topic tree, and users with an already-open ticket get a safe pending-request notification instead of relying on the still-unverified `CallForHelpPendingCallsComposer` packet id.
 - Added reporter-facing guardian outcome notifications, so bully reports now return a visible close/escalation result to the reporting user instead of ending silently once guardian voting or moderator fallback completes.
 - Replaced the last currently-active crafting packet exceptions with safe no-op handlers for `GetCraftingRecipesAvailableEvent` and `CraftSecretEvent`, keeping those revision-mapped probes from crashing sessions until a real crafting domain is ported in.
 - Replaced the remaining advertisement packet exceptions with safe no-op handlers for `GetInterstitialMessageEvent` and `InterstitialShownEvent`, so those low-value client probes no longer tear down sessions while fuller ad-surface support remains intentionally absent.

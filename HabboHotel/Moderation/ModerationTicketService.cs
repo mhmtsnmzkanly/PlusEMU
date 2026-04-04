@@ -23,6 +23,13 @@ internal class ModerationTicketService : IModerationTicketService
         _database = database;
     }
 
+    public Task SendOpenState(GameClient session)
+    {
+        session.Send(new CfhTopicsInitComposer(_moderationManager.UserActionPresets));
+        TrySendPendingTicketNotification(session);
+        return Task.CompletedTask;
+    }
+
     public async Task Submit(GameClient session, string message, int category, int reportedUserId, int type, IReadOnlyCollection<string> reportedChats)
     {
         var habbo = session.GetHabbo();
@@ -33,7 +40,7 @@ internal class ModerationTicketService : IModerationTicketService
             && _moderationManager.TryGetTicketBySenderId(habbo.Id, out var pendingTicket)
             && pendingTicket != null)
         {
-            session.Send(new CallForHelpPendingCallsComposer(pendingTicket));
+            TrySendPendingTicketNotification(session);
             return;
         }
 
@@ -141,5 +148,17 @@ internal class ModerationTicketService : IModerationTicketService
         }
 
         return Task.CompletedTask;
+    }
+
+    private void TrySendPendingTicketNotification(GameClient session)
+    {
+        var habbo = session.GetHabboOrNull();
+        if (habbo == null)
+            return;
+
+        if (_moderationManager.UserHasTickets(habbo.Id)
+            && _moderationManager.TryGetTicketBySenderId(habbo.Id, out var pendingTicket)
+            && pendingTicket != null)
+            session.SendNotification("You already have a pending help request.");
     }
 }

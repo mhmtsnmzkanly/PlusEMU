@@ -81,12 +81,16 @@ Bu liste 3 kategoriye ayrilir:
   - Reply / disabled notify
 - Server tarafi:
   - Ticket sistemi var
-  - Modern submit packet seti gorunmuyor
-  - Pending call delete parcasi var
+  - `SubmitNewTicketEvent` mevcut moderation ticket service'e bagli
+  - help tool acilisi artik moderation topic tree'yi `CfhTopicsInitComposer` ile gonderiyor
+  - kullanicinin acik bir ticket'i varsa help tool acilisinda gorunur pending-request notification donuyor
+  - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
-  - Yardim araci modern Nitro akislarinda kirik veya eksik davranabilir
+  - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
+  - acik ticket durumunda sessiz bozulma yerine gorunur geri bildirim var
 - Teknik etkisi:
-  - Moderation ticket service modern incoming packet'lere baglanmali
+  - moderation topic tree ve open-state ilk kez help tool acilisina baglandi
+  - kalan is exact pending-calls packet semantics ve room/im/forum/photo report varyantlari
 - Oncelik: `Kritik`
 
 ### 3. Sanction Status

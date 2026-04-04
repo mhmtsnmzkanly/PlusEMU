@@ -4,6 +4,7 @@ namespace Plus.HabboHotel.Moderation;
 
 public interface IModerationTicketService
 {
+    Task SendOpenState(GameClient session);
     Task Submit(GameClient session, string message, int category, int reportedUserId, int type, IReadOnlyCollection<string> reportedChats);
     Task Close(GameClient session, int result, int ticketId);
     Task Pick(GameClient session, int ticketId);
