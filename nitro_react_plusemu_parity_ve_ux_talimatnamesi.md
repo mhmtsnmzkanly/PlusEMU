@@ -88,13 +88,14 @@ Bu liste 3 kategoriye ayrilir:
   - reported user offline olsa bile ticket snapshot'i moderator UI'da hedef id/username bilgisini koruyor
   - basarili ticket submit artik reporter'a gorunur bir onay donduruyor ve topic action `message_text` varsa onu reuse ediyor
   - `auto_reply` moderation topic'leri artik mod ticket acmadan dogrudan configured reply ile sonuclaniyor
+  - `mods_till_logout` topic'leri artik moderator kuyruğuna yukseltilmis priority ile dusuyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
   - acik ticket durumunda sessiz bozulma yerine gorunur geri bildirim var
 - Teknik etkisi:
   - moderation topic tree ve open-state ilk kez help tool acilisina baglandi
-  - kalan is exact pending-calls packet semantics, `mods` / `mods_till_logout` / guardian action eslesmesi ve room/im/forum/photo report varyantlarinin ayri payload semantics'ini daraltmak
+  - kalan is exact pending-calls packet semantics, `mods_till_logout` / guardian action davranis eslesmesi ve room/im/forum/photo report varyantlarinin ayri payload semantics'ini daraltmak
 - Oncelik: `Kritik`
 
 ### 3. Sanction Status

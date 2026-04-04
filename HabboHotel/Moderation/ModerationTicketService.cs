@@ -72,7 +72,7 @@ internal class ModerationTicketService : IModerationTicketService
             type,
             category,
             UnixTimestamp.GetNow(),
-            1,
+            GetTicketPriority(topicAction),
             habbo,
             reportedUser,
             reportedUserId,
@@ -194,4 +194,9 @@ internal class ModerationTicketService : IModerationTicketService
 
     private static bool IsAutoReplyTopic(ModerationPresetActions? action) =>
         action != null && string.Equals(action.Type, "auto_reply", StringComparison.OrdinalIgnoreCase);
+
+    private static int GetTicketPriority(ModerationPresetActions? action) =>
+        action != null && string.Equals(action.Type, "mods_till_logout", StringComparison.OrdinalIgnoreCase)
+            ? 2
+            : 1;
 }
