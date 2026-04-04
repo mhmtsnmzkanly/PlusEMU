@@ -365,6 +365,8 @@ internal sealed class GuideService : IGuideService
                     1,
                     habbo,
                     reportedHabbo,
+                    reportedHabbo.Id,
+                    reportedHabbo.Username,
                     trimmedMessage,
                     room,
                     guideSession.Messages.Select(chat => chat.Message).ToList());

@@ -28,8 +28,8 @@ public class ModeratorSupportTicketComposer : IServerPacket
         packet.WriteInteger(_ticket.Sender?.Id ?? 0); // Sender ID
         //base.WriteInteger(1);
         packet.WriteString(_ticket.Sender == null ? string.Empty : _ticket.Sender.Username); // Sender Name
-        packet.WriteInteger(_ticket.Reported?.Id ?? 0); // Reported ID
-        packet.WriteString(_ticket.Reported == null ? string.Empty : _ticket.Reported.Username); // Reported Name
+        packet.WriteInteger(_ticket.Reported?.Id ?? _ticket.ReportedUserId); // Reported ID
+        packet.WriteString(_ticket.Reported?.Username ?? _ticket.ReportedUsername); // Reported Name
         packet.WriteInteger(_ticket.Moderator?.Id ?? 0); // Moderator ID
         packet.WriteString(_ticket.Moderator == null ? string.Empty : _ticket.Moderator.Username); // Mod Name
         packet.WriteString(_ticket.Issue); // Issue

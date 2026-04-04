@@ -47,6 +47,15 @@ internal class ModerationTicketService : IModerationTicketService
         var reportedUser = reportedUserId > 0
             ? _clientManager.GetClientByUserId(reportedUserId)?.GetHabbo()
             : null;
+        string? reportedUsername = null;
+
+        if (reportedUserId > 0 && reportedUser == null)
+        {
+            using var lookupConnection = _database.Connection();
+            reportedUsername = await lookupConnection.QueryFirstOrDefaultAsync<string>(
+                "SELECT `username` FROM `users` WHERE `id` = @userId LIMIT 1",
+                new { userId = reportedUserId });
+        }
 
         habbo.TryGetCurrentRoom(out var currentRoom);
 
@@ -58,6 +67,8 @@ internal class ModerationTicketService : IModerationTicketService
             1,
             habbo,
             reportedUser,
+            reportedUserId,
+            reportedUsername,
             StringCharFilter.Escape(message.Trim()),
             currentRoom,
             reportedChats.ToList());

@@ -33,8 +33,8 @@ public class ModeratorInitComposer : IServerPacket
             packet.WriteInteger(ticket.Sender?.Id ?? 0); // Sender ID
             packet.WriteInteger(1);
             packet.WriteString(ticket.Sender == null ? string.Empty : ticket.Sender.Username); // Sender Name
-            packet.WriteInteger(ticket.Reported?.Id ?? 0); // Reported ID
-            packet.WriteString(ticket.Reported == null ? string.Empty : ticket.Reported.Username); // Reported Name
+            packet.WriteInteger(ticket.Reported?.Id ?? ticket.ReportedUserId); // Reported ID
+            packet.WriteString(ticket.Reported?.Username ?? ticket.ReportedUsername); // Reported Name
             packet.WriteInteger(ticket.Moderator?.Id ?? 0); // Moderator ID
             packet.WriteString(ticket.Moderator == null ? string.Empty : ticket.Moderator.Username); // Mod Name
             packet.WriteString(ticket.Issue); // Issue

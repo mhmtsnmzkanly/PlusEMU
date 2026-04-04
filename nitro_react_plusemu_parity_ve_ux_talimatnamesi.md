@@ -85,6 +85,7 @@ Bu liste 3 kategoriye ayrilir:
   - help tool acilisi artik moderation topic tree'yi `CfhTopicsInitComposer` ile gonderiyor
   - kullanicinin acik bir ticket'i varsa help tool acilisinda gorunur pending-request notification donuyor
   - moderation ticket olusturma artik oda-zorunlu degil; roomless / non-user-scoped modern report varyantlari server tarafinda dusmeden kaydolabiliyor
+  - reported user offline olsa bile ticket snapshot'i moderator UI'da hedef id/username bilgisini koruyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
