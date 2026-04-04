@@ -339,8 +339,8 @@ public static class ClientPacketHeader
     public const uint RenderRoomThumbnailEvent = 1982; // inferred from Arcturus camera room thumbnail mapping
 
     //campaign
-    public const uint OpenCampaignCalendarDoorAsStaffEvent = 1275; // mapped to existing ForceOpenCalendarBoxEvent
-    public const uint OpenCampaignCalendarDoorEvent = 1229; // mapped to existing OpenCalendarBoxEvent
+    //public const uint OpenCampaignCalendarDoorAsStaffEvent = 1275; // mapped to existing ForceOpenCalendarBoxEvent
+    //public const uint OpenCampaignCalendarDoorEvent = 1229; // mapped to existing OpenCalendarBoxEvent
 
     //catalog
     //public const uint GetBonusRareInfoEvent =;

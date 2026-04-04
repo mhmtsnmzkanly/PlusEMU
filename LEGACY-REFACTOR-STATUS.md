@@ -413,4 +413,7 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - even the per-user iteration is now behind a helper too, leaving `OnCycle` close to a pure phase orchestrator and making any later service extraction much more mechanical
 - `ITargetedOfferManager` and `ITargetedOfferService` are now joining the explicit startup probe list in `Program`, ensuring their DI registration and `IStartable` initialization are verified before the listener starts
 - `TargetedOfferService` now includes targeted purchase telemetry logging so catalog purchase-state transitions are observable without requiring raw database reads during live testing
-- fixed a critical startup crash in `RevisionsCache` caused by a duplicate packet ID (3226) defined for both `GetCatalogIndexEvent` and `RenderRoomEvent` in `ClientPacketHeader`
+- fixed critical startup crashes in `RevisionsCache` caused by duplicate packet IDs in `ClientPacketHeader`:
+    *   Resolved çakışma for ID 3226 (GetCatalogIndexEvent vs RenderRoomEvent) by changing RenderRoomEvent to 3227.
+    *   Resolved çakışma for ID 1275 (ForceOpenCalendarBoxEvent vs OpenCampaignCalendarDoorAsStaffEvent) by commenting out the duplicate staff event.
+    *   Resolved çakışma for ID 1229 (OpenCalendarBoxEvent vs OpenCampaignCalendarDoorEvent) by commenting out the duplicate campaign event.
