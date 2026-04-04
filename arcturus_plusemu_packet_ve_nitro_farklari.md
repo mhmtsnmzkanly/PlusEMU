@@ -53,6 +53,13 @@ Burada yorum satirinda duran veya sonradan tamamlanacak packetler var:
 - `SetTargetedOfferStateEvent`
 - `ShopTargetedOfferViewedEvent`
 
+Camera tarafinda ise ilk parity katmani artik mevcut:
+- [CameraService.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Camera/CameraService.cs)
+- [CameraPriceComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Camera/CameraPriceComposer.cs)
+- [CameraURLComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Camera/CameraURLComposer.cs)
+- [CameraPublishWaitMessageComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Camera/CameraPublishWaitMessageComposer.cs)
+- `PhotoCompetitionEvent` halen backlog durumunda
+
 ## Somut Nitro Durumlari
 
 ### Sanction Status

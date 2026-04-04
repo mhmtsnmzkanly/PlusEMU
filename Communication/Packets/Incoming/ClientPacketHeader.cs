@@ -318,12 +318,12 @@ public static class ClientPacketHeader
     //NotImplemented
 
     //Camera
-    //public const uint InitCameraEvent =;
+    public const uint InitCameraEvent = 796; // inferred from Arcturus request camera configuration mapping
     //public const uint PhotoCompetitionEvent =;
-    //public const uint PublishPhotoEvent =;
-    //public const uint PurchasePhotoEvent =;
-    //public const uint RenderRoomEvent =;
-    //public const uint RenderRoomThumbnailEvent =;
+    public const uint PublishPhotoEvent = 2068; // inferred from Arcturus camera publish mapping
+    public const uint PurchasePhotoEvent = 2408; // inferred from Arcturus camera purchase mapping
+    public const uint RenderRoomEvent = 3226; // inferred from Arcturus camera room picture mapping
+    public const uint RenderRoomThumbnailEvent = 1982; // inferred from Arcturus camera room thumbnail mapping
 
     //campaign
     public const uint OpenCampaignCalendarDoorAsStaffEvent = 1275; // mapped to existing ForceOpenCalendarBoxEvent

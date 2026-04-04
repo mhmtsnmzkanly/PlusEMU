@@ -134,6 +134,11 @@ public class Habbo
     public bool SessionClothingBlocked { get; set; }
 
     public Calendar.CalendarComponent? Calendar { get; set; }
+    public string CameraPhotoUrl { get; set; } = string.Empty;
+    public string CameraPhotoJson { get; set; } = string.Empty;
+    public int CameraPhotoRoomId { get; set; }
+    public int CameraPhotoTimestamp { get; set; }
+    public int CameraPublishTimestamp { get; set; }
 
     public event EventHandler? Disconnected;
 

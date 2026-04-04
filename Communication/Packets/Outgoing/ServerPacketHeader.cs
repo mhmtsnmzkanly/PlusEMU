@@ -188,12 +188,14 @@ public static class ServerPacketHeader
     public const uint RoomInfoUpdatedComposer = 3743; //3833
     public const uint MessengerErrorComposer = 880; //915
     public const uint MarketplaceCanMakeOfferResultComposer = 2452; //1874
+    public const uint CameraRoomThumbnailSavedComposer = 3595; // inferred from Arcturus camera mapping
     public const uint GameAccountStatusComposer = 3750; //139
     public const uint GuestRoomSearchResultComposer = 1634; //43
     public const uint NewUserExperienceGiftOfferComposer = 2029; //1904
     public const uint TargetedOfferComposer = 119; // inferred from Arcturus target-offer mapping
     public const uint UpdateUsernameComposer = 3461; //3801
     public const uint VoucherRedeemOkComposer = 2809; //3432
+    public const uint CameraPublishWaitMessageComposer = 2057; // inferred from Arcturus camera mapping
     public const uint FigureSetIdsComposer = 1811; //3469
     public const uint StickyNoteComposer = 344; //2338
     public const uint UserRemoveComposer = 3839; //2841
@@ -201,6 +203,7 @@ public static class ServerPacketHeader
     public const uint DoorbellComposer = 2068; //162
 
     public const uint GiftWrappingConfigurationComposer = 766; //3348
+    public const uint CameraPriceComposer = 3878; // inferred from Arcturus camera mapping
     public const uint GetRelationshipsComposer = 112; //1589
     public const uint FriendNotificationComposer = 3024; //1211
     public const uint BadgeEditorPartsComposer = 2839; //2519
@@ -264,6 +267,7 @@ public static class ServerPacketHeader
     public const uint SanctionStatusComposer = 3525; //193
     public const uint GetYouTubeVideoComposer = 1022; //2374
     public const uint CheckPetNameComposer = 1760; //3019
+    public const uint CameraPurchaseSuccesfullComposer = 2783; // inferred from Arcturus camera mapping
     public const uint RespectPetNotificationComposer = 540; //3637
     public const uint EnforceCategoryUpdateComposer = 3714; //315
     public const uint CommunityGoalHallOfFameComposer = 2629; //690
@@ -279,6 +283,7 @@ public static class ServerPacketHeader
     public const uint GameAchievementListComposer = 2141; //1264
     public const uint PromotableRoomsComposer = 442; //2166
     public const uint FloorPlanSendDoorComposer = 1685; //2180
+    public const uint CameraURLComposer = 3696; // inferred from Arcturus camera mapping
     public const uint RoomEntryInfoComposer = 3675; //3378
     public const uint RoomNotificationComposer = 3152; //2419
     public const uint ClubGiftsComposer = 2992; //1549

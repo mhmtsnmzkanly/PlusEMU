@@ -2,6 +2,8 @@
 
 ### [Unreleased]
 #### Changed
+- Added the first camera parity slice: request/init, room render, thumbnail save, purchase, and publish handlers now run through a dedicated camera service instead of throwing, with inferred Nitro packet IDs and matching outgoing camera composers.
+- Added lightweight camera runtime state on `Habbo`, configurable camera pricing/item/url settings, and fallback persistence hooks for `camera_web`, while intentionally leaving full binary render ingestion and `PhotoCompetitionEvent` semantics for a later pass.
 - Added the first seasonal-calendar parity slice: login now sends calendar state through a dedicated composer, advent door open/staff-open handlers no longer throw, and claimed days persist back into `user_xmas15_calendar` when that legacy table exists.
 - Reused the existing Nitro calendar packet IDs by mapping `OpenCampaignCalendarDoorEvent` and `OpenCampaignCalendarDoorAsStaffEvent` onto the already-defined open/force-open calendar headers, while leaving exact daily-offer packet semantics explicitly pending live client verification.
 - Started the `Targeted Offer` parity path: added a DB-backed targeted-offer manager/service, a Nitro targeted-offer composer, purchase/state persistence against new `catalog_target_offers` and `users_target_offer_purchases` tables, and wired the login/request/purchase/state handlers away from `NotImplementedException`.

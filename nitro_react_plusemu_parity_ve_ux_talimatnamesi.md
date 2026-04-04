@@ -151,18 +151,21 @@ Bu liste 3 kategoriye ayrilir:
 - Oncelik: `Yuksek`
 
 ### 6. Camera Configuration ve Camera Response Surface
-- Durum: `Stub`
+- Durum: `Kismi`
 - Client tarafi:
   - `RequestCameraConfiguration`
   - camera init/result olaylari
 - Server tarafi:
-  - Camera incoming dosyalari var
-  - `InitCameraEvent` ve ilgili akislar tamamlanmamis
-  - camera outgoing composer seti gorunmuyor
+  - `InitCameraEvent`, `RenderRoomEvent`, `RenderRoomThumbnailEvent`, `PurchasePhotoEvent`, `PublishPhotoEvent` artik service-backed
+  - `CameraPriceComposer`, `CameraURLComposer`, `CameraRoomThumbnailSavedComposer`, `CameraPurchaseSuccesfullComposer`, `CameraPublishWaitMessageComposer` eklendi
+  - kullanici bazli gecici camera state artik `Habbo` uzerinde tutuluyor
+  - `camera_web` tablosu yoksa publish persistence guvenli sekilde pas geciliyor
+  - exact binary render payload isleme ve `PhotoCompetitionEvent` semantics halen eksik
 - Kullanici etkisi:
-  - Kamera acilisi veya publish flow kirik olabilir
+  - Kamera acilisi ve temel satin alma/publish akisi artik tamamen kirik degil
 - Teknik etkisi:
-  - Config response, publish/purchase/render result packet seti gerekir
+  - ilk config/render/purchase/publish parity katmani tamamlandi
+  - sonraki adim real renderer entegrasyonu ve competition/report surface
 - Oncelik: `Yuksek`
 
 ### 7. Rentable Bot Command Configuration
