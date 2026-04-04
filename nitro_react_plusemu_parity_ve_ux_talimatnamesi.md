@@ -177,6 +177,7 @@ Bu liste 3 kategoriye ayrilir:
   - `GetHabboClubWindowEvent` artik service-backed ve `ClubCenterDataComposer` gonderiyor
   - `GetClubGiftInfoEvent` artik parametrik `ClubGiftsComposer` gonderiyor
   - club gifts icin eski hardcoded junk payload kaldirildi
+  - active ama dusuk degerli bazi catalog/club probe packet'leri artik exception atmiyor; `GetHabboClubExtendOfferEvent`, `GetHabboBasicMembershipExtendOfferEvent`, `GetDirectClubBuyAvailableEvent` gibi lookup surface'ler guvenli no-op olarak tolere ediliyor
   - kickback/payday sayilari su an mevcut subscription/account state'ten turetilmis fallback degerler
   - exact Nitro HC center economics ve `ScrGetKickbackInfo` / `ScrSendKickbackInfo` semantics halen canli dogrulama istiyor
 - Kullanici etkisi:
