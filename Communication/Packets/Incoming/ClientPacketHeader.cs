@@ -342,14 +342,14 @@ public static class ClientPacketHeader
     //public const uint GetLimitedOfferAppearingNextEvent =;
     //public const uint GetHabboClubExtendOfferEvent =;
     //public const uint GetIsOfferGiftableEvent =;
-    //public const uint GetNextTargetedOfferEvent =;
+    public const uint GetNextTargetedOfferEvent = 2487; // inferred from Arcturus target-offer mapping
     //public const uint GetSeasonalCalendarDailyOfferEvent =;
     //public const uint MarkCatalogNewAdditionsPageOpenedEvent =;
     //public const uint PurchaseBasicMembershipExtensionEvent =;
-    //public const uint PurchaseTargetedOfferEvent =;
+    public const uint PurchaseTargetedOfferEvent = 1826; // inferred from Arcturus target-offer mapping
     //public const uint PurchaseVipMembershipExtensionEvent =;
     //public const uint SelectClubGiftEvent =;
-    //public const uint SetTargetedOfferStateEvent =;
+    public const uint SetTargetedOfferStateEvent = 2041; // inferred from Arcturus target-offer mapping
     //public const uint ShopTargetedOfferViewedEvent =;
 
 

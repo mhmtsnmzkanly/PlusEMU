@@ -191,6 +191,7 @@ public static class ServerPacketHeader
     public const uint GameAccountStatusComposer = 3750; //139
     public const uint GuestRoomSearchResultComposer = 1634; //43
     public const uint NewUserExperienceGiftOfferComposer = 2029; //1904
+    public const uint TargetedOfferComposer = 119; // inferred from Arcturus target-offer mapping
     public const uint UpdateUsernameComposer = 3461; //3801
     public const uint VoucherRedeemOkComposer = 2809; //3432
     public const uint FigureSetIdsComposer = 1811; //3469

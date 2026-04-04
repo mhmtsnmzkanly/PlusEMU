@@ -93,6 +93,7 @@ public class Habbo
     public PermissionComponent? Permissions { get; set; }
     public GameClient? Client { get; set; }
     public NavigatorPreferences? NavigatorPreferences { get; set; }
+    public ConcurrentDictionary<int, Catalog.TargetedOfferPurchaseState> TargetedOfferPurchases { get; set; } = new();
 
     public ConcurrentDictionary<string, UserAchievement> Achievements = new();
     public ArrayList FavoriteRooms = new();

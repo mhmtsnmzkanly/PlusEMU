@@ -2,6 +2,9 @@
 
 ### [Unreleased]
 #### Changed
+- Started the `Targeted Offer` parity path: added a DB-backed targeted-offer manager/service, a Nitro targeted-offer composer, purchase/state persistence against new `catalog_target_offers` and `users_target_offer_purchases` tables, and wired the login/request/purchase/state handlers away from `NotImplementedException`.
+- Documented and shipped the first SQL migration for targeted offers in `Resources/SQLs/Updates/14_AddTargetedOfferTables.sql`, including the server setting hook `hotel.targetoffer.id` for selecting the active offer.
+- Enabled the first inferred packet registrations for targeted offers using Arcturus-compatible IDs (`GetNextTargetedOfferEvent`, `PurchaseTargetedOfferEvent`, `SetTargetedOfferStateEvent`, `TargetedOfferComposer`) while keeping this mapping explicitly marked as needing live Nitro confirmation for the 2017 revision.
 - Started the Nitro parity backlog by wiring `GetSanctionStatusEvent` to a real moderation-backed response path, replacing the old no-op/stub help sanction status flow with a populated composer sourced from mute, trade-lock, caution, and active-ban state.
 - Restored lazy `room_models` loading in `RoomManager`, so custom room models can be resolved on demand again instead of only working when they were already preloaded into the in-memory model cache.
 - Restored the original doorbell-room entry behavior in `RoomService`, so locked rooms now ring when any occupant is present instead of incorrectly requiring an in-room user with rank `>= 2`.

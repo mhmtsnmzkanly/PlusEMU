@@ -96,19 +96,25 @@ Bu liste 3 kategoriye ayrilir:
 - Oncelik: `Kritik`
 
 ### 4. Targeted Offer
-- Durum: `Stub`
+- Durum: `Kismi`
 - Client tarafi:
   - Offer fetch
   - Offer show
   - Purchase
   - Viewed/state update
 - Server tarafi:
-  - `GetNextTargetedOfferEvent`, `PurchaseTargetedOfferEvent`, `SetTargetedOfferStateEvent`, `ShopTargetedOfferViewedEvent` dosyalari var
-  - Handler'lar `NotImplementedException`
+  - `GetNextTargetedOfferEvent`, `PurchaseTargetedOfferEvent`, `SetTargetedOfferStateEvent`, `ShopTargetedOfferViewedEvent` artik service-backed
+  - `TargetedOfferManager`, `TargetedOfferService`, `TargetedOfferComposer` ve SQL tablo yolu eklendi
+  - Login sirasinda aktif teklif push ediliyor
+  - Offer state ve purchase sayaci `users_target_offer_purchases` uzerinden saklaniyor
+  - `catalog_target_offers` tablosu eksikse akis guvenli sekilde pas geciliyor
+  - `ShopTargetedOfferViewedEvent` handler'i var fakat exact client payload semantics hala canli dogrulama istiyor
+  - Packet ID'leri Arcturus mapping'inden turetildi; `PRODUCTION-201701242205-837386173` icin canli dogrulama hala gerekli
 - Kullanici etkisi:
-  - Hedefli teklif UI acilir ama islevsiz kalir
+  - Hedefli teklif UI artik tamamen bos/stub degil
 - Teknik etkisi:
-  - Offer state modeli, persistence, eligibility ve outgoing packet gerekir
+  - Ilk parity katmani tamamlandi
+  - Sonraki adim exact packet mapping ve viewed payload semantics dogrulamasidir
 - Oncelik: `Kritik`
 
 ### 5. HC Kickback / HC Center

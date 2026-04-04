@@ -14,6 +14,7 @@ using Plus.Core.Settings;
 using Plus.HabboHotel.Achievements;
 using Plus.HabboHotel.Badges;
 using Plus.HabboHotel.Cache;
+using Plus.HabboHotel.Catalog;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Moderation;
 using Plus.HabboHotel.Permissions;
@@ -39,6 +40,7 @@ public class SsoTicketEvent : IPacketEvent
     private readonly ILanguageManager _languageManager;
     private readonly ISettingsManager _settingsManager;
     private readonly IRewardManager _rewardManager;
+    private readonly ITargetedOfferService _targetedOfferService;
     private readonly IHabboRuntimeInitializer _habboRuntimeInitializer;
     private readonly ILogger<SsoTicketEvent> _logger;
 
@@ -53,6 +55,7 @@ public class SsoTicketEvent : IPacketEvent
         ILanguageManager languageManager,
         ISettingsManager settingsManager,
         IRewardManager rewardManager,
+        ITargetedOfferService targetedOfferService,
         IHabboRuntimeInitializer habboRuntimeInitializer,
         ILogger<SsoTicketEvent> logger)
     {
@@ -67,6 +70,7 @@ public class SsoTicketEvent : IPacketEvent
         _languageManager = languageManager;
         _settingsManager = settingsManager;
         _rewardManager = rewardManager;
+        _targetedOfferService = targetedOfferService;
         _habboRuntimeInitializer = habboRuntimeInitializer;
         _logger = logger;
     }
@@ -138,6 +142,7 @@ public class SsoTicketEvent : IPacketEvent
             }
             if (_settingsManager.GetBoolOrDefault("user.login.message.enabled", false))
                 session.Send(new MotdNotificationComposer(_languageManager.Require("user.login.message")));
+            await _targetedOfferService.SendCurrentOffer(session);
             await _rewardManager.CheckRewards(session);
         }
     }
