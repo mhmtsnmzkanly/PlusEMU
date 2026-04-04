@@ -97,6 +97,7 @@ Bu liste 3 kategoriye ayrilir:
   - room-scoped report'larda explicit hedef user yoksa oda sahibi snapshot'i reported target olarak tasiniyor
   - moderator queue issue etiketi artik topic `default_sanction` ipucunu da tasiyor
   - moderation topic `type=guardians` ise ve hedef kullanici online ise submit-time guardian queue routing artik mevcut
+  - moderator queue issue etiketi artik ticket type context'ini de tasiyor; roomless ticket chatlog request'i sessiz dusmek yerine gorunur hata veriyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut

@@ -12,7 +12,11 @@ internal class ModerationTicketService : IModerationTicketService
 {
     private const int TicketTypeNormal = 1;
     private const int TicketTypeNormalUnknown = 2;
+    private const int TicketTypeGuideSystem = 5;
+    private const int TicketTypeIm = 6;
     private const int TicketTypeRoom = 7;
+    private const int TicketTypeDiscussion = 11;
+    private const int TicketTypePhoto = 14;
 
     private readonly IModerationManager _moderationManager;
     private readonly IGameClientManager _clientManager;
@@ -94,8 +98,8 @@ internal class ModerationTicketService : IModerationTicketService
             return;
         }
 
-        var issueText = BuildTicketIssue(message, category);
         var ticketType = NormalizeTicketType(type, effectiveReportedUserId, currentRoom != null);
+        var issueText = BuildTicketIssue(message, category, ticketType);
 
         var ticket = new ModerationTicket(
             1,
@@ -268,7 +272,7 @@ internal class ModerationTicketService : IModerationTicketService
         return normalized;
     }
 
-    private string BuildTicketIssue(string message, int category)
+    private string BuildTicketIssue(string message, int category, int ticketType)
     {
         var trimmed = StringCharFilter.Escape((message ?? string.Empty).Trim());
         if (!_moderationManager.TryGetTopicCaption(category, out var caption) || string.IsNullOrWhiteSpace(caption))
@@ -279,6 +283,10 @@ internal class ModerationTicketService : IModerationTicketService
             && action != null
             && !string.IsNullOrWhiteSpace(action.DefaultSanction))
             label = $"{caption} | {action.DefaultSanction}";
+
+        var typeLabel = GetTicketTypeLabel(ticketType);
+        if (!string.IsNullOrWhiteSpace(typeLabel))
+            label = $"{typeLabel} | {label}";
 
         return string.IsNullOrWhiteSpace(trimmed)
             ? $"[{label}]"
@@ -295,4 +303,17 @@ internal class ModerationTicketService : IModerationTicketService
 
         return TicketTypeNormal;
     }
+
+    private static string GetTicketTypeLabel(int ticketType) =>
+        ticketType switch
+        {
+            TicketTypeNormal => "USER",
+            TicketTypeNormalUnknown => "UNKNOWN",
+            TicketTypeGuideSystem => "GUIDE",
+            TicketTypeIm => "IM",
+            TicketTypeRoom => "ROOM",
+            TicketTypeDiscussion => "DISCUSSION",
+            TicketTypePhoto => "PHOTO",
+            _ => string.Empty
+        };
 }

@@ -142,7 +142,10 @@ public class ModerationQueryService : IModerationQueryService
             return;
 
         if (ticket == null || ticket.Room == null)
+        {
+            session.SendNotification("No room chatlog is available for this help request.");
             return;
+        }
 
         session.Send(new ModeratorTicketChatlogComposer(ticket, ticket.Room, ticket.Timestamp));
     }
