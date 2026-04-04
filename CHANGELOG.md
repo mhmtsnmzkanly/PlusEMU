@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Added the first Help/CFH action-type routing: moderation topics configured as `auto_reply` now short-circuit to their configured reply text without opening a moderator ticket, matching the existing non-emergency moderation-topic intent more closely.
 - Made Help/CFH submit acknowledgements topic-aware by reading the moderation topic action metadata, so support requests now reuse configured `message_text` replies when the selected moderation topic provides one.
 - Added a visible submit confirmation for modern Help/CFH tickets, so successful support requests now acknowledge receipt to the reporting user instead of only updating the moderator tool.
 - Preserved reported-user snapshots on moderation tickets, so Help/CFH reports keep the target user id/name visible in moderator views and ticket chatlogs even when the reported user is offline by the time moderators inspect the case.

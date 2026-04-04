@@ -36,11 +36,19 @@ internal class ModerationTicketService : IModerationTicketService
         if (habbo == null)
             return;
 
+        _moderationManager.TryGetTopicAction(category, out var topicAction);
+
         if (_moderationManager.UserHasTickets(habbo.Id)
             && _moderationManager.TryGetTicketBySenderId(habbo.Id, out var pendingTicket)
             && pendingTicket != null)
         {
             TrySendPendingTicketNotification(session);
+            return;
+        }
+
+        if (IsAutoReplyTopic(topicAction))
+        {
+            session.SendNotification(GetSubmitAcknowledgement(category, topicAction));
             return;
         }
 
@@ -81,7 +89,7 @@ internal class ModerationTicketService : IModerationTicketService
             "UPDATE `user_info` SET `cfhs` = `cfhs` + 1 WHERE `user_id` = @userId LIMIT 1",
             new { userId = habbo.Id });
 
-        session.SendNotification(GetSubmitAcknowledgement(category));
+        session.SendNotification(GetSubmitAcknowledgement(category, topicAction));
         _clientManager.ModAlert("A new support ticket has been submitted!");
         _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
     }
@@ -173,13 +181,17 @@ internal class ModerationTicketService : IModerationTicketService
             session.SendNotification("You already have a pending help request.");
     }
 
-    private string GetSubmitAcknowledgement(int category)
+    private string GetSubmitAcknowledgement(int category, ModerationPresetActions? action = null)
     {
-        if (_moderationManager.TryGetTopicAction(category, out var action)
-            && action != null
-            && !string.IsNullOrWhiteSpace(action.MessageText))
+        if (action == null)
+            _moderationManager.TryGetTopicAction(category, out action);
+
+        if (action != null && !string.IsNullOrWhiteSpace(action.MessageText))
             return action.MessageText;
 
         return "Your help request has been submitted.";
     }
+
+    private static bool IsAutoReplyTopic(ModerationPresetActions? action) =>
+        action != null && string.Equals(action.Type, "auto_reply", StringComparison.OrdinalIgnoreCase);
 }
