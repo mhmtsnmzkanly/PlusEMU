@@ -335,7 +335,7 @@ public static class ClientPacketHeader
     //public const uint PhotoCompetitionEvent =;
     public const uint PublishPhotoEvent = 2068; // inferred from Arcturus camera publish mapping
     public const uint PurchasePhotoEvent = 2408; // inferred from Arcturus camera purchase mapping
-    public const uint RenderRoomEvent = 3226; // inferred from Arcturus camera room picture mapping
+    public const uint RenderRoomEvent = 3227; // inferred from Arcturus camera room picture mapping
     public const uint RenderRoomThumbnailEvent = 1982; // inferred from Arcturus camera room thumbnail mapping
 
     //campaign

@@ -413,3 +413,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
 - even the per-user iteration is now behind a helper too, leaving `OnCycle` close to a pure phase orchestrator and making any later service extraction much more mechanical
 - `ITargetedOfferManager` and `ITargetedOfferService` are now joining the explicit startup probe list in `Program`, ensuring their DI registration and `IStartable` initialization are verified before the listener starts
 - `TargetedOfferService` now includes targeted purchase telemetry logging so catalog purchase-state transitions are observable without requiring raw database reads during live testing
+- fixed a critical startup crash in `RevisionsCache` caused by a duplicate packet ID (3226) defined for both `GetCatalogIndexEvent` and `RenderRoomEvent` in `ClientPacketHeader`
