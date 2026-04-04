@@ -56,7 +56,6 @@ Tamamlanan ilk dilim:
 
 Kalan ana bosluk:
 - richer guardian lifecycle, timeout ve resend mantigi
-- guide room invite / requester room surface
 - typing / playing gibi yan session packetleri
 
 Arcturus'ta guardian sistemi ve scheduler izleri var:

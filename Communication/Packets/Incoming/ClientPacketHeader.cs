@@ -74,6 +74,8 @@ public static class ClientPacketHeader
     public const uint GuideUserMessageEvent = 3899; // inferred from Arcturus guide mapping
     public const uint GuideCancelHelpRequestEvent = 291; // inferred from Arcturus guide mapping
     public const uint GuideHandleHelpRequestEvent = 1424; // inferred from Arcturus guide mapping
+    public const uint GuideVisitUserEvent = 1052; // inferred from Arcturus guide mapping
+    public const uint GuideInviteUserEvent = 234; // inferred from Arcturus guide mapping
     public const uint GuideCloseHelpRequestEvent = 887; // inferred from Arcturus guide mapping
     public const uint GuardianNoUpdatesWantedEvent = 2501; // inferred from Arcturus guardian mapping
     public const uint GuardianVoteEvent = 3961; // inferred from Arcturus guardian mapping

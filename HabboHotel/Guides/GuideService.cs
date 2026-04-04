@@ -199,6 +199,54 @@ internal sealed class GuideService : IGuideService
         return Task.CompletedTask;
     }
 
+    public Task SendRequesterRoom(GameClient session)
+    {
+        var habbo = session.GetHabboOrNull();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        lock (_sync)
+        {
+            PruneLocked();
+
+            if (!_sessionsByUserId.TryGetValue(habbo.Id, out var guideSession) || guideSession.HelperId != habbo.Id)
+                return Task.CompletedTask;
+
+            if (!TryGetClientLocked(guideSession.RequesterId, out var requesterClient))
+                return Task.CompletedTask;
+
+            requesterClient.GetHabbo().TryGetCurrentRoom(out var requesterRoom);
+            session.Send(new GuideSessionRequesterRoomComposer(requesterRoom));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task InviteRequesterToRoom(GameClient session)
+    {
+        var habbo = session.GetHabboOrNull();
+        if (habbo == null)
+            return Task.CompletedTask;
+
+        lock (_sync)
+        {
+            PruneLocked();
+
+            if (!_sessionsByUserId.TryGetValue(habbo.Id, out var guideSession) || guideSession.HelperId != habbo.Id)
+                return Task.CompletedTask;
+
+            if (!TryGetClientLocked(guideSession.RequesterId, out var requesterClient))
+                return Task.CompletedTask;
+
+            habbo.TryGetCurrentRoom(out var helperRoom);
+            var packet = new GuideSessionInvitedToGuideRoomComposer(helperRoom);
+            requesterClient.Send(packet);
+            session.Send(packet);
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task CancelRequest(GameClient session)
     {
         var habbo = session.GetHabboOrNull();

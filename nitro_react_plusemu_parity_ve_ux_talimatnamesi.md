@@ -56,13 +56,14 @@ Bu liste 3 kategoriye ayrilir:
   - Minimum `GuideSession*` packet/composer surface artik var
   - Duty state, request queue, accept/decline, chat relay ve close/report akisi service-backed
   - Guardian on-duty, bully report queue, accept ve vote surface'in ilk dilimi artik var
-  - Room invite ve typing/playing gibi yan packetler halen yok
+  - Requester room ve room invite surface artik var
+  - Typing/playing gibi yan packetler halen yok
 - Kullanici etkisi:
   - Guide Tool UI artik yalnizca bos acilmiyor; temel helper-request-session akisi calisiyor
   - Guardian review de artik tamamen bos degil, ama ileri seviye guardian durumlari halen eksik
 - Teknik etkisi:
   - Ilk service, queue ve transient session store eklendi
-  - Kalan is room invite, richer guardian lifecycle ve client-side yan sinyallerin tamamlanmasi
+  - Kalan is richer guardian lifecycle ve client-side yan sinyallerin tamamlanmasi
 - Oncelik: `Kritik`
 
 ### 2. Help / Modern Call For Help Akislari
