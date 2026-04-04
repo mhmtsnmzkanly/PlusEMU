@@ -2,6 +2,7 @@ using Dapper;
 using Plus.Communication.Packets.Outgoing.Moderation;
 using Plus.Database;
 using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Guides;
 using Plus.HabboHotel.Rooms;
 using Plus.Utilities;
 
@@ -15,15 +16,18 @@ internal class ModerationTicketService : IModerationTicketService
 
     private readonly IModerationManager _moderationManager;
     private readonly IGameClientManager _clientManager;
+    private readonly IGuardianService _guardianService;
     private readonly IDatabase _database;
 
     public ModerationTicketService(
         IModerationManager moderationManager,
         IGameClientManager clientManager,
+        IGuardianService guardianService,
         IDatabase database)
     {
         _moderationManager = moderationManager;
         _clientManager = clientManager;
+        _guardianService = guardianService;
         _database = database;
     }
 
@@ -76,6 +80,12 @@ internal class ModerationTicketService : IModerationTicketService
         {
             effectiveReportedUserId = currentRoom.OwnerId;
             reportedUsername = currentRoom.OwnerName;
+        }
+
+        if (IsGuardianTopic(topicAction) && reportedUser != null && await _guardianService.SubmitReport(session, reportedUser.Client))
+        {
+            session.SendNotification(GetSubmitAcknowledgement(category, topicAction));
+            return;
         }
 
         var issueText = BuildTicketIssue(message, category);
@@ -210,6 +220,9 @@ internal class ModerationTicketService : IModerationTicketService
 
     private static bool IsAutoReplyTopic(ModerationPresetActions? action) =>
         action != null && string.Equals(action.Type, "auto_reply", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsGuardianTopic(ModerationPresetActions? action) =>
+        action != null && string.Equals(action.Type, "guardians", StringComparison.OrdinalIgnoreCase);
 
     private static int GetTicketPriority(ModerationPresetActions? action) =>
         action != null && string.Equals(action.Type, "mods_till_logout", StringComparison.OrdinalIgnoreCase)
