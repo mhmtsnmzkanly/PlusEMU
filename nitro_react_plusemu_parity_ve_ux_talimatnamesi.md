@@ -136,18 +136,22 @@ Bu liste 3 kategoriye ayrilir:
 - Oncelik: `Kritik`
 
 ### 5. HC Kickback / HC Center
-- Durum: `Yok`
+- Durum: `Kismi`
 - Client tarafi:
   - `GetClubGiftInfo`
   - `ScrGetKickbackInfo`
   - `ScrSendKickbackInfo`
 - Server tarafi:
-  - Club gift parcasi var
-  - Kickback parcasi yok
+  - `GetHabboClubWindowEvent` artik service-backed ve `ClubCenterDataComposer` gonderiyor
+  - `GetClubGiftInfoEvent` artik parametrik `ClubGiftsComposer` gonderiyor
+  - club gifts icin eski hardcoded junk payload kaldirildi
+  - kickback/payday sayilari su an mevcut subscription/account state'ten turetilmis fallback degerler
+  - exact Nitro HC center economics ve `ScrGetKickbackInfo` / `ScrSendKickbackInfo` semantics halen canli dogrulama istiyor
 - Kullanici etkisi:
-  - HC center eksik bilgi veya bos alan gosterir
+  - HC center ve club gifts yuzeyi artik tamamen bos/no-op degil
 - Teknik etkisi:
-  - Subscription history / reward breakdown response lazim
+  - ilk club-center data ve club-gifts parity katmani tamamlandi
+  - sonraki adim exact kickback hesap mantigi ve gift claim/runtime akisi
 - Oncelik: `Yuksek`
 
 ### 6. Camera Configuration ve Camera Response Surface

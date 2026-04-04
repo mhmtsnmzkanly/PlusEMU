@@ -89,6 +89,18 @@ Durum:
 - satin alim/state persistence katmani var
 - packet ID map'i Arcturus'tan turetildi; exact Nitro 2017 revision dogrulamasi halen gerekli
 
+### HC Center / Club Gifts
+Bu alan artik ilk parity katmanina sahip:
+- [ClubCenterService.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Subscriptions/ClubCenterService.cs)
+- [ClubCenterDataComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Catalog/ClubCenterDataComposer.cs)
+- [ClubGiftsComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Catalog/ClubGiftsComposer.cs)
+
+Durum:
+- `GetHabboClubWindowEvent` artik no-op degil
+- `GetClubGiftInfoEvent` artik hardcoded junk payload yerine parametrik response donduruyor
+- kickback/payday rakamlari mevcut hesap/subscription state'ten turetiliyor
+- exact Nitro economics ve gift-claim flow halen tamamlanmis degil
+
 ### YouTube
 Bu repo YouTube packet yuzeyine sahip:
 - [GetYouTubeTelevisionEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Rooms/Furni/YouTubeTelevisions/GetYouTubeTelevisionEvent.cs)

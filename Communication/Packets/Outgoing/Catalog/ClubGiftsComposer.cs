@@ -1,45 +1,60 @@
-﻿using Plus.HabboHotel.GameClients;
+﻿using Plus.HabboHotel.Catalog;
+using Plus.HabboHotel.GameClients;
+using Plus.HabboHotel.Users.Inventory.Furniture;
 
 namespace Plus.Communication.Packets.Outgoing.Catalog;
 
-// TODO @80O: Implement
 public class ClubGiftsComposer : IServerPacket
 {
+    private readonly int _daysTillNextGift;
+    private readonly int _availableGifts;
+    private readonly int _daysAsHc;
+    private readonly IReadOnlyCollection<CatalogItem> _items;
+
     public uint MessageId => ServerPacketHeader.ClubGiftsComposer;
+
+    public ClubGiftsComposer(int daysTillNextGift, int availableGifts, int daysAsHc, IReadOnlyCollection<CatalogItem> items)
+    {
+        _daysTillNextGift = daysTillNextGift;
+        _availableGifts = availableGifts;
+        _daysAsHc = daysAsHc;
+        _items = items;
+    }
 
     public void Compose(IOutgoingPacket packet)
     {
-        packet.WriteInteger(0); //Days until next gift.
-        packet.WriteInteger(10); //Gifts available
-        packet.WriteInteger(1); //Count?
+        packet.WriteInteger(_daysTillNextGift);
+        packet.WriteInteger(_availableGifts);
+        packet.WriteInteger(_items.Count);
+        foreach (var item in _items)
         {
-            packet.WriteInteger(14689);
-            packet.WriteString("hc_arab_chair");
+            packet.WriteInteger(item.Id);
+            packet.WriteString(item.CatalogName ?? string.Empty);
             packet.WriteBoolean(false);
-            packet.WriteInteger(5);
-            packet.WriteInteger(0);
-            packet.WriteInteger(0);
+            packet.WriteInteger(item.CostCredits);
+            packet.WriteInteger(item.CostDiamonds > 0 ? item.CostDiamonds : item.CostPixels);
+            packet.WriteInteger(item.CostDiamonds > 0 ? 5 : 0);
             packet.WriteBoolean(true);
-            packet.WriteInteger(1); //Count for some reason
-            {
-                packet.WriteString("s");
-                packet.WriteInteger(6341);
-                packet.WriteString("");
-                packet.WriteInteger(1);
-                packet.WriteBoolean(false);
-            }
+            packet.WriteInteger(1);
+            packet.WriteString(item.Definition.Type.ToCharCode().ToLower());
+            packet.WriteInteger(item.Definition.SpriteId);
+            packet.WriteString(item.ExtraData ?? string.Empty);
+            packet.WriteInteger(item.Amount);
+            packet.WriteBoolean(item.IsLimited);
             packet.WriteInteger(0);
             packet.WriteBoolean(false);
-            packet.WriteBoolean(false); // TODO: Figure out
-            packet.WriteString(""); //previewImage -> e.g; catalogue/pet_lion.png
+            packet.WriteBoolean(false);
+            packet.WriteString(string.Empty);
         }
-        packet.WriteInteger(1); //Count
+        packet.WriteInteger(_items.Count);
+        foreach (var item in _items)
         {
-            //int, bool, int, bool
-            packet.WriteInteger(14689); //Maybe the item id?
-            packet.WriteBoolean(true); //Can we get?
-            packet.WriteInteger(-1); //idk
-            packet.WriteBoolean(true); //idk
+            var daysRequired = 0;
+            int.TryParse(item.ExtraData, out daysRequired);
+            packet.WriteInteger(item.Id);
+            packet.WriteBoolean(false);
+            packet.WriteInteger(daysRequired);
+            packet.WriteBoolean(daysRequired <= _daysAsHc);
         }
     }
 }

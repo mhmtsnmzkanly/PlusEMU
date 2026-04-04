@@ -190,6 +190,7 @@ public static class ServerPacketHeader
     public const uint MarketplaceCanMakeOfferResultComposer = 2452; //1874
     public const uint CameraRoomThumbnailSavedComposer = 3595; // inferred from Arcturus camera mapping
     public const uint GameAccountStatusComposer = 3750; //139
+    public const uint ClubDataComposer = 2405; // inferred from Arcturus club mapping
     public const uint GuestRoomSearchResultComposer = 1634; //43
     public const uint NewUserExperienceGiftOfferComposer = 2029; //1904
     public const uint TargetedOfferComposer = 119; // inferred from Arcturus target-offer mapping
@@ -284,6 +285,7 @@ public static class ServerPacketHeader
     public const uint PromotableRoomsComposer = 442; //2166
     public const uint FloorPlanSendDoorComposer = 1685; //2180
     public const uint CameraURLComposer = 3696; // inferred from Arcturus camera mapping
+    public const uint ClubCenterDataComposer = 3277; // inferred from Arcturus club-center mapping
     public const uint RoomEntryInfoComposer = 3675; //3378
     public const uint RoomNotificationComposer = 3152; //2419
     public const uint ClubGiftsComposer = 2992; //1549

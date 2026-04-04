@@ -2,6 +2,8 @@
 
 ### [Unreleased]
 #### Changed
+- Added the first HC Center / Club Gifts parity slice: `GetHabboClubWindowEvent` and `GetClubGiftInfoEvent` now resolve through a club-center service, club-center data has a real outgoing composer, and club-gifts responses no longer rely on the old junk hardcode payload.
+- Kept the kickback/payday metrics intentionally conservative for now by deriving fallback values from existing subscription/account state, with exact Nitro club-center economics still marked as a later verification step.
 - Added the first camera parity slice: request/init, room render, thumbnail save, purchase, and publish handlers now run through a dedicated camera service instead of throwing, with inferred Nitro packet IDs and matching outgoing camera composers.
 - Added lightweight camera runtime state on `Habbo`, configurable camera pricing/item/url settings, and fallback persistence hooks for `camera_web`, while intentionally leaving full binary render ingestion and `PhotoCompetitionEvent` semantics for a later pass.
 - Added the first seasonal-calendar parity slice: login now sends calendar state through a dedicated composer, advent door open/staff-open handlers no longer throw, and claimed days persist back into `user_xmas15_calendar` when that legacy table exists.
