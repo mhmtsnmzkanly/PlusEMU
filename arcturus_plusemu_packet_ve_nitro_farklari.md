@@ -61,11 +61,14 @@ Guide tarafinda ise ilk parity katmani artik mevcut:
 - [GuideSessionRequesterRoomComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Guides/GuideSessionRequesterRoomComposer.cs)
 - [GuideSessionInvitedToGuideRoomComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Guides/GuideSessionInvitedToGuideRoomComposer.cs)
 - [GuideSessionPartnerIsTypingComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Guides/GuideSessionPartnerIsTypingComposer.cs)
+- [GuideSessionPartnerIsPlayingComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Guides/GuideSessionPartnerIsPlayingComposer.cs)
 - [RequestGuideToolEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/RequestGuideToolEvent.cs)
 - [RequestGuideAssistanceEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/RequestGuideAssistanceEvent.cs)
 - [GuideVisitUserEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/GuideVisitUserEvent.cs)
 - [GuideInviteUserEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/GuideInviteUserEvent.cs)
 - [GuideUserTypingEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/GuideUserTypingEvent.cs)
+- [JoinQueueEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Game/Lobby/JoinQueueEvent.cs)
+- [Game2ExitGameEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Game/Arena/Game2ExitGameEvent.cs)
 
 Guardian tarafinda da ilk parity katmani artik mevcut:
 - [GuardianService.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Guides/GuardianService.cs)
@@ -75,7 +78,7 @@ Guardian tarafinda da ilk parity katmani artik mevcut:
 - [GuardianVoteEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/GuardianVoteEvent.cs)
 - bu ilk dilim mevcut `SubmitBullyReportEvent` akisini guardian queue ile baglar, guardian yoksa moderation fallback devam eder
 - accept-timeout, bounded resend ve under-voted moderation fallback artik mevcut
-- `playing` runtime sinyali ve daha zengin guardian sonuc UX'i halen backlog durumunda
+- daha zengin guardian sonuc UX'i halen backlog durumunda
 
 Camera tarafinda ise ilk parity katmani artik mevcut:
 - [CameraService.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Camera/CameraService.cs)

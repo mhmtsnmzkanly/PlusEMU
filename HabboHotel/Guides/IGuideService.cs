@@ -12,6 +12,7 @@ public interface IGuideService
     Task HandleRequest(GameClient session, bool accepted);
     Task SendSessionMessage(GameClient session, string message);
     Task SetTyping(GameClient session, bool typing);
+    Task SetPlaying(GameClient session, bool isPlaying);
     Task SendRequesterRoom(GameClient session);
     Task InviteRequesterToRoom(GameClient session);
     Task CancelRequest(GameClient session);

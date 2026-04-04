@@ -59,7 +59,7 @@ Bu liste 3 kategoriye ayrilir:
   - Guardian timeout/resend ve moderation fallback mantiginin ilk dilimi artik var
   - Requester room ve room invite surface artik var
   - Typing surface artik var
-  - Playing runtime sinyali halen eksik
+  - Playing runtime sinyalinin ilk dilimi artik var
 - Kullanici etkisi:
   - Guide Tool UI artik yalnizca bos acilmiyor; temel helper-request-session akisi calisiyor
   - Guardian review de artik tamamen bos degil, ama ileri seviye guardian durumlari halen eksik

@@ -2,22 +2,25 @@
 using Plus.Communication.Packets.Outgoing.Game;
 using Plus.HabboHotel.GameClients;
 using Plus.HabboHotel.Games;
+using Plus.HabboHotel.Guides;
 
 namespace Plus.Communication.Packets.Incoming.Game.Lobby;
 
 internal class JoinQueueEvent : IPacketEvent
 {
     private readonly IGameDataManager _gameDataManager;
+    private readonly IGuideService _guideService;
 
-    public JoinQueueEvent(IGameDataManager gameDataManager)
+    public JoinQueueEvent(IGameDataManager gameDataManager, IGuideService guideService)
     {
         _gameDataManager = gameDataManager;
+        _guideService = guideService;
     }
-    public Task Parse(GameClient session, IIncomingPacket packet)
+    public async Task Parse(GameClient session, IIncomingPacket packet)
     {
         var habbo = session.GetHabbo();
         if (habbo == null)
-            return Task.CompletedTask;
+            return;
 
         var gameId = packet.ReadInt();
         if (_gameDataManager.TryGetGame(gameId, out var gameData) && gameData != null)
@@ -25,8 +28,8 @@ internal class JoinQueueEvent : IPacketEvent
             var ssoTicket = $"HABBOON-Fastfood-{GenerateSso(32)}-{habbo.Id}";
             session.Send(new JoinQueueComposer(gameData.Id));
             session.Send(new LoadGameComposer(gameData, ssoTicket));
+            await _guideService.SetPlaying(session, true);
         }
-        return Task.CompletedTask;
     }
 
     private string GenerateSso(int length)

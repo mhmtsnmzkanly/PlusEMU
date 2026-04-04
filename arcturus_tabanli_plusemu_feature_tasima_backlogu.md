@@ -56,7 +56,6 @@ Tamamlanan ilk dilim:
 
 Kalan ana bosluk:
 - richer guardian sonuc UX'i
-- playing gibi kalan yan session sinyalleri
 
 Arcturus'ta guardian sistemi ve scheduler izleri var:
 - [GuardianTicketFindMoreSlaves.java](/home/duldul/Belgeler/Arcturus-Community-master/src/main/java/com/eu/habbo/threading/runnables/GuardianTicketFindMoreSlaves.java)
