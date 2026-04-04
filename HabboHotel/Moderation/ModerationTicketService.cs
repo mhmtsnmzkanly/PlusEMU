@@ -56,10 +56,13 @@ internal class ModerationTicketService : IModerationTicketService
             return;
         }
 
+        habbo.TryGetCurrentRoom(out var currentRoom);
+
         var reportedUser = reportedUserId > 0
             ? _clientManager.GetClientByUserId(reportedUserId)?.GetHabbo()
             : null;
         string? reportedUsername = null;
+        var effectiveReportedUserId = reportedUserId;
 
         if (reportedUserId > 0 && reportedUser == null)
         {
@@ -69,9 +72,14 @@ internal class ModerationTicketService : IModerationTicketService
                 new { userId = reportedUserId });
         }
 
-        habbo.TryGetCurrentRoom(out var currentRoom);
+        if (effectiveReportedUserId <= 0 && currentRoom != null)
+        {
+            effectiveReportedUserId = currentRoom.OwnerId;
+            reportedUsername = currentRoom.OwnerName;
+        }
+
         var issueText = BuildTicketIssue(message, category);
-        var ticketType = NormalizeTicketType(type, reportedUserId, currentRoom != null);
+        var ticketType = NormalizeTicketType(type, effectiveReportedUserId, currentRoom != null);
 
         var ticket = new ModerationTicket(
             1,
@@ -81,7 +89,7 @@ internal class ModerationTicketService : IModerationTicketService
             GetTicketPriority(topicAction),
             habbo,
             reportedUser,
-            reportedUserId,
+            effectiveReportedUserId,
             reportedUsername,
             issueText,
             currentRoom,

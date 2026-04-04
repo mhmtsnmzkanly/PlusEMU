@@ -94,6 +94,7 @@ Bu liste 3 kategoriye ayrilir:
   - acik pending ticket bildirimi artik issue ozetini de tasiyor
   - close sonucu da artik issue ozetiyle birlikte gorunur hale geliyor
   - ticket `type` degerleri artik legacy mod-tool enum'una daha yakin normalize ediliyor; guide raporlari `GUIDE_SYSTEM`, roomless/room-scoped fallback'ler daha tutarli
+  - room-scoped report'larda explicit hedef user yoksa oda sahibi snapshot'i reported target olarak tasiniyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut

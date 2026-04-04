@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Restored room-report target parity for Help/CFH tickets by binding room-scoped reports to the current room owner snapshot when no explicit reported user id is present, matching the older mod-tool expectation more closely.
 - Normalized moderation ticket type semantics against the legacy mod-tool enum: guide reports now open as `GUIDE_SYSTEM`, and Help/CFH submits with missing or unusable type values now fall back to context-aware room/user/unknown ticket types instead of forwarding raw junk into moderator views.
 - Improved Help/CFH close notifications by appending a short issue preview, so reporters can tell which request was resolved or rejected instead of only seeing a generic closure message.
 - Improved Help/CFH pending-request feedback by including a short issue preview in the existing pending-ticket notification, making already-open reports more recognizable without depending on the still-unverified pending-calls packet.
