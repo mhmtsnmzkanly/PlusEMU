@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Replaced the last currently-active crafting packet exceptions with safe no-op handlers for `GetCraftingRecipesAvailableEvent` and `CraftSecretEvent`, keeping those revision-mapped probes from crashing sessions until a real crafting domain is ported in.
 - Replaced the remaining advertisement packet exceptions with safe no-op handlers for `GetInterstitialMessageEvent` and `InterstitialShownEvent`, so those low-value client probes no longer tear down sessions while fuller ad-surface support remains intentionally absent.
 - Finished the remaining guide session playing hook: joining a game queue now notifies the guide-session partner that the user started playing, and `Game2ExitGameEvent` clears that state on exit instead of leaving the partner-playing signal unused.
 - Extended the guardian review foundation with timeout and resend lifecycle: unanswered guardian requests now expire, the service can reassign additional guardians up to a bounded limit, and under-voted cases now forward back into the existing moderation path instead of stalling indefinitely.
