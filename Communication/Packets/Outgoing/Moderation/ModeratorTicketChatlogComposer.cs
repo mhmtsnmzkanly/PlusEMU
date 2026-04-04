@@ -8,11 +8,11 @@ namespace Plus.Communication.Packets.Outgoing.Moderation;
 public class ModeratorTicketChatlogComposer : IServerPacket
 {
     private readonly ModerationTicket _ticket;
-    private readonly RoomData _roomData;
+    private readonly RoomData? _roomData;
     private readonly double _timestamp;
     public uint MessageId => ServerPacketHeader.ModeratorTicketChatlogComposer;
 
-    public ModeratorTicketChatlogComposer(ModerationTicket ticket, RoomData roomData, double timestamp)
+    public ModeratorTicketChatlogComposer(ModerationTicket ticket, RoomData? roomData, double timestamp)
     {
         _ticket = ticket;
         _roomData = roomData;
@@ -21,18 +21,21 @@ public class ModeratorTicketChatlogComposer : IServerPacket
 
     public void Compose(IOutgoingPacket packet)
     {
+        var roomId = _roomData?.Id ?? 0;
+        var roomName = _roomData?.Name ?? BuildFallbackRoomName(_ticket);
+
         packet.WriteInteger(_ticket.Id);
         packet.WriteInteger(_ticket.Sender?.Id ?? 0);
         packet.WriteInteger(_ticket.Reported?.Id ?? _ticket.ReportedUserId);
-        packet.WriteUInteger(_roomData.Id);
+        packet.WriteUInteger(roomId);
         packet.WriteByte(1);
         packet.WriteShort(2); //Count
         packet.WriteString("roomName");
         packet.WriteByte(2);
-        packet.WriteString(_roomData.Name);
+        packet.WriteString(roomName);
         packet.WriteString("roomId");
         packet.WriteByte(1);
-        packet.WriteUInteger(_roomData.Id);
+        packet.WriteUInteger(roomId);
         packet.WriteShort((short)_ticket.ReportedChats.Count);
         foreach (var chat in _ticket.ReportedChats)
         {
@@ -42,5 +45,21 @@ public class ModeratorTicketChatlogComposer : IServerPacket
             packet.WriteString(chat.Message);
             packet.WriteBoolean(false);
         }
+    }
+
+    private static string BuildFallbackRoomName(ModerationTicket ticket)
+    {
+        var typeLabel = ticket.Type switch
+        {
+            6 => "IM",
+            11 => "DISCUSSION",
+            14 => "PHOTO",
+            _ => "HELP"
+        };
+
+        var sender = ticket.Sender?.Username;
+        return string.IsNullOrWhiteSpace(sender)
+            ? $"{typeLabel} report context"
+            : $"{typeLabel} report from {sender}";
     }
 }

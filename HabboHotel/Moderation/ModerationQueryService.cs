@@ -141,9 +141,12 @@ public class ModerationQueryService : IModerationQueryService
         if (!_moderationManager.TryGetTicket(ticketId, out var ticket))
             return;
 
-        if (ticket == null || ticket.Room == null)
+        if (ticket == null)
+            return;
+
+        if (ticket.ReportedChats.Count == 0)
         {
-            session.SendNotification("No room chatlog is available for this help request.");
+            session.SendNotification("No chatlog is available for this help request.");
             return;
         }
 
