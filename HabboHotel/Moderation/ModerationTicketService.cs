@@ -81,6 +81,7 @@ internal class ModerationTicketService : IModerationTicketService
             "UPDATE `user_info` SET `cfhs` = `cfhs` + 1 WHERE `user_id` = @userId LIMIT 1",
             new { userId = habbo.Id });
 
+        session.SendNotification("Your help request has been submitted.");
         _clientManager.ModAlert("A new support ticket has been submitted!");
         _clientManager.SendPacket(new ModeratorSupportTicketComposer(habbo.Id, ticket), "mod_tool");
     }

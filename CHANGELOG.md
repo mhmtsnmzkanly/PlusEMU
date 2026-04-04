@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Added a visible submit confirmation for modern Help/CFH tickets, so successful support requests now acknowledge receipt to the reporting user instead of only updating the moderator tool.
 - Preserved reported-user snapshots on moderation tickets, so Help/CFH reports keep the target user id/name visible in moderator views and ticket chatlogs even when the reported user is offline by the time moderators inspect the case.
 - Relaxed moderation ticket creation for modern Help/CFH variants: support tickets no longer require the sender to still be inside a room, and tickets can now be created without an online reported-user object when the report surface is roomless or non-user-scoped.
 - Began wiring modern Help/CFH open-state parity: opening the help tool now pushes moderation CFH topics from the loaded moderation topic tree, and users with an already-open ticket get a safe pending-request notification instead of relying on the still-unverified `CallForHelpPendingCallsComposer` packet id.
