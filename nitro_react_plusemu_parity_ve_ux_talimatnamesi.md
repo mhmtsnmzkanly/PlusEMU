@@ -100,6 +100,7 @@ Bu liste 3 kategoriye ayrilir:
   - moderation topic `type=guardians` ise ve hedef kullanici online ise submit-time guardian queue routing artik mevcut
   - moderator queue issue etiketi artik ticket type context'ini de tasiyor; roomless ticket chatlog request'i artik tamamen dusmuyor, ticket icinde chat entry varsa sentetik report-context chatlog olarak gosterilebiliyor
   - mevcut `SubmitNewTicketEvent` surface'inde gelen reported-chat entry id'leri artik korunuyor; moderation ticket ve moderator chatlog ciktilari packet-level chat metadata'yi tamamen kaybetmiyor
+  - moderator tarafindaki `CloseIssueDefaultActionEvent` artik no-op degil; default-action close butonu mevcut close/result lifecycle'ina bagli
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut

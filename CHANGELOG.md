@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Wired the previously empty `CloseIssueDefaultActionEvent` into the existing moderation close flow, so the moderator default-action close packet no longer no-ops and now resolves tickets through the same result-aware close path as the explicit close event.
 - Opened moderator ticket chatlog parity for roomless Help/CFH cases too: tickets that carry reported chat entries but no room context now render through a synthetic report-context chatlog instead of failing outright, which keeps IM/photo/discussion-style reports inspectable before their dedicated incoming packet split exists.
 - Preserved raw Help/CFH reported-chat entry ids all the way from `SubmitNewTicketEvent` into moderation tickets and moderator chatlog output, so the current submit surface no longer discards packet-level chat entry metadata before the future room/IM/forum/photo report packet split lands.
 - Narrowed room-owner fallback to actual room-scoped Help/CFH tickets only, preventing future non-room contexts such as IM/forum/photo-style reports from inheriting the user's current room owner as a false reported target.
