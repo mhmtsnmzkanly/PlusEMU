@@ -13,6 +13,7 @@ public class SettingsManager : ISettingsManager
     [
         new("catalog.enabled", SettingsValueType.Bool, Owner: "Catalog"),
         new("hotel.targetoffer.id", SettingsValueType.Int, Min: 0, Owner: "Catalog"),
+        new("hotel.calendar.enabled", SettingsValueType.Bool, Owner: "Catalog"),
         new("catalog.group.purchase.cost", SettingsValueType.Int, Min: 0, Owner: "Groups"),
         new("group.delete.member.limit", SettingsValueType.Int, Min: 0, Owner: "Groups"),
         new("messenger.buddy_limit", SettingsValueType.Int, Min: 0, Owner: "Messenger"),

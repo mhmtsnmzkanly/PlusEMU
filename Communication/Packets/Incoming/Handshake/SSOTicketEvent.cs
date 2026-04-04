@@ -23,6 +23,7 @@ using Plus.HabboHotel.Subscriptions;
 using Plus.HabboHotel.Users.Authentication;
 using Plus.HabboHotel.Users.Messenger.FriendBar;
 using Plus.HabboHotel.Users;
+using Plus.HabboHotel.Users.Calendar;
 
 namespace Plus.Communication.Packets.Incoming.Handshake;
 
@@ -41,6 +42,7 @@ public class SsoTicketEvent : IPacketEvent
     private readonly ISettingsManager _settingsManager;
     private readonly IRewardManager _rewardManager;
     private readonly ITargetedOfferService _targetedOfferService;
+    private readonly ISeasonalCalendarService _seasonalCalendarService;
     private readonly IHabboRuntimeInitializer _habboRuntimeInitializer;
     private readonly ILogger<SsoTicketEvent> _logger;
 
@@ -56,6 +58,7 @@ public class SsoTicketEvent : IPacketEvent
         ISettingsManager settingsManager,
         IRewardManager rewardManager,
         ITargetedOfferService targetedOfferService,
+        ISeasonalCalendarService seasonalCalendarService,
         IHabboRuntimeInitializer habboRuntimeInitializer,
         ILogger<SsoTicketEvent> logger)
     {
@@ -71,6 +74,7 @@ public class SsoTicketEvent : IPacketEvent
         _settingsManager = settingsManager;
         _rewardManager = rewardManager;
         _targetedOfferService = targetedOfferService;
+        _seasonalCalendarService = seasonalCalendarService;
         _habboRuntimeInitializer = habboRuntimeInitializer;
         _logger = logger;
     }
@@ -142,6 +146,7 @@ public class SsoTicketEvent : IPacketEvent
             }
             if (_settingsManager.GetBoolOrDefault("user.login.message.enabled", false))
                 session.Send(new MotdNotificationComposer(_languageManager.Require("user.login.message")));
+            await _seasonalCalendarService.SendCalendarData(session);
             await _targetedOfferService.SendCurrentOffer(session);
             await _rewardManager.CheckRewards(session);
         }

@@ -95,6 +95,24 @@ Bu liste 3 kategoriye ayrilir:
   - Sonraki adimda Nitro client payload davranisi dogrulanip gerekirse field semantics daraltilacak
 - Oncelik: `Kritik`
 
+### 3.5 Seasonal Calendar
+- Durum: `Kismi`
+- Client tarafi:
+  - login calendar data surface
+  - day open / force open
+- Server tarafi:
+  - kullanici calendar state yukleniyor
+  - login sirasinda calendar data composer gonderiliyor
+  - `OpenCampaignCalendarDoorEvent` ve `OpenCampaignCalendarDoorAsStaffEvent` artik persistence ile calisiyor
+  - `user_xmas15_calendar` tablosu eksikse akis guvenli sekilde pas geciliyor
+  - exact daily-offer payload semantics halen canli dogrulama istiyor
+- Kullanici etkisi:
+  - advent/calendar UI artik tamamen kirik degil
+- Teknik etkisi:
+  - ilk state + open-door parity katmani tamamlandi
+  - sonraki adim gunluk reward/product payload ve campaign metadata surface
+- Oncelik: `Yuksek`
+
 ### 4. Targeted Offer
 - Durum: `Kismi`
 - Client tarafi:

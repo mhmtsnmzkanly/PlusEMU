@@ -94,11 +94,17 @@ Arcturus tarafinda buna ek scheduler taraflari da gorunuyor:
 ### Calendar
 PlusEMU tarafinda calendar user state izleri var:
 - [Habbo.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Users/Habbo.cs#L135)
+- [SeasonalCalendarService.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Users/Calendar/SeasonalCalendarService.cs)
+- [SeasonalCalendarDataComposer.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Outgoing/Campaign/SeasonalCalendarDataComposer.cs)
 
 Packet header tarafinda da calendar id'leri mevcut:
 - [ClientPacketHeader.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/ClientPacketHeader.cs#L259)
 
-Ancak bu alanin Nitro parity seviyesi Arcturus kadar net ve tam gorunmuyor.
+Guncel durum:
+- login sirasinda calendar state gonderiliyor
+- `OpenCampaignCalendarDoorEvent` ve staff varyanti artik persistence ile calisiyor
+- `user_xmas15_calendar` tablosu yoksa akis guvenli sekilde pas geciliyor
+- exact daily-offer response semantics ve tam reward surface halen Arcturus kadar olgun degil
 
 ### Forums
 PlusEMU packet basliklarinda forum yuzeyi var:

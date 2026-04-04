@@ -2,6 +2,8 @@
 
 ### [Unreleased]
 #### Changed
+- Added the first seasonal-calendar parity slice: login now sends calendar state through a dedicated composer, advent door open/staff-open handlers no longer throw, and claimed days persist back into `user_xmas15_calendar` when that legacy table exists.
+- Reused the existing Nitro calendar packet IDs by mapping `OpenCampaignCalendarDoorEvent` and `OpenCampaignCalendarDoorAsStaffEvent` onto the already-defined open/force-open calendar headers, while leaving exact daily-offer packet semantics explicitly pending live client verification.
 - Started the `Targeted Offer` parity path: added a DB-backed targeted-offer manager/service, a Nitro targeted-offer composer, purchase/state persistence against new `catalog_target_offers` and `users_target_offer_purchases` tables, and wired the login/request/purchase/state handlers away from `NotImplementedException`.
 - Documented and shipped the first SQL migration for targeted offers in `Resources/SQLs/Updates/14_AddTargetedOfferTables.sql`, including the server setting hook `hotel.targetoffer.id` for selecting the active offer.
 - Enabled the first inferred packet registrations for targeted offers using Arcturus-compatible IDs (`GetNextTargetedOfferEvent`, `PurchaseTargetedOfferEvent`, `SetTargetedOfferStateEvent`, `TargetedOfferComposer`) while keeping this mapping explicitly marked as needing live Nitro confirmation for the 2017 revision.
