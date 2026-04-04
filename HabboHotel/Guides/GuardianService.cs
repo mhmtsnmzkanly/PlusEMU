@@ -315,6 +315,7 @@ internal sealed class GuardianService : IGuardianService
         }
 
         _ticketsByReported.Remove(ticket.ReportedId);
+        NotifyReporter(ticket, GetReporterResolutionMessage(ticket.Verdict));
     }
 
     private void ForwardToModerationLocked(GuardianTicket ticket)
@@ -333,6 +334,7 @@ internal sealed class GuardianService : IGuardianService
         }
 
         _ticketsByReported.Remove(ticket.ReportedId);
+        NotifyReporter(ticket, "Your report needs moderator review and has been forwarded to the moderation team.");
 
         var reporterClient = _clientManager.GetClientByUserId(ticket.ReporterId);
         var reportedClient = _clientManager.GetClientByUserId(ticket.ReportedId);
@@ -360,6 +362,24 @@ internal sealed class GuardianService : IGuardianService
         client = _clientManager.GetClientByUserId(guardianId)!;
         return client?.GetHabboOrNull() != null;
     }
+
+    private void NotifyReporter(GuardianTicket ticket, string message)
+    {
+        var reporterClient = _clientManager.GetClientByUserId(ticket.ReporterId);
+        if (reporterClient?.GetHabboOrNull() == null)
+            return;
+
+        reporterClient.SendNotification(message);
+    }
+
+    private static string GetReporterResolutionMessage(GuardianVoteType? verdict) =>
+        verdict switch
+        {
+            GuardianVoteType.Acceptably => "Your report was reviewed and closed. The guardian team did not find enough evidence for action.",
+            GuardianVoteType.Badly => "Your report was reviewed by the guardian team and action has been recommended.",
+            GuardianVoteType.Awfully => "Your report was reviewed by the guardian team and escalated as severe misconduct.",
+            _ => "Your report was reviewed and closed by the guardian team."
+        };
 
     private static int GetCastVotesLocked(GuardianTicket ticket) =>
         ticket.Votes.Values.Count(v => v.Type is GuardianVoteType.Acceptably or GuardianVoteType.Badly or GuardianVoteType.Awfully);
