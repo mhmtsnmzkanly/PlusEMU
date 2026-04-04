@@ -95,6 +95,7 @@ Bu liste 3 kategoriye ayrilir:
   - close sonucu da artik issue ozetiyle birlikte gorunur hale geliyor
   - ticket `type` degerleri artik legacy mod-tool enum'una daha yakin normalize ediliyor; guide raporlari `GUIDE_SYSTEM`, roomless/room-scoped fallback'ler daha tutarli
   - room-scoped report'larda explicit hedef user yoksa oda sahibi snapshot'i reported target olarak tasiniyor
+  - bu room-owner fallback artik yalnizca gercek `ROOM` ticket tipine uygulanıyor; future IM/forum/photo context'lerine yanlis hedef sizmiyor
   - moderator queue issue etiketi artik topic `default_sanction` ipucunu da tasiyor
   - moderation topic `type=guardians` ise ve hedef kullanici online ise submit-time guardian queue routing artik mevcut
   - moderator queue issue etiketi artik ticket type context'ini de tasiyor; roomless ticket chatlog request'i sessiz dusmek yerine gorunur hata veriyor

@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Narrowed room-owner fallback to actual room-scoped Help/CFH tickets only, preventing future non-room contexts such as IM/forum/photo-style reports from inheriting the user's current room owner as a false reported target.
 - Added explicit type labels to Help/CFH ticket issue tags and made roomless ticket chatlog requests fail visibly, so moderator tooling now distinguishes user/room/guide/discussion/photo contexts more clearly and no longer drops non-room chatlog requests without feedback.
 - Added the first moderation-topic guardian bridge: Help/CFH topics configured as `guardians` now route into the existing guardian review queue when the reported user is currently online, and otherwise fall back to the normal moderation-ticket path.
 - Added moderation default-sanction hints to Help/CFH ticket issue labels, so moderator queues now surface the configured topic caption and suggested action together instead of hiding the sanction metadata inside the topic tables.

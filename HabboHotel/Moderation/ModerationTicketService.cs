@@ -71,6 +71,7 @@ internal class ModerationTicketService : IModerationTicketService
             : null;
         string? reportedUsername = null;
         var effectiveReportedUserId = reportedUserId;
+        var ticketType = NormalizeTicketType(type, effectiveReportedUserId, currentRoom != null);
 
         if (reportedUserId > 0 && reportedUser == null)
         {
@@ -80,7 +81,7 @@ internal class ModerationTicketService : IModerationTicketService
                 new { userId = reportedUserId });
         }
 
-        if (effectiveReportedUserId <= 0 && currentRoom != null)
+        if (effectiveReportedUserId <= 0 && currentRoom != null && ticketType == TicketTypeRoom)
         {
             effectiveReportedUserId = currentRoom.OwnerId;
             reportedUsername = currentRoom.OwnerName;
@@ -98,7 +99,6 @@ internal class ModerationTicketService : IModerationTicketService
             return;
         }
 
-        var ticketType = NormalizeTicketType(type, effectiveReportedUserId, currentRoom != null);
         var issueText = BuildTicketIssue(message, category, ticketType);
 
         var ticket = new ModerationTicket(
