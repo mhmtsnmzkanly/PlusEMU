@@ -74,7 +74,8 @@ Guardian tarafinda da ilk parity katmani artik mevcut:
 - [GuardianAcceptRequestEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/GuardianAcceptRequestEvent.cs)
 - [GuardianVoteEvent.cs](/home/duldul/Belgeler/PlusEMU/Communication/Packets/Incoming/Guides/GuardianVoteEvent.cs)
 - bu ilk dilim mevcut `SubmitBullyReportEvent` akisini guardian queue ile baglar, guardian yoksa moderation fallback devam eder
-- `playing` runtime sinyali ve daha zengin guardian sonuc/timeout davranislari halen backlog durumunda
+- accept-timeout, bounded resend ve under-voted moderation fallback artik mevcut
+- `playing` runtime sinyali ve daha zengin guardian sonuc UX'i halen backlog durumunda
 
 Camera tarafinda ise ilk parity katmani artik mevcut:
 - [CameraService.cs](/home/duldul/Belgeler/PlusEMU/HabboHotel/Camera/CameraService.cs)

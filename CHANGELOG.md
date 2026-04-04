@@ -2,6 +2,7 @@
 
 ### [Unreleased]
 #### Changed
+- Extended the guardian review foundation with timeout and resend lifecycle: unanswered guardian requests now expire, the service can reassign additional guardians up to a bounded limit, and under-voted cases now forward back into the existing moderation path instead of stalling indefinitely.
 - Extended the guide session surface with partner typing notifications too: `GuideUserTypingEvent` now relays live typing state between helper and requester, and the matching partner-typing / partner-playing outgoing composers are registered on the packet surface for the remaining guide-session UX work.
 - Extended the guide parity slice once more with requester-room lookup and room-invite support, so helpers can now resolve the requester's room id and send a direct guide-room invite through the `GuideVisitUserEvent` / `GuideInviteUserEvent` flow instead of stopping at chat-only sessions.
 - Extended the guide/help parity slice with a first guardian review foundation: bully reports can now route into a guardian on-duty queue, guardians can accept and vote through a minimal `Guardian*` packet surface, and the old moderation alert path remains as fallback when no guardians are available.

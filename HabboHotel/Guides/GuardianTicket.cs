@@ -16,5 +16,7 @@ public sealed class GuardianTicket
     public int CreatedAt { get; }
     public int TimeLeftSeconds { get; set; } = 120;
     public GuardianVoteType? Verdict { get; set; }
+    public int ResendCount { get; set; }
+    public bool Closed { get; set; }
     public Dictionary<int, GuardianVote> Votes { get; } = new();
 }

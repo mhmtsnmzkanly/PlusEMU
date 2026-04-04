@@ -9,6 +9,10 @@ internal sealed class GuardianService : IGuardianService
 {
     private const string GuideToolPermission = "mod_tool";
     private const int AcceptTimerSeconds = 30;
+    private const int VotingTimerSeconds = 120;
+    private const int MinimumVotes = 3;
+    private const int MaxAssignments = 5;
+    private const int MaxResends = 2;
 
     private readonly object _sync = new();
     private readonly IDatabase _database;
@@ -80,27 +84,23 @@ internal sealed class GuardianService : IGuardianService
         if (chatLog.Count == 0)
             return false;
 
+        GuardianTicket ticket;
         lock (_sync)
         {
             if (_ticketsByReported.ContainsKey(reported.Id))
                 return true;
 
-            var guardians = _guardians.Keys.ToList();
-            if (guardians.Count == 0)
-                return false;
-
-            var ticket = new GuardianTicket(reporter.Id, reported.Id, chatLog, (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-            _ticketsByReported[reported.Id] = ticket;
-
-            foreach (var guardianId in guardians)
+            ticket = new GuardianTicket(reporter.Id, reported.Id, chatLog, (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds())
             {
-                ticket.Votes[guardianId] = new GuardianVote(guardianId);
-                _ticketsByGuardian[guardianId] = ticket;
-            }
+                TimeLeftSeconds = VotingTimerSeconds
+            };
 
+            if (!AssignMoreGuardiansLocked(ticket))
+                return false;
+            _ticketsByReported[reported.Id] = ticket;
         }
 
-        NotifyGuardians();
+        ScheduleFinalize(ticket);
         return true;
     }
 
@@ -117,8 +117,8 @@ internal sealed class GuardianService : IGuardianService
 
             if (!accepted)
             {
-                vote.Type = GuardianVoteType.NotVoted;
-                vote.Ignored = true;
+                ReleaseGuardianLocked(ticket, habbo.Id, ignored: true);
+                TryResendLocked(ticket);
                 return Task.CompletedTask;
             }
 
@@ -150,7 +150,7 @@ internal sealed class GuardianService : IGuardianService
             };
 
             UpdateVoteCounts(ticket);
-            if (ticket.Votes.Values.Any(v => v.Type is GuardianVoteType.Acceptably or GuardianVoteType.Badly or GuardianVoteType.Awfully))
+            if (GetCastVotesLocked(ticket) >= MinimumVotes)
                 CloseTicket(ticket);
         }
 
@@ -181,6 +181,109 @@ internal sealed class GuardianService : IGuardianService
         }
     }
 
+    private bool AssignMoreGuardiansLocked(GuardianTicket ticket)
+    {
+        int assignedCount = ticket.Votes.Count;
+        foreach (var guardianId in _guardians
+                     .Where(entry => !entry.Value)
+                     .Select(entry => entry.Key)
+                     .ToList())
+        {
+            if (assignedCount >= MaxAssignments)
+                break;
+            if (guardianId == ticket.ReporterId || guardianId == ticket.ReportedId)
+                continue;
+            if (ticket.Votes.ContainsKey(guardianId))
+                continue;
+            if (!TryGetGuardianClient(guardianId, out var guardianClient))
+                continue;
+
+            ticket.Votes[guardianId] = new GuardianVote(guardianId);
+            _ticketsByGuardian[guardianId] = ticket;
+            _guardians[guardianId] = true;
+            guardianClient.Send(new GuardianNewReportReceivedComposer(AcceptTimerSeconds));
+            ScheduleGuardianAcceptTimeout(ticket, guardianId);
+            assignedCount++;
+        }
+
+        return ticket.Votes.Count > 0;
+    }
+
+    private void ScheduleGuardianAcceptTimeout(GuardianTicket ticket, int guardianId)
+    {
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(AcceptTimerSeconds));
+            lock (_sync)
+            {
+                if (ticket.Closed || !_ticketsByReported.ContainsKey(ticket.ReportedId))
+                    return;
+                if (!ticket.Votes.TryGetValue(guardianId, out var vote) || vote.Type != GuardianVoteType.Searching)
+                    return;
+
+                ReleaseGuardianLocked(ticket, guardianId, ignored: true);
+                TryResendLocked(ticket);
+            }
+        });
+    }
+
+    private void ScheduleFinalize(GuardianTicket ticket)
+    {
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(VotingTimerSeconds));
+            lock (_sync)
+            {
+                if (ticket.Closed || !_ticketsByReported.ContainsKey(ticket.ReportedId))
+                    return;
+
+                if (GetCastVotesLocked(ticket) >= MinimumVotes)
+                {
+                    CloseTicket(ticket);
+                    return;
+                }
+
+                if (TryResendLocked(ticket))
+                {
+                    ScheduleFinalize(ticket);
+                    return;
+                }
+
+                ForwardToModerationLocked(ticket);
+            }
+        });
+    }
+
+    private bool TryResendLocked(GuardianTicket ticket)
+    {
+        if (ticket.Closed)
+            return false;
+        if (GetCastVotesLocked(ticket) >= MinimumVotes)
+        {
+            CloseTicket(ticket);
+            return false;
+        }
+        if (ticket.ResendCount >= MaxResends)
+            return false;
+
+        int assignedBefore = ticket.Votes.Count;
+        ticket.ResendCount++;
+        return AssignMoreGuardiansLocked(ticket) && ticket.Votes.Count > assignedBefore;
+    }
+
+    private void ReleaseGuardianLocked(GuardianTicket ticket, int guardianId, bool ignored)
+    {
+        if (ticket.Votes.TryGetValue(guardianId, out var vote))
+        {
+            vote.Type = GuardianVoteType.NotVoted;
+            vote.Ignored = ignored;
+        }
+
+        _ticketsByGuardian.Remove(guardianId);
+        if (_guardians.ContainsKey(guardianId))
+            _guardians[guardianId] = false;
+    }
+
     private void UpdateVoteCounts(GuardianTicket ticket)
     {
         foreach (var entry in ticket.Votes)
@@ -195,21 +298,48 @@ internal sealed class GuardianService : IGuardianService
 
     private void CloseTicket(GuardianTicket ticket)
     {
+        if (ticket.Closed)
+            return;
+
+        ticket.Closed = true;
         ticket.Verdict = CalculateVerdict(ticket);
 
         foreach (var entry in ticket.Votes)
         {
-            if (!TryGetGuardianClient(entry.Key, out var guardianClient))
-                continue;
-            if (entry.Value.Type is not (GuardianVoteType.Acceptably or GuardianVoteType.Badly or GuardianVoteType.Awfully))
-                continue;
+            if (TryGetGuardianClient(entry.Key, out var guardianClient)
+                && entry.Value.Type is GuardianVoteType.Acceptably or GuardianVoteType.Badly or GuardianVoteType.Awfully)
+                guardianClient.Send(new GuardianVotingResultComposer(ticket, entry.Value));
 
-            guardianClient.Send(new GuardianVotingResultComposer(ticket, entry.Value));
             _guardians[entry.Key] = false;
             _ticketsByGuardian.Remove(entry.Key);
         }
 
         _ticketsByReported.Remove(ticket.ReportedId);
+    }
+
+    private void ForwardToModerationLocked(GuardianTicket ticket)
+    {
+        if (ticket.Closed)
+            return;
+
+        ticket.Closed = true;
+        ticket.Verdict = GuardianVoteType.Forwarded;
+
+        foreach (var guardianId in ticket.Votes.Keys.ToList())
+        {
+            _ticketsByGuardian.Remove(guardianId);
+            if (_guardians.ContainsKey(guardianId))
+                _guardians[guardianId] = false;
+        }
+
+        _ticketsByReported.Remove(ticket.ReportedId);
+
+        var reporterClient = _clientManager.GetClientByUserId(ticket.ReporterId);
+        var reportedClient = _clientManager.GetClientByUserId(ticket.ReportedId);
+        if (reporterClient != null && reportedClient != null)
+            _clientManager.DoAdvertisingReport(reporterClient, reportedClient);
+        else
+            _clientManager.ModAlert($"Guardian review forwarded to moderators for reported user {ticket.ReportedId}.");
     }
 
     private static GuardianVoteType CalculateVerdict(GuardianTicket ticket)
@@ -230,4 +360,7 @@ internal sealed class GuardianService : IGuardianService
         client = _clientManager.GetClientByUserId(guardianId)!;
         return client?.GetHabboOrNull() != null;
     }
+
+    private static int GetCastVotesLocked(GuardianTicket ticket) =>
+        ticket.Votes.Values.Count(v => v.Type is GuardianVoteType.Acceptably or GuardianVoteType.Badly or GuardianVoteType.Awfully);
 }

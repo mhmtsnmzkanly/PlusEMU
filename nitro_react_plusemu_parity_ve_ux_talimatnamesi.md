@@ -56,6 +56,7 @@ Bu liste 3 kategoriye ayrilir:
   - Minimum `GuideSession*` packet/composer surface artik var
   - Duty state, request queue, accept/decline, chat relay ve close/report akisi service-backed
   - Guardian on-duty, bully report queue, accept ve vote surface'in ilk dilimi artik var
+  - Guardian timeout/resend ve moderation fallback mantiginin ilk dilimi artik var
   - Requester room ve room invite surface artik var
   - Typing surface artik var
   - Playing runtime sinyali halen eksik

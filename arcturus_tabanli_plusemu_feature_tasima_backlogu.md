@@ -55,7 +55,7 @@ Tamamlanan ilk dilim:
 - helper report
 
 Kalan ana bosluk:
-- richer guardian lifecycle, timeout ve resend mantigi
+- richer guardian sonuc UX'i
 - playing gibi kalan yan session sinyalleri
 
 Arcturus'ta guardian sistemi ve scheduler izleri var:
