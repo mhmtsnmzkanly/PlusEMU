@@ -100,6 +100,7 @@ internal class ModerationTicketService : IModerationTicketService
         }
 
         var issueText = BuildTicketIssue(message, category, ticketType);
+        var (contextType, contextLabel) = BuildTicketContext(ticketType, currentRoom);
 
         var ticket = new ModerationTicket(
             1,
@@ -113,6 +114,8 @@ internal class ModerationTicketService : IModerationTicketService
             reportedUsername,
             issueText,
             currentRoom,
+            contextType,
+            contextLabel,
             reportedChats.ToList());
 
         if (!_moderationManager.TryAddTicket(ticket))
@@ -340,4 +343,19 @@ internal class ModerationTicketService : IModerationTicketService
             TicketTypePhoto => "PHOTO",
             _ => string.Empty
         };
+
+    private static (string ContextType, string ContextLabel) BuildTicketContext(int ticketType, RoomData? room)
+    {
+        if (room != null)
+            return ("ROOM", string.IsNullOrWhiteSpace(room.Name) ? $"Room {room.Id}" : room.Name);
+
+        return ticketType switch
+        {
+            TicketTypeIm => ("IM", "Direct messenger report"),
+            TicketTypeDiscussion => ("DISCUSSION", "Forum discussion report"),
+            TicketTypePhoto => ("PHOTO", "Photo report"),
+            TicketTypeGuideSystem => ("GUIDE", "Guide help session"),
+            _ => ("HELP", "Help request")
+        };
+    }
 }

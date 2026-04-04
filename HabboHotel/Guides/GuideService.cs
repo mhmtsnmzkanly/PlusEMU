@@ -370,6 +370,8 @@ internal sealed class GuideService : IGuideService
                     reportedHabbo.Username,
                     trimmedMessage,
                     room,
+                    "GUIDE",
+                    "Guide help session",
                     guideSession.Messages
                         .Select((chat, index) => new ModerationTicketChatEntry(index + 1, chat.Message))
                         .ToList());

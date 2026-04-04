@@ -102,6 +102,7 @@ Bu liste 3 kategoriye ayrilir:
   - mevcut `SubmitNewTicketEvent` surface'inde gelen reported-chat entry id'leri artik korunuyor; moderation ticket ve moderator chatlog ciktilari packet-level chat metadata'yi tamamen kaybetmiyor
   - moderator tarafindaki `CloseIssueDefaultActionEvent` artik no-op degil; default-action close butonu mevcut close/result lifecycle'ina bagli
   - exact pending-calls packet'i hala dogrulanmamis olsa da mevcut fallback notification artik issue ozeti yaninda yaklasik moderation queue position bilgisini de tasiyor
+  - moderation ticket modeli artik hafif `ContextType/ContextLabel` metadata'si tasiyor; bu, roomless report fallback'lerini ve gelecekteki IM/forum/photo ayri packet surface'lerini daha temiz baglamla tasimaya hazirlik sagliyor
   - `CallForHelpPendingCallsComposer` exact packet id'si halen dogrulanmis degil
 - Kullanici etkisi:
   - Yardim araci artik yalnizca bos acilmiyor; temel topic surface mevcut
@@ -110,6 +111,7 @@ Bu liste 3 kategoriye ayrilir:
   - moderation topic tree ve open-state ilk kez help tool acilisina baglandi
   - mevcut help submit packet'inin tasidigi chat entry metadata'si artik ticket modelinde korunuyor; ileride room/IM/forum/photo ayri surface'lerine gecis daha az veri kaybiyla yapilabilecek
   - roomless modern report varyantlari icin moderator chatlog inspectability artirildi; ayri packet surface gelmeden once bile mevcut chat payload'i kaybolmuyor
+  - ticket modeline eklenen context metadata, room-only varsayimlarin azaltilmasi ve ayrik report packet'lerinin ileride ayni moderation cekirdegine daha temiz oturtulmasi icin temel hazirlik sagliyor
   - kalan is exact pending-calls packet semantics ve room/im/forum/photo report varyantlarinin ayri payload semantics'ini daraltmak
 - Oncelik: `Kritik`
 

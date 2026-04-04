@@ -49,14 +49,10 @@ public class ModeratorTicketChatlogComposer : IServerPacket
 
     private static string BuildFallbackRoomName(ModerationTicket ticket)
     {
-        var typeLabel = ticket.Type switch
-        {
-            6 => "IM",
-            11 => "DISCUSSION",
-            14 => "PHOTO",
-            _ => "HELP"
-        };
+        if (!string.IsNullOrWhiteSpace(ticket.ContextLabel))
+            return ticket.ContextLabel;
 
+        var typeLabel = string.IsNullOrWhiteSpace(ticket.ContextType) ? "HELP" : ticket.ContextType;
         var sender = ticket.Sender?.Username;
         return string.IsNullOrWhiteSpace(sender)
             ? $"{typeLabel} report context"

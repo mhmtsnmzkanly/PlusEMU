@@ -146,7 +146,8 @@ public class ModerationQueryService : IModerationQueryService
 
         if (ticket.ReportedChats.Count == 0)
         {
-            session.SendNotification("No chatlog is available for this help request.");
+            var contextLabel = string.IsNullOrWhiteSpace(ticket.ContextLabel) ? "this help request" : ticket.ContextLabel;
+            session.SendNotification($"No chatlog is available for {contextLabel}.");
             return;
         }
 
