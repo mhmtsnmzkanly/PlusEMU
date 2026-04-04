@@ -60,12 +60,13 @@ Bu liste 3 kategoriye ayrilir:
   - Requester room ve room invite surface artik var
   - Typing surface artik var
   - Playing runtime sinyalinin ilk dilimi artik var
+  - Reporter artik guardian review sonucu veya moderator fallback durumunu gorunur sekilde aliyor
 - Kullanici etkisi:
   - Guide Tool UI artik yalnizca bos acilmiyor; temel helper-request-session akisi calisiyor
-  - Guardian review de artik tamamen bos degil, ama ileri seviye guardian durumlari halen eksik
+  - Guardian review de artik tamamen bos degil; session, timeout, resend ve reporter sonuc sinyali calisiyor
 - Teknik etkisi:
   - Ilk service, queue ve transient session store eklendi
-  - Kalan is richer guardian lifecycle ve client-side yan sinyallerin tamamlanmasi
+  - Kalan is exact guardian result packet semantics ve modern Help/CFH surface'in tamamlanmasi
 - Oncelik: `Kritik`
 
 ### 2. Help / Modern Call For Help Akislari

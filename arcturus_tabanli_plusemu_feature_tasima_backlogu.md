@@ -55,7 +55,7 @@ Tamamlanan ilk dilim:
 - helper report
 
 Kalan ana bosluk:
-- richer guardian sonuc UX'i
+- richer guardian packet semantics ve reporter-side dedicated result packet parity'si
 
 Arcturus'ta guardian sistemi ve scheduler izleri var:
 - [GuardianTicketFindMoreSlaves.java](/home/duldul/Belgeler/Arcturus-Community-master/src/main/java/com/eu/habbo/threading/runnables/GuardianTicketFindMoreSlaves.java)
@@ -69,6 +69,7 @@ Yapilacaklar:
 - ticket state ownership
 - claim/accept/timeout akisi
 - moderator ve helper rollerinin ayrimi
+- mevcut notification fallback yerine exact guardian result packet semantics'i canli client ile dogrulamak
 
 ### 3. Camera Runtime
 Arcturus'ta camera reconnect ve client yapisi dogrudan var:
@@ -144,9 +145,9 @@ Ama bu alan kopyalanarak degil, yeni ADR ile tasarlanarak alinmali.
 
 ## Onerilen Uygulama Sirasi
 1. Targeted Offer
-2. Guide / Guardian
-3. Camera
-4. Help / CFH UX tamamlama
+2. Camera
+3. Help / CFH UX tamamlama
+4. Guide / Guardian packet semantics daraltmasi
 5. HC kickback / subscription eventleri
 6. Wired highscores
 7. YouTube runtime iyilestirmeleri
