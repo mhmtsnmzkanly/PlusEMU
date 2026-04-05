@@ -31,13 +31,32 @@ public class RevisionsCache : IRevisionsCache, IStartable
     {
         var incomingHeaders = typeof(ClientPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).ToDictionary(field => field.Name, field => (uint)field.GetRawConstantValue()!);
         var outgoingHeaders = typeof(ServerPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).ToDictionary(field => field.Name, field => (uint)field.GetRawConstantValue()!);
+
+        var incomingMapping = new Dictionary<uint, uint>();
+        foreach (var kvp in incomingHeaders.Where(kvp => kvp.Value > 0))
+        {
+            if (!incomingMapping.TryAdd(kvp.Value, kvp.Value))
+            {
+                Console.WriteLine($"[CRITICAL] Duplicate incoming packet ID {kvp.Value} detected for header {kvp.Key}. Skipping to prevent crash.");
+            }
+        }
+
+        var outgoingMapping = new Dictionary<uint, uint>();
+        foreach (var kvp in outgoingHeaders.Where(kvp => kvp.Value > 0))
+        {
+            if (!outgoingMapping.TryAdd(kvp.Value, kvp.Value))
+            {
+                Console.WriteLine($"[CRITICAL] Duplicate outgoing packet ID {kvp.Value} detected for header {kvp.Key}. Skipping to prevent crash.");
+            }
+        }
+
         InternalRevision = new()
         {
             Name = "PRODUCTION-201701242205-837386173",
             IncomingHeaders = incomingHeaders,
-            IncomingIdToInternalIdMapping = incomingHeaders.Where(kvp => kvp.Value > 0).ToDictionary(kvp => kvp.Value, kvp => kvp.Value),
+            IncomingIdToInternalIdMapping = incomingMapping,
             OutgoingHeaders = outgoingHeaders,
-            InternalIdToOutgoingIdMapping = outgoingHeaders.Where(kvp => kvp.Value > 0).ToDictionary(kvp => kvp.Value, kvp => kvp.Value)
+            InternalIdToOutgoingIdMapping = outgoingMapping
         };
 
         if (!Directory.Exists(Location))
@@ -82,8 +101,26 @@ public class RevisionsCache : IRevisionsCache, IStartable
             }
 
 
-            revision.IncomingIdToInternalIdMapping = revision.IncomingHeaders.Where(kvp => kvp.Value > 0).ToDictionary(kvp => kvp.Value, kvp => InternalRevision.IncomingHeaders[kvp.Key]);
-            revision.InternalIdToOutgoingIdMapping = revision.OutgoingHeaders.Where(kvp => kvp.Value > 0).ToDictionary(kvp => InternalRevision.OutgoingHeaders[kvp.Key], kvp => kvp.Value);
+            var incomingMapping = new Dictionary<uint, uint>();
+            foreach (var kvp in revision.IncomingHeaders.Where(kvp => kvp.Value > 0))
+            {
+                if (!incomingMapping.TryAdd(kvp.Value, InternalRevision.IncomingHeaders[kvp.Key]))
+                {
+                    Console.WriteLine($"[CRITICAL] {revision.Name}: Duplicate incoming packet ID {kvp.Value} detected for header {kvp.Key}. Skipping.");
+                }
+            }
+
+            var outgoingMapping = new Dictionary<uint, uint>();
+            foreach (var kvp in revision.OutgoingHeaders.Where(kvp => kvp.Value > 0))
+            {
+                if (!outgoingMapping.TryAdd(InternalRevision.OutgoingHeaders[kvp.Key], kvp.Value))
+                {
+                    Console.WriteLine($"[CRITICAL] {revision.Name}: Duplicate internal outgoing packet ID {InternalRevision.OutgoingHeaders[kvp.Key]} detected for header {kvp.Key}. Skipping.");
+                }
+            }
+
+            revision.IncomingIdToInternalIdMapping = incomingMapping;
+            revision.InternalIdToOutgoingIdMapping = outgoingMapping;
         }
     }
 }

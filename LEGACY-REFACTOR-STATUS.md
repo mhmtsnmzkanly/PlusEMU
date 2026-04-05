@@ -417,3 +417,4 @@ grep -r "ProgressAchievement" --include="*.cs" | grep "AchievementManager" | gre
     *   Resolved çakışma for ID 3226 (GetCatalogIndexEvent vs RenderRoomEvent) by changing RenderRoomEvent to 3227.
     *   Resolved çakışma for ID 1275 (ForceOpenCalendarBoxEvent vs OpenCampaignCalendarDoorAsStaffEvent) by commenting out the duplicate staff event.
     *   Resolved çakışma for ID 1229 (OpenCalendarBoxEvent vs OpenCampaignCalendarDoorEvent) by commenting out the duplicate campaign event.
+- hardened `RevisionsCache` against future packet ID conflicts by using defensive dictionary building with explicit duplicate logging, preventing critical startup crashes if duplicate IDs are accidentally introduced in `ClientPacketHeader` or revision JSON files.
