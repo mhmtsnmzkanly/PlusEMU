@@ -65,7 +65,7 @@ public static class ServerPacketHeader
     public const uint RoomReadyComposer = 768; //2029
     public const uint OpenConnectionComposer = 3566; //1329
     public const uint CloseConnectionComposer = 726; //1898
-    public const uint FlatAccessibleComposer = 735; //1179
+    public const uint FlatAccessibleComposer = 3783; //1179
     public const uint CantConnectComposer = 200; //1864
 
     // Room Permissions

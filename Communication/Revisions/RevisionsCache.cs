@@ -29,15 +29,30 @@ public class RevisionsCache : IRevisionsCache, IStartable
 
     private void LoadInternalRevision()
     {
-        var incomingHeaders = typeof(ClientPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).ToDictionary(field => field.Name, field => (uint)field.GetRawConstantValue()!);
-        var outgoingHeaders = typeof(ServerPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).ToDictionary(field => field.Name, field => (uint)field.GetRawConstantValue()!);
+        var incomingHeaders = new Dictionary<string, uint>();
+        foreach (var field in typeof(ClientPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy))
+        {
+            if (!incomingHeaders.TryAdd(field.Name, (uint)field.GetRawConstantValue()!))
+            {
+                Console.WriteLine($"[CRITICAL] Duplicate field name {field.Name} in ClientPacketHeader.");
+            }
+        }
+
+        var outgoingHeaders = new Dictionary<string, uint>();
+        foreach (var field in typeof(ServerPacketHeader).GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy))
+        {
+            if (!outgoingHeaders.TryAdd(field.Name, (uint)field.GetRawConstantValue()!))
+            {
+                Console.WriteLine($"[CRITICAL] Duplicate field name {field.Name} in ServerPacketHeader.");
+            }
+        }
 
         var incomingMapping = new Dictionary<uint, uint>();
         foreach (var kvp in incomingHeaders.Where(kvp => kvp.Value > 0))
         {
             if (!incomingMapping.TryAdd(kvp.Value, kvp.Value))
             {
-                Console.WriteLine($"[CRITICAL] Duplicate incoming packet ID {kvp.Value} detected for header {kvp.Key}. Skipping to prevent crash.");
+                Console.WriteLine($"[CRITICAL] Duplicate incoming packet ID {kvp.Value} detected for header {kvp.Key}. Skipping mapping.");
             }
         }
 
@@ -46,7 +61,7 @@ public class RevisionsCache : IRevisionsCache, IStartable
         {
             if (!outgoingMapping.TryAdd(kvp.Value, kvp.Value))
             {
-                Console.WriteLine($"[CRITICAL] Duplicate outgoing packet ID {kvp.Value} detected for header {kvp.Key}. Skipping to prevent crash.");
+                Console.WriteLine($"[CRITICAL] Duplicate outgoing packet ID {kvp.Value} detected for header {kvp.Key}. Skipping mapping.");
             }
         }
 
